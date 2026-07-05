@@ -18,6 +18,8 @@ Web app quản lý khách sạn: room map trực quan, đặt phòng, check-in/c
 - **SQL Server** (Express là đủ) — instance mặc định trong repo là `.\SQLEXPRESS`
 - **Git**
 
+> ⚠️ **Windows**: clone vào đường dẫn NGẮN (vd `D:\projects\`). Đường dẫn quá dài/sâu sẽ gây lỗi `Unable to load DLL 'Microsoft.Data.SqlClient.SNI.dll'` khi backend kết nối SQL Server.
+
 ## Chạy backend (lần đầu)
 
 ```bash
