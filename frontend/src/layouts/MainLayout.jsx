@@ -64,7 +64,7 @@ export default function MainLayout() {
               onClick={logout}
               className={`hidden rounded-full px-3.5 py-1.5 text-[12px] font-semibold text-ink-500 ring-1 ring-black/10 ${EASE} hover:bg-white hover:text-ink-900 sm:block`}
             >
-              Thoát
+              Đăng xuất
             </button>
           </div>
         </div>

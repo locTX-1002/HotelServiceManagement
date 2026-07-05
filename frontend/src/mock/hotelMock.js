@@ -43,6 +43,12 @@ export const MOCK_DASHBOARD = {
   occupiedRooms: 2,
   todayBookings: 3,
   todayRevenue: 3280000,
+  revenueDeltaPct: 12, // so với hôm qua
+  alerts: [
+    { id: 1, text: 'Phòng 102 quá giờ check-out 25 phút', action: 'Check-out', to: '/checkin-checkout' },
+    { id: 2, text: 'Phòng 103 dọn lâu hơn dự kiến (35 phút)', action: 'Xem phòng', to: '/rooms/map' },
+    { id: 3, text: 'Booking BK202607-0014 chưa xác nhận', action: 'Xem booking', to: '/reservations' },
+  ],
   arrivals: [
     { bookingCode: 'BK202607-0012', guestName: 'Trần Thị Bích', roomNumber: '104', typeName: 'Standard', eta: '14:00' },
     { bookingCode: 'BK202607-0014', guestName: 'Phạm Minh Dũng', roomNumber: '302', typeName: 'Suite', eta: '15:30' },
