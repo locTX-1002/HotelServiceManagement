@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import client from '../api/client'
 import { ROOM_STATUS, formatVnd } from '../utils/roomStatus'
 import { MOCK_ROOM_MAP, MOCK_ROOM_TYPES } from '../mock/hotelMock'
@@ -16,11 +17,38 @@ function StatusFlag({ status }) {
   )
 }
 
-function RoomCard({ room, imgIdx = 0 }) {
+/* Vòng công suất: % phòng đang ở + đã đặt */
+function OccupancyRing({ occupied, total }) {
+  const pct = total ? Math.round((occupied / total) * 100) : 0
+  const r = 52
+  const c = 2 * Math.PI * r
+  return (
+    <div className="relative h-32 w-32">
+      <svg viewBox="0 0 120 120" className="h-full w-full -rotate-90">
+        <circle cx="60" cy="60" r={r} fill="none" stroke="currentColor" strokeWidth="7" className="text-black/[0.06]" />
+        <circle
+          cx="60" cy="60" r={r} fill="none" stroke="currentColor" strokeWidth="7" strokeLinecap="round"
+          strokeDasharray={c} strokeDashoffset={c - (c * pct) / 100}
+          className={`text-brand-600 ${EASE} duration-1000`}
+        />
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <p className="font-display text-3xl font-semibold tabular-nums leading-none">{pct}%</p>
+        <p className="mt-1 text-[10px] font-medium text-ink-500">lấp đầy</p>
+      </div>
+    </div>
+  )
+}
+
+function RoomCard({ room, imgIdx, delay, onOpen }) {
   const dimmed = room.status === 'Maintenance' || room.status === 'Cleaning'
   return (
-    <div className={`group overflow-hidden rounded-xl bg-white ring-1 ring-black/5 ${EASE} hover:-translate-y-1 hover:shadow-lift hover:ring-brand-500/30 cursor-pointer`}>
-      <div className="relative h-28 overflow-hidden">
+    <button
+      onClick={() => onOpen(room)}
+      style={{ animationDelay: `${delay}ms` }}
+      className={`card-rise group overflow-hidden rounded-xl bg-white text-left ring-1 ring-black/5 ${EASE} hover:-translate-y-1 hover:shadow-lift hover:ring-brand-500/30 focus-visible:ring-2 focus-visible:ring-brand-500/60 outline-none`}
+    >
+      <div className="relative h-24 overflow-hidden">
         <img
           src={roomImage(room.typeName, imgIdx)}
           alt={`Phòng ${room.roomNumber} - ${room.typeName}`}
@@ -29,7 +57,7 @@ function RoomCard({ room, imgIdx = 0 }) {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-ink-900/50 via-transparent to-transparent" />
         <div className="absolute left-2 top-2"><StatusFlag status={room.status} /></div>
-        <p className="absolute bottom-2 left-3 font-display text-2xl font-semibold text-white drop-shadow-sm">{room.roomNumber}</p>
+        <p className="absolute bottom-1.5 left-3 font-display text-2xl font-semibold text-white drop-shadow-sm">{room.roomNumber}</p>
       </div>
       <div className="px-3.5 py-2.5">
         <div className="flex items-baseline justify-between gap-2">
@@ -37,34 +65,107 @@ function RoomCard({ room, imgIdx = 0 }) {
           <p className="text-[11px] tabular-nums text-ink-500">{formatVnd(room.basePrice)}<span className="opacity-60">/đêm</span></p>
         </div>
         <p className="mt-0.5 h-4 truncate text-[11px] italic text-ink-500">
-          {room.guestName ? `Khách: ${room.guestName}` : ' '}
+          {room.guestName ? `Khách: ${room.guestName}` : ' '}
         </p>
       </div>
-    </div>
+    </button>
   )
 }
 
-function SkeletonCard() {
+/* Drawer chi tiết phòng - trượt từ phải */
+function RoomDrawer({ room, onClose }) {
+  const navigate = useNavigate()
+  useEffect(() => {
+    const onKey = (e) => e.key === 'Escape' && onClose()
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onClose])
+
   return (
-    <div className="overflow-hidden rounded-xl bg-white ring-1 ring-black/5">
-      <div className="h-28 animate-pulse bg-cream-200" />
-      <div className="space-y-2 px-3.5 py-3">
-        <div className="h-3 w-2/3 animate-pulse rounded bg-cream-200" />
-        <div className="h-3 w-1/3 animate-pulse rounded bg-cream-200" />
-      </div>
-    </div>
+    <>
+      <div
+        onClick={onClose}
+        className={`fixed inset-0 z-30 bg-ink-900/30 ${EASE} ${room ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
+      />
+      <aside
+        className={`fixed inset-y-0 right-0 z-40 w-full max-w-sm bg-cream-50 shadow-lift ${EASE} duration-500 ${room ? 'translate-x-0' : 'translate-x-full'}`}
+      >
+        {room && (
+          <div className="flex h-full flex-col">
+            <div className="relative h-52 shrink-0 overflow-hidden">
+              <img src={roomImage(room.typeName, 0)} alt={room.typeName} className="h-full w-full object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-t from-ink-900/70 via-transparent to-transparent" />
+              <button
+                onClick={onClose}
+                className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-white/85 text-sm font-bold text-ink-700 backdrop-blur-sm hover:bg-white"
+                aria-label="Đóng"
+              >
+                ✕
+              </button>
+              <div className="absolute bottom-3 left-4">
+                <p className="font-display text-4xl font-semibold text-white">{room.roomNumber}</p>
+                <p className="text-[12px] font-medium text-white/80">{room.typeName} · {formatVnd(room.basePrice)}/đêm</p>
+              </div>
+            </div>
+
+            <div className="flex-1 space-y-5 overflow-y-auto p-5">
+              <div className="flex items-center justify-between">
+                <p className="text-[12px] font-semibold text-ink-500">Trạng thái hiện tại</p>
+                <StatusFlag status={room.status} />
+              </div>
+              {room.guestName && (
+                <div className="rounded-xl bg-white p-4 ring-1 ring-black/5">
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-500">Khách đang gắn với phòng</p>
+                  <p className="mt-1.5 font-display text-lg font-semibold">{room.guestName}</p>
+                </div>
+              )}
+              <div className="rounded-xl bg-white p-4 ring-1 ring-black/5">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-500">Thao tác nhanh</p>
+                <div className="mt-3 space-y-2">
+                  <button
+                    onClick={() => navigate('/reservations/new')}
+                    disabled={room.status !== 'Available'}
+                    className={`w-full rounded-full bg-brand-600 py-2.5 text-[13px] font-bold text-white ${EASE} hover:bg-brand-700 active:scale-[0.98] disabled:opacity-30`}
+                  >
+                    Đặt phòng này
+                  </button>
+                  <button
+                    disabled
+                    title="Task T4 - CheckInPage"
+                    className="w-full rounded-full py-2.5 text-[13px] font-semibold text-ink-500 ring-1 ring-black/10 disabled:opacity-50"
+                  >
+                    Check-in (mở khóa ở T4)
+                  </button>
+                  <button
+                    disabled
+                    title="Chờ API PATCH /api/rooms/{id}/status"
+                    className="w-full rounded-full py-2.5 text-[13px] font-semibold text-ink-500 ring-1 ring-black/10 disabled:opacity-50"
+                  >
+                    Đổi trạng thái (chờ API)
+                  </button>
+                </div>
+              </div>
+              <p className="text-center text-[11px] italic text-ink-500/70">
+                Dữ liệu chi tiết stay/hóa đơn sẽ hiện ở đây khi backend hoàn thành.
+              </p>
+            </div>
+          </div>
+        )}
+      </aside>
+    </>
   )
 }
 
 const selectCls =
-  'rounded-lg bg-transparent px-3 py-2 text-[13px] font-medium text-ink-700 ring-1 ring-black/10 outline-none focus:ring-2 focus:ring-brand-500/40 hover:ring-black/20'
+  'w-full rounded-lg bg-white px-3 py-2 text-[13px] font-medium text-ink-700 ring-1 ring-black/10 outline-none focus:ring-2 focus:ring-brand-500/40 hover:ring-black/20'
 
 export default function RoomMapPage() {
-  const [floors, setFloors] = useState(null) // null = đang tải
+  const [floors, setFloors] = useState(null)
   const [usingMock, setUsingMock] = useState(false)
   const [floorFilter, setFloorFilter] = useState('all')
   const [typeFilter, setTypeFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState('all')
+  const [openRoom, setOpenRoom] = useState(null)
 
   const load = () => {
     setFloors(null)
@@ -77,7 +178,9 @@ export default function RoomMapPage() {
 
   const allRooms = useMemo(() => (floors ?? []).flatMap((f) => f.rooms), [floors])
   const count = (st) => allRooms.filter((r) => r.status === st).length
+  const occupied = count('Occupied') + count('Reserved')
 
+  // Mặt cắt tòa nhà: tầng cao nhất nằm trên cùng
   const visibleFloors = useMemo(
     () =>
       (floors ?? [])
@@ -90,102 +193,136 @@ export default function RoomMapPage() {
               (statusFilter === 'all' || r.status === statusFilter),
           ),
         }))
-        .filter((f) => f.rooms.length > 0),
+        .filter((f) => f.rooms.length > 0)
+        .sort((a, b) => b.floor - a.floor),
     [floors, floorFilter, typeFilter, statusFilter],
   )
 
-  const stats = [
-    { label: 'tổng phòng', value: allRooms.length },
-    { label: 'trống', value: count('Available'), dot: 'bg-emerald-500' },
-    { label: 'đang ở', value: count('Occupied'), dot: 'bg-rose-500' },
-    { label: 'đã đặt', value: count('Reserved'), dot: 'bg-sky-500' },
-    { label: 'dọn · bảo trì', value: count('Cleaning') + count('Maintenance'), dot: 'bg-amber-500' },
-  ]
+  const statusRows = Object.entries(ROOM_STATUS).map(([key, s]) => ({
+    key, ...s, n: count(key), pct: allRooms.length ? (count(key) / allRooms.length) * 100 : 0,
+  }))
 
   return (
-    <div className="mx-auto max-w-6xl">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p className="font-display text-[15px] italic text-brand-600">tình trạng khách sạn hôm nay</p>
-          <h1 className="mt-1 font-display text-4xl font-semibold tracking-tight">Sơ đồ phòng</h1>
+    <div className="mx-auto max-w-7xl lg:grid lg:grid-cols-[290px_1fr] lg:gap-10">
+      {/* Rail trái: tiêu đề + công suất + thống kê + bộ lọc */}
+      <aside className="lg:sticky lg:top-20 lg:self-start">
+        <p className="font-display text-[15px] italic text-brand-600">tình trạng khách sạn hôm nay</p>
+        <h1 className="mt-1 font-display text-4xl font-semibold tracking-tight">Sơ đồ phòng</h1>
+        {usingMock && (
+          <p className="mt-2 flex items-center gap-1.5 text-[11px] font-medium text-ink-500">
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-500" />
+            dữ liệu mẫu, chờ API
+          </p>
+        )}
+
+        <div className="mt-6 flex items-center gap-5">
+          <OccupancyRing occupied={occupied} total={allRooms.length} />
+          <div>
+            <p className="font-display text-2xl font-semibold tabular-nums leading-none">{allRooms.length}</p>
+            <p className="mt-1 text-[11px] text-ink-500">tổng số phòng</p>
+            <p className="mt-3 font-display text-2xl font-semibold tabular-nums leading-none">{count('Available')}</p>
+            <p className="mt-1 text-[11px] text-ink-500">sẵn sàng đón khách</p>
+          </div>
         </div>
-        <div className="flex items-center gap-3">
-          {usingMock && (
-            <p className="flex items-center gap-1.5 text-[11px] font-medium text-ink-500">
-              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-500" />
-              dữ liệu mẫu, chờ API
-            </p>
-          )}
+
+        <div className="mt-6 space-y-2.5">
+          {statusRows.map((s) => (
+            <button
+              key={s.key}
+              onClick={() => setStatusFilter(statusFilter === s.key ? 'all' : s.key)}
+              className={`w-full text-left ${EASE} ${statusFilter === s.key ? '' : 'opacity-80 hover:opacity-100'}`}
+            >
+              <div className="flex items-center justify-between text-[12px]">
+                <span className={`flex items-center gap-2 font-medium ${statusFilter === s.key ? 'text-ink-900' : 'text-ink-700'}`}>
+                  <span className={`h-1.5 w-1.5 rounded-full ${s.dot}`} />
+                  {s.label}
+                </span>
+                <span className="tabular-nums text-ink-500">{s.n}</span>
+              </div>
+              <div className="mt-1 h-1 overflow-hidden rounded-full bg-black/[0.06]">
+                <div className={`h-full rounded-full ${s.strip} ${EASE} duration-700`} style={{ width: `${s.pct}%` }} />
+              </div>
+            </button>
+          ))}
+        </div>
+
+        <div className="mt-6 space-y-2.5 border-t border-black/[0.07] pt-5">
+          <select className={selectCls} value={floorFilter} onChange={(e) => setFloorFilter(e.target.value)}>
+            <option value="all">Tất cả tầng</option>
+            {(floors ?? []).map((f) => <option key={f.floor} value={f.floor}>Tầng {f.floor}</option>)}
+          </select>
+          <select className={selectCls} value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
+            <option value="all">Tất cả loại phòng</option>
+            {MOCK_ROOM_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+          </select>
           <button
             onClick={load}
-            className={`rounded-full px-4 py-2 text-[13px] font-semibold text-ink-700 ring-1 ring-black/10 ${EASE} hover:bg-white hover:ring-black/20 active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-brand-500/50`}
+            className={`w-full rounded-full py-2 text-[13px] font-semibold text-ink-700 ring-1 ring-black/10 ${EASE} hover:bg-white hover:ring-black/20 active:scale-[0.98]`}
           >
-            Làm mới
+            Làm mới dữ liệu
           </button>
         </div>
-      </div>
+      </aside>
 
-      {/* Dải số liệu: 1 khối, ngăn bằng hairline thay vì 5 hộp rời */}
-      <div className="mt-7 grid grid-cols-2 overflow-hidden rounded-2xl bg-white ring-1 ring-black/5 shadow-soft sm:grid-cols-5 sm:divide-x sm:divide-black/5">
-        {stats.map((st) => (
-          <div key={st.label} className="px-5 py-4">
-            <p className="font-display text-3xl font-semibold tabular-nums leading-none">{st.value}</p>
-            <p className="mt-1.5 flex items-center gap-1.5 text-[11px] font-medium text-ink-500">
-              {st.dot && <span className={`h-1.5 w-1.5 rounded-full ${st.dot}`} />}
-              {st.label}
-            </p>
-          </div>
-        ))}
-      </div>
+      {/* Mặt cắt tòa nhà: trục thang máy bên trái, tầng cao trên cùng, sảnh dưới cùng */}
+      <div className="relative mt-10 lg:mt-2">
+        <div className="absolute bottom-0 left-[15px] top-3 w-px bg-black/10" />
 
-      <div className="mt-6 flex flex-wrap items-center gap-2.5">
-        <select className={selectCls} value={floorFilter} onChange={(e) => setFloorFilter(e.target.value)}>
-          <option value="all">Tất cả tầng</option>
-          {(floors ?? []).map((f) => (
-            <option key={f.floor} value={f.floor}>Tầng {f.floor}</option>
-          ))}
-        </select>
-        <select className={selectCls} value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
-          <option value="all">Tất cả loại phòng</option>
-          {MOCK_ROOM_TYPES.map((t) => (
-            <option key={t} value={t}>{t}</option>
-          ))}
-        </select>
-        <select className={selectCls} value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-          <option value="all">Tất cả trạng thái</option>
-          {Object.entries(ROOM_STATUS).map(([key, s]) => (
-            <option key={key} value={key}>{s.label}</option>
-          ))}
-        </select>
-      </div>
-
-      {floors === null && (
-        <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-          {Array.from({ length: 8 }).map((_, i) => <SkeletonCard key={i} />)}
-        </div>
-      )}
-
-      {visibleFloors.map((f) => (
-        <section key={f.floor} className="mt-9">
-          <div className="mb-3.5 flex items-baseline gap-3">
-            <h2 className="font-display text-xl font-semibold italic">Tầng {f.floor}</h2>
-            <p className="text-[11px] tabular-nums text-ink-500">{f.rooms.length} phòng</p>
-            <div className="h-px flex-1 self-center bg-black/[0.07]" />
-          </div>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-            {f.rooms.map((room, idx) => (
-              <RoomCard key={room.roomId} room={room} imgIdx={idx} />
+        {floors === null && (
+          <div className="space-y-6 pl-12">
+            {[0, 1].map((i) => (
+              <div key={i} className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+                {[0, 1, 2].map((j) => (
+                  <div key={j} className="overflow-hidden rounded-xl bg-white ring-1 ring-black/5">
+                    <div className="h-24 animate-pulse bg-cream-200" />
+                    <div className="space-y-2 px-3.5 py-3">
+                      <div className="h-3 w-2/3 animate-pulse rounded bg-cream-200" />
+                    </div>
+                  </div>
+                ))}
+              </div>
             ))}
           </div>
-        </section>
-      ))}
+        )}
 
-      {floors !== null && visibleFloors.length === 0 && (
-        <div className="mt-10 rounded-2xl border border-dashed border-black/10 bg-white/60 p-10 text-center">
-          <p className="font-display text-lg italic text-ink-700">Không có phòng nào khớp bộ lọc</p>
-          <p className="mt-1 text-[13px] text-ink-500">Thử bỏ bớt điều kiện lọc phía trên.</p>
-        </div>
-      )}
+        {visibleFloors.map((f, fi) => (
+          <section key={f.floor} className="relative mb-7 pl-12">
+            <div className="absolute left-0 top-1 flex h-8 w-8 items-center justify-center rounded-full bg-ink-900 font-display text-[13px] font-semibold text-cream-50 ring-4 ring-cream-100">
+              {f.floor}
+            </div>
+            <div className="mb-3 flex items-baseline gap-3">
+              <h2 className="font-display text-lg font-semibold italic">Tầng {f.floor}</h2>
+              <p className="text-[11px] tabular-nums text-ink-500">{f.rooms.length} phòng</p>
+            </div>
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+              {f.rooms.map((room, idx) => (
+                <RoomCard key={room.roomId} room={room} imgIdx={idx} delay={fi * 120 + idx * 50} onOpen={setOpenRoom} />
+              ))}
+            </div>
+          </section>
+        ))}
+
+        {floors !== null && visibleFloors.length > 0 && (
+          <div className="relative pl-12">
+            <div className="absolute left-0 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-brand-600 text-[13px] text-white ring-4 ring-cream-100">
+              ⌂
+            </div>
+            <div className="rounded-xl bg-ink-900 px-5 py-3.5 text-cream-50">
+              <p className="font-display text-[15px] font-semibold italic">Sảnh · Quầy lễ tân</p>
+              <p className="mt-0.5 text-[11px] text-cream-50/50">Hotel & Service Management · Group 2 SE1919</p>
+            </div>
+          </div>
+        )}
+
+        {floors !== null && visibleFloors.length === 0 && (
+          <div className="ml-12 rounded-2xl border border-dashed border-black/10 bg-white/60 p-10 text-center">
+            <p className="font-display text-lg italic text-ink-700">Không có phòng nào khớp bộ lọc</p>
+            <p className="mt-1 text-[13px] text-ink-500">Thử bỏ bớt điều kiện lọc ở cột bên trái.</p>
+          </div>
+        )}
+      </div>
+
+      <RoomDrawer room={openRoom} onClose={() => setOpenRoom(null)} />
     </div>
   )
 }
