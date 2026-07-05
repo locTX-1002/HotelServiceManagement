@@ -35,3 +35,29 @@ export const MOCK_AVAILABLE_ROOMS = [
   { roomId: 5, roomNumber: '201', typeName: 'Deluxe', floor: 2, basePrice: 800000 },
   { roomId: 8, roomNumber: '301', typeName: 'Family Room', floor: 3, basePrice: 1500000 },
 ]
+
+// GET /api/reports/dashboard + dữ liệu vận hành trong ngày cho trang Tổng quan
+export const MOCK_DASHBOARD = {
+  totalRooms: 9,
+  availableRooms: 3,
+  occupiedRooms: 2,
+  todayBookings: 3,
+  todayRevenue: 3280000,
+  arrivals: [
+    { bookingCode: 'BK202607-0012', guestName: 'Trần Thị Bích', roomNumber: '104', typeName: 'Standard', eta: '14:00' },
+    { bookingCode: 'BK202607-0014', guestName: 'Phạm Minh Dũng', roomNumber: '302', typeName: 'Suite', eta: '15:30' },
+  ],
+  departures: [
+    { bookingCode: 'BK202607-0008', guestName: 'Nguyễn Văn An', roomNumber: '102', typeName: 'Standard', nights: 2, amountDue: 1180000 },
+    { bookingCode: 'BK202607-0009', guestName: 'Lê Hoàng Cường', roomNumber: '203', typeName: 'Deluxe', nights: 1, amountDue: 830000 },
+  ],
+  revenue7d: [
+    { day: 'T3', amount: 1650000 },
+    { day: 'T4', amount: 2470000 },
+    { day: 'T5', amount: 1980000 },
+    { day: 'T6', amount: 3740000 },
+    { day: 'T7', amount: 4120000 },
+    { day: 'CN', amount: 2890000 },
+    { day: 'T2', amount: 3280000 },
+  ],
+}

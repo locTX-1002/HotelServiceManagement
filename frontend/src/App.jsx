@@ -5,6 +5,7 @@ import LoginPage from './pages/LoginPage'
 import Placeholder from './pages/Placeholder'
 import RoomMapPage from './pages/RoomMapPage'
 import CreateReservationPage from './pages/CreateReservationPage'
+import DashboardPage from './pages/DashboardPage'
 
 export default function App() {
   return (
@@ -13,7 +14,7 @@ export default function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route element={<MainLayout />}>
-          <Route path="/dashboard" element={<Placeholder title="Tổng quan" owner="Phúc" day="T3 07/07" />} />
+          <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/rooms/map" element={<RoomMapPage />} />
           <Route path="/rooms" element={<Placeholder title="Phòng & loại phòng" owner="Phúc" day="T3 07/07" />} />
           <Route path="/reservations" element={<Placeholder title="Danh sách đặt phòng" owner="Lộc" day="T3-T4" />} />

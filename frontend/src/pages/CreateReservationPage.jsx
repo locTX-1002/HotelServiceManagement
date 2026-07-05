@@ -76,11 +76,8 @@ function RoomResultCard({ room, idx, selected, onSelect }) {
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="font-display text-xl font-semibold">Phòng {room.roomNumber} · {room.typeName}</p>
-              <p className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] text-ink-500">
-                <span>👤 tối đa {meta.capacity}</span>
-                <span>⤢ {meta.area} m²</span>
-                <span>🛏 {meta.bed}</span>
-                <span>Tầng {room.floor}</span>
+              <p className="mt-2 text-[11px] uppercase tracking-[0.16em] text-ink-500">
+                {meta.capacity} khách &nbsp;·&nbsp; {meta.area} m² &nbsp;·&nbsp; {meta.bed} &nbsp;·&nbsp; Tầng {room.floor}
               </p>
             </div>
           </div>
@@ -192,10 +189,11 @@ export default function CreateReservationPage() {
         <div className="mt-6">
           <div className="relative h-44 overflow-hidden rounded-2xl">
             <img src="/img/login-hero.jpg" alt="" className="h-full w-full object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-r from-ink-900/70 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-r from-ink-900/75 to-transparent" />
             <div className="absolute left-7 top-1/2 -translate-y-1/2">
-              <p className="font-display text-3xl font-semibold italic text-white">Kỳ lưu trú của quý khách</p>
-              <p className="mt-1 text-[13px] text-white/70">Chọn ngày ở và số khách để tìm phòng trống</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/70">Lễ tân · Đặt phòng mới</p>
+              <p className="mt-2 font-display text-3xl font-medium text-white">Kỳ lưu trú của quý khách</p>
+              <p className="mt-1.5 text-[13px] text-white/70">Chọn ngày ở và số khách để tìm phòng trống</p>
             </div>
           </div>
 
@@ -240,13 +238,13 @@ export default function CreateReservationPage() {
       {step === 2 && (
         <div className="mt-6">
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-white px-5 py-3.5 ring-1 ring-black/5 shadow-soft">
-            <div className="flex items-center gap-4 text-[13px] font-semibold">
-              <span>📅 {fmtShort(checkIn)} → {fmtShort(checkOut)}</span>
-              <span className="text-ink-500">·</span>
-              <span>👤 {guests} khách</span>
-              <span className="text-ink-500">·</span>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] font-semibold">
+              <span className="tabular-nums">{fmtShort(checkIn)} → {fmtShort(checkOut)}</span>
+              <span className="text-ink-500/40">|</span>
+              <span>{guests} khách</span>
+              <span className="text-ink-500/40">|</span>
               <span>{nights} đêm</span>
-              <button onClick={() => setStep(1)} className="text-[12px] font-semibold text-brand-600 underline-offset-2 hover:underline">Đổi tìm kiếm</button>
+              <button onClick={() => setStep(1)} className="text-[11px] font-bold uppercase tracking-[0.14em] text-brand-600 underline-offset-4 hover:underline">Đổi tìm kiếm</button>
             </div>
             <button
               onClick={() => setSortAsc(!sortAsc)}
