@@ -5,15 +5,11 @@ const EASE = 'transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]'
 const MENU = [
   { to: '/dashboard', label: 'Tổng quan' },
   { to: '/rooms/map', label: 'Sơ đồ phòng' },
-  { to: '/rooms', label: 'Phòng & loại phòng' },
-  { to: '/reservations', label: 'Đặt phòng' },
-  { to: '/reservations/new', label: 'Tạo đặt phòng' },
-  { to: '/checkin-checkout', label: 'Check-in / Check-out' },
+  { to: '/reservations/new', label: 'Đặt phòng' },
+  { to: '/checkin-checkout', label: 'Check-in' },
   { to: '/service-orders', label: 'Dịch vụ' },
   { to: '/reports', label: 'Báo cáo' },
 ]
-
-const todayLabel = new Intl.DateTimeFormat('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' }).format(new Date())
 
 export default function MainLayout() {
   const navigate = useNavigate()
@@ -24,51 +20,59 @@ export default function MainLayout() {
   }
 
   return (
-    <div className="flex min-h-screen">
-      <aside className="flex w-60 shrink-0 flex-col bg-ink-900 text-cream-50">
-        <div className="px-5 pb-5 pt-6">
-          <p className="font-display text-2xl font-semibold tracking-tight">HSMS</p>
-          <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-[0.22em] text-cream-50/40">Hotel & Service</p>
-        </div>
-        <nav className="flex flex-1 flex-col gap-1 px-3">
-          {MENU.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end={item.to === '/reservations' || item.to === '/rooms'}
-              className={({ isActive }) =>
-                `rounded-xl px-3.5 py-2.5 text-[13px] font-medium ${EASE} ${
-                  isActive ? 'bg-white/10 font-semibold text-white' : 'text-cream-50/70 hover:bg-white/5 hover:text-white'
-                }`
-              }
-            >
-              {item.label}
-            </NavLink>
-          ))}
-        </nav>
-        <div className="px-5 py-4 text-[11px] text-cream-50/40">Group 2 · SE1919</div>
-      </aside>
+    <div className="flex min-h-screen flex-col bg-cream-100">
+      {/* Nav ngang - logo vòm, menu gạch chân terracotta, avatar phải */}
+      <header className="sticky top-0 z-20 border-b border-black/[0.06] bg-cream-50/95 backdrop-blur">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-3">
+          <button onClick={() => navigate('/dashboard')} className="flex shrink-0 items-center gap-2.5">
+            <span className="flex h-9 w-8 items-end justify-center rounded-t-full rounded-b-md bg-brand-600 pb-1.5 font-display text-[13px] font-bold text-white">
+              H
+            </span>
+            <span className="text-left">
+              <p className="font-display text-lg font-bold leading-none tracking-tight">HSMS</p>
+              <p className="mt-0.5 text-[8px] font-bold tracking-[0.28em] text-brand-600">HOTEL & SERVICE</p>
+            </span>
+          </button>
 
-      <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-10 flex items-center justify-between border-b border-black/5 bg-cream-50/90 px-6 py-3 backdrop-blur">
-          <p className="text-sm font-medium capitalize text-ink-500">{todayLabel}</p>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2.5">
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-50 text-[11px] font-bold text-brand-700 ring-1 ring-brand-600/15">LT</span>
-              <span className="hidden text-sm font-semibold sm:block">Receptionist Demo</span>
-            </div>
+          <nav className="hidden items-center gap-6 overflow-x-auto md:flex">
+            {MENU.map((item) => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end={item.to === '/reservations/new'}
+                className={({ isActive }) =>
+                  `whitespace-nowrap border-b-2 pb-0.5 text-[13.5px] ${EASE} ${
+                    isActive
+                      ? 'border-brand-600 font-bold text-ink-900'
+                      : 'border-transparent font-medium text-ink-500 hover:text-ink-900'
+                  }`
+                }
+              >
+                {item.label}
+              </NavLink>
+            ))}
+          </nav>
+
+          <div className="flex shrink-0 items-center gap-2.5">
+            <span
+              title="Receptionist Demo"
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-900 text-[11px] font-bold text-cream-50"
+            >
+              LT
+            </span>
             <button
               onClick={logout}
-              className={`rounded-full px-4 py-1.5 text-[13px] font-semibold text-ink-700 ring-1 ring-black/10 ${EASE} hover:bg-white active:scale-[0.98]`}
+              className={`hidden rounded-full px-3.5 py-1.5 text-[12px] font-semibold text-ink-500 ring-1 ring-black/10 ${EASE} hover:bg-white hover:text-ink-900 sm:block`}
             >
-              Đăng xuất
+              Thoát
             </button>
           </div>
-        </header>
-        <main className="flex-1 px-6 py-7">
-          <Outlet />
-        </main>
-      </div>
+        </div>
+      </header>
+
+      <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-8">
+        <Outlet />
+      </main>
     </div>
   )
 }
