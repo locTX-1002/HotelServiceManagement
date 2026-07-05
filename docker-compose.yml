@@ -1,0 +1,53 @@
+# Chạy toàn bộ hệ thống bằng Docker (phương án dự phòng cho demo / deploy VPS).
+# Máy dev cá nhân vẫn chạy SQL Server Express + dotnet run + npm run dev như README.
+#
+#   docker compose up -d --build
+#   API:      http://localhost:5000  (Swagger: /swagger)
+#   Frontend: http://localhost:8080
+#
+# CHÚ Ý: mật khẩu SA dưới đây chỉ dùng cho môi trường demo local/VPS riêng của nhóm.
+services:
+  hsms-db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: hsms-sqlserver
+    restart: always
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "Hsms@Group2_2026"
+    ports:
+      - "1433:1433"
+    volumes:
+      - hsms_db_data:/var/opt/mssql
+
+  hsms-api:
+    image: hsms-backend-api:latest
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: hsms-backend-api
+    restart: always
+    ports:
+      - "5000:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Server=hsms-db;Database=HotelServiceManagement;User Id=sa;Password=Hsms@Group2_2026;TrustServerCertificate=True;MultipleActiveResultSets=True
+      - Cors__FrontendOrigin=http://localhost:8080
+    depends_on:
+      - hsms-db
+
+  hsms-frontend:
+    image: hsms-frontend:latest
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: http://localhost:5000
+    container_name: hsms-frontend
+    restart: always
+    ports:
+      - "8080:80"
+    depends_on:
+      - hsms-api
+
+volumes:
+  hsms_db_data:

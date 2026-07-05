@@ -72,6 +72,7 @@ backend/
   HotelServiceManagement.Application/    # DTOs, Interfaces, Services, Validators
   HotelServiceManagement.Domain/         # Entities, Enums
   HotelServiceManagement.Infrastructure/ # DbContext, Migrations, Seeder
+  HotelServiceManagement.Tests/          # Unit tests BookingRules (chạy: dotnet test)
 frontend/
   src/api/        # axios client (JWT interceptor có sẵn)
   src/components/ # StatusBadge, ...
@@ -81,6 +82,28 @@ frontend/
 docs/             # tài liệu, quy ước route & màu
 .github/workflows # CI backend + frontend
 ```
+
+## Chạy bằng Docker (dự phòng demo / deploy)
+
+Cần Docker Desktop. Chạy cả SQL Server + API + Frontend trong container:
+
+```bash
+docker compose up -d --build
+# API: http://localhost:5000/swagger | Frontend: http://localhost:8080
+```
+
+## Tài liệu dự án
+
+| File | Nội dung |
+|---|---|
+| [CLEAN_ARCHITECTURE_GUIDELINES.md](CLEAN_ARCHITECTURE_GUIDELINES.md) | Kiến trúc 4 lớp, quy tắc đặt tên, 7 quy tắc bắt buộc |
+| [DEVELOPMENT_WORKFLOW.md](DEVELOPMENT_WORKFLOW.md) | 8 bước thêm 1 tính năng từ entity đến PR |
+| [docs/TeamAssignment.md](docs/TeamAssignment.md) | Phân công 5 role chính thức |
+| [frontend/API_DOCS.md](frontend/API_DOCS.md) | Contract API để FE mock đúng shape |
+| [mo_ta_quan_he_erd.md](mo_ta_quan_he_erd.md) | Quan hệ 13 bảng + ràng buộc DB |
+| [APPLICATION_FEATURES_PLAN.md](APPLICATION_FEATURES_PLAN.md) | Trạng thái module × owner × hạn |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | Nhánh, commit, PR checklist |
+| [CLAUDE.md](CLAUDE.md) | Ngữ cảnh cho AI assistant |
 
 ## Quy trình làm việc
 
