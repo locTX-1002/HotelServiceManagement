@@ -1,5 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import MainLayout from './layouts/MainLayout'
+import HomePage from './pages/HomePage'
 import LoginPage from './pages/LoginPage'
 import Placeholder from './pages/Placeholder'
 import RoomMapPage from './pages/RoomMapPage'
@@ -9,6 +10,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route element={<MainLayout />}>
           <Route path="/dashboard" element={<Placeholder title="Tổng quan" owner="Phúc" day="T3 07/07" />} />
@@ -20,7 +22,7 @@ export default function App() {
           <Route path="/service-orders" element={<Placeholder title="Dịch vụ" owner="Lộc" day="T5 09/07" />} />
           <Route path="/reports" element={<Placeholder title="Báo cáo" owner="Phúc" day="T5 09/07" />} />
         </Route>
-        <Route path="*" element={<Navigate to="/login" replace />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   )

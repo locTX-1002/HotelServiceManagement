@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import client from '../api/client'
 import { formatVnd } from '../utils/roomStatus'
 import { MOCK_AVAILABLE_ROOMS, MOCK_ROOM_TYPES } from '../mock/hotelMock'
@@ -122,21 +123,35 @@ export default function CreateReservationPage() {
   const [done, setDone] = useState(null)
   const [error, setError] = useState(null)
 
+  const [searchParams] = useSearchParams()
+
   const nights = useMemo(() => Math.max(Math.round((new Date(checkOut) - new Date(checkIn)) / 86400000), 0), [checkIn, checkOut])
 
-  const search = () => {
+  const search = (ci = checkIn, co = checkOut, g = guests, rt = roomType) => {
     setSelected(null)
     client
-      .get('/api/reservations/available-rooms', { params: { checkIn, checkOut, roomType, guests } })
+      .get('/api/reservations/available-rooms', { params: { checkIn: ci, checkOut: co, roomType: rt, guests: g } })
       .then((res) => { setResults(res.data); setUsingMock(false) })
       .catch(() => {
         setResults(MOCK_AVAILABLE_ROOMS.filter(
-          (r) => (roomType === 'all' || r.typeName === roomType) && roomMeta(r.typeName).capacity >= guests,
+          (r) => (rt === 'all' || r.typeName === rt) && roomMeta(r.typeName).capacity >= g,
         ))
         setUsingMock(true)
       })
     setStep(2)
   }
+
+  // Đến từ thanh "Đặt ngay" trang chủ: nhận params và nhảy thẳng bước 2
+  useEffect(() => {
+    const ci = searchParams.get('checkIn')
+    if (!ci) return
+    const co = searchParams.get('checkOut') ?? addDays(ci, 1)
+    const g = Number(searchParams.get('guests') ?? 2)
+    const rt = searchParams.get('roomType') ?? 'all'
+    setCheckIn(ci); setCheckOut(co); setGuests(g); setRoomType(rt)
+    search(ci, co, g, rt)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const confirm = () => {
     setError(null)
@@ -210,7 +225,7 @@ export default function CreateReservationPage() {
               </select>
             </div>
             <button
-              onClick={search}
+              onClick={() => search()}
               disabled={nights <= 0}
               className={`h-11 rounded-full bg-brand-600 px-7 text-sm font-bold text-white ${EASE} hover:bg-brand-700 active:scale-[0.98] disabled:opacity-40`}
             >
