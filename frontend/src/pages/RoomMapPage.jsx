@@ -17,29 +17,6 @@ function StatusFlag({ status }) {
   )
 }
 
-/* Vòng công suất: % phòng đang ở + đã đặt */
-function OccupancyRing({ occupied, total }) {
-  const pct = total ? Math.round((occupied / total) * 100) : 0
-  const r = 52
-  const c = 2 * Math.PI * r
-  return (
-    <div className="relative h-32 w-32">
-      <svg viewBox="0 0 120 120" className="h-full w-full -rotate-90">
-        <circle cx="60" cy="60" r={r} fill="none" stroke="currentColor" strokeWidth="7" className="text-black/[0.06]" />
-        <circle
-          cx="60" cy="60" r={r} fill="none" stroke="currentColor" strokeWidth="7" strokeLinecap="round"
-          strokeDasharray={c} strokeDashoffset={c - (c * pct) / 100}
-          className={`text-brand-600 ${EASE} duration-1000`}
-        />
-      </svg>
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <p className="font-display text-3xl font-semibold tabular-nums leading-none">{pct}%</p>
-        <p className="mt-1 text-[10px] font-medium text-ink-500">lấp đầy</p>
-      </div>
-    </div>
-  )
-}
-
 function RoomCard({ room, imgIdx, delay, onOpen }) {
   const dimmed = room.status === 'Maintenance' || room.status === 'Cleaning'
   return (
@@ -216,13 +193,20 @@ export default function RoomMapPage() {
           </p>
         )}
 
-        <div className="mt-6 flex items-center gap-5">
-          <OccupancyRing occupied={occupied} total={allRooms.length} />
+        <div className="mt-6 grid grid-cols-3 gap-3 border-y border-black/[0.07] py-4">
           <div>
             <p className="font-display text-2xl font-semibold tabular-nums leading-none">{allRooms.length}</p>
-            <p className="mt-1 text-[11px] text-ink-500">tổng số phòng</p>
-            <p className="mt-3 font-display text-2xl font-semibold tabular-nums leading-none">{count('Available')}</p>
-            <p className="mt-1 text-[11px] text-ink-500">sẵn sàng đón khách</p>
+            <p className="mt-1.5 text-[11px] text-ink-500">tổng phòng</p>
+          </div>
+          <div>
+            <p className="font-display text-2xl font-semibold tabular-nums leading-none">{count('Available')}</p>
+            <p className="mt-1.5 text-[11px] text-ink-500">sẵn sàng</p>
+          </div>
+          <div>
+            <p className="font-display text-2xl font-semibold tabular-nums leading-none">
+              {allRooms.length ? Math.round((occupied / allRooms.length) * 100) : 0}%
+            </p>
+            <p className="mt-1.5 text-[11px] text-ink-500">lấp đầy</p>
           </div>
         </div>
 
