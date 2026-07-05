@@ -225,9 +225,9 @@ export default function RoomMapPage() {
   )
 
   const chips = [
-    { key: 'all', label: 'Tất cả', n: allRooms.length, cls: 'bg-white text-ink-700 ring-1 ring-black/10' },
+    { key: 'all', label: 'Tất cả', n: allRooms.length },
     ...Object.entries(ROOM_STATUS)
-      .map(([key, s]) => ({ key, label: s.label, n: count(key), cls: s.badge }))
+      .map(([key, s]) => ({ key, label: s.label, n: count(key), dot: s.dot }))
       .filter((c) => c.n > 0),
   ]
 
@@ -257,19 +257,26 @@ export default function RoomMapPage() {
         </div>
       </div>
 
-      {/* Chip filter + trạng thái cập nhật */}
-      <div className="mt-5 flex flex-wrap items-center gap-2">
-        {chips.map((c) => (
-          <button
-            key={c.key}
-            onClick={() => setStatusFilter(c.key)}
-            className={`rounded-full px-3.5 py-1.5 text-[12px] font-semibold ${EASE} active:scale-[0.97] ${
-              statusFilter === c.key ? 'bg-ink-900 text-cream-50' : c.cls
-            }`}
-          >
-            {c.label} {c.n}
-          </button>
-        ))}
+      {/* Bộ lọc segmented: 1 thanh trắng, màu chỉ là chấm nhỏ, active nền đen */}
+      <div className="mt-5 flex flex-wrap items-center gap-3">
+        <div className="inline-flex flex-wrap items-center gap-0.5 rounded-full bg-white p-1 ring-1 ring-black/10 shadow-soft">
+          {chips.map((c) => {
+            const active = statusFilter === c.key
+            return (
+              <button
+                key={c.key}
+                onClick={() => setStatusFilter(c.key)}
+                className={`flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[12px] font-semibold ${EASE} active:scale-[0.97] ${
+                  active ? 'bg-ink-900 text-cream-50' : 'text-ink-500 hover:text-ink-900'
+                }`}
+              >
+                {c.dot && <span className={`h-1.5 w-1.5 rounded-full ${c.dot}`} />}
+                {c.label}
+                <span className={`tabular-nums font-medium ${active ? 'text-cream-50/60' : 'text-ink-500/50'}`}>{c.n}</span>
+              </button>
+            )
+          })}
+        </div>
         <div className="ml-auto flex items-center gap-2.5">
           {usingMock && (
             <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-800 ring-1 ring-amber-600/20">
