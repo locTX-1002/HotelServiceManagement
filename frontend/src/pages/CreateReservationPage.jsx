@@ -143,7 +143,7 @@ export default function CreateReservationPage() {
             )}
 
             <div className="mt-4 space-y-3">
-              {(results ?? []).map((room) => {
+              {(results ?? []).map((room, idx) => {
                 const active = selected?.roomId === room.roomId
                 return (
                   <button
@@ -154,7 +154,7 @@ export default function CreateReservationPage() {
                     }`}
                   >
                     <img
-                      src={roomImage(room.typeName)}
+                      src={roomImage(room.typeName, idx)}
                       alt={room.typeName}
                       loading="lazy"
                       className="h-16 w-20 shrink-0 rounded-lg object-cover"
