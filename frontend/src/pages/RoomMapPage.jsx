@@ -39,8 +39,8 @@ const TILE_TINT = {
   Cleaning: 'bg-amber-50 ring-1 ring-amber-600/15',
 }
 
-/* Thẻ phòng hình vòm kiểu thẻ chìa khóa */
-function RoomTile({ room, delay, onOpen }) {
+/* Thẻ phòng hình vòm kiểu thẻ chìa khóa - ảnh phòng nằm trong ô cửa vòm */
+function RoomTile({ room, imgIdx = 0, delay, onOpen }) {
   const s = ROOM_STATUS[room.status] ?? ROOM_STATUS.Maintenance
   const info = tileInfo(room)
   const maintenance = room.status === 'Maintenance'
@@ -48,17 +48,28 @@ function RoomTile({ room, delay, onOpen }) {
     <button
       onClick={() => onOpen(room)}
       style={{ animationDelay: `${delay}ms` }}
-      className={`card-rise group rounded-t-[999px] rounded-b-2xl px-4 pb-5 pt-9 text-center outline-none ${EASE} focus-visible:ring-2 focus-visible:ring-brand-500/60 ${
+      className={`card-rise group rounded-t-[999px] rounded-b-2xl p-2.5 pb-4 text-center outline-none ${EASE} focus-visible:ring-2 focus-visible:ring-brand-500/60 ${
         maintenance
           ? 'border-2 border-dashed border-black/15 opacity-55 hover:opacity-80'
           : `${TILE_TINT[room.status]} shadow-soft hover:-translate-y-1 hover:shadow-lift`
       }`}
     >
-      <span className={`mx-auto block h-2 w-2 rounded-full ${s.dot}`} />
-      <p className="mt-3 font-display text-4xl font-semibold tabular-nums tracking-tight">{room.roomNumber}</p>
-      <p className="mt-2 text-[9px] font-bold uppercase tracking-[0.24em] text-ink-500">{room.typeName}</p>
-      <div className="mx-5 mt-3 border-t border-dotted border-ink-500/30" />
-      <p className="mt-2.5 truncate text-[13px] font-semibold text-ink-700" title={room.guestName ?? info.main}>{info.main}</p>
+      {/* Ô cửa vòm: viền thẻ (nền nhuộm trạng thái) làm khung quanh ảnh */}
+      <div className="relative">
+        <div className="overflow-hidden rounded-t-[999px] rounded-b-lg">
+          <img
+            src={roomImage(room.typeName, imgIdx)}
+            alt={room.typeName}
+            loading="lazy"
+            className={`h-24 w-full object-cover ${EASE} duration-700 group-hover:scale-[1.07] ${maintenance ? 'grayscale' : ''}`}
+          />
+        </div>
+        <span className={`absolute -bottom-1 left-1/2 h-2.5 w-2.5 -translate-x-1/2 rounded-full ring-2 ring-white ${s.dot}`} />
+      </div>
+      <p className="mt-3 font-display text-[1.7rem] font-semibold leading-none tabular-nums tracking-tight">{room.roomNumber}</p>
+      <p className="mt-1.5 text-[9px] font-bold uppercase tracking-[0.24em] text-ink-500">{room.typeName}</p>
+      <div className="mx-5 mt-2.5 border-t border-dotted border-ink-500/30" />
+      <p className="mt-2 truncate px-1 text-[13px] font-semibold text-ink-700" title={room.guestName ?? info.main}>{info.main}</p>
       <p className={`mt-0.5 text-[12px] font-semibold tabular-nums ${info.subCls}`}>{info.sub}</p>
     </button>
   )
@@ -290,7 +301,7 @@ export default function RoomMapPage() {
           </div>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
             {f.rooms.map((room, idx) => (
-              <RoomTile key={room.roomId} room={room} delay={fi * 100 + idx * 45} onOpen={setOpenRoom} />
+              <RoomTile key={room.roomId} room={room} imgIdx={idx} delay={fi * 100 + idx * 45} onOpen={setOpenRoom} />
             ))}
             {statusFilter === 'all' && f.rooms.length % 4 !== 0 && <GhostTile onClick={() => navigate('/rooms')} />}
           </div>
