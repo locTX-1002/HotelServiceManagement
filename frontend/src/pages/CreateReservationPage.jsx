@@ -11,25 +11,23 @@ const inputCls =
   'w-full rounded-xl bg-white px-3.5 py-2.5 text-sm ring-1 ring-black/10 outline-none placeholder:text-ink-500/50 focus:ring-2 focus:ring-brand-500/40'
 const labelCls = 'mb-1.5 block text-[12px] font-semibold text-ink-700'
 
-const today = () => new Date().toISOString().slice(0, 10)
-const addDays = (dateStr, n) => {
-  const d = new Date(dateStr)
-  d.setDate(d.getDate() + n)
-  return d.toISOString().slice(0, 10)
-}
-const fmtShort = (s) => new Intl.DateTimeFormat('vi-VN', { day: 'numeric', month: 'numeric' }).format(new Date(s))
+import { localToday as today, addDays, fmtShort } from '../utils/dates'
 
-/* Chỉ báo 3 bước - kiểu booking engine khách sạn */
-function Steps({ current }) {
+/* Chỉ báo 3 bước - bước đã xong bấm được để quay lại, đường nối fill theo tiến độ */
+function Steps({ current, onBack }) {
   const items = ['Ngày ở & khách', 'Chọn phòng', 'Xác nhận']
   return (
     <div className="flex items-center justify-center gap-3">
       {items.map((label, i) => {
         const n = i + 1
         const state = n < current ? 'done' : n === current ? 'active' : 'todo'
+        const Tag = state === 'done' ? 'button' : 'div'
         return (
           <div key={label} className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
+            <Tag
+              onClick={state === 'done' ? () => onBack(n) : undefined}
+              className={`flex items-center gap-2 ${state === 'done' ? 'cursor-pointer hover:opacity-70' : ''} ${EASE}`}
+            >
               <span
                 className={`flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-bold ${EASE} ${
                   state === 'done' ? 'bg-emerald-500 text-white' : state === 'active' ? 'bg-ink-900 text-cream-50' : 'bg-black/[0.07] text-ink-500'
@@ -38,8 +36,8 @@ function Steps({ current }) {
                 {state === 'done' ? '✓' : n}
               </span>
               <span className={`text-[13px] ${state === 'active' ? 'font-bold' : 'font-medium text-ink-500'}`}>{label}</span>
-            </div>
-            {n < 3 && <span className="h-px w-10 bg-black/10 sm:w-16" />}
+            </Tag>
+            {n < 3 && <span className={`h-px w-10 sm:w-16 ${EASE} ${n < current ? 'bg-emerald-500/50' : 'bg-black/10'}`} />}
           </div>
         )
       })}
@@ -182,7 +180,7 @@ export default function CreateReservationPage() {
 
   return (
     <div className="mx-auto max-w-5xl pb-24">
-      <Steps current={step} />
+      <Steps current={step} onBack={setStep} />
 
       {/* BƯỚC 1: hero + thanh tìm kiếm pill */}
       {step === 1 && (
@@ -229,8 +227,55 @@ export default function CreateReservationPage() {
             >
               Tìm phòng trống
             </button>
+
+            {/* Quick chips cho lễ tân - 1 click set xong cả 2 ngày */}
+            <div className="flex w-full flex-wrap items-center gap-2 border-t border-black/[0.06] pt-3.5">
+              <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-ink-500">Chọn nhanh</span>
+              {[
+                { label: 'Hôm nay · 1 đêm', start: 0, nights: 1 },
+                { label: 'Hôm nay · 2 đêm', start: 0, nights: 2 },
+                { label: 'Ngày mai · 1 đêm', start: 1, nights: 1 },
+              ].map((q) => (
+                <button
+                  key={q.label}
+                  onClick={() => { const ci = addDays(today(), q.start); setCheckIn(ci); setCheckOut(addDays(ci, q.nights)) }}
+                  className={`rounded-full px-3 py-1.5 text-[12px] font-semibold text-ink-700 ring-1 ring-black/10 ${EASE} hover:bg-cream-100 hover:ring-black/20 active:scale-[0.97]`}
+                >
+                  {q.label}
+                </button>
+              ))}
+            </div>
           </div>
           {nights > 0 && <p className="mt-3 text-center text-[12px] text-ink-500">{nights} đêm · {fmtShort(checkIn)} → {fmtShort(checkOut)} · {guests} khách</p>}
+
+          {/* Walk-in nhanh: phòng đang trống, click là sang thẳng bước 2 với hôm nay -> mai */}
+          <div className="mt-10">
+            <div className="mb-4 flex items-baseline gap-3">
+              <h2 className="font-display text-xl font-semibold italic">Phòng trống hôm nay</h2>
+              <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-ink-500">· khách walk-in nhận phòng ngay</p>
+            </div>
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+              {MOCK_AVAILABLE_ROOMS.map((room, idx) => (
+                <button
+                  key={room.roomId}
+                  onClick={() => {
+                    const ci = today()
+                    setCheckIn(ci); setCheckOut(addDays(ci, 1))
+                    search(ci, addDays(ci, 1), guests, 'all')
+                  }}
+                  className={`group rounded-t-[999px] rounded-b-2xl bg-white p-2.5 pb-4 text-center ring-1 ring-black/[0.07] shadow-soft ${EASE} hover:-translate-y-1 hover:shadow-lift`}
+                >
+                  <div className="overflow-hidden rounded-t-[999px] rounded-b-lg">
+                    <img src={roomImage(room.typeName, idx)} alt={room.typeName} loading="lazy"
+                      className={`h-20 w-full object-cover ${EASE} duration-700 group-hover:scale-[1.07]`} />
+                  </div>
+                  <p className="mt-2.5 font-display text-xl font-semibold tabular-nums">{room.roomNumber}</p>
+                  <p className="mt-0.5 text-[9px] font-bold uppercase tracking-[0.2em] text-ink-500">{room.typeName}</p>
+                  <p className="mt-1 text-[11px] tabular-nums text-ink-500">{formatVnd(room.basePrice)}/đêm</p>
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       )}
 

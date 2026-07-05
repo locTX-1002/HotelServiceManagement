@@ -7,12 +7,7 @@ import { formatVnd } from '../utils/roomStatus'
 
 const EASE = 'transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]'
 
-const today = () => new Date().toISOString().slice(0, 10)
-const addDays = (dateStr, n) => {
-  const d = new Date(dateStr)
-  d.setDate(d.getDate() + n)
-  return d.toISOString().slice(0, 10)
-}
+import { localToday as today, addDays } from '../utils/dates'
 
 const TYPE_PRICES = { Standard: 500000, Deluxe: 800000, Suite: 1200000, 'Family Room': 1500000 }
 const TYPE_DESC = {
