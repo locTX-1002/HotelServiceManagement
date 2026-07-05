@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import client from '../api/client'
 import { formatVnd } from '../utils/roomStatus'
 import { MOCK_AVAILABLE_ROOMS, MOCK_ROOM_TYPES } from '../mock/hotelMock'
+import { roomImage } from '../utils/roomImages'
 
 const EASE = 'transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]'
 const inputCls =
@@ -56,8 +57,9 @@ export default function CreateReservationPage() {
 
   return (
     <div className="mx-auto max-w-6xl">
-      <h1 className="text-2xl font-extrabold tracking-tight">Tạo đặt phòng</h1>
-      <p className="mt-1 text-sm text-ink-500">Nhập thông tin khách, chọn ngày ở rồi tìm phòng trống — tất cả trong một màn hình.</p>
+      <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-brand-600">Lễ tân · Đặt phòng</p>
+      <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight">Tạo đặt phòng</h1>
+      <p className="mt-1 text-sm text-ink-500">Nhập thông tin khách, chọn ngày ở rồi tìm phòng trống trong một màn hình.</p>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-5">
         {/* Cột trái: khách + ngày ở */}
@@ -147,16 +149,22 @@ export default function CreateReservationPage() {
                   <button
                     key={room.roomId}
                     onClick={() => setSelected(room)}
-                    className={`w-full rounded-xl p-3.5 text-left ring-1 ${EASE} ${
+                    className={`flex w-full items-center gap-3.5 rounded-xl p-2.5 text-left ring-1 ${EASE} ${
                       active ? 'bg-brand-50 ring-brand-600/40 shadow-soft' : 'bg-cream-50 ring-black/5 hover:ring-black/15'
                     }`}
                   >
-                    <div className="flex items-center justify-between">
-                      <p className="font-bold">Phòng {room.roomNumber}</p>
-                      <span className={`h-4 w-4 rounded-full border-2 ${active ? 'border-brand-600 bg-brand-600' : 'border-black/20'}`} />
+                    <img
+                      src={roomImage(room.typeName)}
+                      alt={room.typeName}
+                      loading="lazy"
+                      className="h-16 w-20 shrink-0 rounded-lg object-cover"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="font-display text-[15px] font-semibold">Phòng {room.roomNumber}</p>
+                      <p className="mt-0.5 text-[12px] text-ink-500">{room.typeName} · Tầng {room.floor}</p>
+                      <p className="mt-1 text-[13px] font-semibold text-ink-700">{formatVnd(room.basePrice)} <span className="font-normal text-ink-500">/ đêm</span></p>
                     </div>
-                    <p className="mt-0.5 text-[12px] text-ink-500">{room.typeName} · Tầng {room.floor}</p>
-                    <p className="mt-1.5 text-[13px] font-semibold text-ink-700">{formatVnd(room.basePrice)} <span className="font-normal text-ink-500">/ đêm</span></p>
+                    <span className={`h-4 w-4 shrink-0 rounded-full border-2 ${active ? 'border-brand-600 bg-brand-600' : 'border-black/20'}`} />
                   </button>
                 )
               })}

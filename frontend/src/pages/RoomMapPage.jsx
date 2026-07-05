@@ -3,32 +3,35 @@ import client from '../api/client'
 import StatusBadge from '../components/StatusBadge'
 import { ROOM_STATUS, formatVnd } from '../utils/roomStatus'
 import { MOCK_ROOM_MAP, MOCK_ROOM_TYPES } from '../mock/hotelMock'
+import { roomImage } from '../utils/roomImages'
 
 const EASE = 'transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]'
 
 function RoomCard({ room }) {
   const s = ROOM_STATUS[room.status] ?? ROOM_STATUS.Maintenance
+  const dimmed = room.status === 'Maintenance' || room.status === 'Cleaning'
   return (
-    <div className={`group relative overflow-hidden rounded-2xl bg-white ring-1 ring-black/5 shadow-soft ${EASE} hover:-translate-y-0.5 hover:shadow-lift cursor-pointer`}>
-      <div className={`absolute inset-x-0 top-0 h-1 ${s.strip}`} />
-      <div className="p-4 pt-5">
-        <div className="flex items-start justify-between gap-2">
-          <div>
-            <p className="text-xl font-extrabold tracking-tight">{room.roomNumber}</p>
-            <p className="mt-0.5 text-xs font-medium text-ink-500">{room.typeName}</p>
-          </div>
+    <div className={`group relative overflow-hidden rounded-2xl bg-white ring-1 ring-black/5 shadow-soft ${EASE} hover:-translate-y-1 hover:shadow-lift cursor-pointer`}>
+      <div className="relative h-24 overflow-hidden">
+        <img
+          src={roomImage(room.typeName)}
+          alt={room.typeName}
+          loading="lazy"
+          className={`h-full w-full object-cover ${EASE} duration-700 group-hover:scale-105 ${dimmed ? 'grayscale-[0.5] opacity-80' : ''}`}
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent" />
+        <div className={`absolute inset-x-0 bottom-0 h-0.5 ${s.strip}`} />
+        <p className="absolute bottom-1.5 left-3 font-display text-xl font-semibold text-white drop-shadow">{room.roomNumber}</p>
+        <div className="absolute right-2 top-2">
           <StatusBadge status={room.status} />
         </div>
-        <div className="mt-4 flex items-end justify-between">
-          <p className="text-[13px] font-semibold text-ink-700">
-            {formatVnd(room.basePrice)}
-            <span className="text-[11px] font-normal text-ink-500"> / đêm</span>
+      </div>
+      <div className="flex items-center justify-between px-3.5 py-3">
+        <div className="min-w-0">
+          <p className="text-xs font-semibold text-ink-700">{room.typeName}</p>
+          <p className="mt-0.5 truncate text-[11px] text-ink-500">
+            {room.guestName ?? `${formatVnd(room.basePrice)} / đêm`}
           </p>
-          {room.guestName && (
-            <p className="max-w-[55%] truncate text-right text-[11px] text-ink-500" title={room.guestName}>
-              {room.guestName}
-            </p>
-          )}
         </div>
       </div>
     </div>
@@ -88,9 +91,10 @@ export default function RoomMapPage() {
     <div className="mx-auto max-w-6xl">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tight">Sơ đồ phòng</h1>
+          <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-brand-600">Tình trạng khách sạn</p>
+          <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight">Sơ đồ phòng</h1>
           <p className="mt-1 text-sm text-ink-500">
-            {allRooms.length} phòng · cập nhật theo thời gian thực khi lễ tân thao tác
+            {allRooms.length} phòng · cập nhật khi lễ tân thao tác
           </p>
         </div>
         <button

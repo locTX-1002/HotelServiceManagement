@@ -26,9 +26,9 @@ export default function MainLayout() {
   return (
     <div className="flex min-h-screen">
       <aside className="flex w-60 shrink-0 flex-col bg-ink-900 text-cream-50">
-        <div className="px-5 pb-4 pt-6">
-          <p className="text-lg font-extrabold tracking-tight">HSMS</p>
-          <p className="text-[11px] font-medium text-cream-50/50">Hotel & Service Management</p>
+        <div className="px-5 pb-5 pt-6">
+          <p className="font-display text-2xl font-semibold tracking-tight">HSMS</p>
+          <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-[0.22em] text-cream-50/40">Hotel & Service</p>
         </div>
         <nav className="flex flex-1 flex-col gap-1 px-3">
           {MENU.map((item) => (
