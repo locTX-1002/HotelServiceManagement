@@ -48,25 +48,26 @@ function RoomCard({ room, imgIdx, delay, onOpen }) {
       style={{ animationDelay: `${delay}ms` }}
       className={`card-rise group overflow-hidden rounded-xl bg-white text-left ring-1 ring-black/5 ${EASE} hover:-translate-y-1 hover:shadow-lift hover:ring-brand-500/30 focus-visible:ring-2 focus-visible:ring-brand-500/60 outline-none`}
     >
-      <div className="relative h-24 overflow-hidden">
+      <div className="relative h-20 overflow-hidden">
         <img
           src={roomImage(room.typeName, imgIdx)}
           alt={`Phòng ${room.roomNumber} - ${room.typeName}`}
           loading="lazy"
           className={`h-full w-full object-cover ${roomImagePosition(imgIdx)} ${EASE} duration-700 group-hover:scale-[1.06] ${dimmed ? 'opacity-75 saturate-50' : ''}`}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-ink-900/50 via-transparent to-transparent" />
-        <div className="absolute left-2 top-2"><StatusFlag status={room.status} /></div>
-        <p className="absolute bottom-1.5 left-3 font-display text-2xl font-semibold text-white drop-shadow-sm">{room.roomNumber}</p>
+        <div className="absolute inset-0 bg-gradient-to-t from-ink-900/55 via-transparent to-transparent" />
+        <div className="absolute right-1.5 top-1.5"><StatusFlag status={room.status} /></div>
+        <p className="absolute bottom-1 left-2.5 font-display text-xl font-semibold text-white drop-shadow-sm">{room.roomNumber}</p>
       </div>
-      <div className="px-3.5 py-2.5">
+      <div className="px-3 py-2">
         <div className="flex items-baseline justify-between gap-2">
-          <p className="text-[12px] font-semibold text-ink-700">{room.typeName}</p>
-          <p className="text-[11px] tabular-nums text-ink-500">{formatVnd(room.basePrice)}<span className="opacity-60">/đêm</span></p>
+          <p className="truncate text-[11px] font-semibold text-ink-700">{room.typeName}</p>
+          <p className="shrink-0 text-[11px] tabular-nums text-ink-500">
+            {room.guestName
+              ? <span className="italic">{room.guestName.split(' ').slice(-2).join(' ')}</span>
+              : <>{formatVnd(room.basePrice)}<span className="opacity-60">/đêm</span></>}
+          </p>
         </div>
-        <p className="mt-0.5 h-4 truncate text-[11px] italic text-ink-500">
-          {room.guestName ? `Khách: ${room.guestName}` : ' '}
-        </p>
       </div>
     </button>
   )
@@ -194,7 +195,7 @@ export default function RoomMapPage() {
           ),
         }))
         .filter((f) => f.rooms.length > 0)
-        .sort((a, b) => b.floor - a.floor),
+        .sort((a, b) => a.floor - b.floor),
     [floors, floorFilter, typeFilter, statusFilter],
   )
 
@@ -294,25 +295,13 @@ export default function RoomMapPage() {
               <h2 className="font-display text-lg font-semibold italic">Tầng {f.floor}</h2>
               <p className="text-[11px] tabular-nums text-ink-500">{f.rooms.length} phòng</p>
             </div>
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5">
               {f.rooms.map((room, idx) => (
                 <RoomCard key={room.roomId} room={room} imgIdx={idx} delay={fi * 120 + idx * 50} onOpen={setOpenRoom} />
               ))}
             </div>
           </section>
         ))}
-
-        {floors !== null && visibleFloors.length > 0 && (
-          <div className="relative pl-12">
-            <div className="absolute left-0 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-brand-600 text-[13px] text-white ring-4 ring-cream-100">
-              ⌂
-            </div>
-            <div className="rounded-xl bg-ink-900 px-5 py-3.5 text-cream-50">
-              <p className="font-display text-[15px] font-semibold italic">Sảnh · Quầy lễ tân</p>
-              <p className="mt-0.5 text-[11px] text-cream-50/50">Hotel & Service Management · Group 2 SE1919</p>
-            </div>
-          </div>
-        )}
 
         {floors !== null && visibleFloors.length === 0 && (
           <div className="ml-12 rounded-2xl border border-dashed border-black/10 bg-white/60 p-10 text-center">
