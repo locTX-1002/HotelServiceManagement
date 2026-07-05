@@ -3,6 +3,7 @@ import client from '../api/client'
 import { formatVnd } from '../utils/roomStatus'
 import { MOCK_AVAILABLE_ROOMS, MOCK_ROOM_TYPES } from '../mock/hotelMock'
 import { roomImage } from '../utils/roomImages'
+import { roomMeta } from '../utils/roomMeta'
 
 const EASE = 'transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]'
 const inputCls =
@@ -15,180 +16,318 @@ const addDays = (dateStr, n) => {
   d.setDate(d.getDate() + n)
   return d.toISOString().slice(0, 10)
 }
+const fmtShort = (s) => new Intl.DateTimeFormat('vi-VN', { day: 'numeric', month: 'numeric' }).format(new Date(s))
+
+/* Chỉ báo 3 bước - kiểu booking engine khách sạn */
+function Steps({ current }) {
+  const items = ['Ngày ở & khách', 'Chọn phòng', 'Xác nhận']
+  return (
+    <div className="flex items-center justify-center gap-3">
+      {items.map((label, i) => {
+        const n = i + 1
+        const state = n < current ? 'done' : n === current ? 'active' : 'todo'
+        return (
+          <div key={label} className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <span
+                className={`flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-bold ${EASE} ${
+                  state === 'done' ? 'bg-emerald-500 text-white' : state === 'active' ? 'bg-ink-900 text-cream-50' : 'bg-black/[0.07] text-ink-500'
+                }`}
+              >
+                {state === 'done' ? '✓' : n}
+              </span>
+              <span className={`text-[13px] ${state === 'active' ? 'font-bold' : 'font-medium text-ink-500'}`}>{label}</span>
+            </div>
+            {n < 3 && <span className="h-px w-10 bg-black/10 sm:w-16" />}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+/* Card phòng ngang kiểu booking engine, có carousel ảnh mini */
+function RoomResultCard({ room, idx, selected, onSelect }) {
+  const meta = roomMeta(room.typeName)
+  const [imgIdx, setImgIdx] = useState(idx)
+  const active = selected?.roomId === room.roomId
+  return (
+    <div className={`overflow-hidden rounded-2xl bg-white ring-1 ${EASE} ${active ? 'ring-2 ring-brand-600/50 shadow-lift' : 'ring-black/5 shadow-soft hover:ring-black/15'}`}>
+      <div className="flex flex-col sm:flex-row">
+        <div className="group relative h-44 shrink-0 overflow-hidden sm:h-auto sm:w-60">
+          <img src={roomImage(room.typeName, imgIdx)} alt={room.typeName} className="h-full w-full object-cover" loading="lazy" />
+          <button
+            onClick={() => setImgIdx((imgIdx + 3) % 4)}
+            className="absolute left-2 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-xs font-bold text-ink-700 opacity-0 backdrop-blur-sm group-hover:opacity-100"
+            aria-label="Ảnh trước"
+          >
+            ‹
+          </button>
+          <button
+            onClick={() => setImgIdx((imgIdx + 1) % 4)}
+            className="absolute right-2 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-xs font-bold text-ink-700 opacity-0 backdrop-blur-sm group-hover:opacity-100"
+            aria-label="Ảnh sau"
+          >
+            ›
+          </button>
+        </div>
+        <div className="flex flex-1 flex-col p-5">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="font-display text-xl font-semibold">Phòng {room.roomNumber} · {room.typeName}</p>
+              <p className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] text-ink-500">
+                <span>👤 tối đa {meta.capacity}</span>
+                <span>⤢ {meta.area} m²</span>
+                <span>🛏 {meta.bed}</span>
+                <span>Tầng {room.floor}</span>
+              </p>
+            </div>
+          </div>
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {meta.amenities.map((a) => (
+              <span key={a} className="rounded-full bg-cream-100 px-2.5 py-1 text-[11px] font-medium text-ink-700">{a}</span>
+            ))}
+          </div>
+          <div className="mt-auto flex items-end justify-between pt-4">
+            <p className="font-display text-xl font-semibold tabular-nums">
+              {formatVnd(room.basePrice)}
+              <span className="font-sans text-[11px] font-normal text-ink-500"> / đêm</span>
+            </p>
+            <button
+              onClick={() => onSelect(active ? null : room)}
+              className={`rounded-full px-5 py-2 text-[13px] font-bold ${EASE} active:scale-[0.98] ${
+                active ? 'bg-emerald-500 text-white' : 'bg-ink-900 text-cream-50 hover:bg-ink-700'
+              }`}
+            >
+              {active ? '✓ Đã chọn' : 'Chọn phòng này'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 export default function CreateReservationPage() {
-  const [guest, setGuest] = useState({ fullName: '', phoneNumber: '', email: '', identityNumber: '' })
+  const [step, setStep] = useState(1)
   const [checkIn, setCheckIn] = useState(today())
   const [checkOut, setCheckOut] = useState(addDays(today(), 1))
+  const [guests, setGuests] = useState(2)
   const [roomType, setRoomType] = useState('all')
-  const [results, setResults] = useState(null)
-  const [selected, setSelected] = useState(null)
+  const [results, setResults] = useState([])
   const [usingMock, setUsingMock] = useState(false)
-  const [message, setMessage] = useState(null)
+  const [sortAsc, setSortAsc] = useState(true)
+  const [selected, setSelected] = useState(null)
+  const [guest, setGuest] = useState({ fullName: '', phoneNumber: '', email: '', identityNumber: '' })
+  const [done, setDone] = useState(null)
+  const [error, setError] = useState(null)
 
-  const nights = useMemo(() => {
-    const ms = new Date(checkOut) - new Date(checkIn)
-    return Math.max(Math.round(ms / 86400000), 0)
-  }, [checkIn, checkOut])
+  const nights = useMemo(() => Math.max(Math.round((new Date(checkOut) - new Date(checkIn)) / 86400000), 0), [checkIn, checkOut])
 
   const search = () => {
     setSelected(null)
-    setMessage(null)
     client
-      .get('/api/reservations/available-rooms', { params: { checkIn, checkOut, roomType } })
+      .get('/api/reservations/available-rooms', { params: { checkIn, checkOut, roomType, guests } })
       .then((res) => { setResults(res.data); setUsingMock(false) })
       .catch(() => {
-        const list = MOCK_AVAILABLE_ROOMS.filter((r) => roomType === 'all' || r.typeName === roomType)
-        setResults(list)
+        setResults(MOCK_AVAILABLE_ROOMS.filter(
+          (r) => (roomType === 'all' || r.typeName === roomType) && roomMeta(r.typeName).capacity >= guests,
+        ))
         setUsingMock(true)
       })
+    setStep(2)
   }
 
-  const submit = () => {
-    if (!selected) return
+  const confirm = () => {
+    setError(null)
     const payload = { ...guest, roomId: selected.roomId, checkInDate: checkIn, checkOutDate: checkOut }
     client
       .post('/api/reservations', payload)
-      .then((res) => setMessage({ ok: true, text: `Tạo đặt phòng thành công. Mã booking: ${res.data.bookingCode ?? ''}` }))
-      .catch(() => setMessage({ ok: false, text: 'API /api/reservations chưa sẵn sàng (task T3). Form và luồng chọn phòng đã hoạt động.' }))
+      .then((res) => setDone({ code: res.data.bookingCode ?? 'BK-XXXX' }))
+      .catch(() => setError('API /api/reservations chưa sẵn sàng (task T3). Toàn bộ luồng UI đã hoạt động - nối API là chạy.'))
   }
 
-  const canSearch = guest.fullName.trim() && nights > 0
+  const sorted = useMemo(() => [...results].sort((a, b) => (sortAsc ? a.basePrice - b.basePrice : b.basePrice - a.basePrice)), [results, sortAsc])
+
+  /* Màn hình thành công - mã booking to kiểu boarding pass */
+  if (done) {
+    return (
+      <div className="mx-auto max-w-lg pt-10 text-center">
+        <p className="font-display text-[15px] italic text-emerald-600">đặt phòng thành công</p>
+        <div className="mt-4 rounded-2xl bg-white p-8 ring-1 ring-black/5 shadow-lift">
+          <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-ink-500">Mã booking</p>
+          <p className="mt-2 font-display text-5xl font-semibold tracking-tight text-brand-600">{done.code}</p>
+          <div className="my-5 border-t border-dashed border-black/10" />
+          <p className="text-sm text-ink-700">{guest.fullName} · Phòng {selected.roomNumber} ({selected.typeName})</p>
+          <p className="mt-1 text-sm text-ink-500">{fmtShort(checkIn)} → {fmtShort(checkOut)} · {nights} đêm · {formatVnd(selected.basePrice * nights)}</p>
+        </div>
+        <button onClick={() => window.location.reload()} className="mt-6 rounded-full bg-ink-900 px-6 py-2.5 text-sm font-bold text-cream-50">
+          Tạo đặt phòng mới
+        </button>
+      </div>
+    )
+  }
 
   return (
-    <div className="mx-auto max-w-6xl">
-      <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-brand-600">Lễ tân · Đặt phòng</p>
-      <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight">Tạo đặt phòng</h1>
-      <p className="mt-1 text-sm text-ink-500">Nhập thông tin khách, chọn ngày ở rồi tìm phòng trống trong một màn hình.</p>
+    <div className="mx-auto max-w-5xl pb-24">
+      <Steps current={step} />
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-5">
-        {/* Cột trái: khách + ngày ở */}
-        <div className="lg:col-span-3">
-          <div className="rounded-2xl bg-white p-6 ring-1 ring-black/5 shadow-soft">
+      {/* BƯỚC 1: hero + thanh tìm kiếm pill */}
+      {step === 1 && (
+        <div className="mt-6">
+          <div className="relative h-44 overflow-hidden rounded-2xl">
+            <img src="/img/login-hero.jpg" alt="" className="h-full w-full object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-r from-ink-900/70 to-transparent" />
+            <div className="absolute left-7 top-1/2 -translate-y-1/2">
+              <p className="font-display text-3xl font-semibold italic text-white">Kỳ lưu trú của quý khách</p>
+              <p className="mt-1 text-[13px] text-white/70">Chọn ngày ở và số khách để tìm phòng trống</p>
+            </div>
+          </div>
+
+          <div className="relative z-10 mx-4 -mt-8 flex flex-wrap items-end gap-x-5 gap-y-4 rounded-2xl bg-white p-5 ring-1 ring-black/5 shadow-lift">
+            <div className="min-w-36 flex-1">
+              <label className={labelCls}>Nhận phòng</label>
+              <input type="date" className={inputCls} value={checkIn} min={today()}
+                onChange={(e) => { setCheckIn(e.target.value); if (e.target.value >= checkOut) setCheckOut(addDays(e.target.value, 1)) }} />
+            </div>
+            <div className="min-w-36 flex-1">
+              <label className={labelCls}>Trả phòng</label>
+              <input type="date" className={inputCls} value={checkOut} min={addDays(checkIn, 1)} onChange={(e) => setCheckOut(e.target.value)} />
+            </div>
+            <div>
+              <label className={labelCls}>Số khách</label>
+              <div className="flex items-center gap-1 rounded-xl bg-white ring-1 ring-black/10">
+                <button onClick={() => setGuests(Math.max(1, guests - 1))} className="px-3 py-2.5 text-sm font-bold text-ink-500 hover:text-ink-900">−</button>
+                <span className="w-8 text-center text-sm font-bold tabular-nums">{guests}</span>
+                <button onClick={() => setGuests(Math.min(8, guests + 1))} className="px-3 py-2.5 text-sm font-bold text-ink-500 hover:text-ink-900">+</button>
+              </div>
+            </div>
+            <div className="min-w-36">
+              <label className={labelCls}>Loại phòng</label>
+              <select className={inputCls} value={roomType} onChange={(e) => setRoomType(e.target.value)}>
+                <option value="all">Tất cả</option>
+                {MOCK_ROOM_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+              </select>
+            </div>
+            <button
+              onClick={search}
+              disabled={nights <= 0}
+              className={`h-11 rounded-full bg-brand-600 px-7 text-sm font-bold text-white ${EASE} hover:bg-brand-700 active:scale-[0.98] disabled:opacity-40`}
+            >
+              Tìm phòng trống
+            </button>
+          </div>
+          {nights > 0 && <p className="mt-3 text-center text-[12px] text-ink-500">{nights} đêm · {fmtShort(checkIn)} → {fmtShort(checkOut)} · {guests} khách</p>}
+        </div>
+      )}
+
+      {/* BƯỚC 2: kết quả phòng */}
+      {step === 2 && (
+        <div className="mt-6">
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-white px-5 py-3.5 ring-1 ring-black/5 shadow-soft">
+            <div className="flex items-center gap-4 text-[13px] font-semibold">
+              <span>📅 {fmtShort(checkIn)} → {fmtShort(checkOut)}</span>
+              <span className="text-ink-500">·</span>
+              <span>👤 {guests} khách</span>
+              <span className="text-ink-500">·</span>
+              <span>{nights} đêm</span>
+              <button onClick={() => setStep(1)} className="text-[12px] font-semibold text-brand-600 underline-offset-2 hover:underline">Đổi tìm kiếm</button>
+            </div>
+            <button
+              onClick={() => setSortAsc(!sortAsc)}
+              className="rounded-lg px-3 py-1.5 text-[12px] font-semibold text-ink-700 ring-1 ring-black/10 hover:bg-cream-50"
+            >
+              Sắp xếp: giá {sortAsc ? 'tăng dần ↑' : 'giảm dần ↓'}
+            </button>
+          </div>
+
+          {usingMock && (
+            <p className="mt-3 flex items-center gap-1.5 text-[11px] font-medium text-ink-500">
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-500" /> dữ liệu mẫu - chờ API available-rooms (T3)
+            </p>
+          )}
+
+          <div className="mt-4 space-y-4">
+            {sorted.map((room, idx) => (
+              <RoomResultCard key={room.roomId} room={room} idx={idx} selected={selected} onSelect={setSelected} />
+            ))}
+            {sorted.length === 0 && (
+              <div className="rounded-2xl border border-dashed border-black/10 bg-white/60 p-10 text-center">
+                <p className="font-display text-lg italic text-ink-700">Không còn phòng phù hợp</p>
+                <p className="mt-1 text-[13px] text-ink-500">Thử giảm số khách hoặc đổi khoảng ngày.</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* BƯỚC 3: thông tin khách + xác nhận */}
+      {step === 3 && selected && (
+        <div className="mt-6 grid gap-6 lg:grid-cols-5">
+          <div className="rounded-2xl bg-white p-6 ring-1 ring-black/5 shadow-soft lg:col-span-3">
             <h2 className="text-sm font-bold uppercase tracking-[0.14em] text-ink-500">Thông tin khách</h2>
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               <div className="sm:col-span-2">
                 <label className={labelCls}>Họ và tên *</label>
-                <input className={inputCls} placeholder="Nguyễn Văn A" value={guest.fullName}
-                  onChange={(e) => setGuest({ ...guest, fullName: e.target.value })} />
+                <input className={inputCls} placeholder="Nguyễn Văn A" value={guest.fullName} onChange={(e) => setGuest({ ...guest, fullName: e.target.value })} />
               </div>
               <div>
                 <label className={labelCls}>Số điện thoại</label>
-                <input className={inputCls} placeholder="09xx xxx xxx" value={guest.phoneNumber}
-                  onChange={(e) => setGuest({ ...guest, phoneNumber: e.target.value })} />
+                <input className={inputCls} placeholder="09xx xxx xxx" value={guest.phoneNumber} onChange={(e) => setGuest({ ...guest, phoneNumber: e.target.value })} />
               </div>
               <div>
                 <label className={labelCls}>CMND / CCCD</label>
-                <input className={inputCls} placeholder="0790xxxxxxxx" value={guest.identityNumber}
-                  onChange={(e) => setGuest({ ...guest, identityNumber: e.target.value })} />
+                <input className={inputCls} placeholder="0790xxxxxxxx" value={guest.identityNumber} onChange={(e) => setGuest({ ...guest, identityNumber: e.target.value })} />
               </div>
               <div className="sm:col-span-2">
                 <label className={labelCls}>Email</label>
-                <input className={inputCls} placeholder="khach@email.com" value={guest.email}
-                  onChange={(e) => setGuest({ ...guest, email: e.target.value })} />
+                <input className={inputCls} placeholder="khach@email.com" value={guest.email} onChange={(e) => setGuest({ ...guest, email: e.target.value })} />
               </div>
             </div>
+            <button onClick={() => setStep(2)} className="mt-5 text-[12px] font-semibold text-brand-600 underline-offset-2 hover:underline">← Chọn phòng khác</button>
+          </div>
 
-            <h2 className="mt-7 text-sm font-bold uppercase tracking-[0.14em] text-ink-500">Ngày ở</h2>
-            <div className="mt-4 grid gap-4 sm:grid-cols-3">
-              <div>
-                <label className={labelCls}>Nhận phòng</label>
-                <input type="date" className={inputCls} value={checkIn} min={today()}
-                  onChange={(e) => { setCheckIn(e.target.value); if (e.target.value >= checkOut) setCheckOut(addDays(e.target.value, 1)) }} />
-              </div>
-              <div>
-                <label className={labelCls}>Trả phòng</label>
-                <input type="date" className={inputCls} value={checkOut} min={addDays(checkIn, 1)}
-                  onChange={(e) => setCheckOut(e.target.value)} />
-              </div>
-              <div>
-                <label className={labelCls}>Loại phòng</label>
-                <select className={inputCls} value={roomType} onChange={(e) => setRoomType(e.target.value)}>
-                  <option value="all">Tất cả</option>
-                  {MOCK_ROOM_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
-                </select>
+          <div className="lg:col-span-2">
+            <div className="overflow-hidden rounded-2xl bg-ink-900 text-cream-50 shadow-lift">
+              <img src={roomImage(selected.typeName, 0)} alt="" className="h-32 w-full object-cover opacity-80" />
+              <div className="p-5">
+                <p className="font-display text-lg font-semibold">Phòng {selected.roomNumber} · {selected.typeName}</p>
+                <div className="mt-3 space-y-1.5 text-sm">
+                  <p className="flex justify-between"><span className="text-cream-50/60">Ngày ở</span><span>{fmtShort(checkIn)} → {fmtShort(checkOut)}</span></p>
+                  <p className="flex justify-between"><span className="text-cream-50/60">Số đêm × giá</span><span className="tabular-nums">{nights} × {formatVnd(selected.basePrice)}</span></p>
+                  <p className="flex justify-between border-t border-white/10 pt-2 text-base"><span className="text-cream-50/60">Tạm tính</span><span className="font-display font-semibold tabular-nums">{formatVnd(selected.basePrice * nights)}</span></p>
+                </div>
+                <button
+                  onClick={confirm}
+                  disabled={!guest.fullName.trim()}
+                  className={`mt-5 w-full rounded-full bg-brand-500 py-3 text-sm font-bold text-white ${EASE} hover:bg-brand-600 active:scale-[0.98] disabled:opacity-30`}
+                >
+                  Xác nhận đặt phòng
+                </button>
+                {!guest.fullName.trim() && <p className="mt-2 text-center text-[11px] text-cream-50/50">Nhập họ tên khách để xác nhận</p>}
+                {error && <p className="mt-3 text-[12px] font-medium text-amber-300">{error}</p>}
               </div>
             </div>
-
-            <button
-              onClick={search}
-              disabled={!canSearch}
-              className={`mt-6 inline-flex items-center gap-3 rounded-full bg-brand-600 py-2.5 pl-6 pr-2.5 text-sm font-semibold text-white ${EASE} hover:bg-brand-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40`}
-            >
-              Tìm phòng trống
-              <span className={`flex h-7 w-7 items-center justify-center rounded-full bg-white/15 text-xs ${EASE} group-hover:translate-x-0.5`}>→</span>
-            </button>
-            {!canSearch && (
-              <p className="mt-2 text-[12px] text-ink-500">Cần họ tên khách và ngày trả phòng sau ngày nhận phòng.</p>
-            )}
           </div>
         </div>
+      )}
 
-        {/* Cột phải: phòng trống + tổng kết */}
-        <div className="lg:col-span-2">
-          <div className="rounded-2xl bg-white p-6 ring-1 ring-black/5 shadow-soft">
-            <div className="flex items-center justify-between">
-              <h2 className="text-sm font-bold uppercase tracking-[0.14em] text-ink-500">Phòng trống</h2>
-              {nights > 0 && <span className="rounded-full bg-cream-200 px-2.5 py-1 text-[11px] font-semibold text-ink-700">{nights} đêm</span>}
-            </div>
-
-            {results === null && (
-              <p className="mt-6 text-sm text-ink-500">Bấm "Tìm phòng trống" để xem danh sách phòng khả dụng trong khoảng ngày đã chọn.</p>
-            )}
-            {usingMock && results !== null && (
-              <p className="mt-3 text-[11px] font-medium text-brand-700">Dữ liệu mẫu — chờ API available-rooms (T3).</p>
-            )}
-            {results !== null && results.length === 0 && (
-              <p className="mt-6 text-sm text-ink-500">Không còn phòng trống phù hợp trong khoảng ngày này.</p>
-            )}
-
-            <div className="mt-4 space-y-3">
-              {(results ?? []).map((room, idx) => {
-                const active = selected?.roomId === room.roomId
-                return (
-                  <button
-                    key={room.roomId}
-                    onClick={() => setSelected(room)}
-                    className={`flex w-full items-center gap-3.5 rounded-xl p-2.5 text-left ring-1 ${EASE} ${
-                      active ? 'bg-brand-50 ring-brand-600/40 shadow-soft' : 'bg-cream-50 ring-black/5 hover:ring-black/15'
-                    }`}
-                  >
-                    <img
-                      src={roomImage(room.typeName, idx)}
-                      alt={room.typeName}
-                      loading="lazy"
-                      className="h-16 w-20 shrink-0 rounded-lg object-cover"
-                    />
-                    <div className="min-w-0 flex-1">
-                      <p className="font-display text-[15px] font-semibold">Phòng {room.roomNumber}</p>
-                      <p className="mt-0.5 text-[12px] text-ink-500">{room.typeName} · Tầng {room.floor}</p>
-                      <p className="mt-1 text-[13px] font-semibold text-ink-700">{formatVnd(room.basePrice)} <span className="font-normal text-ink-500">/ đêm</span></p>
-                    </div>
-                    <span className={`h-4 w-4 shrink-0 rounded-full border-2 ${active ? 'border-brand-600 bg-brand-600' : 'border-black/20'}`} />
-                  </button>
-                )
-              })}
-            </div>
-          </div>
-
-          <div className="mt-4 rounded-2xl bg-ink-900 p-6 text-cream-50 shadow-soft">
-            <h2 className="text-sm font-bold uppercase tracking-[0.14em] text-cream-50/60">Tổng kết</h2>
-            <div className="mt-3 space-y-1.5 text-sm">
-              <p className="flex justify-between"><span className="text-cream-50/70">Phòng</span><span className="font-semibold">{selected ? `${selected.roomNumber} · ${selected.typeName}` : '—'}</span></p>
-              <p className="flex justify-between"><span className="text-cream-50/70">Số đêm</span><span className="font-semibold">{nights}</span></p>
-              <p className="flex justify-between border-t border-white/10 pt-2 text-base"><span className="text-cream-50/70">Tạm tính</span><span className="font-extrabold">{selected ? formatVnd(selected.basePrice * nights) : '—'}</span></p>
-            </div>
-            <button
-              onClick={submit}
-              disabled={!selected}
-              className={`mt-5 w-full rounded-full bg-brand-500 py-3 text-sm font-bold text-white ${EASE} hover:bg-brand-600 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-30`}
-            >
-              Tạo đặt phòng
-            </button>
-            {message && (
-              <p className={`mt-3 text-[12px] font-medium ${message.ok ? 'text-emerald-300' : 'text-amber-300'}`}>{message.text}</p>
-            )}
-          </div>
+      {/* Sticky bar khi đã chọn phòng ở bước 2 - kiểu BOOK NOW */}
+      <div className={`fixed inset-x-0 bottom-0 z-20 ${EASE} duration-500 ${step === 2 && selected ? 'translate-y-0' : 'translate-y-full'}`}>
+        <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 rounded-t-2xl bg-ink-900 px-6 py-4 text-cream-50 shadow-lift">
+          {selected && (
+            <p className="text-sm">
+              <span className="font-display font-semibold">Phòng {selected.roomNumber}</span>
+              <span className="text-cream-50/60"> · {nights} đêm · </span>
+              <span className="font-display font-semibold tabular-nums">{formatVnd(selected.basePrice * nights)}</span>
+            </p>
+          )}
+          <button
+            onClick={() => setStep(3)}
+            className={`rounded-full bg-brand-500 px-7 py-2.5 text-sm font-bold text-white ${EASE} hover:bg-brand-600 active:scale-[0.98]`}
+          >
+            Tiếp tục →
+          </button>
         </div>
       </div>
     </div>
