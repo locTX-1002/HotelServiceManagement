@@ -1,13 +1,14 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 
+const EASE = 'transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]'
+
 const MENU = [
-  { to: '/dashboard', label: 'Dashboard' },
-  { to: '/rooms/map', label: 'Room Map' },
-  { to: '/rooms', label: 'Rooms' },
-  { to: '/reservations', label: 'Reservations' },
-  { to: '/checkin-checkout', label: 'Check-in / Check-out' },
-  { to: '/service-orders', label: 'Service Orders' },
-  { to: '/reports', label: 'Reports' },
+  { to: '/dashboard', label: 'Tổng quan' },
+  { to: '/rooms/map', label: 'Sơ đồ phòng' },
+  { to: '/reservations/new', label: 'Đặt phòng' },
+  { to: '/checkin-checkout', label: 'Check-in' },
+  { to: '/service-orders', label: 'Dịch vụ' },
+  { to: '/reports', label: 'Báo cáo' },
 ]
 
 export default function MainLayout() {
@@ -19,35 +20,59 @@ export default function MainLayout() {
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      <aside className="w-56 shrink-0 bg-slate-800 text-white">
-        <div className="px-4 py-4 text-lg font-bold">HSMS</div>
-        <nav className="flex flex-col gap-1 px-2">
-          {MENU.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              className={({ isActive }) =>
-                `rounded px-3 py-2 text-sm ${isActive ? 'bg-slate-600 font-semibold' : 'hover:bg-slate-700'}`
-              }
-            >
-              {item.label}
-            </NavLink>
-          ))}
-        </nav>
-      </aside>
-
-      <div className="flex flex-1 flex-col">
-        <header className="flex items-center justify-between border-b bg-white px-6 py-3">
-          <h1 className="text-base font-semibold text-gray-800">Hotel and Service Management System</h1>
-          <button onClick={logout} className="rounded bg-slate-100 px-3 py-1.5 text-sm hover:bg-slate-200">
-            Logout
+    <div className="flex min-h-screen flex-col bg-cream-100">
+      {/* Nav ngang - logo vòm, menu gạch chân terracotta, avatar phải */}
+      <header className="sticky top-0 z-20 border-b border-black/[0.06] bg-cream-50/95 backdrop-blur">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-3">
+          <button onClick={() => navigate('/dashboard')} className="flex shrink-0 items-center gap-2.5">
+            <span className="flex h-9 w-8 items-end justify-center rounded-t-full rounded-b-md bg-brand-600 pb-1.5 font-display text-[13px] font-bold text-white">
+              H
+            </span>
+            <span className="text-left">
+              <p className="font-display text-lg font-bold leading-none tracking-tight">HSMS</p>
+              <p className="mt-0.5 text-[8px] font-bold tracking-[0.28em] text-brand-600">HOTEL & SERVICE</p>
+            </span>
           </button>
-        </header>
-        <main className="flex-1 p-6">
-          <Outlet />
-        </main>
-      </div>
+
+          <nav className="hidden items-center gap-6 overflow-x-auto md:flex">
+            {MENU.map((item) => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end={item.to === '/reservations/new'}
+                className={({ isActive }) =>
+                  `whitespace-nowrap border-b-2 pb-0.5 text-[13.5px] ${EASE} ${
+                    isActive
+                      ? 'border-brand-600 font-bold text-ink-900'
+                      : 'border-transparent font-medium text-ink-500 hover:text-ink-900'
+                  }`
+                }
+              >
+                {item.label}
+              </NavLink>
+            ))}
+          </nav>
+
+          <div className="flex shrink-0 items-center gap-2.5">
+            <span
+              title="Receptionist Demo"
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-900 text-[11px] font-bold text-cream-50"
+            >
+              LT
+            </span>
+            <button
+              onClick={logout}
+              className={`hidden rounded-full px-3.5 py-1.5 text-[12px] font-semibold text-ink-500 ring-1 ring-black/10 ${EASE} hover:bg-white hover:text-ink-900 sm:block`}
+            >
+              Đăng xuất
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-8">
+        <Outlet />
+      </main>
     </div>
   )
 }
