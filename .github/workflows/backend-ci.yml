@@ -1,0 +1,21 @@
+name: Backend CI
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths: [ 'backend/**' ]
+  pull_request:
+    branches: [ main, develop ]
+    paths: [ 'backend/**' ]
+
+jobs:
+  build-and-test-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - run: dotnet restore backend/HotelServiceManagement.slnx
+      - run: dotnet build backend/HotelServiceManagement.slnx --configuration Release --no-restore
+      - run: dotnet test backend/HotelServiceManagement.slnx --configuration Release --no-build
