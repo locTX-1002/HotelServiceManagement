@@ -6,14 +6,14 @@ Web app quản lý khách sạn: room map trực quan, đặt phòng, check-in/c
 | Layer | Công nghệ |
 |---|---|
 | Frontend | React (Vite) + Tailwind CSS + Axios + React Router |
-| Backend | ASP.NET Core Web API (.NET 10) — 4 project: Api / Application / Domain / Infrastructure |
+| Backend | ASP.NET Core Web API (target **net8.0**, chạy được với SDK 8/9/10) — 4 project: Api / Application / Domain / Infrastructure |
 | Database | SQL Server + Entity Framework Core (code-first, migrations) |
 | Auth | JWT Bearer (làm ở tuần phát triển) |
 | CI | GitHub Actions (`.github/workflows/`) |
 
 ## Yêu cầu môi trường
 
-- **.NET SDK 10.0** — `dotnet --version` phải ra `10.x`
+- **.NET SDK 8, 9 hoặc 10 đều được** — project target `net8.0`; máy chỉ có runtime 9/10 vẫn chạy nhờ `RollForward=LatestMajor`. Kiểm tra: `dotnet --list-sdks`
 - **Node.js >= 22** — `node -v`
 - **SQL Server** (Express là đủ) — instance mặc định trong repo là `.\SQLEXPRESS`
 - **Git**
