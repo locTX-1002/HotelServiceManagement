@@ -211,7 +211,8 @@ export default function RoomPage() {
 
       {!loadError && rooms !== null && visible.length > 0 && (
         <div className="card-rise mt-6 overflow-hidden rounded-2xl bg-white ring-1 ring-black/5 shadow-soft">
-          <table className="w-full text-left">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-[620px] text-left">
             <thead>
               <tr className="border-b border-black/[0.06] text-[10px] font-bold uppercase tracking-[0.18em] text-ink-500">
                 <th className="px-5 py-3.5">Phòng</th>
@@ -266,6 +267,7 @@ export default function RoomPage() {
               })}
             </tbody>
           </table>
+          </div>
         </div>
       )}
 

@@ -262,7 +262,8 @@ export default function ReportsPage() {
 
           {/* Bảng chi tiết theo ngày */}
           <div className="card-rise mt-5 overflow-hidden rounded-2xl bg-white ring-1 ring-black/5 shadow-soft">
-            <table className="w-full text-left">
+            <div className="overflow-x-auto">
+            <table className="w-full min-w-[560px] text-left">
               <thead>
                 <tr className="border-b border-black/[0.06] text-[10px] font-bold uppercase tracking-[0.18em] text-ink-500">
                   <th className="px-5 py-3.5">Ngày</th>
@@ -301,6 +302,7 @@ export default function ReportsPage() {
                 </tr>
               </tfoot>
             </table>
+            </div>
           </div>
         </>
       )}
