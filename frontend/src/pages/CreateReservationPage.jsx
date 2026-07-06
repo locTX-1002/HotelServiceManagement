@@ -54,8 +54,10 @@ function RoomResultCard({ room, idx, selected, onSelect }) {
   return (
     <div className={`overflow-hidden rounded-2xl bg-white ring-1 ${EASE} ${active ? 'ring-2 ring-brand-600/50 shadow-lift' : 'ring-black/5 shadow-soft hover:ring-black/15'}`}>
       <div className="flex flex-col sm:flex-row">
-        <div className="group relative h-44 shrink-0 overflow-hidden sm:h-auto sm:w-60">
-          <img src={roomImage(room.typeName, imgIdx)} alt={room.typeName} className="h-full w-full object-cover" loading="lazy" />
+        <div className="group relative h-48 shrink-0 p-3 sm:h-auto sm:w-56">
+          <div className="h-full min-h-40 overflow-hidden rounded-t-[999px] rounded-b-xl">
+            <img src={roomImage(room.typeName, imgIdx)} alt={room.typeName} className="h-full w-full object-cover" loading="lazy" />
+          </div>
           <button
             onClick={() => setImgIdx((imgIdx + 3) % 4)}
             className="absolute left-2 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-xs font-bold text-ink-700 opacity-0 backdrop-blur-sm group-hover:opacity-100"
@@ -71,6 +73,7 @@ function RoomResultCard({ room, idx, selected, onSelect }) {
             ›
           </button>
         </div>
+        {/* đóng khối ảnh vòm */}
         <div className="flex flex-1 flex-col p-5">
           <div className="flex items-start justify-between gap-3">
             <div>
