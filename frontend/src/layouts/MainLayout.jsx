@@ -30,6 +30,10 @@ export default function MainLayout() {
   const navigate = useNavigate()
   const { pathname } = useLocation()
   const [user, setUser] = useState(getUser)
+  const [menuOpen, setMenuOpen] = useState(false)
+
+  // Chuyển trang xong thì tự gập menu mobile lại
+  useEffect(() => { setMenuOpen(false) }, [pathname])
 
   // Backend chạy thì làm mới thông tin user từ /api/auth/me; token hỏng sẽ bị
   // interceptor 401 đưa về /login. Backend chưa có endpoint -> giữ user lúc login.
@@ -106,8 +110,51 @@ export default function MainLayout() {
             >
               Đăng xuất
             </button>
+            {/* Nút mở menu trên màn hình nhỏ - nav ngang bị ẩn dưới md */}
+            <button
+              onClick={() => setMenuOpen(!menuOpen)}
+              aria-label={menuOpen ? 'Đóng menu' : 'Mở menu'}
+              aria-expanded={menuOpen}
+              className={`flex h-9 w-9 items-center justify-center rounded-full text-ink-700 ring-1 ring-black/10 ${EASE} hover:bg-white md:hidden`}
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
+                {menuOpen ? (
+                  <path d="M3 3l10 10M13 3L3 13" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                ) : (
+                  <path d="M2 4.5h12M2 8h12M2 11.5h12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                )}
+              </svg>
+            </button>
           </div>
         </div>
+
+        {/* Menu mobile xổ xuống dưới header - cùng bộ mục đã lọc theo vai trò */}
+        {menuOpen && (
+          <nav className="card-rise border-t border-black/[0.06] bg-cream-50 px-3 pb-3 pt-1.5 md:hidden">
+            {visibleMenu.map((item) => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end={item.to === '/reservations/new'}
+                className={({ isActive }) =>
+                  `block rounded-xl px-3.5 py-2.5 text-sm ${EASE} ${
+                    (item.match ? item.match(pathname) : isActive)
+                      ? 'bg-white font-bold text-ink-900 shadow-soft'
+                      : 'font-medium text-ink-500 hover:text-ink-900'
+                  }`
+                }
+              >
+                {item.label}
+              </NavLink>
+            ))}
+            <button
+              onClick={logout}
+              className={`mt-1.5 block w-full rounded-xl border-t border-black/[0.06] px-3.5 pb-2 pt-3 text-left text-sm font-semibold text-ink-500 ${EASE} hover:text-ink-900 sm:hidden`}
+            >
+              Đăng xuất
+            </button>
+          </nav>
+        )}
       </header>
 
       <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-8">
