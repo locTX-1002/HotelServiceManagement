@@ -1,4 +1,7 @@
+import { useEffect, useState } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import client from '../api/client'
+import { clearSession, getToken, getUser, saveSession } from '../utils/session'
 
 const EASE = 'transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]'
 
@@ -11,11 +14,35 @@ const MENU = [
   { to: '/reports', label: 'Báo cáo' },
 ]
 
+// Nhãn vai trò tiếng Việt cho 4 role seed sẵn của backend
+const ROLE_LABEL = { Admin: 'Quản trị', Manager: 'Quản lý', Receptionist: 'Lễ tân', ServiceStaff: 'NV dịch vụ' }
+
+// 'Nguyễn Văn An' -> 'NA' cho avatar; tên 1 chữ thì lấy 2 ký tự đầu
+const initials = (name) => {
+  const p = (name ?? '').trim().split(/\s+/).filter(Boolean)
+  if (p.length === 0) return 'NV'
+  if (p.length === 1) return p[0].slice(0, 2).toUpperCase()
+  return (p[0][0] + p[p.length - 1][0]).toUpperCase()
+}
+
 export default function MainLayout() {
   const navigate = useNavigate()
+  const [user, setUser] = useState(getUser)
+
+  // Backend chạy thì làm mới thông tin user từ /api/auth/me; token hỏng sẽ bị
+  // interceptor 401 đưa về /login. Backend chưa có endpoint -> giữ user lúc login.
+  useEffect(() => {
+    client
+      .get('/api/auth/me')
+      .then((res) => {
+        const me = res.data?.user ?? res.data
+        if (me?.fullName) { setUser(me); saveSession(getToken(), me) }
+      })
+      .catch(() => {})
+  }, [])
 
   const logout = () => {
-    localStorage.removeItem('token')
+    clearSession()
     navigate('/login')
   }
 
@@ -55,10 +82,16 @@ export default function MainLayout() {
 
           <div className="flex shrink-0 items-center gap-2.5">
             <span
-              title="Receptionist Demo"
+              title={user ? `${user.fullName} · ${ROLE_LABEL[user.role] ?? user.role}` : 'Chưa đăng nhập'}
               className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-900 text-[11px] font-bold text-cream-50"
             >
-              LT
+              {initials(user?.fullName)}
+            </span>
+            <span className="hidden text-left leading-tight lg:block">
+              <p className="max-w-36 truncate text-[12px] font-bold text-ink-900">{user?.fullName ?? 'Nhân viên'}</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-500">
+                {ROLE_LABEL[user?.role] ?? user?.role ?? '—'}{user?.isDemo ? ' · demo' : ''}
+              </p>
             </span>
             <button
               onClick={logout}
