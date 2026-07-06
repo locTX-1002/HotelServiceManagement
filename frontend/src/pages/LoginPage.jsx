@@ -1,21 +1,49 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Navigate, useLocation, useNavigate } from 'react-router-dom'
+import client, { isBackendMissing } from '../api/client'
+import { getToken, saveSession, startDemoSession } from '../utils/session'
 
 const EASE = 'transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]'
 const inputCls =
   'w-full rounded-lg border border-black/15 bg-white px-3.5 py-3 text-sm outline-none placeholder:text-ink-500/40 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20'
 const labelCls = 'mb-1.5 block text-[11px] font-bold uppercase tracking-[0.18em] text-ink-700'
 
-// Login tối giản nền trắng theo mẫu booking engine - nối POST /api/auth/login là task T2 (Phúc)
+// Login tối giản nền trắng theo mẫu booking engine - POST /api/auth/login, lưu phiên vào localStorage
 export default function LoginPage() {
   const [email, setEmail] = useState('receptionist@hotel.com')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
+  const location = useLocation()
+  const from = location.state?.from ?? '/dashboard'
+
+  // Còn phiên cũ (vd bấm nút back) thì khỏi đăng nhập lại
+  if (getToken()) return <Navigate to="/dashboard" replace />
 
   const onSubmit = (e) => {
     e.preventDefault()
-    setError('API login chưa sẵn sàng (task T2). Dùng "Vào thẳng" để xem giao diện.')
+    if (loading) return
+    setError('')
+    setLoading(true)
+    client
+      .post('/api/auth/login', { email: email.trim(), password })
+      .then((res) => {
+        saveSession(res.data.token, res.data.user)
+        navigate(from, { replace: true })
+      })
+      .catch((err) => {
+        if (err.response?.status === 401) setError('Email hoặc mật khẩu không đúng.')
+        else if (isBackendMissing(err)) setError('API đăng nhập chưa sẵn sàng (T2 backend). Dùng "Vào thẳng" bên dưới để xem giao diện.')
+        else setError(err.response?.data?.message ?? 'Máy chủ báo lỗi. Thử lại sau ít phút.')
+      })
+      .finally(() => setLoading(false))
+  }
+
+  // Phiên demo để xem UI khi backend chưa có login - token giả sẽ bị 401 khi backend bật auth
+  const enterDemo = () => {
+    startDemoSession()
+    navigate(from, { replace: true })
   }
 
   return (
@@ -38,26 +66,42 @@ export default function LoginPage() {
         <form onSubmit={onSubmit} className="mt-8 space-y-5">
           <div>
             <label className={labelCls}>E-mail address</label>
-            <input className={inputCls} value={email} onChange={(e) => setEmail(e.target.value)} />
+            <input
+              type="email"
+              required
+              autoComplete="email"
+              className={inputCls}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
           </div>
           <div>
             <label className={labelCls}>Mật khẩu</label>
-            <input type="password" className={inputCls} placeholder="••••••" value={password} onChange={(e) => setPassword(e.target.value)} />
+            <input
+              type="password"
+              required
+              autoComplete="current-password"
+              className={inputCls}
+              placeholder="••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
           </div>
 
           {error && <p className="rounded-lg bg-amber-50 px-3.5 py-2.5 text-[12px] font-medium text-amber-800 ring-1 ring-amber-600/15">{error}</p>}
 
           <button
             type="submit"
-            className={`inline-flex items-center gap-2.5 rounded-full bg-brand-600 px-8 py-3 text-[13px] font-bold uppercase tracking-[0.12em] text-white ${EASE} hover:bg-brand-700 active:scale-[0.98]`}
+            disabled={loading}
+            className={`inline-flex items-center gap-2.5 rounded-full bg-brand-600 px-8 py-3 text-[13px] font-bold uppercase tracking-[0.12em] text-white ${EASE} hover:bg-brand-700 active:scale-[0.98] disabled:opacity-50`}
           >
-            Đăng nhập <span aria-hidden>›</span>
+            {loading ? 'Đang đăng nhập…' : <>Đăng nhập <span aria-hidden>›</span></>}
           </button>
         </form>
 
         <button
           type="button"
-          onClick={() => navigate('/rooms/map')}
+          onClick={enterDemo}
           className={`mt-4 w-max text-[12px] font-semibold text-ink-500 underline-offset-4 ${EASE} hover:text-ink-900 hover:underline`}
         >
           Vào thẳng không cần đăng nhập (dev only)
