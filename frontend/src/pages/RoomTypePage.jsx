@@ -155,7 +155,7 @@ export default function RoomTypePage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-black/[0.05]">
-              {types.map((t, idx) => (
+              {types.map((t) => (
                 <tr key={t.roomTypeId} className={`${EASE} hover:bg-cream-50/60`}>
                   <td className="px-5 py-3.5">
                     <div className="flex items-center gap-3.5">
