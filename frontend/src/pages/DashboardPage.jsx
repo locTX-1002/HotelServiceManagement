@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import client from '../api/client'
+import client, { isBackendMissing } from '../api/client'
+import ErrorState from '../components/ErrorState'
 import { formatVnd } from '../utils/roomStatus'
 import { MOCK_DASHBOARD } from '../mock/hotelMock'
 
@@ -62,13 +63,28 @@ export default function DashboardPage() {
   const navigate = useNavigate()
   const [data, setData] = useState(null)
   const [usingMock, setUsingMock] = useState(false)
+  const [loadError, setLoadError] = useState(false)
 
-  useEffect(() => {
+  const load = () => {
+    setLoadError(false)
     client
       .get('/api/reports/dashboard')
       .then((res) => { setData({ ...MOCK_DASHBOARD, ...res.data }); setUsingMock(false) })
-      .catch(() => { setData(MOCK_DASHBOARD); setUsingMock(true) })
-  }, [])
+      .catch((err) => {
+        if (isBackendMissing(err)) { setData(MOCK_DASHBOARD); setUsingMock(true) }
+        else setLoadError(true) // lỗi thật: không che bằng mock
+      })
+  }
+  useEffect(load, [])
+
+  if (loadError) {
+    return (
+      <div>
+        <h1 className="font-display text-4xl font-semibold tracking-tight">Tổng quan</h1>
+        <div className="mt-8"><ErrorState onRetry={load} /></div>
+      </div>
+    )
+  }
 
   if (!data) {
     return (

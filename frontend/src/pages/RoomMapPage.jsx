@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import client from '../api/client'
+import client, { isBackendMissing } from '../api/client'
 import { ROOM_STATUS, formatVnd } from '../utils/roomStatus'
 import { MOCK_ROOM_MAP } from '../mock/hotelMock'
 import { roomImage } from '../utils/roomImages'
+import ErrorState from '../components/ErrorState'
 
 const EASE = 'transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]'
 
@@ -195,13 +196,25 @@ export default function RoomMapPage() {
   const [statusFilter, setStatusFilter] = useState('all')
   const [openRoom, setOpenRoom] = useState(null)
   const [updatedAt, setUpdatedAt] = useState(null)
+  const [loadError, setLoadError] = useState(false)
   const timer = useRef(null)
 
   const load = () => {
     client
       .get('/api/rooms/map')
-      .then((res) => { setFloors(res.data); setUsingMock(false); setUpdatedAt(new Date()) })
-      .catch(() => { setFloors(MOCK_ROOM_MAP); setUsingMock(true); setUpdatedAt(new Date()) })
+      .then((res) => {
+        setFloors(res.data); setUsingMock(false); setLoadError(false); setUpdatedAt(new Date())
+        // drawer đang mở thì cập nhật theo dữ liệu mới, tránh hiển thị trạng thái cũ
+        setOpenRoom((cur) => (cur ? res.data.flatMap((f) => f.rooms).find((r) => r.roomId === cur.roomId) ?? cur : cur))
+      })
+      .catch((err) => {
+        if (isBackendMissing(err)) {
+          setFloors(MOCK_ROOM_MAP); setUsingMock(true); setLoadError(false)
+        } else {
+          setFloors([]); setLoadError(true) // lỗi thật: không che bằng mock
+        }
+        setUpdatedAt(new Date())
+      })
   }
 
   // Tự làm mới mỗi 30s (gợi ý #6) thay cho nút bấm tay
@@ -315,7 +328,11 @@ export default function RoomMapPage() {
         </section>
       ))}
 
-      {floors !== null && visibleFloors.length === 0 && (
+      {loadError && (
+        <div className="mt-8"><ErrorState onRetry={load} /></div>
+      )}
+
+      {!loadError && floors !== null && visibleFloors.length === 0 && (
         <div className="mt-10 rounded-2xl border border-dashed border-black/10 bg-white/60 p-10 text-center">
           <p className="font-display text-lg italic text-ink-700">Không có phòng nào ở trạng thái này</p>
           <button onClick={() => setStatusFilter('all')} className="mt-2 text-[12px] font-bold uppercase tracking-wider text-brand-600 hover:underline">

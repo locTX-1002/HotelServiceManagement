@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import client from '../api/client'
+import client, { isBackendMissing } from '../api/client'
 import { formatVnd } from '../utils/roomStatus'
 import { MOCK_AVAILABLE_ROOMS, MOCK_ROOM_TYPES } from '../mock/hotelMock'
 import { roomImage } from '../utils/roomImages'
@@ -12,6 +12,7 @@ const inputCls =
 const labelCls = 'mb-1.5 block text-[12px] font-semibold text-ink-700'
 
 import { localToday as today, addDays, fmtShort } from '../utils/dates'
+import ErrorState from '../components/ErrorState'
 
 /* Chỉ báo 3 bước - bước đã xong bấm được để quay lại, đường nối fill theo tiến độ */
 function Steps({ current, onBack }) {
@@ -117,6 +118,7 @@ export default function CreateReservationPage() {
   const [guest, setGuest] = useState({ fullName: '', phoneNumber: '', email: '', identityNumber: '' })
   const [done, setDone] = useState(null)
   const [error, setError] = useState(null)
+  const [searchError, setSearchError] = useState(false)
 
   const [searchParams] = useSearchParams()
 
@@ -126,12 +128,16 @@ export default function CreateReservationPage() {
     setSelected(null)
     client
       .get('/api/reservations/available-rooms', { params: { checkIn: ci, checkOut: co, roomType: rt, guests: g } })
-      .then((res) => { setResults(res.data); setUsingMock(false) })
-      .catch(() => {
-        setResults(MOCK_AVAILABLE_ROOMS.filter(
-          (r) => (rt === 'all' || r.typeName === rt) && roomMeta(r.typeName).capacity >= g,
-        ))
-        setUsingMock(true)
+      .then((res) => { setResults(res.data); setUsingMock(false); setSearchError(false) })
+      .catch((err) => {
+        if (isBackendMissing(err)) {
+          setResults(MOCK_AVAILABLE_ROOMS.filter(
+            (r) => (rt === 'all' || r.typeName === rt) && roomMeta(r.typeName).capacity >= g,
+          ))
+          setUsingMock(true); setSearchError(false)
+        } else {
+          setResults([]); setSearchError(true) // lỗi thật: không che bằng mock
+        }
       })
     setStep(2)
   }
@@ -154,7 +160,12 @@ export default function CreateReservationPage() {
     client
       .post('/api/reservations', payload)
       .then((res) => setDone({ code: res.data.bookingCode ?? 'BK-XXXX' }))
-      .catch(() => setError('API /api/reservations chưa sẵn sàng (task T3). Toàn bộ luồng UI đã hoạt động - nối API là chạy.'))
+      .catch((err) =>
+        setError(
+          isBackendMissing(err)
+            ? 'API /api/reservations chưa sẵn sàng (task T3). Toàn bộ luồng UI đã hoạt động - nối API là chạy.'
+            : err.response?.data?.message ?? 'Máy chủ báo lỗi khi tạo đặt phòng. Thử lại hoặc báo quản trị viên.',
+        ))
   }
 
   const sorted = useMemo(() => [...results].sort((a, b) => (sortAsc ? a.basePrice - b.basePrice : b.basePrice - a.basePrice)), [results, sortAsc])
@@ -306,10 +317,11 @@ export default function CreateReservationPage() {
           )}
 
           <div className="mt-4 space-y-4">
-            {sorted.map((room, idx) => (
+            {searchError && <ErrorState onRetry={() => search()} />}
+            {!searchError && sorted.map((room, idx) => (
               <RoomResultCard key={room.roomId} room={room} idx={idx} selected={selected} onSelect={setSelected} />
             ))}
-            {sorted.length === 0 && (
+            {!searchError && sorted.length === 0 && (
               <div className="rounded-2xl border border-dashed border-black/10 bg-white/60 p-10 text-center">
                 <p className="font-display text-lg italic text-ink-700">Không còn phòng phù hợp</p>
                 <p className="mt-1 text-[13px] text-ink-500">Thử giảm số khách hoặc đổi khoảng ngày.</p>

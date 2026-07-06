@@ -23,4 +23,8 @@ client.interceptors.response.use(
   },
 )
 
+// Backend chưa chạy / endpoint chưa code (network error hoặc 404) -> cho phép fallback mock.
+// Còn 4xx/5xx thật thì KHÔNG được che bằng mock - phải hiện lỗi cho người dùng biết.
+export const isBackendMissing = (err) => !err.response || err.response.status === 404
+
 export default client
