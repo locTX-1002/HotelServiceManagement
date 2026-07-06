@@ -6,6 +6,7 @@ import Placeholder from './pages/Placeholder'
 import RoomMapPage from './pages/RoomMapPage'
 import CreateReservationPage from './pages/CreateReservationPage'
 import DashboardPage from './pages/DashboardPage'
+import ReportsPage from './pages/ReportsPage'
 import RoomPage from './pages/RoomPage'
 import RoomTypePage from './pages/RoomTypePage'
 import ProtectedRoute from './routes/ProtectedRoute'
@@ -27,7 +28,7 @@ export default function App() {
             <Route path="/reservations/new" element={<CreateReservationPage />} />
             <Route path="/checkin-checkout" element={<Placeholder title="Check-in / Check-out" owner="Lộc" day="T4 08/07" />} />
             <Route path="/service-orders" element={<Placeholder title="Dịch vụ" owner="Lộc" day="T5 09/07" />} />
-            <Route path="/reports" element={<Placeholder title="Báo cáo" owner="Phúc" day="T5 09/07" />} />
+            <Route path="/reports" element={<ReportsPage />} />
           </Route>
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
