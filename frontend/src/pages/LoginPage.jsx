@@ -29,7 +29,10 @@ export default function LoginPage() {
     client
       .post('/api/auth/login', { email: email.trim(), password })
       .then((res) => {
-        saveSession(res.data.token, res.data.user)
+        const { token, user } = res.data ?? {}
+        // Không lưu phiên hỏng nếu backend trả 200 mà thiếu token
+        if (!token) return setError('Máy chủ trả về thiếu token — báo backend kiểm tra /api/auth/login.')
+        saveSession(token, user)
         navigate(from, { replace: true })
       })
       .catch((err) => {

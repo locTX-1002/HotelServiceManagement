@@ -45,10 +45,16 @@ export default function ReportsPage() {
   const [occupancy, setOccupancy] = useState(null)
   const [usingMock, setUsingMock] = useState(false)
   const [loadError, setLoadError] = useState(false)
+  const [retryTick, setRetryTick] = useState(0) // Thử lại giữ nguyên dải ngày đang chọn
 
   const days = useMemo(() => dayRange(from, to), [from, to])
-  const rangeError =
-    from > to ? 'Ngày bắt đầu phải trước ngày kết thúc.' : days.length > MAX_DAYS ? `Chọn tối đa ${MAX_DAYS} ngày để biểu đồ còn đọc được.` : ''
+  const rangeError = !from || !to
+    ? 'Chọn đủ cả từ ngày và đến ngày.' // input date bị xóa trắng -> không được render Invalid Date
+    : from > to
+      ? 'Ngày bắt đầu phải trước ngày kết thúc.'
+      : days.length > MAX_DAYS
+        ? `Chọn tối đa ${MAX_DAYS} ngày để biểu đồ còn đọc được.`
+        : ''
 
   useEffect(() => {
     if (rangeError) return
@@ -56,32 +62,39 @@ export default function ReportsPage() {
     setRevenue(null)
     setOccupancy(null)
     setUsingMock(false)
+    // stale = đã đổi dải ngày trong lúc chờ mạng -> response cũ không được đè lên dữ liệu mới
+    let stale = false
     const params = { from, to }
     // Shape dự kiến theo API_DOCS (chốt lại với Khoa ở T5) - backend chưa có thì dùng số liệu mẫu
     client
       .get('/api/reports/revenue', { params })
-      .then((res) => setRevenue(res.data))
+      .then((res) => { if (!stale) setRevenue(res.data) })
       .catch((err) => {
+        if (stale) return
         if (isBackendMissing(err)) { setRevenue(mockRevenueRange(dayRange(from, to))); setUsingMock(true) }
         else setLoadError(true) // lỗi thật: không che bằng mock
       })
     client
       .get('/api/reports/occupancy', { params })
-      .then((res) => setOccupancy(res.data))
+      .then((res) => { if (!stale) setOccupancy(res.data) })
       .catch((err) => {
+        if (stale) return
         if (isBackendMissing(err)) { setOccupancy(mockOccupancyRange(dayRange(from, to))); setUsingMock(true) }
         else setLoadError(true)
       })
+    return () => { stale = true }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [from, to])
+  }, [from, to, retryTick])
 
-  // Gộp 2 nguồn theo ngày cho bảng chi tiết - server trả thiếu ngày nào thì ô đó để trống
+  // Gộp 2 nguồn theo ngày cho bảng chi tiết - server trả thiếu ngày nào thì ô đó để trống.
+  // slice(0,10) phòng backend trả date kèm giờ ('2026-07-06T00:00:00')
+  const dkey = (d) => String(d).slice(0, 10)
   const rows = useMemo(
     () =>
       days.map((date) => ({
         date,
-        rev: (revenue ?? []).find((r) => r.date === date),
-        occ: (occupancy ?? []).find((o) => o.date === date),
+        rev: (revenue ?? []).find((r) => dkey(r.date) === date),
+        occ: (occupancy ?? []).find((o) => dkey(o.date) === date),
       })),
     [days, revenue, occupancy],
   )
@@ -159,7 +172,7 @@ export default function ReportsPage() {
       </div>
 
       {loadError && (
-        <div className="mt-6"><ErrorState onRetry={() => { setFrom(addDays(today(), -6)); setTo(today()) }} /></div>
+        <div className="mt-6"><ErrorState onRetry={() => setRetryTick((t) => t + 1)} /></div>
       )}
 
       {loading && (

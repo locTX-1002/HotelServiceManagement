@@ -20,6 +20,12 @@ const apiError = (err) =>
     ? 'API /api/rooms chưa sẵn sàng (T2 - Khoa). Form đã hoạt động, backend nối xong là chạy.'
     : err.response?.data?.message ?? 'Máy chủ báo lỗi. Thử lại sau ít phút.'
 
+// Nghiệp vụ: không cho xóa phòng đang phục vụ khách - phải check-out / hủy đặt trước
+const deleteBlocked = (room) =>
+  room?.status === 'Occupied' || room?.status === 'Reserved'
+    ? 'Phòng đang có khách hoặc đã có đặt phòng. Check-out hoặc hủy đặt phòng trước khi xóa.'
+    : ''
+
 export default function RoomPage() {
   const [rooms, setRooms] = useState(null)
   const [types, setTypes] = useState([])
@@ -121,6 +127,9 @@ export default function RoomPage() {
   }
 
   const confirmDelete = () => {
+    const blocked = deleteBlocked(toDelete)
+    if (blocked) return setDeleteError(blocked)
+
     setDeleteError('')
     setDeleting(true)
     client
@@ -246,7 +255,7 @@ export default function RoomPage() {
                         Sửa
                       </button>
                       <button
-                        onClick={() => { setDeleteError(''); setToDelete(r) }}
+                        onClick={() => { setDeleteError(deleteBlocked(r)); setToDelete(r) }}
                         className={`ml-2 rounded-full px-3.5 py-1.5 text-[12px] font-semibold text-rose-700 ring-1 ring-rose-600/20 ${EASE} hover:bg-rose-50`}
                       >
                         Xóa

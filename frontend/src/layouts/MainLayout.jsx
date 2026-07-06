@@ -40,7 +40,9 @@ export default function MainLayout() {
       .get('/api/auth/me')
       .then((res) => {
         const me = res.data?.user ?? res.data
-        if (me?.fullName) { setUser(me); saveSession(getToken(), me) }
+        // getToken() kiểm tra lại: nếu user đã đăng xuất trong lúc chờ mạng thì bỏ qua,
+        // không được ghi đè phiên rỗng bằng dữ liệu cũ
+        if (me?.fullName && getToken()) { setUser(me); saveSession(getToken(), me) }
       })
       .catch(() => {})
   }, [])
