@@ -27,7 +27,48 @@ export const MOCK_ROOM_MAP = [
   },
 ]
 
-export const MOCK_ROOM_TYPES = ['Standard', 'Deluxe', 'Suite', 'Family Room']
+// GET /api/room-types -> [{ roomTypeId, typeName, capacity, basePrice, isActive }] (khớp seed backend)
+export const MOCK_ROOM_TYPES_FULL = [
+  { roomTypeId: 1, typeName: 'Standard', capacity: 2, basePrice: 500000, isActive: true },
+  { roomTypeId: 2, typeName: 'Deluxe', capacity: 2, basePrice: 800000, isActive: true },
+  { roomTypeId: 3, typeName: 'Suite', capacity: 4, basePrice: 1200000, isActive: true },
+  { roomTypeId: 4, typeName: 'Family Room', capacity: 6, basePrice: 1500000, isActive: true },
+]
+
+export const MOCK_ROOM_TYPES = MOCK_ROOM_TYPES_FULL.map((t) => t.typeName)
+
+// GET /api/rooms -> [{ roomId, roomNumber, floor, roomTypeId, typeName, basePrice, status, isActive }]
+// Suy từ MOCK_ROOM_MAP để 2 trang không bao giờ lệch nhau
+export const MOCK_ROOMS = MOCK_ROOM_MAP.flatMap((f) =>
+  f.rooms.map((r) => ({
+    roomId: r.roomId,
+    roomNumber: r.roomNumber,
+    floor: f.floor,
+    roomTypeId: MOCK_ROOM_TYPES_FULL.find((t) => t.typeName === r.typeName)?.roomTypeId ?? 1,
+    typeName: r.typeName,
+    basePrice: r.basePrice,
+    status: r.status,
+    isActive: true,
+  })),
+)
+
+// Báo cáo T5: sinh số liệu mẫu ỔN ĐỊNH theo ngày (cùng ngày luôn ra cùng số)
+// cho dải ngày bất kỳ. Shape dự kiến theo API_DOCS - chốt lại với Khoa khi làm API.
+const seedOf = (dateStr) => dateStr.split('-').reduce((acc, part) => (acc * 31 + Number(part)) % 997, 7)
+
+// GET /api/reports/revenue?from=&to= -> [{ date, roomRevenue, serviceRevenue }]
+export const mockRevenueRange = (days) =>
+  days.map((date) => {
+    const s = seedOf(date)
+    return { date, roomRevenue: 1200000 + (s % 7) * 450000, serviceRevenue: 150000 + (s % 5) * 120000 }
+  })
+
+// GET /api/reports/occupancy?from=&to= -> [{ date, occupiedRooms, totalRooms }]
+export const mockOccupancyRange = (days) =>
+  days.map((date) => {
+    const s = seedOf(date)
+    return { date, occupiedRooms: 3 + (s % 6), totalRooms: 9 }
+  })
 
 // GET /api/reservations/available-rooms -> [{ roomId, roomNumber, typeName, floor, basePrice }]
 export const MOCK_AVAILABLE_ROOMS = [
