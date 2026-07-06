@@ -1,9 +1,8 @@
 using System.Security.Claims;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
 using HotelServiceManagement.Application.DTOs.Auth;
 using HotelServiceManagement.Application.Interfaces;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace HotelServiceManagement.Api.Controllers
 {
@@ -11,47 +10,66 @@ namespace HotelServiceManagement.Api.Controllers
     [Route("api/auth")]
     public class AuthController : ControllerBase
     {
-        private readonly IUserService _userService;
+        private readonly IAuthService _authService;
 
-        public AuthController(IUserService userService)
+        public AuthController(IAuthService authService)
         {
-            _userService = userService;
+            _authService = authService;
         }
 
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
-            if (request == null || string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
-            {
-                return BadRequest(new { Message = "Email and Password are required." });
-            }
-
-            var response = await _userService.LoginAsync(request);
-            if (response == null)
-            {
-                return Unauthorized(new { Message = "Invalid email or password, or user is inactive." });
-            }
-
-            return Ok(response);
+            return ToActionResult(await _authService.LoginAsync(request));
         }
 
         [Authorize]
         [HttpGet("me")]
         public async Task<IActionResult> GetMe()
         {
+            var userId = GetCurrentUserId();
+            if (userId == null)
+            {
+                return Unauthorized(new AuthMessageResponse { Message = "Invalid user identity in token." });
+            }
+
+            return ToActionResult(await _authService.GetCurrentUserAsync(userId.Value));
+        }
+
+        [Authorize]
+        [HttpPost("change-password")]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
+        {
+            var userId = GetCurrentUserId();
+            if (userId == null)
+            {
+                return Unauthorized(new AuthMessageResponse { Message = "Invalid user identity in token." });
+            }
+
+            return ToActionResult(await _authService.ChangePasswordAsync(userId.Value, request));
+        }
+
+        private int? GetCurrentUserId()
+        {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+            return int.TryParse(userIdClaim, out var userId) ? userId : null;
+        }
+
+        private IActionResult ToActionResult<T>(AuthServiceResult<T> result)
+        {
+            if (result.IsSuccess)
             {
-                return Unauthorized(new { Message = "Invalid user identity in token." });
+                return Ok(result.Data);
             }
 
-            var response = await _userService.GetCurrentUserAsync(userId);
-            if (response == null)
+            var body = new AuthMessageResponse { Message = result.Message };
+            return result.StatusCode switch
             {
-                return NotFound(new { Message = "User not found." });
-            }
-
-            return Ok(response);
+                401 => Unauthorized(body),
+                404 => NotFound(body),
+                409 => Conflict(body),
+                _ => BadRequest(body)
+            };
         }
     }
 }

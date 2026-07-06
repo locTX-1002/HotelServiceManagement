@@ -47,11 +47,12 @@ namespace HotelServiceManagement.Application.Services
                 return null;
             }
 
-            var token = _jwtService.GenerateToken(user);
+            var accessToken = _jwtService.GenerateAccessToken(user);
 
             return new LoginResponse
             {
-                Token = token,
+                AccessToken = accessToken.Token,
+                ExpiresAt = accessToken.ExpiresAt,
                 UserId = user.Id,
                 FullName = user.FullName,
                 Email = user.Email,
@@ -72,7 +73,8 @@ namespace HotelServiceManagement.Application.Services
                 UserId = user.Id,
                 FullName = user.FullName,
                 Email = user.Email,
-                Role = user.Role?.RoleName ?? string.Empty
+                Role = user.Role?.RoleName ?? string.Empty,
+                IsActive = user.IsActive
             };
         }
     }

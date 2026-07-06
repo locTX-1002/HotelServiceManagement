@@ -18,10 +18,10 @@ namespace HotelServiceManagement.Infrastructure.Services
             _configuration = configuration;
         }
 
-        public string GenerateToken(User user)
+        public (string Token, DateTime ExpiresAt) GenerateAccessToken(User user)
         {
             var jwtSettings = _configuration.GetSection("Jwt");
-            var keyString = jwtSettings["Key"] ?? "PLEASE_CHANGE_THIS_SECRET_KEY_IN_PRODUCTION_AND_MAKE_IT_VERY_LONG_AT_LEAST_32_BYTES";
+            var keyString = jwtSettings["Key"] ?? "PLEASE_CHANGE_THIS_SECRET_KEY_WITH_AT_LEAST_32_CHARS";
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(keyString));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
@@ -33,17 +33,23 @@ namespace HotelServiceManagement.Infrastructure.Services
                 new Claim(ClaimTypes.Role, user.Role?.RoleName ?? "")
             };
 
-            var expiryMinutes = int.Parse(jwtSettings["ExpireMinutes"] ?? "120");
+            var expiryMinutes = int.Parse(jwtSettings["ExpireMinutes"] ?? "15");
+            var expiresAt = DateTime.UtcNow.AddMinutes(expiryMinutes);
 
             var token = new JwtSecurityToken(
                 issuer: jwtSettings["Issuer"] ?? "HotelServiceManagement",
                 audience: jwtSettings["Audience"] ?? "HotelServiceManagementClient",
                 claims: claims,
-                expires: DateTime.UtcNow.AddMinutes(expiryMinutes),
+                expires: expiresAt,
                 signingCredentials: creds
             );
 
-            return new JwtSecurityTokenHandler().WriteToken(token);
+            return (new JwtSecurityTokenHandler().WriteToken(token), expiresAt);
+        }
+
+        public string GenerateToken(User user)
+        {
+            return GenerateAccessToken(user).Token;
         }
     }
 }

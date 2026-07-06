@@ -20,6 +20,8 @@ builder.Services.AddDbContext<HotelDbContext>(options =>
 // 2. Configure Dependency Injection
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<IJwtService, JwtService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IUserManagementService, UserManagementService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IStayService, StayService>();
@@ -28,7 +30,7 @@ builder.Services.AddScoped<IPaymentService, PaymentService>();
 
 // 3. Configure JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("Jwt");
-var secretKey = jwtSettings["Key"] ?? "PLEASE_CHANGE_THIS_SECRET_KEY_IN_PRODUCTION_AND_MAKE_IT_VERY_LONG_AT_LEAST_32_BYTES";
+var secretKey = jwtSettings["Key"] ?? "PLEASE_CHANGE_THIS_SECRET_KEY_WITH_AT_LEAST_32_CHARS";
 var issuer = jwtSettings["Issuer"] ?? "HotelServiceManagement";
 var audience = jwtSettings["Audience"] ?? "HotelServiceManagementClient";
 
@@ -107,7 +109,10 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-app.UseHttpsRedirection();
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 
 app.UseCors("AllowAll");
 

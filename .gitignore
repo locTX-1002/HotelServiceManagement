@@ -9,6 +9,7 @@ obj/
 *.log
 
 # EF Core / secrets
+appsettings.Development.json
 appsettings.Production.json
 *.pfx
 
