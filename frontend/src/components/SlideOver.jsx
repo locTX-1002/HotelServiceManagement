@@ -1,15 +1,21 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 
 const EASE = 'transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]'
 
 // Ngăn kéo trượt phải dùng chung cho form quản trị - cùng chuyển động
 // với RoomDrawer của sơ đồ phòng. Esc hoặc bấm nền mờ để đóng.
 export default function SlideOver({ open, eyebrow, title, onClose, children }) {
+  const panelRef = useRef(null)
+
   useEffect(() => {
     if (!open) return
     const onKey = (e) => e.key === 'Escape' && onClose()
     window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
+    // Đưa con trỏ vào ô nhập đầu tiên để nhập liền tay, không phải rê chuột
+    const timer = setTimeout(() => {
+      panelRef.current?.querySelector('input, select, textarea')?.focus()
+    }, 350)
+    return () => { window.removeEventListener('keydown', onKey); clearTimeout(timer) }
   }, [open, onClose])
 
   return (
@@ -19,6 +25,7 @@ export default function SlideOver({ open, eyebrow, title, onClose, children }) {
         className={`fixed inset-0 z-30 bg-ink-900/30 ${EASE} ${open ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
       />
       <aside
+        ref={panelRef}
         className={`fixed inset-y-0 right-0 z-40 flex w-full max-w-sm flex-col bg-cream-50 shadow-lift ${EASE} duration-500 ${
           open ? 'translate-x-0' : 'translate-x-full'
         }`}
