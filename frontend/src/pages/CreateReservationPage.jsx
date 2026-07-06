@@ -200,11 +200,11 @@ export default function CreateReservationPage() {
       {step === 1 && (
         <div className="mt-6">
           <div className="relative h-44 overflow-hidden rounded-2xl">
-            <img src="/img/login-hero.jpg" alt="" className="h-full w-full object-cover" />
+            <img src="/img/v2.jpg" alt="" className="h-full w-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-r from-ink-900/75 to-transparent" />
             <div className="absolute left-7 top-1/2 -translate-y-1/2">
-              <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/70">Lễ tân · Đặt phòng mới</p>
-              <p className="mt-2 font-display text-3xl font-medium text-white">Kỳ lưu trú của quý khách</p>
+              <p className="font-display text-[15px] italic text-white/80">lễ tân · đặt phòng mới</p>
+              <p className="mt-1.5 font-display text-3xl font-medium text-white">Kỳ lưu trú của quý khách</p>
               <p className="mt-1.5 text-[13px] text-white/70">Chọn ngày ở và số khách để tìm phòng trống</p>
             </div>
           </div>

@@ -10,7 +10,7 @@
   --color-cream-200: #efe6d8;
   --color-ink-900: #211d18;
   --color-ink-700: #4a4237;
-  --color-ink-500: #857a69;
+  --color-ink-500: #6f6455; /* đậm hơn một nấc cho đủ contrast chữ nhỏ trên nền kem */
   --color-brand-700: #9c4423;
   --color-brand-600: #b4552d;
   --color-brand-500: #c96a41;

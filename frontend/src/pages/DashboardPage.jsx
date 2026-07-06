@@ -238,7 +238,7 @@ export default function DashboardPage() {
                     {Math.round(d.amount / 1000)}k
                   </p>
                   <div
-                    className={`w-full max-w-12 rounded-t-md ${EASE} ${last ? 'bg-brand-600' : 'bg-cream-200 group-hover:bg-cream-200/70'}`}
+                    className={`w-full max-w-12 rounded-t-md ${EASE} ${last ? 'bg-brand-600' : 'bg-cream-200 group-hover:bg-ink-900/20'}`}
                     style={{ height: `${Math.max((d.amount / maxRevenue) * 100, 6)}%` }}
                   />
                   <p className={`text-[11px] ${last ? 'font-bold text-ink-900' : 'font-medium text-ink-500'}`}>{d.day}</p>
