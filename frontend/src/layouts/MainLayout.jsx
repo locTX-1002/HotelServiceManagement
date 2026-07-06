@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import client from '../api/client'
+import { ROLE_LABEL, canAccess, homeFor } from '../utils/roles'
 import { clearSession, getToken, getUser, saveSession } from '../utils/session'
 
 const EASE = 'transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]'
@@ -16,9 +17,6 @@ const MENU = [
   { to: '/service-orders', label: 'Dịch vụ' },
   { to: '/reports', label: 'Báo cáo' },
 ]
-
-// Nhãn vai trò tiếng Việt cho 4 role seed sẵn của backend
-const ROLE_LABEL = { Admin: 'Quản trị', Manager: 'Quản lý', Receptionist: 'Lễ tân', ServiceStaff: 'NV dịch vụ' }
 
 // 'Nguyễn Văn An' -> 'NA' cho avatar; tên 1 chữ thì lấy 2 ký tự đầu
 const initials = (name) => {
@@ -52,12 +50,15 @@ export default function MainLayout() {
     navigate('/login')
   }
 
+  // Menu chỉ hiện mục thuộc quyền xem của vai trò (nguồn: utils/roles.js)
+  const visibleMenu = MENU.filter((item) => canAccess(user?.role, item.to))
+
   return (
     <div className="flex min-h-screen flex-col bg-cream-100">
       {/* Nav ngang - logo vòm, menu gạch chân terracotta, avatar phải */}
       <header className="sticky top-0 z-20 border-b border-black/[0.06] bg-cream-50/95 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-3">
-          <button onClick={() => navigate('/dashboard')} className="flex shrink-0 items-center gap-2.5">
+          <button onClick={() => navigate(homeFor(user?.role))} className="flex shrink-0 items-center gap-2.5">
             <span className="flex h-9 w-8 items-end justify-center rounded-t-full rounded-b-md bg-brand-600 pb-1.5 font-display text-[13px] font-bold text-white">
               H
             </span>
@@ -68,7 +69,7 @@ export default function MainLayout() {
           </button>
 
           <nav className="hidden items-center gap-6 overflow-x-auto md:flex">
-            {MENU.map((item) => (
+            {visibleMenu.map((item) => (
               <NavLink
                 key={item.to}
                 to={item.to}

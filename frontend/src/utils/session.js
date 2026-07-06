@@ -22,5 +22,6 @@ export const clearSession = () => {
 
 // Phiên xem thử giao diện khi backend chưa có API login (dev only). Token giả này
 // sẽ bị 401 ngay khi backend bật [Authorize] -> interceptor tự đưa về /login.
+// Role Admin để dev xem được mọi màn hình, không bị lớp chặn theo vai trò giấu mất.
 export const startDemoSession = () =>
-  saveSession('demo-token', { fullName: 'Receptionist Demo', role: 'Receptionist', isDemo: true })
+  saveSession('demo-token', { fullName: 'Admin Demo', role: 'Admin', isDemo: true })

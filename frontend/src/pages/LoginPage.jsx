@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import client, { isBackendMissing } from '../api/client'
-import { getToken, saveSession, startDemoSession } from '../utils/session'
+import { homeFor } from '../utils/roles'
+import { getToken, getUser, saveSession, startDemoSession } from '../utils/session'
 
 const EASE = 'transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]'
 const inputCls =
@@ -16,10 +17,10 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
-  const from = location.state?.from ?? '/dashboard'
+  const from = location.state?.from ?? null
 
   // Còn phiên cũ (vd bấm nút back) thì khỏi đăng nhập lại
-  if (getToken()) return <Navigate to="/dashboard" replace />
+  if (getToken()) return <Navigate to={homeFor(getUser()?.role)} replace />
 
   const onSubmit = (e) => {
     e.preventDefault()
@@ -33,7 +34,8 @@ export default function LoginPage() {
         // Không lưu phiên hỏng nếu backend trả 200 mà thiếu token
         if (!token) return setError('Máy chủ trả về thiếu token — báo backend kiểm tra /api/auth/login.')
         saveSession(token, user)
-        navigate(from, { replace: true })
+        // Về trang bị chặn trước đó, không có thì về trang chính theo vai trò
+        navigate(from ?? homeFor(user?.role), { replace: true })
       })
       .catch((err) => {
         if (err.response?.status === 401) setError('Email hoặc mật khẩu không đúng.')
@@ -46,7 +48,7 @@ export default function LoginPage() {
   // Phiên demo để xem UI khi backend chưa có login - token giả sẽ bị 401 khi backend bật auth
   const enterDemo = () => {
     startDemoSession()
-    navigate(from, { replace: true })
+    navigate(from ?? '/dashboard', { replace: true })
   }
 
   return (
