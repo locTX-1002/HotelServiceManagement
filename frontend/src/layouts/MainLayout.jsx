@@ -1,13 +1,16 @@
 import { useEffect, useState } from 'react'
-import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import client from '../api/client'
 import { clearSession, getToken, getUser, saveSession } from '../utils/session'
 
 const EASE = 'transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]'
 
+// `match` ghi đè active mặc định: mục Phòng sáng ở cả /rooms lẫn /rooms/types
+// nhưng không được sáng ở /rooms/map (mục riêng của Sơ đồ phòng)
 const MENU = [
   { to: '/dashboard', label: 'Tổng quan' },
   { to: '/rooms/map', label: 'Sơ đồ phòng' },
+  { to: '/rooms', label: 'Phòng', match: (p) => p === '/rooms' || p.startsWith('/rooms/types') },
   { to: '/reservations/new', label: 'Đặt phòng' },
   { to: '/checkin-checkout', label: 'Check-in' },
   { to: '/service-orders', label: 'Dịch vụ' },
@@ -27,6 +30,7 @@ const initials = (name) => {
 
 export default function MainLayout() {
   const navigate = useNavigate()
+  const { pathname } = useLocation()
   const [user, setUser] = useState(getUser)
 
   // Backend chạy thì làm mới thông tin user từ /api/auth/me; token hỏng sẽ bị
@@ -69,7 +73,7 @@ export default function MainLayout() {
                 end={item.to === '/reservations/new'}
                 className={({ isActive }) =>
                   `whitespace-nowrap border-b-2 pb-0.5 text-[13.5px] ${EASE} ${
-                    isActive
+                    (item.match ? item.match(pathname) : isActive)
                       ? 'border-brand-600 font-bold text-ink-900'
                       : 'border-transparent font-medium text-ink-500 hover:text-ink-900'
                   }`

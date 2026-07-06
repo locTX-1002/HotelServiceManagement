@@ -6,6 +6,7 @@ import Placeholder from './pages/Placeholder'
 import RoomMapPage from './pages/RoomMapPage'
 import CreateReservationPage from './pages/CreateReservationPage'
 import DashboardPage from './pages/DashboardPage'
+import RoomPage from './pages/RoomPage'
 import RoomTypePage from './pages/RoomTypePage'
 import ProtectedRoute from './routes/ProtectedRoute'
 
@@ -20,7 +21,7 @@ export default function App() {
           <Route element={<MainLayout />}>
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/rooms/map" element={<RoomMapPage />} />
-            <Route path="/rooms" element={<Placeholder title="Phòng & loại phòng" owner="Phúc" day="T3 07/07" />} />
+            <Route path="/rooms" element={<RoomPage />} />
             <Route path="/rooms/types" element={<RoomTypePage />} />
             <Route path="/reservations" element={<Placeholder title="Danh sách đặt phòng" owner="Lộc" day="T3-T4" />} />
             <Route path="/reservations/new" element={<CreateReservationPage />} />
