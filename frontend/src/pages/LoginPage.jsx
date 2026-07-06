@@ -19,11 +19,14 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center bg-white px-6">
+    <div className="flex min-h-screen flex-col items-center bg-cream-50 px-6">
       <div className="flex w-full max-w-sm flex-1 flex-col justify-center py-10">
-        {/* Logo giữa như mẫu */}
-        <div className="text-center">
-          <p className="font-display text-3xl font-semibold tracking-tight text-brand-600">HSMS</p>
+        {/* Logo vòm đồng bộ với nav */}
+        <div className="flex flex-col items-center text-center">
+          <span className="flex h-12 w-10 items-end justify-center rounded-t-full rounded-b-md bg-brand-600 pb-2 font-display text-lg font-bold text-white">
+            H
+          </span>
+          <p className="mt-3 font-display text-3xl font-semibold tracking-tight">HSMS</p>
           <p className="mt-1 text-[9px] font-semibold tracking-[0.32em] text-ink-500">★★★★★ HOTEL & SERVICE MANAGEMENT</p>
         </div>
 
