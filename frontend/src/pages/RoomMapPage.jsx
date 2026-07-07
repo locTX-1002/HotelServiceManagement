@@ -293,7 +293,7 @@ export default function RoomMapPage() {
         <div className="ml-auto flex items-center gap-2.5">
           {usingMock && (
             <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-800 ring-1 ring-amber-600/20">
-              Dữ liệu mẫu — chờ API
+              dữ liệu mẫu, chờ API
             </span>
           )}
           {updatedAt && (

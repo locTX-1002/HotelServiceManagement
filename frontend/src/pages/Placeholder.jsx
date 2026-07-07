@@ -14,7 +14,7 @@ export default function Placeholder({ title, owner, day }) {
       <span className="h-12 w-9 rounded-t-full rounded-b-md border-2 border-dashed border-brand-600/30" />
       <p className="mt-5 font-display text-2xl font-semibold tracking-tight">{title}</p>
       <p className="mt-2 max-w-sm text-[13px] leading-relaxed text-ink-500">
-        Màn hình này đang được xây — task <span className="font-semibold text-ink-700">{day}</span> do{' '}
+        Màn hình này đang được xây, task <span className="font-semibold text-ink-700">{day}</span> do{' '}
         <span className="font-semibold text-ink-700">{owner}</span> phụ trách theo bảng phân công.
       </p>
       <p className="mt-5 text-[11px] font-medium">
