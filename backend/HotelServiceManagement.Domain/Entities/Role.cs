@@ -1,12 +1,13 @@
+using System.Collections.Generic;
 using HotelServiceManagement.Domain.Common;
 
-namespace HotelServiceManagement.Domain.Entities;
-
-public class Role : BaseAuditableEntity
+namespace HotelServiceManagement.Domain.Entities
 {
-    public int RoleId { get; set; }
-    public string RoleName { get; set; } = null!;
-    public string? Description { get; set; }
+    public class Role : BaseEntity
+    {
+        public string RoleName { get; set; } = string.Empty;
 
-    public ICollection<User> Users { get; set; } = new List<User>();
+        // Navigation property
+        public virtual ICollection<User> Users { get; set; } = new List<User>();
+    }
 }

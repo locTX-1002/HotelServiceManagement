@@ -1,15 +1,14 @@
 using HotelServiceManagement.Domain.Common;
 
-namespace HotelServiceManagement.Domain.Entities;
-
-public class ServiceItem : BaseAuditableEntity
+namespace HotelServiceManagement.Domain.Entities
 {
-    public int ServiceItemId { get; set; }
-    public int ServiceCategoryId { get; set; }
-    public string ServiceName { get; set; } = null!;
-    public decimal UnitPrice { get; set; }
-    public bool IsAvailable { get; set; } = true;
+    public class ServiceItem : BaseEntity
+    {
+        public int ServiceCategoryId { get; set; }
+        public string ServiceName { get; set; } = string.Empty;
+        public decimal UnitPrice { get; set; }
+        public bool IsAvailable { get; set; } = true;
 
-    public ServiceCategory ServiceCategory { get; set; } = null!;
-    public ICollection<ServiceOrderDetail> ServiceOrderDetails { get; set; } = new List<ServiceOrderDetail>();
+        public virtual ServiceCategory ServiceCategory { get; set; } = null!;
+    }
 }
