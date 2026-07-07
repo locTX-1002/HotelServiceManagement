@@ -17,6 +17,19 @@ namespace HotelServiceManagement.Api.Controllers
             _invoiceService = invoiceService;
         }
 
+        [HttpGet("{id:int}")]
+        [Authorize(Roles = "Admin,Manager,Receptionist")]
+        public async Task<IActionResult> GetById(int id)
+        {
+            var invoice = await _invoiceService.GetByIdAsync(id);
+            if (invoice == null)
+            {
+                return NotFound(new { Message = $"Invoice ID {id} not found." });
+            }
+
+            return Ok(invoice);
+        }
+
         [HttpGet("stay/{stayId}")]
         [Authorize(Roles = "Admin,Manager,Receptionist")]
         public async Task<IActionResult> GetByStayId(int stayId)

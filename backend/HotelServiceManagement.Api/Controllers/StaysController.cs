@@ -18,6 +18,13 @@ namespace HotelServiceManagement.Api.Controllers
             _stayService = stayService;
         }
 
+        [HttpGet("active")]
+        [Authorize(Roles = "Admin,Manager,Receptionist")]
+        public async Task<IActionResult> GetActive()
+        {
+            return Ok(await _stayService.GetActiveAsync());
+        }
+
         [HttpPost("check-in")]
         [Authorize(Roles = "Admin,Manager,Receptionist")]
         public async Task<IActionResult> CheckIn([FromBody] CheckInRequest request)
