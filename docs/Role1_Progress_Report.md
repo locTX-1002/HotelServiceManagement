@@ -4,9 +4,9 @@
 
 - Member: Phan Tien Phat
 - Role: Role 1 - Team Leader / Backend Core Developer
-- Current branch checked locally: `develop`
-- Latest commit on current branch: `f65710c chore(fe): xoa StatusBadge khong con noi nao dung`
-- Auth MVP status in workspace: source code is present in local staged/working-tree changes. The current Git workspace is not clean, so staged files should be reviewed before PR/push.
+- Current branch checked locally: `be/phat`
+- Latest commit on current branch: `d1910dd fix: update application URL to correct port in launch settings`
+- Role 1 MVP status in workspace: Auth MVP is implemented, and Stay / Check-in / Check-out / Invoice / Payment has been upgraded from placeholder responses to database-backed MVP logic. The current Git workspace is not clean, so staged files should be reviewed before PR/push.
 - Main responsibility: backend foundation, authentication, JWT, role-based authorization, staff account auth, change password, Admin user management, backend setup/testing, and later Stay / Check-in / Check-out / Invoice / Payment modules.
 
 ## 2. Summary of Completed Work
@@ -15,7 +15,9 @@ The workspace contains the staff authentication MVP for the internal hotel manag
 
 Completed backend Auth MVP work includes JWT login, current-user lookup, password change, BCrypt password hashing, active-user validation, role claims in JWT, Admin-only user management APIs, Swagger JWT authorization setup, and clean placeholder-based app settings.
 
-Important current-state note: the API project itself builds successfully. The solution-level build was also able to compile the backend projects, but failed at the test project because the generated test DLL was locked by another process.
+Role 1 operational flow now includes active stay listing, database-backed check-in, database-backed check-out with invoice generation, invoice lookup, and payment recording.
+
+Important current-state note: solution-level build currently passes with 0 warnings and 0 errors.
 
 ## 3. Implemented Backend Foundation
 
@@ -31,8 +33,8 @@ Important current-state note: the API project itself builds successfully. The so
 - Port: current launch profile uses `http://localhost:5000`.
 - JWT: configured through `Jwt` settings in `appsettings.json`; token validation is enabled for issuer, audience, lifetime, and signing key.
 - EF Core: `HotelDbContext` contains DbSets for roles, users, rooms, guests, reservations, stays, services, invoices, and payments.
-- Migration status: one migration is visible, `20260705165953_InitialCreate`. Applied/pending migration status could not be confirmed because the local SQL Server connection was unavailable.
-- Git status: many backend files are currently staged/modified. No conflict markers were found in `backend/HotelServiceManagement.sln` during the final check.
+- Migration status: one migration is visible and applied, `20260705165953_InitialCreate`. Local SQL Server was confirmed through the API and EF migration commands.
+- Git status: Role 1 backend files are modified/untracked, and `docs/Role1_Progress_Report.md` is staged. Review intended files before commit.
 
 ## 4. Implemented Auth Features
 
@@ -46,6 +48,18 @@ Important current-state note: the API project itself builds successfully. The so
 | Active user validation | Complete | `AuthService.LoginAsync` rejects inactive users; `ChangePasswordAsync` also checks active status |
 | Role claims | Complete | `JwtService` includes `ClaimTypes.Role` from `user.Role.RoleName` |
 | Role-based authorization | Complete | JWT auth configured in `Program.cs`; role-protected controllers/actions exist, including `[Authorize(Roles = "Admin")]` |
+
+## 4.1 Implemented Stay / Invoice / Payment Features
+
+| Feature | Status | Evidence / Files |
+|---|---|---|
+| Active stays | Complete | `GET /api/stays/active` in `StaysController.cs`; logic in `Infrastructure/Services/StayService.cs` |
+| Check-in | Complete | Creates `Stay`, updates `ReservationStatus.CheckedIn`, updates room to `Occupied` |
+| Check-out | Complete | Completes stay, completes reservation, moves room to `Cleaning`, creates/updates invoice |
+| Invoice by ID | Complete | `GET /api/invoices/{id}` in `InvoicesController.cs` |
+| Invoice by stay | Complete | `GET /api/invoices/stay/{stayId}` |
+| Create invoice | Complete | `POST /api/invoices/stay/{stayId}` calculates room charge + service charge |
+| Payment recording | Complete | `POST /api/payments`; validates method/amount, stores payment, updates invoice status |
 
 ## 5. Implemented Admin User Management
 
@@ -90,6 +104,9 @@ Important current-state note: the API project itself builds successfully. The so
 - `backend/HotelServiceManagement.Infrastructure/Services/AuthService.cs`: implements login, current-user lookup, and change password.
 - `backend/HotelServiceManagement.Infrastructure/Services/UserManagementService.cs`: implements Admin user management.
 - `backend/HotelServiceManagement.Infrastructure/Services/JwtService.cs`: creates JWT access tokens with user and role claims.
+- `backend/HotelServiceManagement.Infrastructure/Services/StayService.cs`: implements active stays, check-in, check-out, room/reservation status updates, and invoice generation.
+- `backend/HotelServiceManagement.Infrastructure/Services/InvoiceService.cs`: implements invoice lookup and invoice creation with room/service charge calculation.
+- `backend/HotelServiceManagement.Infrastructure/Services/PaymentService.cs`: implements payment validation, payment recording, and invoice payment status updates.
 - `backend/HotelServiceManagement.Infrastructure/Security/PasswordHasher.cs`: wraps BCrypt hashing and verification.
 - `backend/HotelServiceManagement.Infrastructure/Data/HotelDbContext.cs`: EF Core DbContext.
 - `backend/HotelServiceManagement.Infrastructure/Configurations/UserConfiguration.cs`: user mapping, unique email index, role relation, and hashed seed users.
@@ -101,26 +118,41 @@ Important current-state note: the API project itself builds successfully. The so
 - `backend/HotelServiceManagement.Api/appsettings.json`: placeholder-only database/JWT/CORS config.
 - `backend/HotelServiceManagement.Api/Properties/launchSettings.json`: current HTTP launch URL is `http://localhost:5000`.
 - `.gitignore`: ignores local development settings.
+- `backend/.gitignore`: ignores local DataProtection keys generated during development.
 - `backend/HotelServiceManagement.sln`: no conflict markers were found during the final check.
 
 ## 7. Testing Result
 
-- Solution build: failed at the test project because `backend/HotelServiceManagement.Tests/obj/Debug/net10.0/HotelServiceManagement.Tests.dll` was locked by another process.
-  - Error observed: `CS2012`; file may be locked by `Microsoft Defender Antivirus Service`.
-  - Backend projects compiled before the test project failure.
-- API project build: passed with 0 errors and 0 warnings using `backend/HotelServiceManagement.Api/HotelServiceManagement.Api.csproj`.
-- Migration list command: returned migration `20260705165953_InitialCreate`, but SQL Server was not reachable, so applied/pending status could not be confirmed.
+- Solution build: passed with 0 errors and 0 warnings using `backend/HotelServiceManagement.sln`.
+- API project build: passed as part of the solution build.
+- Migration update command: passed; no migrations were applied because the database is already up to date.
+- Migration list command: returned applied migration `20260705165953_InitialCreate`.
 - API run status: API started successfully using the `http` launch profile on port `5000`.
 - Swagger status: Swagger JSON opened successfully at `http://localhost:5000/swagger/v1/swagger.json`.
-- Swagger Auth/User routes observed:
+- Swagger Role 1 routes observed:
   - `/api/auth/login`
   - `/api/auth/me`
   - `/api/auth/change-password`
+  - `/api/stays/active`
+  - `/api/stays/check-in`
+  - `/api/stays/{id}/check-out`
+  - `/api/invoices/{id}`
+  - `/api/invoices/stay/{stayId}`
+  - `/api/payments`
   - `/api/users`
   - `/api/users/{id}`
   - `/api/users/{id}/status`
   - `/api/users/{id}/reset-password`
-- Database smoke test: not rerun in the current workspace because SQL Server connection was unavailable.
+- Database smoke test: passed with real SQL Server data.
+  1. Login as Admin succeeded.
+  2. A test reservation was created in the local database.
+  3. `POST /api/stays/check-in` created an active stay.
+  4. `GET /api/stays/active` returned that stay.
+  5. A completed service order was added for the stay.
+  6. `POST /api/stays/{id}/check-out` generated an invoice.
+  7. Invoice total was `130.00`, including `100.00` room charge and `30.00` service charge.
+  8. `POST /api/payments` recorded full payment.
+  9. `GET /api/invoices/{id}` returned invoice status `Paid`.
 
 ## 8. Security Check
 
@@ -131,45 +163,45 @@ Important current-state note: the API project itself builds successfully. The so
 - JWT key in `appsettings.json` is a placeholder: `PLEASE_CHANGE_THIS_SECRET_KEY_WITH_AT_LEAST_32_CHARS`.
 - Password hashing is implemented through BCrypt.
 - New user creation and Admin password reset hash passwords through `PasswordHasher`.
+- Development DataProtection keys are stored locally under `DataProtectionKeys/` and ignored by git.
 
 ## 9. Remaining TODO for Role 1
 
 - Review current staged/modified files before PR/build verification.
-- Rerun solution-level build after the locked test DLL is released or after cleaning test build artifacts.
-- Confirm local SQL Server connection and rerun database-backed smoke tests.
-- Check-in API.
-- Check-out API.
-- Invoice generation.
-- Payment recording.
-- Integration with Reservation / Stay / ServiceOrder modules.
+- Run the same end-to-end flow once more from Swagger/Postman for demo evidence.
+- Confirm check-in/check-out flow with real reservations created by Role 2 APIs.
+- Confirm service charge calculation after ServiceOrder API is fully implemented.
 - Final backend testing and deployment support.
 - Sync documentation so README target framework, port, health endpoint, and demo passwords match the current backend.
 
 ## 10. Recommendation for Next Step
 
-The next backend module should be: RoomType + Room + Room Map API.
+The next backend module should be: Reservation + ServiceOrder integration testing.
 
-Reason: Reservation depends on available rooms and room types. Check-in depends on reservations. Invoice generation depends on stays and service orders. Building room APIs first gives the team a stable foundation for reservation flow, room map UI, check-in/check-out, and later billing.
+Reason: Role 1 check-in/check-out now depends on real reservations and service orders. The next useful step is to connect the full demo flow: reservation -> check-in -> service order -> check-out -> invoice -> payment.
 
 Suggested order:
 
-1. Review current staged/modified files and rerun solution-level build.
-2. RoomType API.
-3. Room API.
-4. Room Map API.
-5. Reservation API.
-6. Stay / Check-in / Check-out.
-7. Invoice / Payment.
+1. Review current staged/modified files.
+2. Create real reservation test data.
+3. Test check-in from reservation.
+4. Add service orders to active stay.
+5. Test check-out and generated invoice.
+6. Test partial and full payment.
+7. Prepare Postman/Swagger demo script.
 
 ## 11. Final Evaluation
 
-- Is Role 1 Auth MVP complete? Functionally yes: the staff authentication MVP is present for login, current user, change password, JWT, role authorization, and Admin user management.
-- Is it ready for PR? Not yet in the current workspace because Git has many staged/modified files and solution-level build needs to be rerun after the test DLL lock clears.
-- Is it safe to push? Not yet. Review staged files, rerun build, verify database-backed auth smoke tests, then push only intended files.
+- Is Role 1 Auth MVP complete? Yes.
+- Is Role 1 operational flow complete? MVP-level yes for backend logic, and database-backed smoke testing passed.
+- Estimated Role 1 completion after this update: about 85-90%.
+- Is it ready for PR? Close, after reviewing intended files and asking one teammate to retest the same flow.
+- Is it safe to push? Close. Review staged/untracked files, keep `appsettings.Development.json` uncommitted, then push only intended files.
 - What should be checked before pushing?
   - `git status --short` contains only intended files.
   - `backend/HotelServiceManagement.sln` has no `<<<<<<<`, `=======`, or `>>>>>>>` markers.
   - `appsettings.Development.json` remains uncommitted.
   - Solution-level `dotnet build` passes.
   - Swagger runs on the intended team port, currently `5000`.
+  - Check-in, check-out, invoice, and payment work with real DB data.
   - README/demo password documentation is aligned with the actual BCrypt seed passwords.
