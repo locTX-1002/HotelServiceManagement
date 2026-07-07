@@ -311,8 +311,9 @@ export default function RoomPage() {
       >
         <form onSubmit={submit} className="space-y-5">
           <div>
-            <label className={labelCls}>Số phòng *</label>
+            <label htmlFor="room-number" className={labelCls}>Số phòng *</label>
             <input
+              id="room-number"
               className={inputCls}
               placeholder="101"
               value={form.roomNumber}
@@ -340,8 +341,9 @@ export default function RoomPage() {
             </div>
           </div>
           <div>
-            <label className={labelCls}>Loại phòng *</label>
+            <label htmlFor="room-type" className={labelCls}>Loại phòng *</label>
             <select
+              id="room-type"
               className={inputCls}
               value={form.roomTypeId}
               onChange={(e) => setForm({ ...form, roomTypeId: e.target.value })}
@@ -356,8 +358,9 @@ export default function RoomPage() {
           </div>
           {editing ? (
             <div>
-              <label className={labelCls}>Trạng thái</label>
+              <label htmlFor="room-status" className={labelCls}>Trạng thái</label>
               <select
+                id="room-status"
                 className={inputCls}
                 value={form.status}
                 onChange={(e) => setForm({ ...form, status: e.target.value })}

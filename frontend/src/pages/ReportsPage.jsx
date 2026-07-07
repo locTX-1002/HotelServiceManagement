@@ -132,12 +132,12 @@ export default function ReportsPage() {
         </div>
         <div className="flex flex-wrap items-end gap-3 rounded-2xl bg-white p-4 ring-1 ring-black/5 shadow-soft">
           <div>
-            <label className={labelCls}>Từ ngày</label>
-            <input type="date" className={inputCls} value={from} max={today()} onChange={(e) => setFrom(e.target.value)} />
+            <label htmlFor="report-from" className={labelCls}>Từ ngày</label>
+            <input id="report-from" type="date" className={inputCls} value={from} max={today()} onChange={(e) => setFrom(e.target.value)} />
           </div>
           <div>
-            <label className={labelCls}>Đến ngày</label>
-            <input type="date" className={inputCls} value={to} max={today()} onChange={(e) => setTo(e.target.value)} />
+            <label htmlFor="report-to" className={labelCls}>Đến ngày</label>
+            <input id="report-to" type="date" className={inputCls} value={to} max={today()} onChange={(e) => setTo(e.target.value)} />
           </div>
           <div className="flex gap-2 pb-0.5">
             {quickRanges.map((q) => {

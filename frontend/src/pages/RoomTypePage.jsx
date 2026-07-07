@@ -233,8 +233,9 @@ export default function RoomTypePage() {
       >
         <form onSubmit={submit} className="space-y-5">
           <div>
-            <label className={labelCls}>Tên loại phòng *</label>
+            <label htmlFor="rt-name" className={labelCls}>Tên loại phòng *</label>
             <input
+              id="rt-name"
               className={inputCls}
               placeholder="Deluxe"
               value={form.typeName}
@@ -262,8 +263,9 @@ export default function RoomTypePage() {
             </div>
           </div>
           <div>
-            <label className={labelCls}>Giá mỗi đêm (VND) *</label>
+            <label htmlFor="rt-price" className={labelCls}>Giá mỗi đêm (VND) *</label>
             <input
+              id="rt-price"
               type="number"
               min="0"
               step="50000"
