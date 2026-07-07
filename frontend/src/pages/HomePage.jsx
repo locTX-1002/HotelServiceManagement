@@ -5,8 +5,27 @@ import { roomImage } from '../utils/roomImages'
 import { roomMeta } from '../utils/roomMeta'
 import { formatVnd } from '../utils/roomStatus'
 import { localToday as today, addDays } from '../utils/dates'
+import { Reveal } from '../utils/useInView'
 
 const EASE = 'transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]'
+const EASE_SLOW = 'transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)]'
+
+// Nút "Đặt phòng" kiểu button-in-button: mũi tên nằm trong vòng tròn riêng, tách khỏi chữ
+function BookButton({ onClick, dark }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`group/btn inline-flex items-center gap-3 rounded-full py-2 pl-5 pr-2 text-[11px] font-bold uppercase tracking-[0.18em] ${EASE_SLOW} active:scale-[0.97] ${
+        dark ? 'bg-ink-900 text-cream-50 hover:bg-ink-700' : 'bg-brand-600 text-white hover:bg-brand-700'
+      }`}
+    >
+      Đặt phòng
+      <span className={`flex h-6 w-6 items-center justify-center rounded-full bg-white/15 ${EASE_SLOW} group-hover/btn:translate-x-0.5 group-hover/btn:bg-white/25`}>
+        ↗
+      </span>
+    </button>
+  )
+}
 
 const TYPE_PRICES = { Standard: 500000, Deluxe: 800000, Suite: 1200000, 'Family Room': 1500000 }
 const TYPE_DESC = {
@@ -35,6 +54,8 @@ export default function HomePage() {
 
   return (
     <div className="bg-cream-50">
+      <div className="grain-overlay" />
+
       {/* ===== HERO ===== */}
       <section className="relative flex min-h-[100dvh] flex-col">
         <img src="/img/login-hero.jpg" alt="" className="absolute inset-0 h-full w-full object-cover" />
@@ -67,97 +88,102 @@ export default function HomePage() {
           </p>
         </div>
 
-        <div className="relative z-10 px-4 pb-8 sm:px-12">
-          <div className="mx-auto grid max-w-5xl grid-cols-2 overflow-hidden rounded-2xl bg-white shadow-lift sm:grid-cols-[1fr_1fr_0.7fr_1fr_auto]">
-            <div className="border-b border-r border-black/[0.07] px-5 py-4 sm:border-b-0">
-              <p className={cellLabel}>Ngày nhận phòng</p>
-              <input type="date" className={cellInput} value={checkIn} min={today()}
-                onChange={(e) => { setCheckIn(e.target.value); if (e.target.value >= checkOut) setCheckOut(addDays(e.target.value, 1)) }} />
-            </div>
-            <div className="border-b border-black/[0.07] px-5 py-4 sm:border-b-0 sm:border-r">
-              <p className={cellLabel}>Ngày trả phòng</p>
-              <input type="date" className={cellInput} value={checkOut} min={addDays(checkIn, 1)} onChange={(e) => setCheckOut(e.target.value)} />
-            </div>
-            <div className="border-r border-black/[0.07] px-5 py-4">
-              <p className={cellLabel}>Khách</p>
-              <div className="mt-1 flex items-center gap-2">
-                <button onClick={() => setGuests(Math.max(1, guests - 1))} className="text-sm font-bold text-ink-500 hover:text-ink-900">−</button>
-                <span className="w-6 text-center text-sm font-bold tabular-nums">{guests}</span>
-                <button onClick={() => setGuests(Math.min(8, guests + 1))} className="text-sm font-bold text-ink-500 hover:text-ink-900">+</button>
+        <div className="relative z-10 px-4 pb-10 sm:px-12">
+          <div className="mx-auto max-w-5xl bezel-shell">
+            <div className="bezel-core grid grid-cols-2 overflow-hidden sm:grid-cols-[1fr_1fr_0.7fr_1fr_auto]">
+              <div className="border-b border-r border-black/[0.06] px-5 py-4 sm:border-b-0">
+                <p className={cellLabel}>Ngày nhận phòng</p>
+                <input type="date" className={cellInput} value={checkIn} min={today()}
+                  onChange={(e) => { setCheckIn(e.target.value); if (e.target.value >= checkOut) setCheckOut(addDays(e.target.value, 1)) }} />
               </div>
+              <div className="border-b border-black/[0.06] px-5 py-4 sm:border-b-0 sm:border-r">
+                <p className={cellLabel}>Ngày trả phòng</p>
+                <input type="date" className={cellInput} value={checkOut} min={addDays(checkIn, 1)} onChange={(e) => setCheckOut(e.target.value)} />
+              </div>
+              <div className="border-r border-black/[0.06] px-5 py-4">
+                <p className={cellLabel}>Khách</p>
+                <div className="mt-1 flex items-center gap-2">
+                  <button onClick={() => setGuests(Math.max(1, guests - 1))} className="text-sm font-bold text-ink-500 hover:text-ink-900">−</button>
+                  <span className="w-6 text-center text-sm font-bold tabular-nums">{guests}</span>
+                  <button onClick={() => setGuests(Math.min(8, guests + 1))} className="text-sm font-bold text-ink-500 hover:text-ink-900">+</button>
+                </div>
+              </div>
+              <div className="px-5 py-4">
+                <p className={cellLabel}>Loại phòng</p>
+                <select className={`${cellInput} cursor-pointer`} value={roomType} onChange={(e) => setRoomType(e.target.value)}>
+                  <option value="all">Tất cả</option>
+                  {MOCK_ROOM_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+                </select>
+              </div>
+              <button
+                onClick={() => book()}
+                className={`group/cta col-span-2 flex items-center justify-center gap-3 bg-brand-600 px-8 py-4 text-sm font-bold uppercase tracking-[0.18em] text-white ${EASE_SLOW} hover:bg-brand-700 active:scale-[0.98] sm:col-span-1`}
+              >
+                Đặt phòng
+                <span className={`flex h-6 w-6 items-center justify-center rounded-full bg-white/15 ${EASE_SLOW} group-hover/cta:translate-x-0.5`}>↗</span>
+              </button>
             </div>
-            <div className="px-5 py-4">
-              <p className={cellLabel}>Loại phòng</p>
-              <select className={`${cellInput} cursor-pointer`} value={roomType} onChange={(e) => setRoomType(e.target.value)}>
-                <option value="all">Tất cả</option>
-                {MOCK_ROOM_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
-              </select>
-            </div>
-            <button
-              onClick={() => book()}
-              className={`col-span-2 bg-brand-600 px-10 py-4 text-sm font-bold uppercase tracking-[0.18em] text-white ${EASE} hover:bg-brand-700 active:scale-[0.99] sm:col-span-1`}
-            >
-              Đặt phòng
-            </button>
           </div>
         </div>
       </section>
 
       {/* ===== TUYÊN NGÔN: một câu serif giữa trang, không eyebrow ===== */}
-      <section className="mx-auto max-w-3xl px-6 py-24 text-center sm:py-32">
-        <p className="font-display text-2xl font-medium leading-snug text-ink-900 [text-wrap:balance] sm:text-[2rem]">
-          Một khách sạn nhỏ vận hành như một lời hứa: phòng luôn sẵn sàng trước khi bạn đến,
-          <em className="text-brand-600"> bữa sáng nóng</em> và
-          <em className="text-brand-600"> áo sơ mi được ủi phẳng</em> trước khi bạn kịp nhớ ra mình cần chúng.
-        </p>
-        <div className="mx-auto mt-10 h-px w-16 bg-brand-600/40" />
+      <section className="mx-auto max-w-3xl px-6 py-28 text-center sm:py-40">
+        <Reveal>
+          <p className="font-display text-2xl font-medium leading-[1.3] text-ink-900 [text-wrap:balance] sm:text-[2rem]">
+            Một khách sạn nhỏ vận hành như một lời hứa: phòng luôn sẵn sàng trước khi bạn đến,
+            <em className="text-brand-600"> bữa sáng nóng</em> và
+            <em className="text-brand-600"> áo sơ mi được ủi phẳng</em> trước khi bạn kịp nhớ ra mình cần chúng.
+          </p>
+          <div className="mx-auto mt-10 h-px w-16 bg-brand-600/40" />
+        </Reveal>
       </section>
 
       {/* ===== PHÒNG NGHỈ: hàng editorial so le, danh mục 4 hạng phòng ===== */}
-      <section id="rooms" className="mx-auto max-w-6xl px-6 pb-8 sm:px-12">
-        <div className="mb-14 flex items-end justify-between gap-4">
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-brand-600">Phòng nghỉ</p>
-            <h2 className="mt-3 font-display text-4xl font-medium tracking-tight">Chọn không gian của bạn</h2>
+      <section id="rooms" className="mx-auto max-w-6xl px-6 pb-12 sm:px-12">
+        <Reveal>
+          <div className="mb-16 flex items-end justify-between gap-4">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-brand-600">Phòng nghỉ</p>
+              <h2 className="mt-3 font-display text-4xl font-medium tracking-tight">Chọn không gian của bạn</h2>
+            </div>
+            <p className="hidden shrink-0 text-[12px] text-ink-500 sm:block">Từ {formatVnd(500000)} một đêm</p>
           </div>
-          <p className="hidden shrink-0 text-[12px] text-ink-500 sm:block">Từ {formatVnd(500000)} một đêm</p>
-        </div>
+        </Reveal>
 
-        <div className="space-y-20 pb-20">
+        <div className="space-y-24 pb-24">
           {MOCK_ROOM_TYPES.map((t, i) => {
             const meta = roomMeta(t)
             const flip = i % 2 === 1
             return (
-              <div key={t} className="grid items-center gap-8 lg:grid-cols-12">
-                <div className={`group relative overflow-hidden lg:col-span-7 ${flip ? 'lg:order-2' : ''}`}>
-                  <img
-                    src={roomImage(t, 0)}
-                    alt={t}
-                    loading="lazy"
-                    className={`aspect-[16/10] w-full object-cover ${EASE} duration-[1.2s] group-hover:scale-[1.04]`}
-                  />
-                </div>
-                <div className={`lg:col-span-5 ${flip ? 'lg:order-1 lg:pr-6' : 'lg:pl-6'}`}>
-                  <h3 className="font-display text-3xl font-medium tracking-tight">{t}</h3>
-                  <p className="mt-2 text-[12px] text-ink-500">
-                    {meta.capacity} khách, {meta.area} m², {meta.bed}
-                  </p>
-                  <p className="mt-5 max-w-md text-[14px] leading-relaxed text-ink-700">{TYPE_DESC[t]}</p>
-                  <div className="mt-7 flex items-center gap-8">
-                    <p className="font-display text-xl font-semibold tabular-nums">
-                      {formatVnd(TYPE_PRICES[t])}
-                      <span className="font-sans text-[11px] font-normal text-ink-500"> / đêm</span>
+              <Reveal key={t} delay={80}>
+                <div className="grid items-center gap-8 lg:grid-cols-12">
+                  <div className={`bezel-shell lg:col-span-7 ${flip ? 'lg:order-2' : ''}`}>
+                    <div className="group bezel-core relative overflow-hidden">
+                      <img
+                        src={roomImage(t, 0)}
+                        alt={t}
+                        loading="lazy"
+                        className={`aspect-[16/10] w-full object-cover ${EASE} duration-[1.4s] group-hover:scale-[1.05]`}
+                      />
+                    </div>
+                  </div>
+                  <div className={`lg:col-span-5 ${flip ? 'lg:order-1 lg:pr-6' : 'lg:pl-6'}`}>
+                    <h3 className="font-display text-3xl font-medium tracking-tight">{t}</h3>
+                    <p className="mt-2 text-[12px] text-ink-500">
+                      {meta.capacity} khách, {meta.area} m², {meta.bed}
                     </p>
-                    <button
-                      onClick={() => book(t)}
-                      className={`group/btn relative pb-1 text-[11px] font-bold uppercase tracking-[0.22em] text-ink-900 ${EASE}`}
-                    >
-                      Đặt phòng
-                      <span className={`absolute bottom-0 left-0 h-px w-full bg-ink-900/30 ${EASE} group-hover/btn:bg-brand-600`} />
-                    </button>
+                    <p className="mt-5 max-w-md text-[14px] leading-relaxed text-ink-700">{TYPE_DESC[t]}</p>
+                    <div className="mt-8 flex items-center gap-8">
+                      <p className="font-display text-xl font-semibold tabular-nums">
+                        {formatVnd(TYPE_PRICES[t])}
+                        <span className="font-sans text-[11px] font-normal text-ink-500"> / đêm</span>
+                      </p>
+                      <BookButton onClick={() => book(t)} />
+                    </div>
                   </div>
                 </div>
-              </div>
+              </Reveal>
             )
           })}
         </div>
@@ -165,26 +191,30 @@ export default function HomePage() {
 
       {/* ===== DỊCH VỤ: dải nền tối full width, không eyebrow ===== */}
       <section id="services" className="bg-ink-900 text-cream-50">
-        <div className="mx-auto grid max-w-6xl gap-0 px-6 py-24 sm:px-12 lg:grid-cols-2 lg:gap-16">
-          <h2 className="font-display text-4xl font-medium tracking-tight [text-wrap:balance]">
-            Mọi thứ đến tận cửa phòng
-          </h2>
-          <div className="mt-10 space-y-10 lg:mt-2">
-            <div className="border-t border-white/10 pt-8">
-              <p className="font-display text-xl font-medium">Nhà hàng</p>
-              <p className="mt-2.5 max-w-md text-[14px] leading-relaxed text-cream-50/60">
-                Bữa sáng, bữa tối và đồ uống phục vụ tận phòng trong suốt kỳ lưu trú.
-                Gọi món qua lễ tân, chi phí tính thẳng vào hóa đơn khi trả phòng.
-              </p>
+        <div className="mx-auto grid max-w-6xl gap-0 px-6 py-28 sm:px-12 sm:py-36 lg:grid-cols-2 lg:gap-16">
+          <Reveal>
+            <h2 className="font-display text-4xl font-medium tracking-tight [text-wrap:balance]">
+              Mọi thứ đến tận cửa phòng
+            </h2>
+          </Reveal>
+          <Reveal delay={120}>
+            <div className="mt-10 space-y-10 lg:mt-2">
+              <div className="border-t border-white/10 pt-8">
+                <p className="font-display text-xl font-medium">Nhà hàng</p>
+                <p className="mt-2.5 max-w-md text-[14px] leading-relaxed text-cream-50/60">
+                  Bữa sáng, bữa tối và đồ uống phục vụ tận phòng trong suốt kỳ lưu trú.
+                  Gọi món qua lễ tân, chi phí tính thẳng vào hóa đơn khi trả phòng.
+                </p>
+              </div>
+              <div className="border-t border-white/10 pt-8">
+                <p className="font-display text-xl font-medium">Giặt ủi</p>
+                <p className="mt-2.5 max-w-md text-[14px] leading-relaxed text-cream-50/60">
+                  Nhận và trả đồ trong ngày: áo sơ mi, quần âu, ủi phẳng.
+                  Đồ của bạn quay về tủ trước giờ hẹn tiếp theo.
+                </p>
+              </div>
             </div>
-            <div className="border-t border-white/10 pt-8">
-              <p className="font-display text-xl font-medium">Giặt ủi</p>
-              <p className="mt-2.5 max-w-md text-[14px] leading-relaxed text-cream-50/60">
-                Nhận và trả đồ trong ngày: áo sơ mi, quần âu, ủi phẳng.
-                Đồ của bạn quay về tủ trước giờ hẹn tiếp theo.
-              </p>
-            </div>
-          </div>
+          </Reveal>
         </div>
       </section>
 
