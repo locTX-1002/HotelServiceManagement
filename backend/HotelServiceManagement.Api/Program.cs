@@ -107,6 +107,10 @@ if (app.Environment.IsDevelopment())
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "Hotel Service API v1");
     });
+
+    // Máy dev tự tạo/migrate database khi chạy, không cần lệnh tay
+    using var scope = app.Services.CreateScope();
+    scope.ServiceProvider.GetRequiredService<HotelDbContext>().Database.Migrate();
 }
 
 if (!app.Environment.IsDevelopment())
@@ -122,5 +126,6 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.MapGet("/", () => Results.Redirect("/swagger"));
+app.MapGet("/health", () => Results.Ok(new { status = "ok", timeUtc = DateTime.UtcNow }));
 
 app.Run();
