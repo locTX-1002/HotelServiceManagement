@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import client from '../api/client'
+import ErrorBoundary from '../components/ErrorBoundary'
 import { ROLE_LABEL, canAccess, homeFor } from '../utils/roles'
 import { clearSession, getToken, getUser, saveSession } from '../utils/session'
 
@@ -158,7 +159,10 @@ export default function MainLayout() {
       </header>
 
       <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-8">
-        <Outlet />
+        {/* Trang con hỏng thì chỉ vùng này báo lỗi, nav + header vẫn dùng được */}
+        <ErrorBoundary resetKey={pathname}>
+          <Outlet />
+        </ErrorBoundary>
       </main>
     </div>
   )
