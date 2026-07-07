@@ -6,14 +6,14 @@ Web app quản lý khách sạn: room map trực quan, đặt phòng, check-in/c
 | Layer | Công nghệ |
 |---|---|
 | Frontend | React (Vite) + Tailwind CSS + Axios + React Router |
-| Backend | ASP.NET Core Web API (target **net8.0**, chạy được với SDK 8/9/10) — 4 project: Api / Application / Domain / Infrastructure |
+| Backend | ASP.NET Core Web API (target **net10.0**) — 4 project: Api / Application / Domain / Infrastructure |
 | Database | SQL Server + Entity Framework Core (code-first, migrations) |
-| Auth | JWT Bearer (làm ở tuần phát triển) |
+| Auth | JWT Bearer (đã có: login, /me, đổi mật khẩu) |
 | CI | GitHub Actions (`.github/workflows/`) |
 
 ## Yêu cầu môi trường
 
-- **.NET SDK 8, 9 hoặc 10 đều được** — project target `net8.0`; máy chỉ có runtime 9/10 vẫn chạy nhờ `RollForward=LatestMajor`. Kiểm tra: `dotnet --list-sdks`
+- **.NET SDK 10** (bắt buộc, cả nhóm cài cùng bản) — project target `net10.0`. Kiểm tra: `dotnet --list-sdks`, tải tại https://dotnet.microsoft.com/download/dotnet/10.0
 - **Node.js >= 22** — `node -v`
 - **SQL Server** (Express là đủ) — instance mặc định trong repo là `.\SQLEXPRESS`
 - **Git**
@@ -59,10 +59,10 @@ Mở http://localhost:5173 — trang Login hiện ra; các trang trong menu là 
 
 | Email | Mật khẩu | Vai trò |
 |---|---|---|
-| admin@hotel.com | 123456 | Admin |
-| manager@hotel.com | 123456 | Manager |
-| receptionist@hotel.com | 123456 | Receptionist |
-| service@hotel.com | 123456 | ServiceStaff |
+| admin@hotel.com | Admin123! | Admin |
+| manager@hotel.com | Manager123! | Manager |
+| receptionist@hotel.com | Receptionist123! | Receptionist |
+| service@hotel.com | Service123! | ServiceStaff |
 
 ## Cấu trúc thư mục
 

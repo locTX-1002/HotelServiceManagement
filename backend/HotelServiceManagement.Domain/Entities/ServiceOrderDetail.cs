@@ -1,16 +1,15 @@
 using HotelServiceManagement.Domain.Common;
 
-namespace HotelServiceManagement.Domain.Entities;
-
-public class ServiceOrderDetail : BaseAuditableEntity
+namespace HotelServiceManagement.Domain.Entities
 {
-    public int DetailId { get; set; }
-    public int ServiceOrderId { get; set; }
-    public int ServiceItemId { get; set; }
-    public int Quantity { get; set; }
-    public decimal UnitPrice { get; set; }
-    public decimal Subtotal { get; set; }
-
-    public ServiceOrder ServiceOrder { get; set; } = null!;
-    public ServiceItem ServiceItem { get; set; } = null!;
+    public class ServiceOrderDetail : BaseEntity
+    {
+        public int ServiceOrderId { get; set; }
+        public virtual ServiceOrder ServiceOrder { get; set; } = null!;
+        public int ServiceItemId { get; set; }
+        public virtual ServiceItem ServiceItem { get; set; } = null!;
+        public int Quantity { get; set; }
+        public decimal UnitPrice { get; set; }
+        public decimal Subtotal { get; set; }
+    }
 }

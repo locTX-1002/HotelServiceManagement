@@ -1,12 +1,13 @@
+using System.Collections.Generic;
 using HotelServiceManagement.Domain.Common;
 
-namespace HotelServiceManagement.Domain.Entities;
-
-public class ServiceCategory : BaseAuditableEntity
+namespace HotelServiceManagement.Domain.Entities
 {
-    public int ServiceCategoryId { get; set; }
-    public string CategoryName { get; set; } = null!;
-    public bool IsActive { get; set; } = true;
+    public class ServiceCategory : BaseEntity
+    {
+        public string CategoryName { get; set; } = string.Empty;
+        public bool IsActive { get; set; } = true;
 
-    public ICollection<ServiceItem> ServiceItems { get; set; } = new List<ServiceItem>();
+        public virtual ICollection<ServiceItem> ServiceItems { get; set; } = new List<ServiceItem>();
+    }
 }
