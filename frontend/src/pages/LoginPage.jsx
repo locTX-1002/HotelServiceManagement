@@ -66,11 +66,14 @@ export default function LoginPage() {
         <div className="mt-12 border-t border-black/[0.07] pt-5">
           <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-ink-500">Tài khoản demo</p>
           <p className="mt-2 text-[12px] leading-relaxed text-ink-500">
-            admin · manager · receptionist · service <span className="text-ink-700">@hotel.com</span> — mật khẩu <span className="font-semibold text-ink-700">123456</span>
+            admin, manager, receptionist, service <span className="text-ink-700">@hotel.com</span>
+          </p>
+          <p className="text-[12px] leading-relaxed text-ink-500">
+            Mật khẩu <span className="font-semibold text-ink-700">123456</span>
           </p>
         </div>
       </div>
-      <p className="pb-5 text-[11px] text-ink-500/60">Group 2 · SE1919 · FPT University</p>
+      <p className="pb-5 text-[11px] text-ink-500/60">Group 2, SE1919, FPT University</p>
     </div>
   )
 }
