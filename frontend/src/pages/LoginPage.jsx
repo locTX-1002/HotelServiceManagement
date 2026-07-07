@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import client, { isBackendMissing } from '../api/client'
 import { homeFor } from '../utils/roles'
-import { getToken, getUser, saveSession, startDemoSession } from '../utils/session'
+import { getToken, getUser, readAuthResponse, saveSession, startDemoSession } from '../utils/session'
 
 const EASE = 'transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]'
 const inputCls =
@@ -31,7 +31,8 @@ export default function LoginPage() {
     client
       .post('/api/auth/login', { email: email.trim(), password })
       .then((res) => {
-        const { token, user } = res.data ?? {}
+        // Đọc được cả shape phẳng (accessToken + field phẳng) lẫn lồng ({token, user})
+        const { token, user } = readAuthResponse(res.data)
         // Không lưu phiên hỏng nếu backend trả 200 mà thiếu token
         if (!token) return setError('Máy chủ trả về thiếu token — báo backend kiểm tra /api/auth/login.')
         saveSession(token, user)
