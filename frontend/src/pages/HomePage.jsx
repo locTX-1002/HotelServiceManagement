@@ -28,15 +28,48 @@ function BookButton({ onClick, dark }) {
 }
 
 const TYPE_PRICES = { Standard: 500000, Deluxe: 800000, Suite: 1200000, 'Family Room': 1500000 }
-const TYPE_DESC = {
-  Standard: 'Gọn gàng và đủ đầy cho chuyến đi ngắn ngày, với giường đôi êm, bàn làm việc nhỏ và cửa sổ đón nắng sớm.',
-  Deluxe: 'Rộng hơn một nhịp thở, có thêm minibar và góc nhìn thành phố. Lựa chọn được đặt nhiều nhất của chúng tôi.',
-  Suite: 'Phòng khách riêng tách biệt khỏi giường ngủ, có bồn tắm dài và ánh đèn ấm, dành cho kỳ nghỉ không vội vã.',
-  'Family Room': 'Hai giường lớn, một ban công và một góc nhỏ cho trẻ em, để cả nhà ở cùng nhau mà không ai phải nhường ai.',
-}
 
 const cellLabel = 'text-[10px] font-bold uppercase tracking-[0.18em] text-ink-500'
 const cellInput = 'mt-1 w-full bg-transparent text-sm font-semibold text-ink-900 outline-none'
+
+// Ô ảnh loại phòng kiểu tấm bìa: ảnh phủ kín, thông tin nổi trên gradient tối ở đáy
+function RoomTile({ type, featured, wide, onBook }) {
+  const meta = roomMeta(type)
+  return (
+    <div
+      className={`group relative overflow-hidden rounded-2xl ${
+        featured ? 'aspect-[4/3] lg:aspect-auto lg:h-full lg:min-h-[24rem]' : wide ? 'aspect-[21/9]' : 'aspect-[4/3]'
+      }`}
+    >
+      <img
+        src={roomImage(type, 0)}
+        alt={type}
+        loading="lazy"
+        className={`absolute inset-0 h-full w-full object-cover ${EASE_SLOW} duration-[1.4s] group-hover:scale-[1.06]`}
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-ink-900/85 via-ink-900/10 to-transparent" />
+      <div className="absolute inset-x-0 bottom-0 p-6">
+        <h3 className="font-display text-2xl font-medium text-white">{type}</h3>
+        <p className="mt-1 text-[12px] text-white/70">
+          {meta.capacity} khách · {meta.area} m² · {formatVnd(TYPE_PRICES[type])}/đêm
+        </p>
+        <button
+          onClick={() => onBook(type)}
+          className={`mt-3 text-[11px] font-bold uppercase tracking-[0.16em] text-white underline-offset-4 ${EASE} hover:underline`}
+        >
+          Đặt phòng →
+        </button>
+      </div>
+    </div>
+  )
+}
+
+const EXPERIENCES = [
+  { title: 'Nhà hàng', desc: 'Bữa sáng, bữa tối và đồ uống phục vụ tận phòng suốt kỳ lưu trú.', img: '/img/v1.jpg' },
+  { title: 'Giặt ủi', desc: 'Nhận và trả trong ngày, áo sơ mi và quần âu được ủi phẳng.', img: '/img/v2.jpg' },
+  { title: 'Đưa đón sân bay', desc: 'Xe riêng đón tận nơi, đặt trước qua lễ tân ít nhất 2 giờ.', img: '/img/v3.jpg' },
+  { title: 'Dịch vụ phòng 24/7', desc: 'Gọi món, yêu cầu thêm khăn hay gối vào bất kỳ giờ nào.', img: '/img/suite.jpg' },
+]
 
 export default function HomePage() {
   const navigate = useNavigate()
@@ -139,10 +172,10 @@ export default function HomePage() {
         </Reveal>
       </section>
 
-      {/* ===== PHÒNG NGHỈ: hàng editorial so le, danh mục 4 hạng phòng ===== */}
-      <section id="rooms" className="mx-auto max-w-6xl px-6 pb-12 sm:px-12">
+      {/* ===== PHÒNG NGHỈ: lưới bento bất đối xứng, Suite làm tâm điểm ===== */}
+      <section id="rooms" className="mx-auto max-w-6xl px-6 pb-24 sm:px-12">
         <Reveal>
-          <div className="mb-16 flex items-end justify-between gap-4">
+          <div className="mb-10 flex items-end justify-between gap-4">
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-brand-600">Phòng nghỉ</p>
               <h2 className="mt-3 font-display text-4xl font-medium tracking-tight">Chọn không gian của bạn</h2>
@@ -151,71 +184,65 @@ export default function HomePage() {
           </div>
         </Reveal>
 
-        <div className="space-y-24 pb-24">
-          {MOCK_ROOM_TYPES.map((t, i) => {
-            const meta = roomMeta(t)
-            const flip = i % 2 === 1
-            return (
-              <Reveal key={t} delay={80}>
-                <div className="grid items-center gap-8 lg:grid-cols-12">
-                  <div className={`bezel-shell lg:col-span-7 ${flip ? 'lg:order-2' : ''}`}>
-                    <div className="group bezel-core relative overflow-hidden">
-                      <img
-                        src={roomImage(t, 0)}
-                        alt={t}
-                        loading="lazy"
-                        className={`aspect-[16/10] w-full object-cover ${EASE} duration-[1.4s] group-hover:scale-[1.05]`}
-                      />
-                    </div>
-                  </div>
-                  <div className={`lg:col-span-5 ${flip ? 'lg:order-1 lg:pr-6' : 'lg:pl-6'}`}>
-                    <h3 className="font-display text-3xl font-medium tracking-tight">{t}</h3>
-                    <p className="mt-2 text-[12px] text-ink-500">
-                      {meta.capacity} khách, {meta.area} m², {meta.bed}
-                    </p>
-                    <p className="mt-5 max-w-md text-[14px] leading-relaxed text-ink-700">{TYPE_DESC[t]}</p>
-                    <div className="mt-8 flex items-center gap-8">
-                      <p className="font-display text-xl font-semibold tabular-nums">
-                        {formatVnd(TYPE_PRICES[t])}
-                        <span className="font-sans text-[11px] font-normal text-ink-500"> / đêm</span>
-                      </p>
-                      <BookButton onClick={() => book(t)} />
-                    </div>
-                  </div>
-                </div>
-              </Reveal>
-            )
-          })}
-        </div>
+        <Reveal delay={80}>
+          <div className="grid grid-cols-1 gap-5 lg:grid-cols-12 lg:gap-6">
+            <div className="lg:col-span-7">
+              <RoomTile type="Suite" featured onBook={book} />
+            </div>
+            <div className="flex flex-col gap-5 lg:col-span-5 lg:gap-6">
+              <RoomTile type="Deluxe" onBook={book} />
+              <RoomTile type="Standard" onBook={book} />
+            </div>
+            <div className="lg:col-span-12">
+              <RoomTile type="Family Room" wide onBook={book} />
+            </div>
+          </div>
+        </Reveal>
       </section>
 
-      {/* ===== DỊCH VỤ: dải nền tối full width, không eyebrow ===== */}
+      {/* ===== DỊCH VỤ: dải nền tối full width, dải ảnh cuộn ngang, không eyebrow ===== */}
       <section id="services" className="bg-ink-900 text-cream-50">
-        <div className="mx-auto grid max-w-6xl gap-0 px-6 py-28 sm:px-12 sm:py-36 lg:grid-cols-2 lg:gap-16">
+        <div className="mx-auto max-w-6xl px-6 py-28 sm:px-12 sm:py-36">
           <Reveal>
-            <h2 className="font-display text-4xl font-medium tracking-tight [text-wrap:balance]">
+            <h2 className="max-w-lg font-display text-4xl font-medium tracking-tight [text-wrap:balance]">
               Mọi thứ đến tận cửa phòng
             </h2>
           </Reveal>
+
           <Reveal delay={120}>
-            <div className="mt-10 space-y-10 lg:mt-2">
-              <div className="border-t border-white/10 pt-8">
-                <p className="font-display text-xl font-medium">Nhà hàng</p>
-                <p className="mt-2.5 max-w-md text-[14px] leading-relaxed text-cream-50/60">
-                  Bữa sáng, bữa tối và đồ uống phục vụ tận phòng trong suốt kỳ lưu trú.
-                  Gọi món qua lễ tân, chi phí tính thẳng vào hóa đơn khi trả phòng.
-                </p>
-              </div>
-              <div className="border-t border-white/10 pt-8">
-                <p className="font-display text-xl font-medium">Giặt ủi</p>
-                <p className="mt-2.5 max-w-md text-[14px] leading-relaxed text-cream-50/60">
-                  Nhận và trả đồ trong ngày: áo sơ mi, quần âu, ủi phẳng.
-                  Đồ của bạn quay về tủ trước giờ hẹn tiếp theo.
-                </p>
-              </div>
+            <div className="mt-14 flex snap-x snap-mandatory gap-5 overflow-x-auto pb-4 sm:gap-6">
+              {EXPERIENCES.map((s) => (
+                <div key={s.title} className="w-72 shrink-0 snap-start sm:w-80">
+                  <div className="relative aspect-[4/5] overflow-hidden rounded-2xl ring-1 ring-white/10">
+                    <img src={s.img} alt={s.title} loading="lazy" className="absolute inset-0 h-full w-full object-cover" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-ink-900/90 via-ink-900/15 to-transparent" />
+                    <div className="absolute inset-x-0 bottom-0 p-5">
+                      <p className="font-display text-xl font-medium text-white">{s.title}</p>
+                      <p className="mt-2 text-[13px] leading-relaxed text-white/70">{s.desc}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </Reveal>
         </div>
+      </section>
+
+      {/* ===== CTA ĐÓNG: dải ảnh full-bleed, một lời mời ngắn trước footer ===== */}
+      <section className="relative flex min-h-[60vh] items-center justify-center overflow-hidden px-6 py-24 text-center">
+        <img src="/img/v3.jpg" alt="" className="absolute inset-0 h-full w-full object-cover" />
+        <div className="absolute inset-0 bg-ink-900/70" />
+        <Reveal className="relative z-10">
+          <h2 className="font-display text-3xl font-medium text-white [text-wrap:balance] sm:text-5xl">
+            Kỳ nghỉ tiếp theo của bạn đang chờ
+          </h2>
+          <p className="mx-auto mt-4 max-w-sm text-[14px] text-white/70">
+            Chọn ngày, chọn phòng, chúng tôi lo phần còn lại.
+          </p>
+          <div className="mt-8 flex justify-center">
+            <BookButton onClick={() => book()} />
+          </div>
+        </Reveal>
       </section>
 
       {/* ===== FOOTER ===== */}
