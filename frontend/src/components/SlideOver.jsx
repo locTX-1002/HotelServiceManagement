@@ -9,7 +9,19 @@ export default function SlideOver({ open, eyebrow, title, onClose, children }) {
 
   useEffect(() => {
     if (!open) return
-    const onKey = (e) => e.key === 'Escape' && onClose()
+    const onKey = (e) => {
+      if (e.key === 'Escape') return onClose()
+      // Nhốt Tab trong panel: tới cuối vòng về đầu và ngược lại, không thoát ra sau lưng modal
+      if (e.key === 'Tab') {
+        const items = panelRef.current?.querySelectorAll('button, input, select, textarea, [href]')
+        if (!items || items.length === 0) return
+        const list = [...items].filter((el) => !el.disabled)
+        const first = list[0]
+        const last = list[list.length - 1]
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus() }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus() }
+      }
+    }
     window.addEventListener('keydown', onKey)
     // Đưa con trỏ vào ô nhập đầu tiên để nhập liền tay, không phải rê chuột
     const timer = setTimeout(() => {
