@@ -4,6 +4,7 @@ import ConfirmDialog from '../components/ConfirmDialog'
 import ErrorState from '../components/ErrorState'
 import RoomsTabs from '../components/RoomsTabs'
 import SlideOver from '../components/SlideOver'
+import { useToast } from '../components/toastContext'
 import { MOCK_ROOM_TYPES_FULL } from '../mock/hotelMock'
 import { roomImage } from '../utils/roomImages'
 import { formatVnd } from '../utils/roomStatus'
@@ -23,6 +24,7 @@ const apiError = (err) =>
     : err.response?.data?.message ?? 'Máy chủ báo lỗi. Thử lại sau ít phút.'
 
 export default function RoomTypePage() {
+  const toast = useToast()
   const [types, setTypes] = useState(null)
   const [usingMock, setUsingMock] = useState(false)
   const [loadError, setLoadError] = useState(false)
@@ -85,7 +87,11 @@ export default function RoomTypePage() {
         ? client.put(`/api/room-types/${drawer.item.roomTypeId}`, payload)
         : client.post('/api/room-types', payload)
     req
-      .then(() => { setDrawer(null); load() })
+      .then(() => {
+        toast.success(drawer.mode === 'edit' ? `Đã lưu ${payload.typeName}` : `Đã thêm loại phòng ${payload.typeName}`)
+        setDrawer(null)
+        load()
+      })
       .catch((err) => setFormError(apiError(err)))
       .finally(() => setSaving(false))
   }
@@ -95,7 +101,11 @@ export default function RoomTypePage() {
     setDeleting(true)
     client
       .delete(`/api/room-types/${toDelete.roomTypeId}`)
-      .then(() => { setToDelete(null); load() })
+      .then(() => {
+        toast.success(`Đã xóa loại phòng ${toDelete.typeName}`)
+        setToDelete(null)
+        load()
+      })
       .catch((err) => setDeleteError(apiError(err)))
       .finally(() => setDeleting(false))
   }

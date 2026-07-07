@@ -4,6 +4,7 @@ import ConfirmDialog from '../components/ConfirmDialog'
 import ErrorState from '../components/ErrorState'
 import RoomsTabs from '../components/RoomsTabs'
 import SlideOver from '../components/SlideOver'
+import { useToast } from '../components/toastContext'
 import { MOCK_ROOMS, MOCK_ROOM_TYPES_FULL } from '../mock/hotelMock'
 import { roomImage } from '../utils/roomImages'
 import { ROOM_STATUS, formatVnd } from '../utils/roomStatus'
@@ -27,6 +28,7 @@ const deleteBlocked = (room) =>
     : ''
 
 export default function RoomPage() {
+  const toast = useToast()
   const [rooms, setRooms] = useState(null)
   const [types, setTypes] = useState([])
   const [usingMock, setUsingMock] = useState(false)
@@ -121,7 +123,11 @@ export default function RoomPage() {
         ? client.put(`/api/rooms/${drawer.item.roomId}`, payload)
         : client.post('/api/rooms', payload)
     req
-      .then(() => { setDrawer(null); load() })
+      .then(() => {
+        toast.success(drawer.mode === 'edit' ? `Đã lưu phòng ${payload.roomNumber}` : `Đã thêm phòng ${payload.roomNumber}`)
+        setDrawer(null)
+        load()
+      })
       .catch((err) => setFormError(apiError(err)))
       .finally(() => setSaving(false))
   }
@@ -134,7 +140,11 @@ export default function RoomPage() {
     setDeleting(true)
     client
       .delete(`/api/rooms/${toDelete.roomId}`)
-      .then(() => { setToDelete(null); load() })
+      .then(() => {
+        toast.success(`Đã xóa phòng ${toDelete.roomNumber}`)
+        setToDelete(null)
+        load()
+      })
       .catch((err) => setDeleteError(apiError(err)))
       .finally(() => setDeleting(false))
   }
