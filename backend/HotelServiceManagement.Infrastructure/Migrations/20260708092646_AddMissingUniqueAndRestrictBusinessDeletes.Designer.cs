@@ -11,38 +11,31 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace HotelServiceManagement.Infrastructure.Migrations
 {
-    [DbContext(typeof(AppDbContext))]
-    [Migration("20260705103111_InitialCreate")]
-    partial class InitialCreate
+    [DbContext(typeof(HotelDbContext))]
+    [Migration("20260708092646_AddMissingUniqueAndRestrictBusinessDeletes")]
+    partial class AddMissingUniqueAndRestrictBusinessDeletes
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.11")
+                .HasAnnotation("ProductVersion", "10.0.9")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
             modelBuilder.Entity("HotelServiceManagement.Domain.Entities.Guest", b =>
                 {
-                    b.Property<int>("GuestId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("GuestId"));
-
-                    b.Property<string>("Address")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Email")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
 
                     b.Property<string>("FullName")
                         .IsRequired()
@@ -50,30 +43,29 @@ namespace HotelServiceManagement.Infrastructure.Migrations
                         .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("IdentityNumber")
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("PhoneNumber")
+                        .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("GuestId");
+                    b.HasKey("Id");
 
                     b.ToTable("Guests");
                 });
 
             modelBuilder.Entity("HotelServiceManagement.Domain.Entities.Invoice", b =>
                 {
-                    b.Property<int>("InvoiceId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("InvoiceId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTime>("InvoiceDate")
                         .HasColumnType("datetime2");
 
                     b.Property<decimal>("RoomCharge")
@@ -86,8 +78,8 @@ namespace HotelServiceManagement.Infrastructure.Migrations
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<int>("StayId")
                         .HasColumnType("int");
@@ -96,10 +88,7 @@ namespace HotelServiceManagement.Infrastructure.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("InvoiceId");
+                    b.HasKey("Id");
 
                     b.HasIndex("StayId")
                         .IsUnique();
@@ -109,68 +98,60 @@ namespace HotelServiceManagement.Infrastructure.Migrations
 
             modelBuilder.Entity("HotelServiceManagement.Domain.Entities.Payment", b =>
                 {
-                    b.Property<int>("PaymentId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PaymentId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<decimal>("Amount")
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
                     b.Property<int>("InvoiceId")
                         .HasColumnType("int");
-
-                    b.Property<string>("Method")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
 
                     b.Property<DateTime>("PaymentDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("PaymentMethod")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
+                    b.Property<string>("TransactionId")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
-                    b.HasKey("PaymentId");
+                    b.HasKey("Id");
 
                     b.HasIndex("InvoiceId");
 
-                    b.ToTable("Payments", t =>
-                        {
-                            t.HasCheckConstraint("CK_Payments_Amount", "[Amount] > 0");
-                        });
+                    b.ToTable("Payments");
                 });
 
             modelBuilder.Entity("HotelServiceManagement.Domain.Entities.Reservation", b =>
                 {
-                    b.Property<int>("ReservationId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ReservationId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("BookingCode")
                         .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<DateTime>("CheckInDate")
                         .HasColumnType("datetime2");
 
                     b.Property<DateTime>("CheckOutDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<int>("GuestId")
@@ -181,91 +162,97 @@ namespace HotelServiceManagement.Infrastructure.Migrations
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("ReservationId");
+                    b.HasKey("Id");
 
                     b.HasIndex("BookingCode")
                         .IsUnique();
 
                     b.HasIndex("GuestId");
 
-                    b.HasIndex("RoomId", "CheckInDate", "CheckOutDate");
+                    b.HasIndex("RoomId");
 
                     b.ToTable("Reservations", t =>
                         {
-                            t.HasCheckConstraint("CK_Reservations_DateRange", "[CheckOutDate] > [CheckInDate]");
+                            t.HasCheckConstraint("CK_Reservation_CheckOutDate_CheckInDate", "[CheckOutDate] > [CheckInDate]");
                         });
                 });
 
             modelBuilder.Entity("HotelServiceManagement.Domain.Entities.Role", b =>
                 {
-                    b.Property<int>("RoleId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("RoleId"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("RoleName")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("RoleId");
+                    b.HasKey("Id");
 
                     b.HasIndex("RoleName")
                         .IsUnique();
 
                     b.ToTable("Roles");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            RoleName = "Admin"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            RoleName = "Manager"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            RoleName = "Receptionist"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            RoleName = "ServiceStaff"
+                        });
                 });
 
             modelBuilder.Entity("HotelServiceManagement.Domain.Entities.Room", b =>
                 {
-                    b.Property<int>("RoomId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("RoomId"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int>("Floor")
                         .HasColumnType("int");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
 
                     b.Property<string>("RoomNumber")
                         .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<int>("RoomTypeId")
                         .HasColumnType("int");
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("RoomId");
+                    b.HasKey("Id");
 
                     b.HasIndex("RoomNumber")
                         .IsUnique();
@@ -273,15 +260,71 @@ namespace HotelServiceManagement.Infrastructure.Migrations
                     b.HasIndex("RoomTypeId");
 
                     b.ToTable("Rooms");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Floor = 1,
+                            IsActive = true,
+                            RoomNumber = "101",
+                            RoomTypeId = 1,
+                            Status = "Available"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Floor = 1,
+                            IsActive = true,
+                            RoomNumber = "102",
+                            RoomTypeId = 1,
+                            Status = "Available"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Floor = 2,
+                            IsActive = true,
+                            RoomNumber = "201",
+                            RoomTypeId = 2,
+                            Status = "Available"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Floor = 2,
+                            IsActive = true,
+                            RoomNumber = "202",
+                            RoomTypeId = 2,
+                            Status = "Available"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            Floor = 3,
+                            IsActive = true,
+                            RoomNumber = "301",
+                            RoomTypeId = 3,
+                            Status = "Available"
+                        },
+                        new
+                        {
+                            Id = 6,
+                            Floor = 4,
+                            IsActive = true,
+                            RoomNumber = "401",
+                            RoomTypeId = 4,
+                            Status = "Available"
+                        });
                 });
 
             modelBuilder.Entity("HotelServiceManagement.Domain.Entities.RoomType", b =>
                 {
-                    b.Property<int>("RoomTypeId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("RoomTypeId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<decimal>("BasePrice")
                         .HasPrecision(18, 2)
@@ -290,112 +333,199 @@ namespace HotelServiceManagement.Infrastructure.Migrations
                     b.Property<int>("Capacity")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
 
                     b.Property<string>("TypeName")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("RoomTypeId");
+                    b.HasKey("Id");
 
                     b.HasIndex("TypeName")
                         .IsUnique();
 
                     b.ToTable("RoomTypes");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            BasePrice = 100.00m,
+                            Capacity = 2,
+                            Description = "Standard Room with basic amenities",
+                            IsActive = true,
+                            TypeName = "Standard"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            BasePrice = 180.00m,
+                            Capacity = 2,
+                            Description = "Deluxe Room with premium comfort",
+                            IsActive = true,
+                            TypeName = "Deluxe"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            BasePrice = 300.00m,
+                            Capacity = 4,
+                            Description = "Luxurious Suite with separate living area",
+                            IsActive = true,
+                            TypeName = "Suite"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            BasePrice = 250.00m,
+                            Capacity = 6,
+                            Description = "Spacious Room ideal for families",
+                            IsActive = true,
+                            TypeName = "Family Room"
+                        });
                 });
 
             modelBuilder.Entity("HotelServiceManagement.Domain.Entities.ServiceCategory", b =>
                 {
-                    b.Property<int>("ServiceCategoryId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ServiceCategoryId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("CategoryName")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
 
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("ServiceCategoryId");
-
-                    b.HasIndex("CategoryName")
-                        .IsUnique();
+                    b.HasKey("Id");
 
                     b.ToTable("ServiceCategories");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            CategoryName = "Restaurant",
+                            IsActive = true
+                        },
+                        new
+                        {
+                            Id = 2,
+                            CategoryName = "Laundry",
+                            IsActive = true
+                        });
                 });
 
             modelBuilder.Entity("HotelServiceManagement.Domain.Entities.ServiceItem", b =>
                 {
-                    b.Property<int>("ServiceItemId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ServiceItemId"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<bool>("IsAvailable")
-                        .HasColumnType("bit");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
 
                     b.Property<int>("ServiceCategoryId")
                         .HasColumnType("int");
 
                     b.Property<string>("ServiceName")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
 
                     b.Property<decimal>("UnitPrice")
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("ServiceItemId");
+                    b.HasKey("Id");
 
                     b.HasIndex("ServiceCategoryId");
 
                     b.ToTable("ServiceItems");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            IsAvailable = true,
+                            ServiceCategoryId = 1,
+                            ServiceName = "Breakfast Set",
+                            UnitPrice = 15.00m
+                        },
+                        new
+                        {
+                            Id = 2,
+                            IsAvailable = true,
+                            ServiceCategoryId = 1,
+                            ServiceName = "Dinner Set",
+                            UnitPrice = 25.00m
+                        },
+                        new
+                        {
+                            Id = 3,
+                            IsAvailable = true,
+                            ServiceCategoryId = 1,
+                            ServiceName = "Bottled Water",
+                            UnitPrice = 2.00m
+                        },
+                        new
+                        {
+                            Id = 4,
+                            IsAvailable = true,
+                            ServiceCategoryId = 2,
+                            ServiceName = "Shirt Washing",
+                            UnitPrice = 5.00m
+                        },
+                        new
+                        {
+                            Id = 5,
+                            IsAvailable = true,
+                            ServiceCategoryId = 2,
+                            ServiceName = "Pants Washing",
+                            UnitPrice = 5.00m
+                        },
+                        new
+                        {
+                            Id = 6,
+                            IsAvailable = true,
+                            ServiceCategoryId = 2,
+                            ServiceName = "Ironing Service",
+                            UnitPrice = 3.00m
+                        });
                 });
 
             modelBuilder.Entity("HotelServiceManagement.Domain.Entities.ServiceOrder", b =>
                 {
-                    b.Property<int>("ServiceOrderId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ServiceOrderId"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("OrderDate")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<int>("StayId")
                         .HasColumnType("int");
@@ -404,10 +534,7 @@ namespace HotelServiceManagement.Infrastructure.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("ServiceOrderId");
+                    b.HasKey("Id");
 
                     b.HasIndex("StayId");
 
@@ -416,14 +543,11 @@ namespace HotelServiceManagement.Infrastructure.Migrations
 
             modelBuilder.Entity("HotelServiceManagement.Domain.Entities.ServiceOrderDetail", b =>
                 {
-                    b.Property<int>("DetailId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("DetailId"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int>("Quantity")
                         .HasColumnType("int");
@@ -442,28 +566,22 @@ namespace HotelServiceManagement.Infrastructure.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("DetailId");
+                    b.HasKey("Id");
 
                     b.HasIndex("ServiceItemId");
 
                     b.HasIndex("ServiceOrderId");
 
-                    b.ToTable("ServiceOrderDetails", t =>
-                        {
-                            t.HasCheckConstraint("CK_ServiceOrderDetails_Quantity", "[Quantity] > 0");
-                        });
+                    b.ToTable("ServiceOrderDetails");
                 });
 
             modelBuilder.Entity("HotelServiceManagement.Domain.Entities.Stay", b =>
                 {
-                    b.Property<int>("StayId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("StayId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("ActualCheckIn")
                         .HasColumnType("datetime2");
@@ -471,21 +589,15 @@ namespace HotelServiceManagement.Infrastructure.Migrations
                     b.Property<DateTime?>("ActualCheckOut")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
                     b.Property<int>("ReservationId")
                         .HasColumnType("int");
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("StayId");
+                    b.HasKey("Id");
 
                     b.HasIndex("ReservationId")
                         .IsUnique();
@@ -495,19 +607,16 @@ namespace HotelServiceManagement.Infrastructure.Migrations
 
             modelBuilder.Entity("HotelServiceManagement.Domain.Entities.User", b =>
                 {
-                    b.Property<int>("UserId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("UserId"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Email")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
 
                     b.Property<string>("FullName")
                         .IsRequired()
@@ -525,10 +634,7 @@ namespace HotelServiceManagement.Infrastructure.Migrations
                     b.Property<int>("RoleId")
                         .HasColumnType("int");
 
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("UserId");
+                    b.HasKey("Id");
 
                     b.HasIndex("Email")
                         .IsUnique();
@@ -536,6 +642,44 @@ namespace HotelServiceManagement.Infrastructure.Migrations
                     b.HasIndex("RoleId");
 
                     b.ToTable("Users");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Email = "admin@hotel.com",
+                            FullName = "Admin User",
+                            IsActive = true,
+                            PasswordHash = "$2a$11$/LMRtOKzu0S3y3Wy61vsPeGaBR.YvvmkgijRmvbobvp2RNSlrkD3e",
+                            RoleId = 1
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Email = "manager@hotel.com",
+                            FullName = "Manager User",
+                            IsActive = true,
+                            PasswordHash = "$2a$11$T0pLWQ97vlvtz6TZar.kpeCGQeYKu3ojVW/99TcqzI5n3FWPEbPma",
+                            RoleId = 2
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Email = "receptionist@hotel.com",
+                            FullName = "Receptionist User",
+                            IsActive = true,
+                            PasswordHash = "$2a$11$1J39Dq0KNZJB5wIWzBxdAOOZx8hsLsvUFsdlq3f4sCTAMvdJNw7l6",
+                            RoleId = 3
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Email = "service@hotel.com",
+                            FullName = "Service Staff",
+                            IsActive = true,
+                            PasswordHash = "$2a$11$A4f9RZSr6u.ePghf680l8eU5FJos.cO0eqaadtofI4wY4pu5D/Gb.",
+                            RoleId = 4
+                        });
                 });
 
             modelBuilder.Entity("HotelServiceManagement.Domain.Entities.Invoice", b =>
@@ -615,13 +759,13 @@ namespace HotelServiceManagement.Infrastructure.Migrations
             modelBuilder.Entity("HotelServiceManagement.Domain.Entities.ServiceOrderDetail", b =>
                 {
                     b.HasOne("HotelServiceManagement.Domain.Entities.ServiceItem", "ServiceItem")
-                        .WithMany("ServiceOrderDetails")
+                        .WithMany()
                         .HasForeignKey("ServiceItemId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("HotelServiceManagement.Domain.Entities.ServiceOrder", "ServiceOrder")
-                        .WithMany("Details")
+                        .WithMany("OrderDetails")
                         .HasForeignKey("ServiceOrderId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -688,14 +832,9 @@ namespace HotelServiceManagement.Infrastructure.Migrations
                     b.Navigation("ServiceItems");
                 });
 
-            modelBuilder.Entity("HotelServiceManagement.Domain.Entities.ServiceItem", b =>
-                {
-                    b.Navigation("ServiceOrderDetails");
-                });
-
             modelBuilder.Entity("HotelServiceManagement.Domain.Entities.ServiceOrder", b =>
                 {
-                    b.Navigation("Details");
+                    b.Navigation("OrderDetails");
                 });
 
             modelBuilder.Entity("HotelServiceManagement.Domain.Entities.Stay", b =>

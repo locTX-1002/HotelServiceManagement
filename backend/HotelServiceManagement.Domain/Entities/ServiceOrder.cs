@@ -1,16 +1,21 @@
+using System;
+using System.Collections.Generic;
 using HotelServiceManagement.Domain.Common;
 using HotelServiceManagement.Domain.Enums;
 
-namespace HotelServiceManagement.Domain.Entities;
-
-public class ServiceOrder : BaseAuditableEntity
+namespace HotelServiceManagement.Domain.Entities
 {
-    public int ServiceOrderId { get; set; }
-    public int StayId { get; set; }
-    public DateTime OrderDate { get; set; } = DateTime.UtcNow;
-    public ServiceOrderStatus Status { get; set; } = ServiceOrderStatus.Pending;
-    public decimal TotalAmount { get; set; }
+    public class ServiceOrder : BaseEntity
+    {
+        public int StayId { get; set; }
+        public virtual Stay Stay { get; set; } = null!;
+        public DateTime OrderDate { get; set; }
+        public ServiceOrderStatus Status { get; set; } = ServiceOrderStatus.Pending;
+        public decimal TotalAmount { get; set; }
+        public int? CreatedByUserId { get; set; }
+        public virtual User? CreatedByUser { get; set; }
 
-    public Stay Stay { get; set; } = null!;
-    public ICollection<ServiceOrderDetail> Details { get; set; } = new List<ServiceOrderDetail>();
+        // Navigation property
+        public virtual ICollection<ServiceOrderDetail> OrderDetails { get; set; } = new List<ServiceOrderDetail>();
+    }
 }

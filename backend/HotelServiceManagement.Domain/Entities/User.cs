@@ -1,15 +1,15 @@
 using HotelServiceManagement.Domain.Common;
 
-namespace HotelServiceManagement.Domain.Entities;
-
-public class User : BaseAuditableEntity
+namespace HotelServiceManagement.Domain.Entities
 {
-    public int UserId { get; set; }
-    public int RoleId { get; set; }
-    public string FullName { get; set; } = null!;
-    public string Email { get; set; } = null!;
-    public string PasswordHash { get; set; } = null!;
-    public bool IsActive { get; set; } = true;
+    public class User : BaseEntity
+    {
+        public string FullName { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string PasswordHash { get; set; } = string.Empty;
+        public bool IsActive { get; set; } = true;
 
-    public Role Role { get; set; } = null!;
+        public int RoleId { get; set; }
+        public virtual Role Role { get; set; } = null!;
+    }
 }
