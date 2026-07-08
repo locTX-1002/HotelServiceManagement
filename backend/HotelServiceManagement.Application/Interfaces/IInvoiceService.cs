@@ -7,6 +7,6 @@ namespace HotelServiceManagement.Application.Interfaces
     {
         Task<InvoiceResponse?> GetByIdAsync(int id);
         Task<InvoiceResponse?> GetInvoiceByStayIdAsync(int stayId);
-        Task<InvoiceResponse?> CreateInvoiceAsync(int stayId);
+        Task<InvoiceResponse?> CreateInvoiceAsync(int stayId, int createdByUserId);
     }
 }

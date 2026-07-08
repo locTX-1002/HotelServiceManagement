@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using HotelServiceManagement.Application.Interfaces;
@@ -46,12 +47,25 @@ namespace HotelServiceManagement.Api.Controllers
         [Authorize(Roles = "Admin,Manager,Receptionist")]
         public async Task<IActionResult> Create(int stayId)
         {
-            var invoice = await _invoiceService.CreateInvoiceAsync(stayId);
+            var invoice = await _invoiceService.CreateInvoiceAsync(stayId, GetCurrentUserId());
             if (invoice == null)
             {
                 return BadRequest(new { Message = "Failed to create invoice." });
             }
             return Ok(invoice);
+        }
+
+        private int GetCurrentUserId()
+        {
+            var userIdValue = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                ?? User.FindFirst("userId")?.Value;
+
+            if (!int.TryParse(userIdValue, out var userId))
+            {
+                throw new UnauthorizedAccessException("Invalid user token.");
+            }
+
+            return userId;
         }
     }
 }

@@ -26,6 +26,11 @@ namespace HotelServiceManagement.Infrastructure.Configurations
                    .HasForeignKey(r => r.RoomId)
                    .OnDelete(DeleteBehavior.Restrict);
 
+            builder.HasOne(r => r.CreatedByUser)
+                   .WithMany()
+                   .HasForeignKey(r => r.CreatedByUserId)
+                   .OnDelete(DeleteBehavior.Restrict);
+
             // Check Constraint: CheckOutDate > CheckInDate
             builder.ToTable(t => t.HasCheckConstraint("CK_Reservation_CheckOutDate_CheckInDate", "[CheckOutDate] > [CheckInDate]"));
         }

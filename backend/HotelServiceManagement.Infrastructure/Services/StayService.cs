@@ -41,7 +41,7 @@ namespace HotelServiceManagement.Infrastructure.Services
             }).ToList();
         }
 
-        public async Task<CheckOutResponse> CheckInAsync(CheckInRequest request)
+        public async Task<CheckOutResponse> CheckInAsync(CheckInRequest request, int checkedInByUserId)
         {
             if (request == null || request.ReservationId <= 0)
             {
@@ -87,6 +87,7 @@ namespace HotelServiceManagement.Infrastructure.Services
             {
                 ReservationId = reservation.Id,
                 ActualCheckIn = actualCheckIn,
+                CheckedInByUserId = checkedInByUserId,
                 Status = StayStatus.Active
             };
 
@@ -105,7 +106,7 @@ namespace HotelServiceManagement.Infrastructure.Services
             };
         }
 
-        public async Task<CheckOutResponse> CheckOutAsync(int stayId)
+        public async Task<CheckOutResponse> CheckOutAsync(int stayId, int checkedOutByUserId)
         {
             var stay = await _context.Stays
                 .AsSplitQuery()
@@ -134,6 +135,7 @@ namespace HotelServiceManagement.Infrastructure.Services
 
             stay.ActualCheckOut = actualCheckOut;
             stay.Status = StayStatus.Completed;
+            stay.CheckedOutByUserId = checkedOutByUserId;
             stay.Reservation.Status = ReservationStatus.Completed;
             stay.Reservation.Room.Status = RoomStatus.Cleaning;
 
@@ -146,6 +148,7 @@ namespace HotelServiceManagement.Infrastructure.Services
                     RoomCharge = roomCharge,
                     ServiceCharge = serviceCharge,
                     TotalAmount = totalAmount,
+                    CreatedByUserId = checkedOutByUserId,
                     Status = InvoiceStatus.Unpaid
                 };
                 _context.Invoices.Add(invoice);
@@ -157,6 +160,7 @@ namespace HotelServiceManagement.Infrastructure.Services
                 stay.Invoice.ServiceCharge = serviceCharge;
                 stay.Invoice.TotalAmount = totalAmount;
                 stay.Invoice.Status = ResolveInvoiceStatus(stay.Invoice);
+                stay.Invoice.CreatedByUserId ??= checkedOutByUserId;
             }
 
             await _context.SaveChangesAsync();

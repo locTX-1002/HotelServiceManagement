@@ -34,7 +34,7 @@ namespace HotelServiceManagement.Infrastructure.Services
             return invoice == null ? null : ToResponse(invoice);
         }
 
-        public async Task<InvoiceResponse?> CreateInvoiceAsync(int stayId)
+        public async Task<InvoiceResponse?> CreateInvoiceAsync(int stayId, int createdByUserId)
         {
             var stay = await _context.Stays
                 .AsSplitQuery()
@@ -68,9 +68,14 @@ namespace HotelServiceManagement.Infrastructure.Services
                 {
                     StayId = stay.Id,
                     InvoiceDate = invoiceDate,
+                    CreatedByUserId = createdByUserId,
                     Status = InvoiceStatus.Unpaid
                 };
                 _context.Invoices.Add(invoice);
+            }
+            else
+            {
+                invoice.CreatedByUserId ??= createdByUserId;
             }
 
             invoice.RoomCharge = roomCharge;

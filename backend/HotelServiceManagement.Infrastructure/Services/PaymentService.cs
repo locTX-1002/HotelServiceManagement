@@ -16,7 +16,7 @@ namespace HotelServiceManagement.Infrastructure.Services
             _context = context;
         }
 
-        public async Task<PaymentResponse> ProcessPaymentAsync(PaymentRequest request)
+        public async Task<PaymentResponse> ProcessPaymentAsync(PaymentRequest request, int receivedByUserId)
         {
             if (request == null || request.InvoiceId <= 0)
             {
@@ -69,6 +69,7 @@ namespace HotelServiceManagement.Infrastructure.Services
                 Amount = request.Amount,
                 PaymentMethod = paymentMethod,
                 Status = PaymentStatus.Completed,
+                ReceivedByUserId = receivedByUserId,
                 TransactionId = $"PMT-{Guid.NewGuid():N}"
             };
 
