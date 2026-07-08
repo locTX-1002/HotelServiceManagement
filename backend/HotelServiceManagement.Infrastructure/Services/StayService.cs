@@ -58,9 +58,9 @@ namespace HotelServiceManagement.Infrastructure.Services
                 return Failure("Reservation not found.");
             }
 
-            if (reservation.Status is ReservationStatus.Cancelled or ReservationStatus.Completed)
+            if (reservation.Status != ReservationStatus.Confirmed)
             {
-                return Failure("Reservation is not eligible for check-in.");
+                return Failure("Only confirmed reservations can be checked in.");
             }
 
             if (reservation.Stay != null)

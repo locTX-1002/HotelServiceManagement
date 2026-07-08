@@ -16,7 +16,7 @@ namespace HotelServiceManagement.Infrastructure.Configurations
             builder.HasOne(so => so.Stay)
                    .WithMany(s => s.ServiceOrders)
                    .HasForeignKey(so => so.StayId)
-                   .OnDelete(DeleteBehavior.Cascade);
+                   .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

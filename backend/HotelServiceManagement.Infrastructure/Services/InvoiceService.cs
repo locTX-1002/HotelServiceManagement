@@ -51,7 +51,12 @@ namespace HotelServiceManagement.Infrastructure.Services
                 return null;
             }
 
-            var invoiceDate = stay.ActualCheckOut ?? DateTime.UtcNow;
+            if (stay.Status != StayStatus.Completed || stay.ActualCheckOut == null)
+            {
+                return null;
+            }
+
+            var invoiceDate = stay.ActualCheckOut.Value;
             var roomCharge = CalculateRoomCharge(stay, invoiceDate);
             var serviceCharge = CalculateServiceCharge(stay);
             var totalAmount = roomCharge + serviceCharge;
