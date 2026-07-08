@@ -41,13 +41,13 @@ export default function LoginPage() {
       })
       .catch((err) => {
         if (err.response?.status === 401) setError('Email hoặc mật khẩu không đúng.')
-        else if (isBackendMissing(err)) setError('API đăng nhập chưa sẵn sàng (T2 backend). Dùng "Vào thẳng" bên dưới để xem giao diện.')
+        else if (isBackendMissing(err)) setError('Không kết nối được máy chủ. Vui lòng thử lại sau.')
         else setError(err.response?.data?.message ?? 'Máy chủ báo lỗi. Thử lại sau ít phút.')
       })
       .finally(() => setLoading(false))
   }
 
-  // Phiên demo để xem UI khi backend chưa có login - token giả sẽ bị 401 khi backend bật auth
+  // Phiên xem thử giao diện - token tạm sẽ bị 401 và tự đăng xuất khi máy chủ bật xác thực
   const enterDemo = () => {
     startDemoSession()
     navigate(from ?? '/dashboard', { replace: true })
@@ -120,7 +120,7 @@ export default function LoginPage() {
           onClick={enterDemo}
           className={`mt-4 w-max text-[12px] font-semibold text-ink-500 underline-offset-4 ${EASE} hover:text-ink-900 hover:underline`}
         >
-          Vào thẳng không cần đăng nhập (dev only)
+          Xem thử giao diện
         </button>
 
         <div className="mt-12 border-t border-black/[0.07] pt-5">

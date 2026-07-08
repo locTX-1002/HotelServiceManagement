@@ -52,8 +52,8 @@ export const MOCK_ROOMS = MOCK_ROOM_MAP.flatMap((f) =>
   })),
 )
 
-// Báo cáo T5: sinh số liệu mẫu ỔN ĐỊNH theo ngày (cùng ngày luôn ra cùng số)
-// cho dải ngày bất kỳ. Shape dự kiến theo API_DOCS - chốt lại với Khoa khi làm API.
+// Báo cáo: sinh số liệu mẫu ỔN ĐỊNH theo ngày (cùng ngày luôn ra cùng số)
+// cho dải ngày bất kỳ, theo shape trong API_DOCS.
 const seedOf = (dateStr) => dateStr.split('-').reduce((acc, part) => (acc * 31 + Number(part)) % 997, 7)
 
 // GET /api/reports/revenue?from=&to= -> [{ date, roomRevenue, serviceRevenue }]

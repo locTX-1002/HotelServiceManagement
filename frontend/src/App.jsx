@@ -28,10 +28,10 @@ export default function App() {
               <Route path="/rooms/map" element={<RoomMapPage />} />
               <Route path="/rooms" element={<RoomPage />} />
               <Route path="/rooms/types" element={<RoomTypePage />} />
-              <Route path="/reservations" element={<Placeholder title="Danh sách đặt phòng" owner="Lộc" day="T3-T4" />} />
+              <Route path="/reservations" element={<Placeholder title="Danh sách đặt phòng" />} />
               <Route path="/reservations/new" element={<CreateReservationPage />} />
-              <Route path="/checkin-checkout" element={<Placeholder title="Check-in / Check-out" owner="Lộc" day="T4 08/07" />} />
-              <Route path="/service-orders" element={<Placeholder title="Dịch vụ" owner="Lộc" day="T5 09/07" />} />
+              <Route path="/checkin-checkout" element={<Placeholder title="Check-in / Check-out" />} />
+              <Route path="/service-orders" element={<Placeholder title="Dịch vụ" />} />
               <Route path="/reports" element={<ReportsPage />} />
             </Route>
           </Route>

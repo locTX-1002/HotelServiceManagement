@@ -19,7 +19,7 @@ const EMPTY_FORM = { roomNumber: '', floor: 1, roomTypeId: '', status: 'Availabl
 
 const apiError = (err) =>
   isBackendMissing(err)
-    ? 'Không gọi được API /api/rooms (backend chưa chạy hoặc chưa merge auth). Thử lại khi backend sẵn sàng.'
+    ? 'Không kết nối được máy chủ. Vui lòng thử lại sau.'
     : err.response?.data?.message ?? 'Máy chủ báo lỗi. Thử lại sau ít phút.'
 
 // Nghiệp vụ: không cho xóa phòng đang phục vụ khách - phải check-out / hủy đặt trước
@@ -195,7 +195,7 @@ export default function RoomPage() {
         <div className="ml-auto flex items-center gap-2.5">
           {usingMock && (
             <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-800 ring-1 ring-amber-600/20">
-              Dữ liệu mẫu — chờ API
+              Dữ liệu mẫu
             </span>
           )}
           <input

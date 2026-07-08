@@ -65,7 +65,7 @@ export default function ReportsPage() {
     // stale = đã đổi dải ngày trong lúc chờ mạng -> response cũ không được đè lên dữ liệu mới
     let stale = false
     const params = { from, to }
-    // Shape dự kiến theo API_DOCS (chốt lại với Khoa ở T5) - backend chưa có thì dùng số liệu mẫu
+    // Gọi API thật; nếu máy chủ chưa sẵn sàng thì dùng số liệu mẫu
     client
       .get('/api/reports/revenue', { params })
       .then((res) => { if (!stale) setRevenue(res.data) })
@@ -161,7 +161,7 @@ export default function ReportsPage() {
       <div className="mt-4 flex flex-wrap items-center gap-2.5">
         {usingMock && (
           <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-800 ring-1 ring-amber-600/20">
-            Dữ liệu mẫu — chờ API (T5)
+            Dữ liệu mẫu
           </span>
         )}
         {rangeError && (

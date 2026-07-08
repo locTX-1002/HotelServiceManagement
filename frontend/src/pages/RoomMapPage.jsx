@@ -103,18 +103,18 @@ function RoomDrawer({ room, onClose }) {
     ? {
         Available: [
           { label: 'Đặt phòng này', primary: true, onClick: () => navigate('/reservations/new') },
-          { label: 'Chuyển sang bảo trì', note: 'chờ API PATCH status' },
+          { label: 'Chuyển sang bảo trì', note: 'sắp có' },
         ],
         Reserved: [
           { label: 'Check-in khách', primary: true, onClick: () => navigate('/checkin-checkout') },
-          { label: 'Hủy đặt phòng', note: 'chờ API cancel' },
+          { label: 'Hủy đặt phòng', note: 'sắp có' },
         ],
         Occupied: [
           { label: 'Check-out', primary: true, onClick: () => navigate('/checkin-checkout') },
           { label: 'Thêm dịch vụ', onClick: () => navigate('/service-orders') },
         ],
-        Cleaning: [{ label: 'Đánh dấu đã sạch', primary: true, note: 'chờ API PATCH status' }],
-        Maintenance: [{ label: 'Mở lại phòng', primary: true, note: 'chờ API PATCH status' }],
+        Cleaning: [{ label: 'Đánh dấu đã sạch', primary: true, note: 'sắp có' }],
+        Maintenance: [{ label: 'Mở lại phòng', primary: true, note: 'sắp có' }],
       }[room.status] ?? []
     : []
 
@@ -293,7 +293,7 @@ export default function RoomMapPage() {
         <div className="ml-auto flex items-center gap-2.5">
           {usingMock && (
             <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-800 ring-1 ring-amber-600/20">
-              Dữ liệu mẫu — chờ API
+              Dữ liệu mẫu
             </span>
           )}
           {updatedAt && (

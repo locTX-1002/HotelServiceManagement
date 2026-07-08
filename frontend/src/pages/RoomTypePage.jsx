@@ -17,11 +17,10 @@ const labelCls = 'mb-1.5 block text-[12px] font-semibold text-ink-700'
 
 const EMPTY_FORM = { typeName: '', capacity: 2, basePrice: '' }
 
-// Lỗi mutation: backend chưa có endpoint thì nói thẳng đang chờ task nào,
-// còn lỗi thật thì hiện message của máy chủ - không che bằng mock.
+// Backend chưa kết nối được -> báo chung; lỗi thật thì hiện message của máy chủ.
 const apiError = (err) =>
   isBackendMissing(err)
-    ? 'Không gọi được API /api/room-types (backend chưa chạy hoặc chưa merge auth). Thử lại khi backend sẵn sàng.'
+    ? 'Không kết nối được máy chủ. Vui lòng thử lại sau.'
     : err.response?.data?.message ?? 'Máy chủ báo lỗi. Thử lại sau ít phút.'
 
 export default function RoomTypePage() {
@@ -136,7 +135,7 @@ export default function RoomTypePage() {
 
       {usingMock && (
         <span className="mt-4 inline-block rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-800 ring-1 ring-amber-600/20">
-          Dữ liệu mẫu — chờ API
+          Dữ liệu mẫu
         </span>
       )}
 
