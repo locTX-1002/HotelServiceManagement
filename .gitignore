@@ -9,7 +9,6 @@ obj/
 *.log
 
 # EF Core / secrets
-appsettings.Development.json
 appsettings.Production.json
 *.pfx
 
@@ -26,3 +25,4 @@ npm-debug.log*
 *.swp
 .DS_Store
 Thumbs.db
+.claude/

@@ -252,20 +252,22 @@ export default function RoomMapPage() {
           <p className="font-display text-[15px] italic capitalize tracking-wide text-brand-600">{dateLabel}</p>
           <h1 className="mt-1 font-display text-4xl font-semibold tracking-tight">Sơ đồ phòng</h1>
         </div>
-        <div className="flex overflow-hidden rounded-xl bg-white ring-1 ring-black/10 divide-x divide-black/[0.07]">
-          <div className="px-5 py-3 text-center">
-            <p className="font-display text-2xl font-semibold tabular-nums leading-none">{allRooms.length}</p>
-            <p className="mt-1 text-[9px] font-bold uppercase tracking-[0.2em] text-ink-500">Tổng</p>
-          </div>
-          <div className="px-5 py-3 text-center">
-            <p className="font-display text-2xl font-semibold tabular-nums leading-none">{count('Available')}</p>
-            <p className="mt-1 text-[9px] font-bold uppercase tracking-[0.2em] text-ink-500">Sẵn sàng</p>
-          </div>
-          <div className="px-5 py-3 text-center">
-            <p className="font-display text-2xl font-semibold tabular-nums leading-none text-brand-600">
-              {allRooms.length ? Math.round((occupied / allRooms.length) * 100) : 0}%
-            </p>
-            <p className="mt-1 text-[9px] font-bold uppercase tracking-[0.2em] text-ink-500">Lấp đầy</p>
+        <div className="bezel-shell">
+          <div className="bezel-core flex divide-x divide-black/[0.06]">
+            <div className="px-5 py-3 text-center">
+              <p className="font-display text-2xl font-semibold tabular-nums leading-none">{allRooms.length}</p>
+              <p className="mt-1 text-[9px] font-bold uppercase tracking-[0.2em] text-ink-500">Tổng</p>
+            </div>
+            <div className="px-5 py-3 text-center">
+              <p className="font-display text-2xl font-semibold tabular-nums leading-none">{count('Available')}</p>
+              <p className="mt-1 text-[9px] font-bold uppercase tracking-[0.2em] text-ink-500">Sẵn sàng</p>
+            </div>
+            <div className="px-5 py-3 text-center">
+              <p className="font-display text-2xl font-semibold tabular-nums leading-none text-brand-600">
+                {allRooms.length ? Math.round((occupied / allRooms.length) * 100) : 0}%
+              </p>
+              <p className="mt-1 text-[9px] font-bold uppercase tracking-[0.2em] text-ink-500">Lấp đầy</p>
+            </div>
           </div>
         </div>
       </div>
@@ -293,7 +295,7 @@ export default function RoomMapPage() {
         <div className="ml-auto flex items-center gap-2.5">
           {usingMock && (
             <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-800 ring-1 ring-amber-600/20">
-              Dữ liệu mẫu — chờ API
+              dữ liệu mẫu, chờ API
             </span>
           )}
           {updatedAt && (

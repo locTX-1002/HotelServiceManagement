@@ -1,6 +1,6 @@
 # Hướng dẫn Kiến trúc (Architecture Guidelines) - HSMS
 
-Tài liệu này quy định tiêu chuẩn kiến trúc, cấu trúc thư mục và quy tắc phát triển cho dự án Hotel and Service Management System (.NET 8 / net8.0, chạy được với SDK 8/9/10). Mục tiêu: dễ bảo trì, dễ chia việc 5 người không giẫm chân nhau, hoàn thành được trong 1 tuần.
+Tài liệu này quy định tiêu chuẩn kiến trúc, cấu trúc thư mục và quy tắc phát triển cho dự án Hotel and Service Management System (.NET 10 / net10.0, cả nhóm cài cùng SDK 10). Mục tiêu: dễ bảo trì, dễ chia việc 5 người không giẫm chân nhau, hoàn thành được trong 1 tuần.
 
 ---
 
