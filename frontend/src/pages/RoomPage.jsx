@@ -6,6 +6,7 @@ import RoomsTabs from '../components/RoomsTabs'
 import SlideOver from '../components/SlideOver'
 import { useToast } from '../components/toastContext'
 import { MOCK_ROOMS, MOCK_ROOM_TYPES_FULL } from '../mock/hotelMock'
+import { denormalizeStatus, normalizeRoom, normalizeRoomType } from '../utils/apiShape'
 import { roomImage } from '../utils/roomImages'
 import { ROOM_STATUS, formatVnd } from '../utils/roomStatus'
 
@@ -18,7 +19,7 @@ const EMPTY_FORM = { roomNumber: '', floor: 1, roomTypeId: '', status: 'Availabl
 
 const apiError = (err) =>
   isBackendMissing(err)
-    ? 'API /api/rooms chưa sẵn sàng (T2 - Khoa). Form đã hoạt động, backend nối xong là chạy.'
+    ? 'Không gọi được API /api/rooms (backend chưa chạy hoặc chưa merge auth). Thử lại khi backend sẵn sàng.'
     : err.response?.data?.message ?? 'Máy chủ báo lỗi. Thử lại sau ít phút.'
 
 // Nghiệp vụ: không cho xóa phòng đang phục vụ khách - phải check-out / hủy đặt trước
@@ -47,7 +48,7 @@ export default function RoomPage() {
     setLoadError(false)
     client
       .get('/api/rooms')
-      .then((res) => { setRooms(res.data); setUsingMock(false) })
+      .then((res) => { setRooms(res.data.map(normalizeRoom)); setUsingMock(false) })
       .catch((err) => {
         if (isBackendMissing(err)) { setRooms(MOCK_ROOMS); setUsingMock(true) }
         else setLoadError(true) // lỗi thật: không che bằng mock
@@ -55,7 +56,7 @@ export default function RoomPage() {
     // Loại phòng chỉ phục vụ ô chọn trong form + tra tên, lỗi thì âm thầm dùng mock
     client
       .get('/api/room-types')
-      .then((res) => setTypes(res.data))
+      .then((res) => setTypes(res.data.map(normalizeRoomType)))
       .catch(() => setTypes(MOCK_ROOM_TYPES_FULL))
   }
   useEffect(load, [])
@@ -115,7 +116,7 @@ export default function RoomPage() {
       roomNumber: form.roomNumber.trim(),
       floor: Number(form.floor),
       roomTypeId: Number(form.roomTypeId),
-      status: form.status,
+      status: denormalizeStatus(form.status), // backend nhận enum dạng số
       isActive: drawer?.item?.isActive ?? true,
     }
     const req =

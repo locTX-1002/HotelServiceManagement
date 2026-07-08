@@ -6,6 +6,7 @@ import RoomsTabs from '../components/RoomsTabs'
 import SlideOver from '../components/SlideOver'
 import { useToast } from '../components/toastContext'
 import { MOCK_ROOM_TYPES_FULL } from '../mock/hotelMock'
+import { normalizeRoomType } from '../utils/apiShape'
 import { roomImage } from '../utils/roomImages'
 import { formatVnd } from '../utils/roomStatus'
 
@@ -20,7 +21,7 @@ const EMPTY_FORM = { typeName: '', capacity: 2, basePrice: '' }
 // còn lỗi thật thì hiện message của máy chủ - không che bằng mock.
 const apiError = (err) =>
   isBackendMissing(err)
-    ? 'API /api/room-types chưa sẵn sàng (T2 - Khoa). Form đã hoạt động, backend nối xong là chạy.'
+    ? 'Không gọi được API /api/room-types (backend chưa chạy hoặc chưa merge auth). Thử lại khi backend sẵn sàng.'
     : err.response?.data?.message ?? 'Máy chủ báo lỗi. Thử lại sau ít phút.'
 
 export default function RoomTypePage() {
@@ -40,7 +41,7 @@ export default function RoomTypePage() {
     setLoadError(false)
     client
       .get('/api/room-types')
-      .then((res) => { setTypes(res.data); setUsingMock(false) })
+      .then((res) => { setTypes(res.data.map(normalizeRoomType)); setUsingMock(false) })
       .catch((err) => {
         if (isBackendMissing(err)) { setTypes(MOCK_ROOM_TYPES_FULL); setUsingMock(true) }
         else setLoadError(true) // lỗi thật: không che bằng mock
