@@ -153,7 +153,8 @@ export default function RoomTypePage() {
       )}
 
       {!loadError && types !== null && types.length > 0 && (
-        <div className="card-rise mt-6 overflow-hidden rounded-2xl bg-white ring-1 ring-black/5 shadow-soft">
+        <div className="card-rise mt-6 bezel-shell">
+          <div className="bezel-core overflow-hidden">
           <div className="overflow-x-auto">
           <table className="w-full min-w-[560px] text-left">
             <thead>
@@ -210,6 +211,7 @@ export default function RoomTypePage() {
               ))}
             </tbody>
           </table>
+          </div>
           </div>
         </div>
       )}

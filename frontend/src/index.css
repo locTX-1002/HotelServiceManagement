@@ -2,7 +2,7 @@
 
 @theme {
   --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Fraunces", ui-serif, Georgia, serif;
+  --font-display: "Cormorant Garamond", ui-serif, Georgia, serif;
 
   /* Palette hospitality: nền kem ấm, chữ espresso, nhấn terracotta */
   --color-cream-50: #fdfbf7;
@@ -16,8 +16,12 @@
   --color-brand-500: #c96a41;
   --color-brand-50: #fbeee7;
 
+  /* Shadow "double-bezel": ambient mềm bên ngoài + highlight khắc bên trong */
   --shadow-soft: 0 1px 2px rgb(33 29 24 / 0.05), 0 10px 30px -12px rgb(33 29 24 / 0.12);
   --shadow-lift: 0 2px 4px rgb(33 29 24 / 0.06), 0 16px 40px -16px rgb(33 29 24 / 0.18);
+  --shadow-bezel: 0 24px 48px -20px rgb(33 29 24 / 0.22), 0 2px 6px rgb(33 29 24 / 0.06);
+  --inset-highlight: inset 0 1px 0 rgb(255 255 255 / 0.6);
+  --inset-highlight-dark: inset 0 1px 0 rgb(255 255 255 / 0.08);
 
   --ease-fluid: cubic-bezier(0.32, 0.72, 0, 1);
 }
@@ -36,4 +40,46 @@ body {
 }
 .card-rise {
   animation: rise 0.55s var(--ease-fluid) both;
+}
+
+/* Reveal khi cuộn tới - dùng với hook useInView (IntersectionObserver, không nghe scroll event) */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  filter: blur(6px);
+  transition: opacity 0.9s var(--ease-fluid), transform 0.9s var(--ease-fluid), filter 0.9s var(--ease-fluid);
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+  filter: blur(0);
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal { opacity: 1; transform: none; filter: none; transition: none; }
+  .card-rise { animation: none; }
+}
+
+/* Lớp hạt phim mỏng - phủ cố định toàn màn, không đặt trong vùng cuộn (đỡ tốn GPU) */
+.grain-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+  opacity: 0.035;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Khối vòm "double-bezel": lớp vỏ ngoài mỏng bao lấy khối trong, tạo cảm giác vật lý.
+   Vỏ phải khác tông rõ với lõi (kem-50), không thì hiệu ứng vòm biến mất trên nền trắng. */
+.bezel-shell {
+  padding: 0.5rem;
+  border-radius: 1.75rem;
+  background: linear-gradient(160deg, #e4d6bd, #d8c6a3);
+  box-shadow: var(--shadow-bezel);
+}
+.bezel-core {
+  border-radius: 1.25rem;
+  background-color: var(--color-cream-50);
+  box-shadow: var(--inset-highlight), 0 1px 2px rgb(33 29 24 / 0.08);
 }

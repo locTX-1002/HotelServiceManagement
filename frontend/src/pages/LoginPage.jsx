@@ -54,8 +54,12 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center bg-cream-50 px-6">
-      <div className="flex w-full max-w-sm flex-1 flex-col justify-center py-10">
+    <div className="relative flex min-h-screen flex-col items-center bg-cream-100 px-6">
+      <div className="grain-overlay" />
+      <div className="flex w-full max-w-md flex-1 flex-col justify-center py-10">
+        {/* Double-bezel: vỏ vòm mềm bọc lấy card đăng nhập - chất Amanoi */}
+        <div className="bezel-shell">
+          <div className="bezel-core px-7 py-9 sm:px-10 sm:py-12">
         {/* Logo vòm đồng bộ với nav */}
         <div className="flex flex-col items-center text-center">
           <span className="flex h-12 w-10 items-end justify-center rounded-t-full rounded-b-md bg-brand-600 pb-2 font-display text-lg font-bold text-white">
@@ -65,7 +69,7 @@ export default function LoginPage() {
           <p className="mt-1 text-[9px] font-semibold tracking-[0.32em] text-ink-500">★★★★★ HOTEL & SERVICE MANAGEMENT</p>
         </div>
 
-        <h1 className="mt-10 text-2xl font-extrabold tracking-tight">Chào mừng trở lại!</h1>
+        <h1 className="mt-10 font-display text-4xl font-medium tracking-tight">Chào mừng trở lại</h1>
         <p className="mt-2 text-sm leading-relaxed text-ink-500">
           Đăng nhập bằng tài khoản nhân viên để bắt đầu ca làm việc và truy cập mọi chức năng theo vai trò của bạn.
         </p>
@@ -123,11 +127,17 @@ export default function LoginPage() {
           Xem thử giao diện
         </button>
 
-        <div className="mt-12 border-t border-black/[0.07] pt-5">
+        <div className="mt-10 border-t border-black/[0.07] pt-5">
           <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-ink-500">Tài khoản demo</p>
           <p className="mt-2 text-[12px] leading-relaxed text-ink-500">
-            admin · manager · receptionist · service <span className="text-ink-700">@hotel.com</span> — mật khẩu <span className="font-semibold text-ink-700">123456</span>
+            admin<span className="text-ink-700">/Admin123!</span> · manager<span className="text-ink-700">/Manager123!</span>
           </p>
+          <p className="text-[12px] leading-relaxed text-ink-500">
+            receptionist<span className="text-ink-700">/Receptionist123!</span> · service<span className="text-ink-700">/Service123!</span>
+          </p>
+          <p className="mt-1 text-[11px] text-ink-500/70">đuôi email chung: @hotel.com</p>
+        </div>
+          </div>
         </div>
       </div>
       <p className="pb-5 text-[11px] text-ink-500/60">Group 2 · SE1919 · FPT University</p>

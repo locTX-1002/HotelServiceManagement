@@ -187,23 +187,25 @@ export default function ReportsPage() {
 
       {!rangeError && !loadError && !loading && (
         <>
-          {/* KPI: 3 ô thường + ô tổng doanh thu tô nổi như trang Tổng quan */}
-          <div className="card-rise mt-5 grid grid-cols-2 overflow-hidden rounded-2xl bg-white ring-1 ring-black/5 shadow-soft sm:grid-cols-4 sm:divide-x sm:divide-black/5">
-            <div className="px-5 py-4">
-              <p className="font-display text-2xl font-semibold tabular-nums leading-none">{days.length}</p>
-              <p className="mt-1.5 text-[11px] font-medium text-ink-500">ngày trong kỳ</p>
-            </div>
-            <div className="px-5 py-4">
-              <p className="font-display text-2xl font-semibold tabular-nums leading-none">{totalOccupied}</p>
-              <p className="mt-1.5 text-[11px] font-medium text-ink-500">đêm phòng có khách</p>
-            </div>
-            <div className="px-5 py-4">
-              <p className="font-display text-2xl font-semibold tabular-nums leading-none">{avgOccupancy}%</p>
-              <p className="mt-1.5 text-[11px] font-medium text-ink-500">công suất trung bình</p>
-            </div>
-            <div className="col-span-2 bg-brand-50 px-5 py-4 sm:col-span-1">
-              <p className="font-display text-2xl font-semibold tabular-nums leading-none text-brand-700">{formatVnd(total)}</p>
-              <p className="mt-1.5 text-[11px] font-medium text-ink-500">tổng doanh thu kỳ này</p>
+          {/* KPI: 3 ô thường + ô tổng doanh thu tô nổi - double-bezel như trang Tổng quan */}
+          <div className="card-rise mt-5 bezel-shell">
+            <div className="bezel-core grid grid-cols-2 overflow-hidden sm:grid-cols-4 sm:divide-x sm:divide-black/[0.06]">
+              <div className="px-5 py-4">
+                <p className="font-display text-3xl font-semibold tabular-nums leading-none">{days.length}</p>
+                <p className="mt-1.5 text-[11px] font-medium text-ink-500">ngày trong kỳ</p>
+              </div>
+              <div className="px-5 py-4">
+                <p className="font-display text-3xl font-semibold tabular-nums leading-none">{totalOccupied}</p>
+                <p className="mt-1.5 text-[11px] font-medium text-ink-500">đêm phòng có khách</p>
+              </div>
+              <div className="px-5 py-4">
+                <p className="font-display text-3xl font-semibold tabular-nums leading-none">{avgOccupancy}%</p>
+                <p className="mt-1.5 text-[11px] font-medium text-ink-500">công suất trung bình</p>
+              </div>
+              <div className="col-span-2 bg-brand-50 px-5 py-4 sm:col-span-1">
+                <p className="font-display text-3xl font-semibold tabular-nums leading-none text-brand-700">{formatVnd(total)}</p>
+                <p className="mt-1.5 text-[11px] font-medium text-ink-500">tổng doanh thu kỳ này</p>
+              </div>
             </div>
           </div>
 
@@ -261,7 +263,8 @@ export default function ReportsPage() {
           </div>
 
           {/* Bảng chi tiết theo ngày */}
-          <div className="card-rise mt-5 overflow-hidden rounded-2xl bg-white ring-1 ring-black/5 shadow-soft">
+          <div className="card-rise mt-5 bezel-shell">
+            <div className="bezel-core overflow-hidden">
             <div className="overflow-x-auto">
             <table className="w-full min-w-[560px] text-left">
               <thead>
@@ -302,6 +305,7 @@ export default function ReportsPage() {
                 </tr>
               </tfoot>
             </table>
+            </div>
             </div>
           </div>
         </>

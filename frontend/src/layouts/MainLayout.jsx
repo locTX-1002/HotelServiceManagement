@@ -60,6 +60,8 @@ export default function MainLayout() {
 
   return (
     <div className="flex min-h-screen flex-col bg-cream-100">
+      {/* Lớp hạt phim mỏng phủ toàn app - chất "quiet luxury" kiểu Amanoi */}
+      <div className="grain-overlay" />
       {/* Nav ngang - logo vòm, menu gạch chân terracotta, avatar phải */}
       <header className="sticky top-0 z-20 border-b border-black/[0.06] bg-cream-50/95 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-3">
