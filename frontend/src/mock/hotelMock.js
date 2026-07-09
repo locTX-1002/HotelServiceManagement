@@ -104,6 +104,40 @@ export const MOCK_ACTIVE_STAYS = [
   { stayId: 2, reservationId: 4, bookingCode: 'BK202607-0009', guestName: 'Lê Hoàng Cường', roomNumber: '203', actualCheckIn: '2026-07-08T13:40:00', plannedCheckOut: '2026-07-09T12:00:00', status: 'Active' },
 ]
 
+// GET /api/service-categories -> [{ id, categoryName, isActive }]
+export const MOCK_SERVICE_CATEGORIES = [
+  { id: 1, categoryName: 'Ăn uống', isActive: true },
+  { id: 2, categoryName: 'Giặt ủi', isActive: true },
+  { id: 3, categoryName: 'Spa & Giải trí', isActive: true },
+]
+
+// GET /api/service-items -> [{ id, serviceCategoryId, categoryName, serviceName, unitPrice, isAvailable }]
+export const MOCK_SERVICE_ITEMS = [
+  { id: 1, serviceCategoryId: 1, categoryName: 'Ăn uống', serviceName: 'Bữa sáng buffet', unitPrice: 80000, isAvailable: true },
+  { id: 2, serviceCategoryId: 1, categoryName: 'Ăn uống', serviceName: 'Nước suối', unitPrice: 15000, isAvailable: true },
+  { id: 3, serviceCategoryId: 1, categoryName: 'Ăn uống', serviceName: 'Cà phê', unitPrice: 25000, isAvailable: true },
+  { id: 4, serviceCategoryId: 2, categoryName: 'Giặt ủi', serviceName: 'Giặt áo sơ mi', unitPrice: 20000, isAvailable: true },
+  { id: 5, serviceCategoryId: 2, categoryName: 'Giặt ủi', serviceName: 'Giặt quần', unitPrice: 25000, isAvailable: true },
+  { id: 6, serviceCategoryId: 3, categoryName: 'Spa & Giải trí', serviceName: 'Massage 60 phút', unitPrice: 350000, isAvailable: true },
+]
+
+// GET /api/service-orders -> [{ id, stayId, orderDate, status, totalAmount, details: [...] }]
+// status là SỐ theo enum backend: Pending=0, Processing=1, Completed=2, Cancelled=3
+// stayId=1 khớp MOCK_ACTIVE_STAYS ở trên (phòng 102 - Nguyễn Văn An)
+export const MOCK_SERVICE_ORDERS = [
+  {
+    id: 1,
+    stayId: 1,
+    orderDate: '2026-07-08T09:00:00',
+    status: 0,
+    totalAmount: 95000,
+    details: [
+      { id: 1, serviceItemId: 1, serviceName: 'Bữa sáng buffet', quantity: 1, unitPrice: 80000, subtotal: 80000 },
+      { id: 2, serviceItemId: 2, serviceName: 'Nước suối', quantity: 1, unitPrice: 15000, subtotal: 15000 },
+    ],
+  },
+]
+
 // GET /api/reservations/available-rooms -> [{ roomId, roomNumber, typeName, floor, basePrice }]
 export const MOCK_AVAILABLE_ROOMS = [
   { roomId: 1, roomNumber: '101', typeName: 'Standard', floor: 1, basePrice: 500000 },
