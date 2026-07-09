@@ -27,7 +27,75 @@ export const MOCK_ROOM_MAP = [
   },
 ]
 
-export const MOCK_ROOM_TYPES = ['Standard', 'Deluxe', 'Suite', 'Family Room']
+// GET /api/room-types -> [{ roomTypeId, typeName, capacity, basePrice, isActive }] (khớp seed backend)
+export const MOCK_ROOM_TYPES_FULL = [
+  { roomTypeId: 1, typeName: 'Standard', capacity: 2, basePrice: 500000, isActive: true },
+  { roomTypeId: 2, typeName: 'Deluxe', capacity: 2, basePrice: 800000, isActive: true },
+  { roomTypeId: 3, typeName: 'Suite', capacity: 4, basePrice: 1200000, isActive: true },
+  { roomTypeId: 4, typeName: 'Family Room', capacity: 6, basePrice: 1500000, isActive: true },
+]
+
+export const MOCK_ROOM_TYPES = MOCK_ROOM_TYPES_FULL.map((t) => t.typeName)
+
+// GET /api/rooms -> [{ roomId, roomNumber, floor, roomTypeId, typeName, basePrice, status, isActive }]
+// Suy từ MOCK_ROOM_MAP để 2 trang không bao giờ lệch nhau
+export const MOCK_ROOMS = MOCK_ROOM_MAP.flatMap((f) =>
+  f.rooms.map((r) => ({
+    roomId: r.roomId,
+    roomNumber: r.roomNumber,
+    floor: f.floor,
+    roomTypeId: MOCK_ROOM_TYPES_FULL.find((t) => t.typeName === r.typeName)?.roomTypeId ?? 1,
+    typeName: r.typeName,
+    basePrice: r.basePrice,
+    status: r.status,
+    isActive: true,
+  })),
+)
+
+// Số ngày trong dải [from..to] tính cả 2 đầu
+const daysBetween = (from, to) => {
+  const [y1, m1, d1] = from.split('-').map(Number)
+  const [y2, m2, d2] = to.split('-').map(Number)
+  return Math.max(Math.round((Date.UTC(y2, m2 - 1, d2) - Date.UTC(y1, m1 - 1, d1)) / 86400000) + 1, 1)
+}
+
+// GET /api/reports/revenue?fromDate=&toDate= -> { fromDate, toDate, roomRevenue, serviceRevenue, paymentRevenue, totalRevenue }
+// Tổng hợp cả kỳ, scale theo số ngày cho có cảm giác thật.
+export const mockRevenueSummary = (from, to) => {
+  const n = daysBetween(from, to)
+  const roomRevenue = 1_650_000 * n
+  const serviceRevenue = 240_000 * n
+  const total = roomRevenue + serviceRevenue
+  return { fromDate: from, toDate: to, roomRevenue, serviceRevenue, paymentRevenue: total, totalRevenue: total }
+}
+
+// GET /api/reports/occupancy -> { totalRooms, occupiedRooms, reservedRooms, occupancyRate, byFloor: [...] }
+// Suy từ MOCK_ROOM_MAP để khớp sơ đồ phòng.
+export const mockOccupancySnapshot = () => {
+  const byFloor = MOCK_ROOM_MAP.map((f) => {
+    const totalRooms = f.rooms.length
+    const occupiedRooms = f.rooms.filter((r) => r.status === 'Occupied').length
+    const reservedRooms = f.rooms.filter((r) => r.status === 'Reserved').length
+    const occupancyRate = totalRooms ? Math.round(((occupiedRooms + reservedRooms) / totalRooms) * 100) : 0
+    return { floor: f.floor, totalRooms, occupiedRooms, reservedRooms, occupancyRate }
+  })
+  const totalRooms = byFloor.reduce((s, f) => s + f.totalRooms, 0)
+  const occupiedRooms = byFloor.reduce((s, f) => s + f.occupiedRooms, 0)
+  const reservedRooms = byFloor.reduce((s, f) => s + f.reservedRooms, 0)
+  const occupancyRate = totalRooms ? Math.round(((occupiedRooms + reservedRooms) / totalRooms) * 100) : 0
+  return { totalRooms, occupiedRooms, reservedRooms, occupancyRate, byFloor }
+}
+
+// GET /api/reservations -> [{ id, bookingCode, guestName, guestPhoneNumber, roomNumber, roomTypeName, checkInDate, checkOutDate, status }]
+// status là SỐ theo enum backend: Pending=0, Confirmed=1, Cancelled=2, CheckedIn=3, Completed=4
+export const MOCK_RESERVATIONS = [
+  { id: 1, bookingCode: 'BK202607-0012', guestName: 'Trần Thị Bích', guestPhoneNumber: '0905123456', roomNumber: '104', roomTypeName: 'Standard', checkInDate: '2026-07-09', checkOutDate: '2026-07-11', status: 1 },
+  { id: 2, bookingCode: 'BK202607-0014', guestName: 'Phạm Minh Dũng', guestPhoneNumber: '0912987654', roomNumber: '302', roomTypeName: 'Suite', checkInDate: '2026-07-09', checkOutDate: '2026-07-12', status: 0 },
+  { id: 3, bookingCode: 'BK202607-0008', guestName: 'Nguyễn Văn An', guestPhoneNumber: '0987654321', roomNumber: '102', roomTypeName: 'Standard', checkInDate: '2026-07-07', checkOutDate: '2026-07-09', status: 3 },
+  { id: 4, bookingCode: 'BK202607-0009', guestName: 'Lê Hoàng Cường', guestPhoneNumber: '0934567890', roomNumber: '203', roomTypeName: 'Deluxe', checkInDate: '2026-07-08', checkOutDate: '2026-07-09', status: 3 },
+  { id: 5, bookingCode: 'BK202607-0005', guestName: 'Võ Thị Hoa', guestPhoneNumber: '0978112233', roomNumber: '201', roomTypeName: 'Deluxe', checkInDate: '2026-07-02', checkOutDate: '2026-07-05', status: 4 },
+  { id: 6, bookingCode: 'BK202607-0003', guestName: 'Đặng Quốc Bảo', guestPhoneNumber: '0901445566', roomNumber: '301', roomTypeName: 'Family Room', checkInDate: '2026-07-01', checkOutDate: '2026-07-03', status: 2 },
+]
 
 // GET /api/reservations/available-rooms -> [{ roomId, roomNumber, typeName, floor, basePrice }]
 export const MOCK_AVAILABLE_ROOMS = [

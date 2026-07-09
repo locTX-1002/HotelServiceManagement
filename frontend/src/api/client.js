@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { clearSession } from '../utils/session'
 
 const client = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000',
@@ -11,12 +12,12 @@ client.interceptors.request.use((config) => {
   return config
 })
 
-// Token hết hạn / không hợp lệ -> quay về trang login
+// Token hết hạn / không hợp lệ -> dọn phiên rồi quay về trang login
 client.interceptors.response.use(
   (res) => res,
   (err) => {
     if (err.response?.status === 401 && window.location.pathname !== '/login') {
-      localStorage.removeItem('token')
+      clearSession()
       window.location.href = '/login'
     }
     return Promise.reject(err)

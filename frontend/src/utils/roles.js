@@ -1,0 +1,31 @@
+// Quyền XEM theo vai trò - nguồn sự thật duy nhất cho menu (MainLayout),
+// chặn route (RequireRole) và trang đích sau login (LoginPage).
+// Đây chỉ là lớp UX: chốt chặn thật vẫn là [Authorize(Roles)] phía backend.
+const ALL = ['Admin', 'Manager', 'Receptionist', 'ServiceStaff']
+
+// Theo mô tả role trong seed backend + demo flow của TeamAssignment:
+// Manager chỉ xem tổng quan/báo cáo, Receptionist vận hành đặt phòng - check-in,
+// ServiceStaff chỉ lo dịch vụ, Admin thấy tất cả.
+export const ROUTE_ROLES = {
+  '/dashboard': ['Admin', 'Manager', 'Receptionist'],
+  '/rooms/map': ALL,
+  '/rooms': ['Admin', 'Manager'],
+  '/rooms/types': ['Admin', 'Manager'],
+  '/reservations': ['Admin', 'Receptionist'],
+  '/reservations/new': ['Admin', 'Receptionist'],
+  '/checkin-checkout': ['Admin', 'Receptionist'],
+  '/service-orders': ['Admin', 'Receptionist', 'ServiceStaff'],
+  '/reports': ['Admin', 'Manager'],
+}
+
+export const ROLE_LABEL = { Admin: 'Quản trị', Manager: 'Quản lý', Receptionist: 'Lễ tân', ServiceStaff: 'NV dịch vụ' }
+
+export const canAccess = (role, path) => {
+  // Phiên cũ chưa lưu role -> không chặn nhầm người, backend sẽ chặn thật khi gọi API
+  if (!role) return true
+  const roles = ROUTE_ROLES[path]
+  return !roles || roles.includes(role)
+}
+
+// Trang đích mặc định sau khi đăng nhập: ai không được xem Tổng quan thì về Sơ đồ phòng
+export const homeFor = (role) => (canAccess(role, '/dashboard') ? '/dashboard' : '/rooms/map')
