@@ -14,6 +14,8 @@ namespace HotelServiceManagement.Domain.Entities
         public DateTime CheckInDate { get; set; }
         public DateTime CheckOutDate { get; set; }
         public ReservationStatus Status { get; set; } = ReservationStatus.Pending;
+        public int? CreatedByUserId { get; set; }
+        public virtual User? CreatedByUser { get; set; }
 
         // Navigation property for 0..1 relationship
         public virtual Stay? Stay { get; set; }

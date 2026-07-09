@@ -13,5 +13,7 @@ namespace HotelServiceManagement.Domain.Entities
         public PaymentMethod PaymentMethod { get; set; } = PaymentMethod.Cash;
         public PaymentStatus Status { get; set; } = PaymentStatus.Pending;
         public string? TransactionId { get; set; }
+        public int? ReceivedByUserId { get; set; }
+        public virtual User? ReceivedByUser { get; set; }
     }
 }

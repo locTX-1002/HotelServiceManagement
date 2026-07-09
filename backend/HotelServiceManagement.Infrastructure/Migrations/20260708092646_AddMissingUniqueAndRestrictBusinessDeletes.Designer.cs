@@ -4,6 +4,7 @@ using HotelServiceManagement.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HotelServiceManagement.Infrastructure.Migrations
 {
     [DbContext(typeof(HotelDbContext))]
-    partial class HotelDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260708092646_AddMissingUniqueAndRestrictBusinessDeletes")]
+    partial class AddMissingUniqueAndRestrictBusinessDeletes
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -62,9 +65,6 @@ namespace HotelServiceManagement.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int?>("CreatedByUserId")
-                        .HasColumnType("int");
-
                     b.Property<DateTime>("InvoiceDate")
                         .HasColumnType("datetime2");
 
@@ -89,8 +89,6 @@ namespace HotelServiceManagement.Infrastructure.Migrations
                         .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("CreatedByUserId");
 
                     b.HasIndex("StayId")
                         .IsUnique();
@@ -121,9 +119,6 @@ namespace HotelServiceManagement.Infrastructure.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<int?>("ReceivedByUserId")
-                        .HasColumnType("int");
-
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -136,8 +131,6 @@ namespace HotelServiceManagement.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("InvoiceId");
-
-                    b.HasIndex("ReceivedByUserId");
 
                     b.ToTable("Payments");
                 });
@@ -161,9 +154,6 @@ namespace HotelServiceManagement.Infrastructure.Migrations
                     b.Property<DateTime>("CheckOutDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("CreatedByUserId")
-                        .HasColumnType("int");
-
                     b.Property<int>("GuestId")
                         .HasColumnType("int");
 
@@ -179,8 +169,6 @@ namespace HotelServiceManagement.Infrastructure.Migrations
 
                     b.HasIndex("BookingCode")
                         .IsUnique();
-
-                    b.HasIndex("CreatedByUserId");
 
                     b.HasIndex("GuestId");
 
@@ -531,9 +519,6 @@ namespace HotelServiceManagement.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int?>("CreatedByUserId")
-                        .HasColumnType("int");
-
                     b.Property<DateTime>("OrderDate")
                         .HasColumnType("datetime2");
 
@@ -550,8 +535,6 @@ namespace HotelServiceManagement.Infrastructure.Migrations
                         .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("CreatedByUserId");
 
                     b.HasIndex("StayId");
 
@@ -606,12 +589,6 @@ namespace HotelServiceManagement.Infrastructure.Migrations
                     b.Property<DateTime?>("ActualCheckOut")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("CheckedInByUserId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("CheckedOutByUserId")
-                        .HasColumnType("int");
-
                     b.Property<int>("ReservationId")
                         .HasColumnType("int");
 
@@ -621,10 +598,6 @@ namespace HotelServiceManagement.Infrastructure.Migrations
                         .HasColumnType("nvarchar(50)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("CheckedInByUserId");
-
-                    b.HasIndex("CheckedOutByUserId");
 
                     b.HasIndex("ReservationId")
                         .IsUnique();
@@ -711,18 +684,11 @@ namespace HotelServiceManagement.Infrastructure.Migrations
 
             modelBuilder.Entity("HotelServiceManagement.Domain.Entities.Invoice", b =>
                 {
-                    b.HasOne("HotelServiceManagement.Domain.Entities.User", "CreatedByUser")
-                        .WithMany()
-                        .HasForeignKey("CreatedByUserId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.HasOne("HotelServiceManagement.Domain.Entities.Stay", "Stay")
                         .WithOne("Invoice")
                         .HasForeignKey("HotelServiceManagement.Domain.Entities.Invoice", "StayId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.Navigation("CreatedByUser");
 
                     b.Navigation("Stay");
                 });
@@ -735,23 +701,11 @@ namespace HotelServiceManagement.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("HotelServiceManagement.Domain.Entities.User", "ReceivedByUser")
-                        .WithMany()
-                        .HasForeignKey("ReceivedByUserId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.Navigation("Invoice");
-
-                    b.Navigation("ReceivedByUser");
                 });
 
             modelBuilder.Entity("HotelServiceManagement.Domain.Entities.Reservation", b =>
                 {
-                    b.HasOne("HotelServiceManagement.Domain.Entities.User", "CreatedByUser")
-                        .WithMany()
-                        .HasForeignKey("CreatedByUserId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.HasOne("HotelServiceManagement.Domain.Entities.Guest", "Guest")
                         .WithMany("Reservations")
                         .HasForeignKey("GuestId")
@@ -763,8 +717,6 @@ namespace HotelServiceManagement.Infrastructure.Migrations
                         .HasForeignKey("RoomId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.Navigation("CreatedByUser");
 
                     b.Navigation("Guest");
 
@@ -795,18 +747,11 @@ namespace HotelServiceManagement.Infrastructure.Migrations
 
             modelBuilder.Entity("HotelServiceManagement.Domain.Entities.ServiceOrder", b =>
                 {
-                    b.HasOne("HotelServiceManagement.Domain.Entities.User", "CreatedByUser")
-                        .WithMany()
-                        .HasForeignKey("CreatedByUserId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.HasOne("HotelServiceManagement.Domain.Entities.Stay", "Stay")
                         .WithMany("ServiceOrders")
                         .HasForeignKey("StayId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.Navigation("CreatedByUser");
 
                     b.Navigation("Stay");
                 });
@@ -832,25 +777,11 @@ namespace HotelServiceManagement.Infrastructure.Migrations
 
             modelBuilder.Entity("HotelServiceManagement.Domain.Entities.Stay", b =>
                 {
-                    b.HasOne("HotelServiceManagement.Domain.Entities.User", "CheckedInByUser")
-                        .WithMany()
-                        .HasForeignKey("CheckedInByUserId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("HotelServiceManagement.Domain.Entities.User", "CheckedOutByUser")
-                        .WithMany()
-                        .HasForeignKey("CheckedOutByUserId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.HasOne("HotelServiceManagement.Domain.Entities.Reservation", "Reservation")
                         .WithOne("Stay")
                         .HasForeignKey("HotelServiceManagement.Domain.Entities.Stay", "ReservationId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.Navigation("CheckedInByUser");
-
-                    b.Navigation("CheckedOutByUser");
 
                     b.Navigation("Reservation");
                 });
