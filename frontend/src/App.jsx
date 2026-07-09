@@ -8,6 +8,7 @@ import RoomMapPage from './pages/RoomMapPage'
 import CreateReservationPage from './pages/CreateReservationPage'
 import DashboardPage from './pages/DashboardPage'
 import ReportsPage from './pages/ReportsPage'
+import ReservationsPage from './pages/ReservationsPage'
 import RoomPage from './pages/RoomPage'
 import RoomTypePage from './pages/RoomTypePage'
 import ProtectedRoute from './routes/ProtectedRoute'
@@ -28,7 +29,7 @@ export default function App() {
               <Route path="/rooms/map" element={<RoomMapPage />} />
               <Route path="/rooms" element={<RoomPage />} />
               <Route path="/rooms/types" element={<RoomTypePage />} />
-              <Route path="/reservations" element={<Placeholder title="Danh sách đặt phòng" />} />
+              <Route path="/reservations" element={<ReservationsPage />} />
               <Route path="/reservations/new" element={<CreateReservationPage />} />
               <Route path="/checkin-checkout" element={<Placeholder title="Check-in / Check-out" />} />
               <Route path="/service-orders" element={<Placeholder title="Dịch vụ" />} />

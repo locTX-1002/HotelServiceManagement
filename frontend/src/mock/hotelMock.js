@@ -52,23 +52,50 @@ export const MOCK_ROOMS = MOCK_ROOM_MAP.flatMap((f) =>
   })),
 )
 
-// Báo cáo: sinh số liệu mẫu ỔN ĐỊNH theo ngày (cùng ngày luôn ra cùng số)
-// cho dải ngày bất kỳ, theo shape trong API_DOCS.
-const seedOf = (dateStr) => dateStr.split('-').reduce((acc, part) => (acc * 31 + Number(part)) % 997, 7)
+// Số ngày trong dải [from..to] tính cả 2 đầu
+const daysBetween = (from, to) => {
+  const [y1, m1, d1] = from.split('-').map(Number)
+  const [y2, m2, d2] = to.split('-').map(Number)
+  return Math.max(Math.round((Date.UTC(y2, m2 - 1, d2) - Date.UTC(y1, m1 - 1, d1)) / 86400000) + 1, 1)
+}
 
-// GET /api/reports/revenue?from=&to= -> [{ date, roomRevenue, serviceRevenue }]
-export const mockRevenueRange = (days) =>
-  days.map((date) => {
-    const s = seedOf(date)
-    return { date, roomRevenue: 1200000 + (s % 7) * 450000, serviceRevenue: 150000 + (s % 5) * 120000 }
-  })
+// GET /api/reports/revenue?fromDate=&toDate= -> { fromDate, toDate, roomRevenue, serviceRevenue, paymentRevenue, totalRevenue }
+// Tổng hợp cả kỳ, scale theo số ngày cho có cảm giác thật.
+export const mockRevenueSummary = (from, to) => {
+  const n = daysBetween(from, to)
+  const roomRevenue = 1_650_000 * n
+  const serviceRevenue = 240_000 * n
+  const total = roomRevenue + serviceRevenue
+  return { fromDate: from, toDate: to, roomRevenue, serviceRevenue, paymentRevenue: total, totalRevenue: total }
+}
 
-// GET /api/reports/occupancy?from=&to= -> [{ date, occupiedRooms, totalRooms }]
-export const mockOccupancyRange = (days) =>
-  days.map((date) => {
-    const s = seedOf(date)
-    return { date, occupiedRooms: 3 + (s % 6), totalRooms: 9 }
+// GET /api/reports/occupancy -> { totalRooms, occupiedRooms, reservedRooms, occupancyRate, byFloor: [...] }
+// Suy từ MOCK_ROOM_MAP để khớp sơ đồ phòng.
+export const mockOccupancySnapshot = () => {
+  const byFloor = MOCK_ROOM_MAP.map((f) => {
+    const totalRooms = f.rooms.length
+    const occupiedRooms = f.rooms.filter((r) => r.status === 'Occupied').length
+    const reservedRooms = f.rooms.filter((r) => r.status === 'Reserved').length
+    const occupancyRate = totalRooms ? Math.round(((occupiedRooms + reservedRooms) / totalRooms) * 100) : 0
+    return { floor: f.floor, totalRooms, occupiedRooms, reservedRooms, occupancyRate }
   })
+  const totalRooms = byFloor.reduce((s, f) => s + f.totalRooms, 0)
+  const occupiedRooms = byFloor.reduce((s, f) => s + f.occupiedRooms, 0)
+  const reservedRooms = byFloor.reduce((s, f) => s + f.reservedRooms, 0)
+  const occupancyRate = totalRooms ? Math.round(((occupiedRooms + reservedRooms) / totalRooms) * 100) : 0
+  return { totalRooms, occupiedRooms, reservedRooms, occupancyRate, byFloor }
+}
+
+// GET /api/reservations -> [{ id, bookingCode, guestName, guestPhoneNumber, roomNumber, roomTypeName, checkInDate, checkOutDate, status }]
+// status là SỐ theo enum backend: Pending=0, Confirmed=1, Cancelled=2, CheckedIn=3, Completed=4
+export const MOCK_RESERVATIONS = [
+  { id: 1, bookingCode: 'BK202607-0012', guestName: 'Trần Thị Bích', guestPhoneNumber: '0905123456', roomNumber: '104', roomTypeName: 'Standard', checkInDate: '2026-07-09', checkOutDate: '2026-07-11', status: 1 },
+  { id: 2, bookingCode: 'BK202607-0014', guestName: 'Phạm Minh Dũng', guestPhoneNumber: '0912987654', roomNumber: '302', roomTypeName: 'Suite', checkInDate: '2026-07-09', checkOutDate: '2026-07-12', status: 0 },
+  { id: 3, bookingCode: 'BK202607-0008', guestName: 'Nguyễn Văn An', guestPhoneNumber: '0987654321', roomNumber: '102', roomTypeName: 'Standard', checkInDate: '2026-07-07', checkOutDate: '2026-07-09', status: 3 },
+  { id: 4, bookingCode: 'BK202607-0009', guestName: 'Lê Hoàng Cường', guestPhoneNumber: '0934567890', roomNumber: '203', roomTypeName: 'Deluxe', checkInDate: '2026-07-08', checkOutDate: '2026-07-09', status: 3 },
+  { id: 5, bookingCode: 'BK202607-0005', guestName: 'Võ Thị Hoa', guestPhoneNumber: '0978112233', roomNumber: '201', roomTypeName: 'Deluxe', checkInDate: '2026-07-02', checkOutDate: '2026-07-05', status: 4 },
+  { id: 6, bookingCode: 'BK202607-0003', guestName: 'Đặng Quốc Bảo', guestPhoneNumber: '0901445566', roomNumber: '301', roomTypeName: 'Family Room', checkInDate: '2026-07-01', checkOutDate: '2026-07-03', status: 2 },
+]
 
 // GET /api/reservations/available-rooms -> [{ roomId, roomNumber, typeName, floor, basePrice }]
 export const MOCK_AVAILABLE_ROOMS = [

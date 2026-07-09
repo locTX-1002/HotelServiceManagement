@@ -35,3 +35,17 @@ export const normalizeAvailableRoom = (r) => ({
   roomId: r.roomId ?? r.id,
   typeName: r.typeName ?? r.roomTypeName,
 })
+
+// Thứ tự PHẢI khớp enum ReservationStatus của backend: Pending=0, Confirmed=1, Cancelled=2, CheckedIn=3, Completed=4
+const RESERVATION_STATUS_ORDER = ['Pending', 'Confirmed', 'Cancelled', 'CheckedIn', 'Completed']
+
+export const normalizeReservationStatus = (s) =>
+  typeof s === 'number' ? RESERVATION_STATUS_ORDER[s] ?? 'Pending' : s
+
+// GET /api/reservations: backend trả { id, roomTypeName, status: số } -> FE cần { reservationId, typeName, status: chuỗi }
+export const normalizeReservation = (r) => ({
+  ...r,
+  reservationId: r.reservationId ?? r.id,
+  typeName: r.typeName ?? r.roomTypeName,
+  status: normalizeReservationStatus(r.status),
+})

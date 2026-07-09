@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import client, { isBackendMissing } from '../api/client'
 import ErrorState from '../components/ErrorState'
-import { mockOccupancyRange, mockRevenueRange } from '../mock/hotelMock'
+import { mockOccupancySnapshot, mockRevenueSummary } from '../mock/hotelMock'
 import { addDays, fmtShort, localToday as today } from '../utils/dates'
 import { formatVnd } from '../utils/roomStatus'
 
@@ -10,30 +10,21 @@ const inputCls =
   'w-full rounded-xl bg-white px-3.5 py-2.5 text-sm ring-1 ring-black/10 outline-none focus:ring-2 focus:ring-brand-500/40'
 const labelCls = 'mb-1.5 block text-[12px] font-semibold text-ink-700'
 
-const MAX_DAYS = 31
-
-// Dải ngày [from..to] dạng chuỗi local - có chốt trên để vòng lặp không chạy vô hạn
-const dayRange = (from, to) => {
-  const out = []
-  let d = from
-  while (d <= to && out.length <= MAX_DAYS) {
-    out.push(d)
-    d = addDays(d, 1)
-  }
-  return out
-}
-
 // Ngày đầu tháng hiện tại cho chip "Tháng này"
 const monthStart = () => `${today().slice(0, 8)}01`
+
+// Công suất % tính từ số phòng (đang ở + đã đặt) / tổng - ổn định, không phụ thuộc
+// field occupancyRate của backend (chưa rõ 0-1 hay 0-100)
+const rateOf = (o) => (o?.totalRooms ? Math.round(((o.occupiedRooms + (o.reservedRooms ?? 0)) / o.totalRooms) * 100) : 0)
 
 function Panel({ title, hint, children }) {
   return (
     <div className="rounded-2xl bg-white p-6 ring-1 ring-black/5 shadow-soft">
-      <div className="flex items-baseline justify-between">
-        <h2 className="font-display text-lg font-semibold">{title}</h2>
+      <div className="flex items-baseline justify-between gap-3">
+        <h2 className="font-display text-xl font-semibold">{title}</h2>
         {hint && <p className="text-[11px] text-ink-500">{hint}</p>}
       </div>
-      <div className="mt-2">{children}</div>
+      <div className="mt-3">{children}</div>
     </div>
   )
 }
@@ -47,14 +38,11 @@ export default function ReportsPage() {
   const [loadError, setLoadError] = useState(false)
   const [retryTick, setRetryTick] = useState(0) // Thử lại giữ nguyên dải ngày đang chọn
 
-  const days = useMemo(() => dayRange(from, to), [from, to])
   const rangeError = !from || !to
-    ? 'Chọn đủ cả từ ngày và đến ngày.' // input date bị xóa trắng -> không được render Invalid Date
+    ? 'Chọn đủ cả từ ngày và đến ngày.' // input date bị xóa trắng
     : from > to
       ? 'Ngày bắt đầu phải trước ngày kết thúc.'
-      : days.length > MAX_DAYS
-        ? `Chọn tối đa ${MAX_DAYS} ngày để biểu đồ còn đọc được.`
-        : ''
+      : ''
 
   useEffect(() => {
     if (rangeError) return
@@ -64,56 +52,43 @@ export default function ReportsPage() {
     setUsingMock(false)
     // stale = đã đổi dải ngày trong lúc chờ mạng -> response cũ không được đè lên dữ liệu mới
     let stale = false
-    const params = { from, to }
-    // Gọi API thật; nếu máy chủ chưa sẵn sàng thì dùng số liệu mẫu
+    // Doanh thu theo dải ngày (backend nhận fromDate/toDate)
     client
-      .get('/api/reports/revenue', { params })
+      .get('/api/reports/revenue', { params: { fromDate: from, toDate: to } })
       .then((res) => { if (!stale) setRevenue(res.data) })
       .catch((err) => {
         if (stale) return
-        if (isBackendMissing(err)) { setRevenue(mockRevenueRange(dayRange(from, to))); setUsingMock(true) }
+        if (isBackendMissing(err)) { setRevenue(mockRevenueSummary(from, to)); setUsingMock(true) }
         else setLoadError(true) // lỗi thật: không che bằng mock
       })
+    // Công suất là ảnh chụp hiện tại - không theo dải ngày
     client
-      .get('/api/reports/occupancy', { params })
+      .get('/api/reports/occupancy')
       .then((res) => { if (!stale) setOccupancy(res.data) })
       .catch((err) => {
         if (stale) return
-        if (isBackendMissing(err)) { setOccupancy(mockOccupancyRange(dayRange(from, to))); setUsingMock(true) }
+        if (isBackendMissing(err)) { setOccupancy(mockOccupancySnapshot()); setUsingMock(true) }
         else setLoadError(true)
       })
     return () => { stale = true }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [from, to, retryTick])
 
-  // Gộp 2 nguồn theo ngày cho bảng chi tiết - server trả thiếu ngày nào thì ô đó để trống.
-  // slice(0,10) phòng backend trả date kèm giờ ('2026-07-06T00:00:00')
-  const dkey = (d) => String(d).slice(0, 10)
-  const rows = useMemo(
-    () =>
-      days.map((date) => ({
-        date,
-        rev: (revenue ?? []).find((r) => dkey(r.date) === date),
-        occ: (occupancy ?? []).find((o) => dkey(o.date) === date),
-      })),
-    [days, revenue, occupancy],
-  )
-
   const loading = !rangeError && !loadError && (revenue === null || occupancy === null)
 
-  const totalRoom = rows.reduce((s, r) => s + (r.rev?.roomRevenue ?? 0), 0)
-  const totalService = rows.reduce((s, r) => s + (r.rev?.serviceRevenue ?? 0), 0)
-  const total = totalRoom + totalService
-  const totalOccupied = rows.reduce((s, r) => s + (r.occ?.occupiedRooms ?? 0), 0)
-  const totalCapacity = rows.reduce((s, r) => s + (r.occ?.totalRooms ?? 0), 0)
-  const avgOccupancy = totalCapacity ? Math.round((totalOccupied / totalCapacity) * 100) : 0
-  const maxDayTotal = Math.max(...rows.map((r) => (r.rev?.roomRevenue ?? 0) + (r.rev?.serviceRevenue ?? 0)), 1)
+  // Doanh thu (tổng hợp cả kỳ)
+  const roomRevenue = revenue?.roomRevenue ?? 0
+  const serviceRevenue = revenue?.serviceRevenue ?? 0
+  const totalRevenue = revenue?.totalRevenue ?? roomRevenue + serviceRevenue
+  const revBase = Math.max(roomRevenue + serviceRevenue, 1)
 
-  const pct = (r) => (r.occ?.totalRooms ? Math.round((r.occ.occupiedRooms / r.occ.totalRooms) * 100) : 0)
-
-  // Nhãn ngày dưới biểu đồ: dải dài chỉ ghi thưa cho khỏi dính chữ
-  const labelStep = Math.ceil(days.length / 8)
-  const showLabel = (i) => i === 0 || i === days.length - 1 || i % labelStep === 0
+  // Công suất hiện tại + theo tầng
+  const floors = useMemo(
+    () => [...(occupancy?.byFloor ?? [])].sort((a, b) => a.floor - b.floor),
+    [occupancy],
+  )
+  const overallRate = rateOf(occupancy)
+  const available = (occupancy?.totalRooms ?? 0) - (occupancy?.occupiedRooms ?? 0) - (occupancy?.reservedRooms ?? 0)
 
   const quickRanges = [
     { label: '7 ngày', from: addDays(today(), -6), to: today() },
@@ -128,7 +103,7 @@ export default function ReportsPage() {
         <div>
           <p className="font-display text-[15px] italic capitalize text-brand-600">quản lý · thống kê</p>
           <h1 className="mt-1 font-display text-4xl font-semibold tracking-tight">Báo cáo</h1>
-          <p className="mt-1 text-sm text-ink-500">Doanh thu và công suất phòng theo dải ngày tùy chọn.</p>
+          <p className="mt-1 text-sm text-ink-500">Doanh thu theo dải ngày và công suất phòng hiện tại.</p>
         </div>
         <div className="flex flex-wrap items-end gap-3 rounded-2xl bg-white p-4 ring-1 ring-black/5 shadow-soft">
           <div>
@@ -187,125 +162,117 @@ export default function ReportsPage() {
 
       {!rangeError && !loadError && !loading && (
         <>
-          {/* KPI: 3 ô thường + ô tổng doanh thu tô nổi - double-bezel như trang Tổng quan */}
+          {/* KPI doanh thu kỳ: phòng + dịch vụ + đã thu + tổng (tô nổi) - double-bezel */}
           <div className="card-rise mt-5 bezel-shell">
             <div className="bezel-core grid grid-cols-2 overflow-hidden sm:grid-cols-4 sm:divide-x sm:divide-black/[0.06]">
               <div className="px-5 py-4">
-                <p className="font-display text-3xl font-semibold tabular-nums leading-none">{days.length}</p>
-                <p className="mt-1.5 text-[11px] font-medium text-ink-500">ngày trong kỳ</p>
+                <p className="font-display text-3xl font-semibold tabular-nums leading-none">{formatVnd(roomRevenue)}</p>
+                <p className="mt-1.5 text-[11px] font-medium text-ink-500">tiền phòng</p>
               </div>
               <div className="px-5 py-4">
-                <p className="font-display text-3xl font-semibold tabular-nums leading-none">{totalOccupied}</p>
-                <p className="mt-1.5 text-[11px] font-medium text-ink-500">đêm phòng có khách</p>
+                <p className="font-display text-3xl font-semibold tabular-nums leading-none">{formatVnd(serviceRevenue)}</p>
+                <p className="mt-1.5 text-[11px] font-medium text-ink-500">dịch vụ</p>
               </div>
               <div className="px-5 py-4">
-                <p className="font-display text-3xl font-semibold tabular-nums leading-none">{avgOccupancy}%</p>
-                <p className="mt-1.5 text-[11px] font-medium text-ink-500">công suất trung bình</p>
+                <p className="font-display text-3xl font-semibold tabular-nums leading-none">{formatVnd(revenue?.paymentRevenue ?? totalRevenue)}</p>
+                <p className="mt-1.5 text-[11px] font-medium text-ink-500">đã thu</p>
               </div>
               <div className="col-span-2 bg-brand-50 px-5 py-4 sm:col-span-1">
-                <p className="font-display text-3xl font-semibold tabular-nums leading-none text-brand-700">{formatVnd(total)}</p>
+                <p className="font-display text-3xl font-semibold tabular-nums leading-none text-brand-700">{formatVnd(totalRevenue)}</p>
                 <p className="mt-1.5 text-[11px] font-medium text-ink-500">tổng doanh thu kỳ này</p>
               </div>
             </div>
           </div>
 
           <div className="mt-5 grid gap-5 lg:grid-cols-2">
-            {/* Doanh thu theo ngày: cột chồng phòng (terracotta) + dịch vụ (nhạt) */}
-            <Panel
-              title="Doanh thu theo ngày"
-              hint={`phòng ${formatVnd(totalRoom)} · dịch vụ ${formatVnd(totalService)}`}
-            >
-              <div className="mt-2 flex h-40 items-end gap-1.5 sm:gap-2">
-                {rows.map((r, i) => {
-                  const room = r.rev?.roomRevenue ?? 0
-                  const service = r.rev?.serviceRevenue ?? 0
-                  return (
-                    <div key={r.date} className="group flex h-full flex-1 flex-col items-center justify-end gap-1.5">
-                      <p className={`text-[10px] tabular-nums text-ink-500 opacity-0 ${EASE} group-hover:opacity-100`}>
-                        {Math.round((room + service) / 1000)}k
-                      </p>
-                      <div className="flex w-full max-w-10 flex-col overflow-hidden rounded-t-md">
-                        <div className={`w-full bg-brand-500/35 ${EASE}`} style={{ height: `${(service / maxDayTotal) * 128}px` }} />
-                        <div className={`w-full bg-brand-600 ${EASE} group-hover:bg-brand-700`} style={{ height: `${Math.max((room / maxDayTotal) * 128, 2)}px` }} />
-                      </div>
-                      <p className="h-3.5 text-[10px] font-medium text-ink-500">{showLabel(i) ? fmtShort(r.date) : ''}</p>
-                    </div>
-                  )
-                })}
+            {/* Cơ cấu doanh thu: phòng vs dịch vụ */}
+            <Panel title="Cơ cấu doanh thu" hint={`${fmtShort(from)} → ${fmtShort(to)}`}>
+              <div className="flex h-3.5 w-full overflow-hidden rounded-full bg-cream-200">
+                <div className={`bg-brand-600 ${EASE}`} style={{ width: `${(roomRevenue / revBase) * 100}%` }} />
+                <div className={`bg-brand-500/40 ${EASE}`} style={{ width: `${(serviceRevenue / revBase) * 100}%` }} />
               </div>
-              <div className="mt-3 flex items-center gap-4 text-[11px] text-ink-500">
-                <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm bg-brand-600" /> Tiền phòng</span>
-                <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm bg-brand-500/35" /> Dịch vụ</span>
+              <div className="mt-4 space-y-2.5">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="flex items-center gap-2 text-ink-700"><span className="h-2.5 w-2.5 rounded-sm bg-brand-600" /> Tiền phòng</span>
+                  <span className="font-semibold tabular-nums">{formatVnd(roomRevenue)} <span className="text-[11px] font-normal text-ink-500">· {Math.round((roomRevenue / revBase) * 100)}%</span></span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="flex items-center gap-2 text-ink-700"><span className="h-2.5 w-2.5 rounded-sm bg-brand-500/40" /> Dịch vụ</span>
+                  <span className="font-semibold tabular-nums">{formatVnd(serviceRevenue)} <span className="text-[11px] font-normal text-ink-500">· {Math.round((serviceRevenue / revBase) * 100)}%</span></span>
+                </div>
+                <div className="flex items-center justify-between border-t border-black/[0.06] pt-2.5 text-sm">
+                  <span className="font-semibold text-ink-900">Tổng</span>
+                  <span className="font-display text-lg font-semibold tabular-nums text-brand-700">{formatVnd(totalRevenue)}</span>
+                </div>
               </div>
             </Panel>
 
-            {/* Công suất phòng: cột % + vạch trung bình */}
-            <Panel title="Công suất phòng" hint={`trung bình ${avgOccupancy}%`}>
-              <div className="relative mt-2 h-40">
-                {/* Vạch công suất trung bình */}
-                <div className="absolute inset-x-0 z-10 border-t border-dashed border-ink-500/40" style={{ bottom: `${(avgOccupancy / 100) * 128 + 20}px` }}>
-                  <span className="absolute -top-2.5 right-0 bg-white px-1 text-[9px] font-bold uppercase tracking-wider text-ink-500">TB {avgOccupancy}%</span>
+            {/* Công suất hiện tại: vòng số lớn + phân rã trạng thái */}
+            <Panel title="Công suất phòng" hint="ảnh chụp hiện tại">
+              <div className="flex items-center gap-6">
+                <div className="shrink-0 text-center">
+                  <p className="font-display text-5xl font-semibold leading-none text-brand-600">{overallRate}%</p>
+                  <p className="mt-1 text-[11px] uppercase tracking-[0.14em] text-ink-500">lấp đầy</p>
                 </div>
-                <div className="flex h-full items-end gap-1.5 sm:gap-2">
-                  {rows.map((r, i) => (
-                    <div key={r.date} className="group flex h-full flex-1 flex-col items-center justify-end gap-1.5">
-                      <p className={`text-[10px] tabular-nums text-ink-500 opacity-0 ${EASE} group-hover:opacity-100`}>{pct(r)}%</p>
-                      <div
-                        className={`w-full max-w-10 rounded-t-md ${EASE} ${pct(r) >= avgOccupancy ? 'bg-sky-400/70 group-hover:bg-sky-500' : 'bg-cream-200 group-hover:bg-ink-900/20'}`}
-                        style={{ height: `${Math.max((pct(r) / 100) * 128, 2)}px` }}
-                      />
-                      <p className="h-3.5 text-[10px] font-medium text-ink-500">{showLabel(i) ? fmtShort(r.date) : ''}</p>
-                    </div>
-                  ))}
+                <div className="flex-1 space-y-2 text-sm">
+                  <div className="flex items-center justify-between"><span className="flex items-center gap-2 text-ink-700"><span className="h-2.5 w-2.5 rounded-full bg-rose-500" /> Đang ở</span><span className="font-semibold tabular-nums">{occupancy?.occupiedRooms ?? 0}</span></div>
+                  <div className="flex items-center justify-between"><span className="flex items-center gap-2 text-ink-700"><span className="h-2.5 w-2.5 rounded-full bg-sky-500" /> Đã đặt</span><span className="font-semibold tabular-nums">{occupancy?.reservedRooms ?? 0}</span></div>
+                  <div className="flex items-center justify-between"><span className="flex items-center gap-2 text-ink-700"><span className="h-2.5 w-2.5 rounded-full bg-emerald-500" /> Còn trống</span><span className="font-semibold tabular-nums">{Math.max(available, 0)}</span></div>
+                  <div className="flex items-center justify-between border-t border-black/[0.06] pt-2"><span className="font-semibold text-ink-900">Tổng phòng</span><span className="font-semibold tabular-nums">{occupancy?.totalRooms ?? 0}</span></div>
                 </div>
               </div>
             </Panel>
           </div>
 
-          {/* Bảng chi tiết theo ngày */}
+          {/* Công suất theo tầng */}
           <div className="card-rise mt-5 bezel-shell">
             <div className="bezel-core overflow-hidden">
-            <div className="overflow-x-auto">
-            <table className="w-full min-w-[560px] text-left">
-              <thead>
-                <tr className="border-b border-black/[0.06] text-[10px] font-bold uppercase tracking-[0.18em] text-ink-500">
-                  <th className="px-5 py-3.5">Ngày</th>
-                  <th className="px-5 py-3.5 text-right">Tiền phòng</th>
-                  <th className="px-5 py-3.5 text-right">Dịch vụ</th>
-                  <th className="px-5 py-3.5 text-right">Tổng</th>
-                  <th className="px-5 py-3.5 text-right">Công suất</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-black/[0.05]">
-                {rows.map((r) => (
-                  <tr key={r.date} className={`${EASE} hover:bg-cream-50/60`}>
-                    <td className="px-5 py-3 text-sm font-semibold">{fmtShort(r.date)}</td>
-                    <td className="px-5 py-3 text-right text-sm tabular-nums text-ink-700">
-                      {r.rev ? formatVnd(r.rev.roomRevenue) : '—'}
-                    </td>
-                    <td className="px-5 py-3 text-right text-sm tabular-nums text-ink-700">
-                      {r.rev ? formatVnd(r.rev.serviceRevenue) : '—'}
-                    </td>
-                    <td className="px-5 py-3 text-right text-sm font-semibold tabular-nums">
-                      {r.rev ? formatVnd((r.rev.roomRevenue ?? 0) + (r.rev.serviceRevenue ?? 0)) : '—'}
-                    </td>
-                    <td className="px-5 py-3 text-right text-sm tabular-nums text-ink-700">
-                      {r.occ ? `${pct(r)}% · ${r.occ.occupiedRooms}/${r.occ.totalRooms}` : '—'}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-              <tfoot>
-                <tr className="border-t border-black/[0.08] bg-cream-50/60">
-                  <td className="px-5 py-3.5 text-sm font-bold">Tổng kỳ</td>
-                  <td className="px-5 py-3.5 text-right text-sm font-bold tabular-nums">{formatVnd(totalRoom)}</td>
-                  <td className="px-5 py-3.5 text-right text-sm font-bold tabular-nums">{formatVnd(totalService)}</td>
-                  <td className="px-5 py-3.5 text-right font-display text-base font-semibold tabular-nums text-brand-700">{formatVnd(total)}</td>
-                  <td className="px-5 py-3.5 text-right text-sm font-bold tabular-nums">TB {avgOccupancy}%</td>
-                </tr>
-              </tfoot>
-            </table>
-            </div>
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[560px] text-left">
+                  <thead>
+                    <tr className="border-b border-black/[0.06] text-[10px] font-bold uppercase tracking-[0.18em] text-ink-500">
+                      <th className="px-5 py-3.5">Tầng</th>
+                      <th className="px-5 py-3.5 text-right">Tổng phòng</th>
+                      <th className="px-5 py-3.5 text-right">Đang ở</th>
+                      <th className="px-5 py-3.5 text-right">Đã đặt</th>
+                      <th className="px-5 py-3.5">Công suất</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-black/[0.05]">
+                    {floors.map((f) => {
+                      const r = rateOf(f)
+                      return (
+                        <tr key={f.floor} className={`${EASE} hover:bg-cream-50/60`}>
+                          <td className="px-5 py-3 text-sm font-semibold">Tầng {f.floor}</td>
+                          <td className="px-5 py-3 text-right text-sm tabular-nums text-ink-700">{f.totalRooms}</td>
+                          <td className="px-5 py-3 text-right text-sm tabular-nums text-ink-700">{f.occupiedRooms}</td>
+                          <td className="px-5 py-3 text-right text-sm tabular-nums text-ink-700">{f.reservedRooms ?? 0}</td>
+                          <td className="px-5 py-3">
+                            <div className="flex items-center gap-2.5">
+                              <div className="h-2 flex-1 overflow-hidden rounded-full bg-cream-200">
+                                <div className={`h-full rounded-full bg-brand-500 ${EASE}`} style={{ width: `${r}%` }} />
+                              </div>
+                              <span className="w-9 text-right text-[12px] font-semibold tabular-nums text-ink-700">{r}%</span>
+                            </div>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                    {floors.length === 0 && (
+                      <tr><td colSpan={5} className="px-5 py-10 text-center text-[13px] italic text-ink-500">Chưa có dữ liệu công suất theo tầng</td></tr>
+                    )}
+                  </tbody>
+                  <tfoot>
+                    <tr className="border-t border-black/[0.08] bg-cream-50/60">
+                      <td className="px-5 py-3.5 text-sm font-bold">Toàn khách sạn</td>
+                      <td className="px-5 py-3.5 text-right text-sm font-bold tabular-nums">{occupancy?.totalRooms ?? 0}</td>
+                      <td className="px-5 py-3.5 text-right text-sm font-bold tabular-nums">{occupancy?.occupiedRooms ?? 0}</td>
+                      <td className="px-5 py-3.5 text-right text-sm font-bold tabular-nums">{occupancy?.reservedRooms ?? 0}</td>
+                      <td className="px-5 py-3.5 text-sm font-bold tabular-nums text-brand-700">{overallRate}%</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
             </div>
           </div>
         </>

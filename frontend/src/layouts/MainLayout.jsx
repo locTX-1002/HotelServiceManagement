@@ -13,7 +13,7 @@ const MENU = [
   { to: '/dashboard', label: 'Tổng quan' },
   { to: '/rooms/map', label: 'Sơ đồ phòng' },
   { to: '/rooms', label: 'Phòng', match: (p) => p === '/rooms' || p.startsWith('/rooms/types') },
-  { to: '/reservations/new', label: 'Đặt phòng' },
+  { to: '/reservations', label: 'Đặt phòng', match: (p) => p.startsWith('/reservations') },
   { to: '/checkin-checkout', label: 'Check-in' },
   { to: '/service-orders', label: 'Dịch vụ' },
   { to: '/reports', label: 'Báo cáo' },
