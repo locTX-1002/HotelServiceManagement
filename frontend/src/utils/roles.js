@@ -6,8 +6,10 @@ const ALL = ['Admin', 'Manager', 'Receptionist', 'ServiceStaff']
 // Theo mô tả role trong seed backend + demo flow của TeamAssignment:
 // Manager chỉ xem tổng quan/báo cáo, Receptionist vận hành đặt phòng - check-in,
 // ServiceStaff chỉ lo dịch vụ, Admin thấy tất cả.
+// /dashboard đọc chung API /api/reports/dashboard - backend chỉ cho Admin,Manager
+// ([Authorize(Roles = "Admin,Manager")] ở ReportsController) nên FE phải khớp, không thì Receptionist vào là dính 403.
 export const ROUTE_ROLES = {
-  '/dashboard': ['Admin', 'Manager', 'Receptionist'],
+  '/dashboard': ['Admin', 'Manager'],
   '/rooms/map': ALL,
   '/rooms': ['Admin', 'Manager'],
   '/rooms/types': ['Admin', 'Manager'],
