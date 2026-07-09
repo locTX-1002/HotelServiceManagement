@@ -104,6 +104,18 @@ export const MOCK_ACTIVE_STAYS = [
   { stayId: 2, reservationId: 4, bookingCode: 'BK202607-0009', guestName: 'Lê Hoàng Cường', roomNumber: '203', actualCheckIn: '2026-07-08T13:40:00', plannedCheckOut: '2026-07-09T12:00:00', status: 'Active' },
 ]
 
+// GET /api/invoices/stay/{stayId} -> { invoiceId, stayId, invoiceDate, roomCharge, serviceCharge, totalAmount, status }
+// status đã là CHUỖI thật từ backend (invoice.Status.ToString()), không phải số như các enum khác.
+export const MOCK_INVOICE = {
+  invoiceId: 1,
+  stayId: 1,
+  invoiceDate: '2026-07-09T12:00:00',
+  roomCharge: 200000,
+  serviceCharge: 95000,
+  totalAmount: 295000,
+  status: 'Unpaid',
+}
+
 // GET /api/service-categories -> [{ id, categoryName, isActive }]
 export const MOCK_SERVICE_CATEGORIES = [
   { id: 1, categoryName: 'Ăn uống', isActive: true },

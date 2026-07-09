@@ -17,6 +17,7 @@ export const ROUTE_ROLES = {
   '/reservations/new': ['Admin', 'Receptionist'],
   '/checkin-checkout': ['Admin', 'Receptionist'],
   '/service-orders': ['Admin', 'Receptionist', 'ServiceStaff'],
+  '/invoices': ['Admin', 'Receptionist'],
   '/reports': ['Admin', 'Manager'],
 }
 
