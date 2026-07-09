@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import client, { isBackendMissing } from '../api/client'
 import { ROOM_STATUS, formatVnd } from '../utils/roomStatus'
 import { MOCK_ROOM_MAP } from '../mock/hotelMock'
+import { normalizeRoom } from '../utils/apiShape'
 import { roomImage } from '../utils/roomImages'
 import ErrorState from '../components/ErrorState'
 
@@ -203,9 +204,11 @@ export default function RoomMapPage() {
     client
       .get('/api/rooms/map')
       .then((res) => {
-        setFloors(res.data); setUsingMock(false); setLoadError(false); setUpdatedAt(new Date())
+        // Backend trả roomId dưới tên id, typeName dưới tên roomTypeName, status là số -> chuẩn hoá về đúng shape FE dùng
+        const normalized = res.data.map((f) => ({ ...f, rooms: f.rooms.map(normalizeRoom) }))
+        setFloors(normalized); setUsingMock(false); setLoadError(false); setUpdatedAt(new Date())
         // drawer đang mở thì cập nhật theo dữ liệu mới, tránh hiển thị trạng thái cũ
-        setOpenRoom((cur) => (cur ? res.data.flatMap((f) => f.rooms).find((r) => r.roomId === cur.roomId) ?? cur : cur))
+        setOpenRoom((cur) => (cur ? normalized.flatMap((f) => f.rooms).find((r) => r.roomId === cur.roomId) ?? cur : cur))
       })
       .catch((err) => {
         if (isBackendMissing(err)) {
