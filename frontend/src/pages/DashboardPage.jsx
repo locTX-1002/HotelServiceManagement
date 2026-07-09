@@ -119,7 +119,7 @@ export default function DashboardPage() {
         <div className="flex items-center gap-2.5">
           {usingMock && (
             <span className="mr-1 rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-800 ring-1 ring-amber-600/20">
-              Dữ liệu mẫu
+              dữ liệu mẫu, chờ API
             </span>
           )}
           <button onClick={() => navigate('/reservations/new')}
@@ -133,24 +133,26 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* KPI: 4 ô thường + ô doanh thu được tô nổi (phân cấp) */}
-      <div className="mt-7 grid grid-cols-2 overflow-hidden rounded-2xl bg-white ring-1 ring-black/5 shadow-soft sm:grid-cols-5 sm:divide-x sm:divide-black/5">
-        {stats.map((st) => (
-          <div key={st.label} className="px-5 py-4">
-            <p className="font-display text-2xl font-semibold tabular-nums leading-none">{st.value}</p>
-            <p className="mt-1.5 text-[11px] font-medium text-ink-500">{st.label}</p>
+      {/* KPI: 4 ô thường + ô doanh thu được tô nổi (phân cấp) - double-bezel cho chiều sâu */}
+      <div className="mt-7 bezel-shell">
+        <div className="bezel-core grid grid-cols-2 overflow-hidden sm:grid-cols-5 sm:divide-x sm:divide-black/[0.06]">
+          {stats.map((st) => (
+            <div key={st.label} className="px-5 py-4">
+              <p className="font-display text-2xl font-semibold tabular-nums leading-none">{st.value}</p>
+              <p className="mt-1.5 text-[11px] font-medium text-ink-500">{st.label}</p>
+            </div>
+          ))}
+          <div className="col-span-2 bg-brand-50 px-5 py-4 sm:col-span-1">
+            <p className="font-display text-2xl font-semibold tabular-nums leading-none text-brand-700">{formatVnd(data.todayRevenue)}</p>
+            <p className="mt-1.5 flex items-center gap-2 text-[11px] font-medium text-ink-500">
+              doanh thu hôm nay
+              {typeof data.revenueDeltaPct === 'number' && (
+                <span className={`font-bold ${data.revenueDeltaPct >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
+                  {data.revenueDeltaPct >= 0 ? '↑' : '↓'} {Math.abs(data.revenueDeltaPct)}% so hôm qua
+                </span>
+              )}
+            </p>
           </div>
-        ))}
-        <div className="col-span-2 bg-brand-50 px-5 py-4 sm:col-span-1">
-          <p className="font-display text-2xl font-semibold tabular-nums leading-none text-brand-700">{formatVnd(data.todayRevenue)}</p>
-          <p className="mt-1.5 flex items-center gap-2 text-[11px] font-medium text-ink-500">
-            doanh thu hôm nay
-            {typeof data.revenueDeltaPct === 'number' && (
-              <span className={`font-bold ${data.revenueDeltaPct >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
-                {data.revenueDeltaPct >= 0 ? '↑' : '↓'} {Math.abs(data.revenueDeltaPct)}% so hôm qua
-              </span>
-            )}
-          </p>
         </div>
       </div>
 

@@ -166,7 +166,7 @@ export default function CreateReservationPage() {
       .catch((err) =>
         setError(
           isBackendMissing(err)
-            ? 'Không kết nối được máy chủ. Vui lòng thử lại sau.'
+            ? 'API /api/reservations chưa sẵn sàng (task T3). Toàn bộ luồng UI đã hoạt động - nối API là chạy.'
             : err.response?.data?.message ?? 'Máy chủ báo lỗi khi tạo đặt phòng. Thử lại hoặc báo quản trị viên.',
         ))
   }
@@ -315,7 +315,7 @@ export default function CreateReservationPage() {
 
           {usingMock && (
             <p className="mt-3 flex items-center gap-1.5 text-[11px] font-medium text-ink-500">
-              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-500" /> Dữ liệu mẫu
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-500" /> dữ liệu mẫu - chờ API available-rooms (T3)
             </p>
           )}
 
