@@ -124,6 +124,7 @@ export default function CreateReservationPage() {
   const [done, setDone] = useState(null)
   const [error, setError] = useState(null)
   const [searchError, setSearchError] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
 
   const [searchParams] = useSearchParams()
 
@@ -174,7 +175,9 @@ export default function CreateReservationPage() {
   // Backend không nhận thông tin khách kèm luôn trong đặt phòng - phải tạo Guest trước rồi mới tạo Reservation với guestId.
   // Lễ tân tạo trực tiếp cho khách trước mặt nên xác nhận luôn (status=1 Confirmed), không qua bước chờ duyệt.
   const confirm = () => {
+    if (submitting) return // KI-04: chặn bấm đúp tạo trùng đặt phòng
     setError(null)
+    setSubmitting(true)
     client
       .post('/api/guests', {
         fullName: guest.fullName.trim(),
@@ -198,6 +201,7 @@ export default function CreateReservationPage() {
             ? 'Không kết nối được máy chủ. Vui lòng thử lại sau.'
             : err.response?.data?.message ?? 'Máy chủ báo lỗi khi tạo đặt phòng. Thử lại hoặc báo quản trị viên.',
         ))
+      .finally(() => setSubmitting(false))
   }
 
   const sorted = useMemo(() => [...results].sort((a, b) => (sortAsc ? a.basePrice - b.basePrice : b.basePrice - a.basePrice)), [results, sortAsc])
@@ -401,10 +405,10 @@ export default function CreateReservationPage() {
                 </div>
                 <button
                   onClick={confirm}
-                  disabled={!guest.fullName.trim() || !guest.phoneNumber.trim() || !guest.identityNumber.trim()}
+                  disabled={submitting || !guest.fullName.trim() || !guest.phoneNumber.trim() || !guest.identityNumber.trim()}
                   className={`mt-5 w-full rounded-full bg-brand-500 py-3 text-sm font-bold text-white ${EASE} hover:bg-brand-600 active:scale-[0.98] disabled:opacity-30`}
                 >
-                  Xác nhận đặt phòng
+                  {submitting ? 'Đang xác nhận…' : 'Xác nhận đặt phòng'}
                 </button>
                 {(!guest.fullName.trim() || !guest.phoneNumber.trim() || !guest.identityNumber.trim()) && (
                   <p className="mt-2 text-center text-[11px] text-cream-50/50">Nhập đủ họ tên, số điện thoại và CMND/CCCD để xác nhận</p>
