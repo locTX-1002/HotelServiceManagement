@@ -97,6 +97,13 @@ export const MOCK_RESERVATIONS = [
   { id: 6, bookingCode: 'BK202607-0003', guestName: 'Đặng Quốc Bảo', guestPhoneNumber: '0901445566', roomNumber: '301', roomTypeName: 'Family Room', checkInDate: '2026-07-01', checkOutDate: '2026-07-03', status: 2 },
 ]
 
+// GET /api/stays/active -> [{ stayId, reservationId, bookingCode, guestName, roomNumber, actualCheckIn, plannedCheckOut, status }]
+// Khớp 2 đặt phòng đã CheckedIn (status=3) ở trên - phòng 102 và 203.
+export const MOCK_ACTIVE_STAYS = [
+  { stayId: 1, reservationId: 3, bookingCode: 'BK202607-0008', guestName: 'Nguyễn Văn An', roomNumber: '102', actualCheckIn: '2026-07-07T14:10:00', plannedCheckOut: '2026-07-09T12:00:00', status: 'Active' },
+  { stayId: 2, reservationId: 4, bookingCode: 'BK202607-0009', guestName: 'Lê Hoàng Cường', roomNumber: '203', actualCheckIn: '2026-07-08T13:40:00', plannedCheckOut: '2026-07-09T12:00:00', status: 'Active' },
+]
+
 // GET /api/reservations/available-rooms -> [{ roomId, roomNumber, typeName, floor, basePrice }]
 export const MOCK_AVAILABLE_ROOMS = [
   { roomId: 1, roomNumber: '101', typeName: 'Standard', floor: 1, basePrice: 500000 },

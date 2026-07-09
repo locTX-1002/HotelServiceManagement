@@ -6,6 +6,7 @@ import LoginPage from './pages/LoginPage'
 import Placeholder from './pages/Placeholder'
 import RoomMapPage from './pages/RoomMapPage'
 import CreateReservationPage from './pages/CreateReservationPage'
+import CheckInOutPage from './pages/CheckInOutPage'
 import DashboardPage from './pages/DashboardPage'
 import ReportsPage from './pages/ReportsPage'
 import ReservationsPage from './pages/ReservationsPage'
@@ -31,7 +32,7 @@ export default function App() {
               <Route path="/rooms/types" element={<RoomTypePage />} />
               <Route path="/reservations" element={<ReservationsPage />} />
               <Route path="/reservations/new" element={<CreateReservationPage />} />
-              <Route path="/checkin-checkout" element={<Placeholder title="Check-in / Check-out" />} />
+              <Route path="/checkin-checkout" element={<CheckInOutPage />} />
               <Route path="/service-orders" element={<Placeholder title="Dịch vụ" />} />
               <Route path="/reports" element={<ReportsPage />} />
             </Route>

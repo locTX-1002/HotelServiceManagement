@@ -17,3 +17,8 @@ export const fmtShort = (dateStr) => {
   const [y, m, day] = dateStr.split('-').map(Number)
   return new Intl.DateTimeFormat('vi-VN', { day: '2-digit', month: 'short' }).format(new Date(y, m - 1, day))
 }
+
+// Chuỗi datetime ISO thật từ backend (có giờ) -> '06 thg 7, 14:05' theo giờ trình duyệt.
+// Khác fmtShort: đây nhận Date/instant thật (check-in, check-out), không phải ngày dạng chuỗi 'YYYY-MM-DD'.
+export const fmtDateTime = (iso) =>
+  new Intl.DateTimeFormat('vi-VN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }).format(new Date(iso))
