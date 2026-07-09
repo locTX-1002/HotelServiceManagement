@@ -18,7 +18,12 @@ namespace HotelServiceManagement.Infrastructure.Configurations
             builder.HasOne(p => p.Invoice)
                    .WithMany(i => i.Payments)
                    .HasForeignKey(p => p.InvoiceId)
-                   .OnDelete(DeleteBehavior.Cascade);
+                   .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne(p => p.ReceivedByUser)
+                   .WithMany()
+                   .HasForeignKey(p => p.ReceivedByUserId)
+                   .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

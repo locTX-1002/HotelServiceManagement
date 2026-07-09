@@ -5,6 +5,6 @@ namespace HotelServiceManagement.Application.Interfaces
 {
     public interface IPaymentService
     {
-        Task<PaymentResponse> ProcessPaymentAsync(PaymentRequest request);
+        Task<PaymentResponse> ProcessPaymentAsync(PaymentRequest request, int receivedByUserId);
     }
 }

@@ -12,6 +12,10 @@ namespace HotelServiceManagement.Domain.Entities
         public DateTime ActualCheckIn { get; set; }
         public DateTime? ActualCheckOut { get; set; }
         public StayStatus Status { get; set; } = StayStatus.Active;
+        public int? CheckedInByUserId { get; set; }
+        public virtual User? CheckedInByUser { get; set; }
+        public int? CheckedOutByUserId { get; set; }
+        public virtual User? CheckedOutByUser { get; set; }
 
         // Navigation property for 0..1 relationship with Invoice
         public virtual Invoice? Invoice { get; set; }
