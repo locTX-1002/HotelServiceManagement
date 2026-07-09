@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import client, { isBackendMissing } from '../api/client'
 import { formatVnd } from '../utils/roomStatus'
-import { MOCK_AVAILABLE_ROOMS, MOCK_ROOM_TYPES } from '../mock/hotelMock'
+import { MOCK_AVAILABLE_ROOMS, MOCK_ROOM_TYPES_FULL } from '../mock/hotelMock'
+import { normalizeAvailableRoom, normalizeRoomType } from '../utils/apiShape'
 import { roomImage } from '../utils/roomImages'
 import { roomMeta } from '../utils/roomMeta'
 
@@ -114,6 +115,7 @@ export default function CreateReservationPage() {
   const [checkOut, setCheckOut] = useState(addDays(today(), 1))
   const [guests, setGuests] = useState(2)
   const [roomType, setRoomType] = useState('all')
+  const [roomTypes, setRoomTypes] = useState(MOCK_ROOM_TYPES_FULL.map(normalizeRoomType))
   const [results, setResults] = useState([])
   const [usingMock, setUsingMock] = useState(false)
   const [sortAsc, setSortAsc] = useState(true)
@@ -127,16 +129,20 @@ export default function CreateReservationPage() {
 
   const nights = useMemo(() => Math.max(Math.round((new Date(checkOut) - new Date(checkIn)) / 86400000), 0), [checkIn, checkOut])
 
+  // roomTypeId thật của backend (số) - 'all' nghĩa là không lọc
   const search = (ci = checkIn, co = checkOut, g = guests, rt = roomType) => {
     setSelected(null)
     client
-      .get('/api/reservations/available-rooms', { params: { checkIn: ci, checkOut: co, roomType: rt, guests: g } })
-      .then((res) => { setResults(res.data); setUsingMock(false); setSearchError(false) })
+      .get('/api/reservations/available-rooms', { params: { checkInDate: ci, checkOutDate: co, roomTypeId: rt === 'all' ? undefined : rt, capacity: g } })
+      .then((res) => { setResults(res.data.map(normalizeAvailableRoom)); setUsingMock(false); setSearchError(false) })
       .catch((err) => {
         if (isBackendMissing(err)) {
-          setResults(MOCK_AVAILABLE_ROOMS.filter(
-            (r) => (rt === 'all' || r.typeName === rt) && roomMeta(r.typeName).capacity >= g,
-          ))
+          const typeName = rt === 'all' ? null : roomTypes.find((t) => t.roomTypeId === rt)?.typeName
+          setResults(
+            MOCK_AVAILABLE_ROOMS
+              .filter((r) => (!typeName || r.typeName === typeName) && roomMeta(r.typeName).capacity >= g)
+              .map(normalizeAvailableRoom),
+          )
           setUsingMock(true); setSearchError(false)
         } else {
           setResults([]); setSearchError(true) // lỗi thật: không che bằng mock
@@ -145,28 +151,51 @@ export default function CreateReservationPage() {
     setStep(2)
   }
 
-  // Đến từ thanh "Đặt ngay" trang chủ: nhận params và nhảy thẳng bước 2
+  // Nạp danh mục loại phòng thật trước, rồi mới xử lý tới từ "Đặt ngay" trang chủ (roomType=tên -> cần map sang id)
   useEffect(() => {
-    const ci = searchParams.get('checkIn')
-    if (!ci) return
-    const co = searchParams.get('checkOut') ?? addDays(ci, 1)
-    const g = Number(searchParams.get('guests') ?? 2)
-    const rt = searchParams.get('roomType') ?? 'all'
-    setCheckIn(ci); setCheckOut(co); setGuests(g); setRoomType(rt)
-    search(ci, co, g, rt)
+    client
+      .get('/api/room-types')
+      .then((res) => res.data.map(normalizeRoomType))
+      .catch(() => MOCK_ROOM_TYPES_FULL.map(normalizeRoomType))
+      .then((types) => {
+        setRoomTypes(types)
+        const ci = searchParams.get('checkIn')
+        if (!ci) return
+        const co = searchParams.get('checkOut') ?? addDays(ci, 1)
+        const g = Number(searchParams.get('guests') ?? 2)
+        const rtName = searchParams.get('roomType')
+        const rt = rtName && rtName !== 'all' ? (types.find((t) => t.typeName === rtName)?.roomTypeId ?? 'all') : 'all'
+        setCheckIn(ci); setCheckOut(co); setGuests(g); setRoomType(rt)
+        search(ci, co, g, rt)
+      })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // Backend không nhận thông tin khách kèm luôn trong đặt phòng - phải tạo Guest trước rồi mới tạo Reservation với guestId.
+  // Lễ tân tạo trực tiếp cho khách trước mặt nên xác nhận luôn (status=1 Confirmed), không qua bước chờ duyệt.
   const confirm = () => {
     setError(null)
-    const payload = { ...guest, roomId: selected.roomId, checkInDate: checkIn, checkOutDate: checkOut }
     client
-      .post('/api/reservations', payload)
+      .post('/api/guests', {
+        fullName: guest.fullName.trim(),
+        phoneNumber: guest.phoneNumber.trim(),
+        email: guest.email.trim() || undefined,
+        identityNumber: guest.identityNumber.trim(),
+      })
+      .then((res) =>
+        client.post('/api/reservations', {
+          guestId: res.data.id,
+          roomId: selected.roomId,
+          checkInDate: checkIn,
+          checkOutDate: checkOut,
+          status: 1,
+        }),
+      )
       .then((res) => setDone({ code: res.data.bookingCode ?? 'BK-XXXX' }))
       .catch((err) =>
         setError(
           isBackendMissing(err)
-            ? 'API /api/reservations chưa sẵn sàng (task T3). Toàn bộ luồng UI đã hoạt động - nối API là chạy.'
+            ? 'Không kết nối được máy chủ. Vui lòng thử lại sau.'
             : err.response?.data?.message ?? 'Máy chủ báo lỗi khi tạo đặt phòng. Thử lại hoặc báo quản trị viên.',
         ))
   }
@@ -229,9 +258,9 @@ export default function CreateReservationPage() {
             </div>
             <div className="min-w-36">
               <label className={labelCls}>Loại phòng</label>
-              <select className={inputCls} value={roomType} onChange={(e) => setRoomType(e.target.value)}>
+              <select className={inputCls} value={roomType} onChange={(e) => setRoomType(e.target.value === 'all' ? 'all' : Number(e.target.value))}>
                 <option value="all">Tất cả</option>
-                {MOCK_ROOM_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+                {roomTypes.map((t) => <option key={t.roomTypeId} value={t.roomTypeId}>{t.typeName}</option>)}
               </select>
             </div>
             <button
@@ -345,11 +374,11 @@ export default function CreateReservationPage() {
                 <input className={inputCls} placeholder="Nguyễn Văn A" value={guest.fullName} onChange={(e) => setGuest({ ...guest, fullName: e.target.value })} />
               </div>
               <div>
-                <label className={labelCls}>Số điện thoại</label>
+                <label className={labelCls}>Số điện thoại *</label>
                 <input className={inputCls} placeholder="09xx xxx xxx" value={guest.phoneNumber} onChange={(e) => setGuest({ ...guest, phoneNumber: e.target.value })} />
               </div>
               <div>
-                <label className={labelCls}>CMND / CCCD</label>
+                <label className={labelCls}>CMND / CCCD *</label>
                 <input className={inputCls} placeholder="0790xxxxxxxx" value={guest.identityNumber} onChange={(e) => setGuest({ ...guest, identityNumber: e.target.value })} />
               </div>
               <div className="sm:col-span-2">
@@ -372,12 +401,14 @@ export default function CreateReservationPage() {
                 </div>
                 <button
                   onClick={confirm}
-                  disabled={!guest.fullName.trim()}
+                  disabled={!guest.fullName.trim() || !guest.phoneNumber.trim() || !guest.identityNumber.trim()}
                   className={`mt-5 w-full rounded-full bg-brand-500 py-3 text-sm font-bold text-white ${EASE} hover:bg-brand-600 active:scale-[0.98] disabled:opacity-30`}
                 >
                   Xác nhận đặt phòng
                 </button>
-                {!guest.fullName.trim() && <p className="mt-2 text-center text-[11px] text-cream-50/50">Nhập họ tên khách để xác nhận</p>}
+                {(!guest.fullName.trim() || !guest.phoneNumber.trim() || !guest.identityNumber.trim()) && (
+                  <p className="mt-2 text-center text-[11px] text-cream-50/50">Nhập đủ họ tên, số điện thoại và CMND/CCCD để xác nhận</p>
+                )}
                 {error && <p className="mt-3 text-[12px] font-medium text-amber-300">{error}</p>}
               </div>
             </div>
