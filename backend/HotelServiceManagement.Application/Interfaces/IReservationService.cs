@@ -7,7 +7,7 @@ namespace HotelServiceManagement.Application.Interfaces
     {
         Task<AuthServiceResult<IReadOnlyList<ReservationResponse>>> GetAllAsync();
         Task<AuthServiceResult<ReservationResponse>> GetByIdAsync(int id);
-        Task<AuthServiceResult<ReservationResponse>> CreateAsync(CreateReservationRequest request);
+        Task<AuthServiceResult<ReservationResponse>> CreateAsync(CreateReservationRequest request, int createdByUserId);
         Task<AuthServiceResult<ReservationResponse>> UpdateAsync(int id, UpdateReservationRequest request);
         Task<AuthServiceResult<AuthMessageResponse>> CancelAsync(int id);
         Task<AuthServiceResult<IReadOnlyList<AvailableRoomResponse>>> GetAvailableRoomsAsync(DateTime checkInDate, DateTime checkOutDate, int? roomTypeId, int? capacity);

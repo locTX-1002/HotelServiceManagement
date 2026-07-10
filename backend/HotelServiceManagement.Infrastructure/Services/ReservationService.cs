@@ -42,7 +42,7 @@ namespace HotelServiceManagement.Infrastructure.Services
                 : AuthServiceResult<ReservationResponse>.Success(ToResponse(reservation));
         }
 
-        public async Task<AuthServiceResult<ReservationResponse>> CreateAsync(CreateReservationRequest request)
+        public async Task<AuthServiceResult<ReservationResponse>> CreateAsync(CreateReservationRequest request, int createdByUserId)
         {
             var validationMessage = ValidateDates(request.CheckInDate, request.CheckOutDate);
             if (validationMessage != null)
@@ -82,16 +82,16 @@ namespace HotelServiceManagement.Infrastructure.Services
                 RoomId = request.RoomId,
                 CheckInDate = request.CheckInDate,
                 CheckOutDate = request.CheckOutDate,
-                Status = request.Status
+                Status = request.Status,
+                CreatedByUserId = createdByUserId
             };
 
             _context.Reservations.Add(reservation);
             UpdateRoomStatusFromReservation(room, request.Status);
             await _context.SaveChangesAsync();
 
-            reservation.Guest = guest;
-            reservation.Room = room;
-            return AuthServiceResult<ReservationResponse>.Success(ToResponse(reservation), "Reservation created successfully.");
+            var savedReservation = await QueryReservations().FirstAsync(r => r.Id == reservation.Id);
+            return AuthServiceResult<ReservationResponse>.Success(ToResponse(savedReservation), "Reservation created successfully.");
         }
 
         public async Task<AuthServiceResult<ReservationResponse>> UpdateAsync(int id, UpdateReservationRequest request)
@@ -222,6 +222,7 @@ namespace HotelServiceManagement.Infrastructure.Services
         {
             return _context.Reservations
                 .Include(r => r.Guest)
+                .Include(r => r.CreatedByUser)
                 .Include(r => r.Room)
                     .ThenInclude(r => r.RoomType);
         }
@@ -293,7 +294,9 @@ namespace HotelServiceManagement.Infrastructure.Services
                 RoomTypeName = reservation.Room?.RoomType?.TypeName ?? string.Empty,
                 CheckInDate = reservation.CheckInDate,
                 CheckOutDate = reservation.CheckOutDate,
-                Status = reservation.Status
+                Status = reservation.Status,
+                CreatedByUserId = reservation.CreatedByUserId,
+                CreatedByUserName = reservation.CreatedByUser?.FullName
             };
         }
 

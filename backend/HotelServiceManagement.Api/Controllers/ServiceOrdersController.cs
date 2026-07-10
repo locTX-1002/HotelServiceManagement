@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using HotelServiceManagement.Application.DTOs.Auth;
 using HotelServiceManagement.Application.DTOs.ServiceOrders;
 using HotelServiceManagement.Application.Interfaces;
@@ -34,7 +35,7 @@ namespace HotelServiceManagement.Api.Controllers
         [Authorize(Roles = "Admin,Manager,Receptionist,ServiceStaff")]
         public async Task<IActionResult> Create([FromBody] CreateServiceOrderRequest request)
         {
-            var result = await _serviceOrderService.CreateAsync(request);
+            var result = await _serviceOrderService.CreateAsync(request, GetCurrentUserId());
             return result.IsSuccess
                 ? CreatedAtAction(nameof(GetById), new { id = result.Data!.Id }, result.Data)
                 : ToActionResult(result);
@@ -45,6 +46,19 @@ namespace HotelServiceManagement.Api.Controllers
         public async Task<IActionResult> UpdateStatus(int id, [FromBody] UpdateServiceOrderStatusRequest request)
         {
             return ToActionResult(await _serviceOrderService.UpdateStatusAsync(id, request));
+        }
+
+        private int GetCurrentUserId()
+        {
+            var userIdValue = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                ?? User.FindFirst("userId")?.Value;
+
+            if (!int.TryParse(userIdValue, out var userId))
+            {
+                throw new UnauthorizedAccessException("Invalid user token.");
+            }
+
+            return userId;
         }
 
         private IActionResult ToActionResult<T>(AuthServiceResult<T> result)

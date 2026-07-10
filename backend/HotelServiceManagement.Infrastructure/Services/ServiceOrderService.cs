@@ -35,7 +35,7 @@ namespace HotelServiceManagement.Infrastructure.Services
                 : AuthServiceResult<ServiceOrderResponse>.Success(ToResponse(order));
         }
 
-        public async Task<AuthServiceResult<ServiceOrderResponse>> CreateAsync(CreateServiceOrderRequest request)
+        public async Task<AuthServiceResult<ServiceOrderResponse>> CreateAsync(CreateServiceOrderRequest request, int createdByUserId)
         {
             if (request == null)
             {
@@ -73,7 +73,8 @@ namespace HotelServiceManagement.Infrastructure.Services
                 StayId = request.StayId,
                 OrderDate = DateTime.UtcNow,
                 Status = ServiceOrderStatus.Pending,
-                TotalAmount = 0
+                TotalAmount = 0,
+                CreatedByUserId = createdByUserId
             };
 
             foreach (var detailRequest in request.Details)
@@ -119,6 +120,7 @@ namespace HotelServiceManagement.Infrastructure.Services
         private IQueryable<ServiceOrder> QueryOrders()
         {
             return _context.ServiceOrders
+                .Include(o => o.CreatedByUser)
                 .Include(o => o.OrderDetails)
                     .ThenInclude(d => d.ServiceItem);
         }
@@ -132,6 +134,8 @@ namespace HotelServiceManagement.Infrastructure.Services
                 OrderDate = order.OrderDate,
                 Status = order.Status,
                 TotalAmount = order.TotalAmount,
+                CreatedByUserId = order.CreatedByUserId,
+                CreatedByUserName = order.CreatedByUser?.FullName,
                 Details = order.OrderDetails
                     .OrderBy(d => d.Id)
                     .Select(d => new ServiceOrderDetailResponse

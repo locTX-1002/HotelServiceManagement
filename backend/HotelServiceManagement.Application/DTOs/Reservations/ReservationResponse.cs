@@ -15,4 +15,6 @@ public class ReservationResponse
     public DateTime CheckInDate { get; set; }
     public DateTime CheckOutDate { get; set; }
     public ReservationStatus Status { get; set; }
+    public int? CreatedByUserId { get; set; }
+    public string? CreatedByUserName { get; set; }
 }
