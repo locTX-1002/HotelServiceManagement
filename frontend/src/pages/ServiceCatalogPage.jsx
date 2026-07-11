@@ -287,8 +287,9 @@ export default function ServiceCatalogPage() {
               onChange={(e) => setForm({ ...form, serviceCategoryId: e.target.value })}
             >
               <option value="">— Chọn danh mục —</option>
-              {categories.filter((c) => c.isActive !== false).map((c) => (
-                <option key={c.id} value={c.id}>{c.categoryName}</option>
+              {/* Giữ lại danh mục hiện tại của món dù đã tắt - không thì form Sửa hiện select trống */}
+              {categories.filter((c) => c.isActive !== false || (editing && c.id === drawer.item.serviceCategoryId)).map((c) => (
+                <option key={c.id} value={c.id}>{c.categoryName}{c.isActive === false ? ' (đã tắt)' : ''}</option>
               ))}
             </select>
           </div>

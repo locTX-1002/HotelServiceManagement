@@ -86,15 +86,16 @@ export const mockOccupancySnapshot = () => {
   return { totalRooms, occupiedRooms, reservedRooms, occupancyRate, byFloor }
 }
 
-// GET /api/reservations -> [{ id, bookingCode, guestName, guestPhoneNumber, roomNumber, roomTypeName, checkInDate, checkOutDate, status }]
+// GET /api/reservations -> [{ id, bookingCode, guestId, guestName, guestPhoneNumber, roomId, roomNumber, roomTypeName, numberOfGuests, checkInDate, checkOutDate, status }]
 // status là SỐ theo enum backend: Pending=0, Confirmed=1, Cancelled=2, CheckedIn=3, Completed=4
+// roomId khớp MOCK_ROOM_MAP, guestId khớp MOCK_GUESTS (khách ngoài danh sách dùng id tiếp theo)
 export const MOCK_RESERVATIONS = [
-  { id: 1, bookingCode: 'BK202607-0012', guestName: 'Trần Thị Bích', guestPhoneNumber: '0905123456', roomNumber: '104', roomTypeName: 'Standard', checkInDate: '2026-07-09', checkOutDate: '2026-07-11', status: 1 },
-  { id: 2, bookingCode: 'BK202607-0014', guestName: 'Phạm Minh Dũng', guestPhoneNumber: '0912987654', roomNumber: '302', roomTypeName: 'Suite', checkInDate: '2026-07-09', checkOutDate: '2026-07-12', status: 0 },
-  { id: 3, bookingCode: 'BK202607-0008', guestName: 'Nguyễn Văn An', guestPhoneNumber: '0987654321', roomNumber: '102', roomTypeName: 'Standard', checkInDate: '2026-07-07', checkOutDate: '2026-07-09', status: 3 },
-  { id: 4, bookingCode: 'BK202607-0009', guestName: 'Lê Hoàng Cường', guestPhoneNumber: '0934567890', roomNumber: '203', roomTypeName: 'Deluxe', checkInDate: '2026-07-08', checkOutDate: '2026-07-09', status: 3 },
-  { id: 5, bookingCode: 'BK202607-0005', guestName: 'Võ Thị Hoa', guestPhoneNumber: '0978112233', roomNumber: '201', roomTypeName: 'Deluxe', checkInDate: '2026-07-02', checkOutDate: '2026-07-05', status: 4 },
-  { id: 6, bookingCode: 'BK202607-0003', guestName: 'Đặng Quốc Bảo', guestPhoneNumber: '0901445566', roomNumber: '301', roomTypeName: 'Family Room', checkInDate: '2026-07-01', checkOutDate: '2026-07-03', status: 2 },
+  { id: 1, bookingCode: 'BK202607-0012', guestId: 2, guestName: 'Trần Thị Bích', guestPhoneNumber: '0905123456', roomId: 4, roomNumber: '104', roomTypeName: 'Standard', numberOfGuests: 2, checkInDate: '2026-07-09', checkOutDate: '2026-07-11', status: 1 },
+  { id: 2, bookingCode: 'BK202607-0014', guestId: 4, guestName: 'Phạm Minh Dũng', guestPhoneNumber: '0912987654', roomId: 9, roomNumber: '302', roomTypeName: 'Suite', numberOfGuests: 3, checkInDate: '2026-07-09', checkOutDate: '2026-07-12', status: 0 },
+  { id: 3, bookingCode: 'BK202607-0008', guestId: 1, guestName: 'Nguyễn Văn An', guestPhoneNumber: '0987654321', roomId: 2, roomNumber: '102', roomTypeName: 'Standard', numberOfGuests: 1, checkInDate: '2026-07-07', checkOutDate: '2026-07-09', status: 3 },
+  { id: 4, bookingCode: 'BK202607-0009', guestId: 3, guestName: 'Lê Hoàng Cường', guestPhoneNumber: '0934567890', roomId: 7, roomNumber: '203', roomTypeName: 'Deluxe', numberOfGuests: 1, checkInDate: '2026-07-08', checkOutDate: '2026-07-09', status: 3 },
+  { id: 5, bookingCode: 'BK202607-0005', guestId: 5, guestName: 'Võ Thị Hoa', guestPhoneNumber: '0978112233', roomId: 5, roomNumber: '201', roomTypeName: 'Deluxe', numberOfGuests: 2, checkInDate: '2026-07-02', checkOutDate: '2026-07-05', status: 4 },
+  { id: 6, bookingCode: 'BK202607-0003', guestId: 6, guestName: 'Đặng Quốc Bảo', guestPhoneNumber: '0901445566', roomId: 8, roomNumber: '301', roomTypeName: 'Family Room', numberOfGuests: 4, checkInDate: '2026-07-01', checkOutDate: '2026-07-03', status: 2 },
 ]
 
 // GET /api/stays/active -> [{ stayId, reservationId, bookingCode, guestName, roomNumber, actualCheckIn, plannedCheckOut, status }]

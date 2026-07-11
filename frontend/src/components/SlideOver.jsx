@@ -45,6 +45,9 @@ export default function SlideOver({ open, eyebrow, title, onClose, children }) {
       />
       <aside
         ref={panelRef}
+        // inert khi đóng: panel chỉ trượt ra ngoài màn hình chứ vẫn trong DOM,
+        // không có inert thì Tab vẫn lọt vào các ô nhập vô hình (kể cả ô mật khẩu)
+        inert={!open || undefined}
         className={`fixed inset-y-0 right-0 z-40 flex w-full max-w-sm flex-col bg-cream-50 shadow-lift ${EASE} duration-500 ${
           open ? 'translate-x-0' : 'translate-x-full'
         }`}

@@ -29,14 +29,20 @@ export default function GuestsPage() {
   const [formError, setFormError] = useState('')
   const [saving, setSaving] = useState(false)
 
-  // Tìm kiếm chạy phía máy chủ - gõ xong 350ms mới gọi, không bắn request mỗi phím
+  // Tìm kiếm chạy phía máy chủ - gõ xong 350ms mới gọi, không bắn request mỗi phím.
+  // stale = đã gõ keyword mới trong lúc request cũ còn bay -> response cũ về muộn không được đè kết quả mới
   useEffect(() => {
+    let stale = false
     const timer = setTimeout(() => {
       setLoadError(false)
       client
         .get('/api/guests', { params: { keyword: keyword.trim() || undefined } })
-        .then((res) => { setGuests(res.data); setUsingMock(false) })
+        .then((res) => {
+          if (stale) return
+          setGuests(res.data); setUsingMock(false)
+        })
         .catch((err) => {
+          if (stale) return
           if (isBackendMissing(err)) {
             const q = keyword.trim().toLowerCase()
             setGuests(MOCK_GUESTS.filter((g) => !q || g.fullName.toLowerCase().includes(q) || g.phoneNumber.includes(q)))
@@ -44,7 +50,7 @@ export default function GuestsPage() {
           } else setLoadError(true) // lỗi thật: không che bằng mock
         })
     }, 350)
-    return () => clearTimeout(timer)
+    return () => { stale = true; clearTimeout(timer) }
   }, [keyword, retryTick])
 
   const reload = () => setRetryTick((t) => t + 1)
@@ -72,11 +78,7 @@ export default function GuestsPage() {
       .then(() => {
         toast.success(`Đã lưu hồ sơ ${form.fullName.trim()}`)
         setToEdit(null)
-        // Nạp lại danh sách với keyword hiện tại
-        client
-          .get('/api/guests', { params: { keyword: keyword.trim() || undefined } })
-          .then((res) => setGuests(res.data))
-          .catch(() => {})
+        reload() // nạp lại qua effect (giữ keyword hiện tại + có cờ stale)
       })
       .catch((err) => setFormError(apiError(err)))
       .finally(() => setSaving(false))

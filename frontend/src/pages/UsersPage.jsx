@@ -76,6 +76,9 @@ export default function UsersPage() {
         (u) => u.email.trim().toLowerCase() === form.email.trim().toLowerCase() && u.id !== drawer?.item?.id,
       )
       if (dup) return 'Email này đã có tài khoản.'
+      // Tự hạ quyền = hệ thống có thể mất Admin cuối cùng, không ai vào /users sửa lại được
+      if (drawer.mode === 'edit' && drawer.item.id === me?.userId && Number(form.roleId) !== drawer.item.roleId)
+        return 'Không thể tự đổi vai trò của chính mình.'
     }
     if (drawer.mode !== 'edit') {
       if (form.password.length < 6) return 'Mật khẩu phải từ 6 ký tự.'
@@ -304,14 +307,18 @@ export default function UsersPage() {
                 <label htmlFor="user-role" className={labelCls}>Vai trò *</label>
                 <select
                   id="user-role"
-                  className={inputCls}
+                  className={`${inputCls} disabled:opacity-50`}
                   value={form.roleId}
+                  disabled={mode === 'edit' && drawer.item.id === me?.userId}
                   onChange={(e) => setForm({ ...form, roleId: e.target.value })}
                 >
                   {ROLES.map((r) => (
                     <option key={r.roleId} value={r.roleId}>{ROLE_LABEL[r.name] ?? r.name}</option>
                   ))}
                 </select>
+                {mode === 'edit' && drawer.item.id === me?.userId && (
+                  <p className="mt-1.5 text-[12px] text-ink-500">Không thể tự đổi vai trò của chính mình.</p>
+                )}
               </div>
             </>
           )}

@@ -257,10 +257,11 @@ export default function MainLayout() {
                 {item.label}
               </NavLink>
             ))}
+            {/* sm:hidden giống nút Đăng xuất: từ sm trở lên đã có nút trên header, tránh hiện đúp */}
             {!user?.isDemo && (
               <button
                 onClick={() => setPwOpen(true)}
-                className={`mt-1.5 block w-full rounded-xl border-t border-black/[0.06] px-3.5 pb-2 pt-3 text-left text-sm font-semibold text-ink-500 ${EASE} hover:text-ink-900`}
+                className={`mt-1.5 block w-full rounded-xl border-t border-black/[0.06] px-3.5 pb-2 pt-3 text-left text-sm font-semibold text-ink-500 ${EASE} hover:text-ink-900 sm:hidden`}
               >
                 Đổi mật khẩu
               </button>

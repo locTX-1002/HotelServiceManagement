@@ -58,8 +58,13 @@ export default function RoomPage() {
     client
       .get('/api/room-types')
       .then((res) => setTypes(res.data.map(normalizeRoomType)))
-      .catch((err) => { if (isBackendMissing(err)) setTypes(MOCK_ROOM_TYPES_FULL) })
+      .catch((err) => {
+        if (isBackendMissing(err)) setTypes(MOCK_ROOM_TYPES_FULL)
+        else toast.error('Không tải được danh sách loại phòng. Thử tải lại trang.') // lỗi thật: báo rõ, không nuốt im lặng
+      })
   }
+  // toast từ ToastProvider đã useMemo nên ổn định, không cần đưa vào deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(load, [])
 
   // Tra thông tin loại phòng: ưu tiên field backend trả kèm, thiếu thì tra theo roomTypeId
@@ -358,9 +363,10 @@ export default function RoomPage() {
               onChange={(e) => setForm({ ...form, roomTypeId: e.target.value })}
             >
               <option value="">— Chọn loại phòng —</option>
-              {types.filter((t) => t.isActive !== false).map((t) => (
+              {/* Giữ lại loại đang được chọn dù đã ngừng dùng - không thì form Sửa hiện select trống */}
+              {types.filter((t) => t.isActive !== false || String(t.roomTypeId) === String(form.roomTypeId)).map((t) => (
                 <option key={t.roomTypeId} value={t.roomTypeId}>
-                  {t.typeName} — {formatVnd(t.basePrice)}/đêm
+                  {t.typeName} — {formatVnd(t.basePrice)}/đêm{t.isActive === false ? ' (ngừng dùng)' : ''}
                 </option>
               ))}
             </select>
