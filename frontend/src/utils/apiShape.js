@@ -42,6 +42,12 @@ const RESERVATION_STATUS_ORDER = ['Pending', 'Confirmed', 'Cancelled', 'CheckedI
 export const normalizeReservationStatus = (s) =>
   typeof s === 'number' ? RESERVATION_STATUS_ORDER[s] ?? 'Pending' : s
 
+// Chiều FE GỬI lên (PUT /api/reservations/{id}): backend nhận enum dạng SỐ
+export const denormalizeReservationStatus = (s) => {
+  const i = RESERVATION_STATUS_ORDER.indexOf(s)
+  return i >= 0 ? i : 0
+}
+
 // GET /api/reservations: backend trả { id, roomTypeName, status: số } -> FE cần { reservationId, typeName, status: chuỗi }
 export const normalizeReservation = (r) => ({
   ...r,

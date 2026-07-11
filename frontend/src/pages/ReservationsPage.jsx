@@ -3,12 +3,16 @@ import { useNavigate } from 'react-router-dom'
 import client, { isBackendMissing } from '../api/client'
 import ConfirmDialog from '../components/ConfirmDialog'
 import ErrorState from '../components/ErrorState'
+import SlideOver from '../components/SlideOver'
 import { useToast } from '../components/toastContext'
 import { MOCK_RESERVATIONS } from '../mock/hotelMock'
-import { normalizeReservation } from '../utils/apiShape'
+import { denormalizeReservationStatus, normalizeReservation } from '../utils/apiShape'
 import { fmtShort } from '../utils/dates'
 
 const EASE = 'transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]'
+const inputCls =
+  'w-full rounded-xl bg-white px-3.5 py-2.5 text-sm ring-1 ring-black/10 outline-none focus:ring-2 focus:ring-brand-500/40'
+const labelCls = 'mb-1.5 block text-[12px] font-semibold text-ink-700'
 
 // Nhãn + màu cho 5 trạng thái đặt phòng (khớp enum backend)
 const RES_STATUS = {
@@ -20,8 +24,9 @@ const RES_STATUS = {
 }
 const STATUS_ORDER = ['Pending', 'Confirmed', 'CheckedIn', 'Completed', 'Cancelled']
 
-// Chỉ hủy được khi chưa nhận phòng và chưa hủy
+// Chỉ hủy / sửa được khi chưa nhận phòng và chưa hủy
 const canCancel = (r) => r.status === 'Pending' || r.status === 'Confirmed'
+const canEdit = canCancel
 const dkey = (d) => String(d).slice(0, 10)
 
 const apiError = (err) =>
@@ -40,6 +45,10 @@ export default function ReservationsPage() {
   const [toCancel, setToCancel] = useState(null)
   const [cancelling, setCancelling] = useState(false)
   const [cancelError, setCancelError] = useState('')
+  const [toEdit, setToEdit] = useState(null) // reservation đang sửa
+  const [editForm, setEditForm] = useState({ checkInDate: '', checkOutDate: '', numberOfGuests: 1 })
+  const [editError, setEditError] = useState('')
+  const [savingEdit, setSavingEdit] = useState(false)
 
   const load = () => {
     setLoadError(false)
@@ -79,6 +88,39 @@ export default function ReservationsPage() {
       })
       .catch((err) => setCancelError(apiError(err)))
       .finally(() => setCancelling(false))
+  }
+
+  const openEdit = (r) => {
+    setEditForm({ checkInDate: dkey(r.checkInDate), checkOutDate: dkey(r.checkOutDate), numberOfGuests: r.numberOfGuests ?? 1 })
+    setEditError('')
+    setToEdit(r)
+  }
+
+  // PUT /api/reservations/{id} nhận đủ payload - giữ nguyên khách/phòng/trạng thái, chỉ đổi ngày + số khách.
+  // Backend tự kiểm tra trùng lịch (BR03) và sức chứa nên FE chỉ cần validate cơ bản.
+  const submitEdit = (e) => {
+    e.preventDefault()
+    if (!editForm.checkInDate || !editForm.checkOutDate) return setEditError('Chọn đủ ngày nhận và trả phòng.')
+    if (editForm.checkInDate >= editForm.checkOutDate) return setEditError('Ngày trả phòng phải sau ngày nhận phòng.')
+
+    setEditError('')
+    setSavingEdit(true)
+    client
+      .put(`/api/reservations/${toEdit.reservationId}`, {
+        guestId: toEdit.guestId,
+        roomId: toEdit.roomId,
+        numberOfGuests: Number(editForm.numberOfGuests),
+        checkInDate: editForm.checkInDate,
+        checkOutDate: editForm.checkOutDate,
+        status: denormalizeReservationStatus(toEdit.status), // backend nhận enum dạng số
+      })
+      .then(() => {
+        toast.success(`Đã cập nhật đặt phòng ${toEdit.bookingCode}`)
+        setToEdit(null)
+        load()
+      })
+      .catch((err) => setEditError(apiError(err)))
+      .finally(() => setSavingEdit(false))
   }
 
   return (
@@ -182,10 +224,18 @@ export default function ReservationsPage() {
                           <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${s.badge}`}>{s.label}</span>
                         </td>
                         <td className="px-5 py-3.5 text-right">
+                          {canEdit(r) && (
+                            <button
+                              onClick={() => openEdit(r)}
+                              className={`rounded-full px-3.5 py-1.5 text-[12px] font-semibold text-ink-700 ring-1 ring-black/10 ${EASE} hover:bg-cream-100`}
+                            >
+                              Sửa
+                            </button>
+                          )}
                           {canCancel(r) ? (
                             <button
                               onClick={() => { setCancelError(''); setToCancel(r) }}
-                              className={`rounded-full px-3.5 py-1.5 text-[12px] font-semibold text-rose-700 ring-1 ring-rose-600/20 ${EASE} hover:bg-rose-50`}
+                              className={`ml-2 rounded-full px-3.5 py-1.5 text-[12px] font-semibold text-rose-700 ring-1 ring-rose-600/20 ${EASE} hover:bg-rose-50`}
                             >
                               Hủy
                             </button>
@@ -220,6 +270,75 @@ export default function ReservationsPage() {
           )}
         </div>
       )}
+
+      {/* Form sửa ngày ở + số khách */}
+      <SlideOver
+        open={toEdit !== null}
+        eyebrow="chỉnh sửa"
+        title={`Sửa đặt phòng ${toEdit?.bookingCode ?? ''}`}
+        onClose={() => setToEdit(null)}
+      >
+        {toEdit && (
+          <form onSubmit={submitEdit} className="space-y-5">
+            <p className="text-[13px] text-ink-500">
+              Khách <span className="font-semibold text-ink-700">{toEdit.guestName}</span> · Phòng{' '}
+              <span className="font-semibold text-ink-700">{toEdit.roomNumber}</span> — muốn đổi khách hoặc phòng thì hủy rồi tạo lượt đặt mới.
+            </p>
+            <div>
+              <label htmlFor="edit-checkin" className={labelCls}>Ngày nhận phòng *</label>
+              <input
+                id="edit-checkin"
+                type="date"
+                className={inputCls}
+                value={editForm.checkInDate}
+                onChange={(e) => setEditForm({ ...editForm, checkInDate: e.target.value })}
+              />
+            </div>
+            <div>
+              <label htmlFor="edit-checkout" className={labelCls}>Ngày trả phòng *</label>
+              <input
+                id="edit-checkout"
+                type="date"
+                className={inputCls}
+                value={editForm.checkOutDate}
+                onChange={(e) => setEditForm({ ...editForm, checkOutDate: e.target.value })}
+              />
+            </div>
+            <div>
+              <label className={labelCls}>Số khách *</label>
+              <div className="inline-flex items-center gap-1 rounded-xl bg-white ring-1 ring-black/10">
+                <button
+                  type="button"
+                  onClick={() => setEditForm({ ...editForm, numberOfGuests: Math.max(1, Number(editForm.numberOfGuests) - 1) })}
+                  className="px-3.5 py-2.5 text-sm font-bold text-ink-500 hover:text-ink-900"
+                >
+                  −
+                </button>
+                <span className="w-8 text-center text-sm font-bold tabular-nums">{editForm.numberOfGuests}</span>
+                <button
+                  type="button"
+                  onClick={() => setEditForm({ ...editForm, numberOfGuests: Math.min(20, Number(editForm.numberOfGuests) + 1) })}
+                  className="px-3.5 py-2.5 text-sm font-bold text-ink-500 hover:text-ink-900"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+
+            {editError && (
+              <p className="rounded-lg bg-amber-50 px-3.5 py-2.5 text-[12px] font-medium text-amber-800 ring-1 ring-amber-600/15">{editError}</p>
+            )}
+
+            <button
+              type="submit"
+              disabled={savingEdit}
+              className={`w-full rounded-full bg-brand-600 py-3 text-[13px] font-bold text-white ${EASE} hover:bg-brand-700 active:scale-[0.98] disabled:opacity-40`}
+            >
+              {savingEdit ? 'Đang lưu…' : 'Lưu thay đổi'}
+            </button>
+          </form>
+        )}
+      </SlideOver>
 
       {/* Xác nhận hủy */}
       <ConfirmDialog
