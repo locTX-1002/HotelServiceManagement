@@ -16,6 +16,8 @@ export const ROUTE_ROLES = {
   '/reservations': ['Admin', 'Receptionist'],
   '/reservations/new': ['Admin', 'Receptionist'],
   '/checkin-checkout': ['Admin', 'Receptionist'],
+  // Khớp [Authorize] backend: PUT /api/guests cho Admin,Manager,Receptionist
+  '/guests': ['Admin', 'Manager', 'Receptionist'],
   '/service-orders': ['Admin', 'Receptionist', 'ServiceStaff'],
   '/invoices': ['Admin', 'Receptionist'],
   '/reports': ['Admin', 'Manager'],

@@ -150,6 +150,13 @@ export const MOCK_SERVICE_ORDERS = [
   },
 ]
 
+// GET /api/guests -> [{ id, fullName, email?, phoneNumber, identityNumber, reservationCount }]
+export const MOCK_GUESTS = [
+  { id: 1, fullName: 'Nguyễn Văn An', email: 'an.nguyen@gmail.com', phoneNumber: '0901234567', identityNumber: '079203001234', reservationCount: 2 },
+  { id: 2, fullName: 'Trần Thị Bích', email: null, phoneNumber: '0912345678', identityNumber: '079203005678', reservationCount: 1 },
+  { id: 3, fullName: 'Lê Hoàng Cường', email: 'cuong.le@gmail.com', phoneNumber: '0923456789', identityNumber: '079203009012', reservationCount: 1 },
+]
+
 // GET /api/reservations/available-rooms -> [{ roomId, roomNumber, typeName, floor, basePrice }]
 export const MOCK_AVAILABLE_ROOMS = [
   { roomId: 1, roomNumber: '101', typeName: 'Standard', floor: 1, basePrice: 500000 },

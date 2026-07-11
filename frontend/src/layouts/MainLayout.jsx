@@ -107,6 +107,7 @@ const MENU = [
   { to: '/rooms', label: 'Phòng', match: (p) => p === '/rooms' || p.startsWith('/rooms/types') },
   { to: '/reservations', label: 'Đặt phòng', match: (p) => p.startsWith('/reservations') },
   { to: '/checkin-checkout', label: 'Check-in' },
+  { to: '/guests', label: 'Khách' },
   { to: '/service-orders', label: 'Dịch vụ' },
   { to: '/reports', label: 'Báo cáo' },
 ]

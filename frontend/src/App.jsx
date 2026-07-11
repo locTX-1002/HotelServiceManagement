@@ -7,6 +7,7 @@ import RoomMapPage from './pages/RoomMapPage'
 import CreateReservationPage from './pages/CreateReservationPage'
 import CheckInOutPage from './pages/CheckInOutPage'
 import DashboardPage from './pages/DashboardPage'
+import GuestsPage from './pages/GuestsPage'
 import ReportsPage from './pages/ReportsPage'
 import ReservationsPage from './pages/ReservationsPage'
 import RoomPage from './pages/RoomPage'
@@ -34,6 +35,7 @@ export default function App() {
               <Route path="/reservations" element={<ReservationsPage />} />
               <Route path="/reservations/new" element={<CreateReservationPage />} />
               <Route path="/checkin-checkout" element={<CheckInOutPage />} />
+              <Route path="/guests" element={<GuestsPage />} />
               <Route path="/service-orders" element={<ServiceOrderPage />} />
               <Route path="/invoices" element={<InvoicePage />} />
               <Route path="/reports" element={<ReportsPage />} />
