@@ -7,7 +7,7 @@ import SlideOver from '../components/SlideOver'
 import { useToast } from '../components/toastContext'
 import { MOCK_RESERVATIONS } from '../mock/hotelMock'
 import { denormalizeReservationStatus, normalizeReservation } from '../utils/apiShape'
-import { fmtShort } from '../utils/dates'
+import { fmtShort, localToday } from '../utils/dates'
 
 const EASE = 'transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]'
 const inputCls =
@@ -289,6 +289,7 @@ export default function ReservationsPage() {
               <input
                 id="edit-checkin"
                 type="date"
+                min={localToday()}
                 className={inputCls}
                 value={editForm.checkInDate}
                 onChange={(e) => setEditForm({ ...editForm, checkInDate: e.target.value })}
@@ -299,6 +300,7 @@ export default function ReservationsPage() {
               <input
                 id="edit-checkout"
                 type="date"
+                min={localToday()}
                 className={inputCls}
                 value={editForm.checkOutDate}
                 onChange={(e) => setEditForm({ ...editForm, checkOutDate: e.target.value })}
