@@ -11,6 +11,11 @@ namespace HotelServiceManagement.Domain.Entities
         public virtual Guest Guest { get; set; } = null!;
         public int RoomId { get; set; }
         public virtual Room Room { get; set; } = null!;
+
+        // Default 1 only protects existing/new database rows.
+        // Request DTOs intentionally do not default this value so FE must send it explicitly.
+        public int NumberOfGuests { get; set; } = 1;
+
         public DateTime CheckInDate { get; set; }
         public DateTime CheckOutDate { get; set; }
         public ReservationStatus Status { get; set; } = ReservationStatus.Pending;

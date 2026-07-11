@@ -12,9 +12,8 @@ public class ReservationResponse
     public int RoomId { get; set; }
     public string RoomNumber { get; set; } = string.Empty;
     public string RoomTypeName { get; set; } = string.Empty;
+    public int NumberOfGuests { get; set; }
     public DateTime CheckInDate { get; set; }
     public DateTime CheckOutDate { get; set; }
     public ReservationStatus Status { get; set; }
-    public int? CreatedByUserId { get; set; }
-    public string? CreatedByUserName { get; set; }
 }

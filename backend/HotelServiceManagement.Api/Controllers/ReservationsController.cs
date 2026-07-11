@@ -32,7 +32,12 @@ namespace HotelServiceManagement.Api.Controllers
             [FromQuery] int? roomTypeId,
             [FromQuery] int? capacity)
         {
-            return ToActionResult(await _reservationService.GetAvailableRoomsAsync(checkInDate, checkOutDate, roomTypeId, capacity));
+            return ToActionResult(
+                await _reservationService.GetAvailableRoomsAsync(
+                    checkInDate,
+                    checkOutDate,
+                    roomTypeId,
+                    capacity));
         }
 
         [HttpGet("{id:int}")]
@@ -45,7 +50,19 @@ namespace HotelServiceManagement.Api.Controllers
         [Authorize(Roles = "Admin,Manager,Receptionist")]
         public async Task<IActionResult> Create([FromBody] CreateReservationRequest request)
         {
-            var result = await _reservationService.CreateAsync(request, GetCurrentUserId());
+            var currentUserId = GetCurrentUserId();
+            if (currentUserId == null)
+            {
+                return Unauthorized(new AuthMessageResponse
+                {
+                    Message = "Invalid or missing user id in access token."
+                });
+            }
+
+            var result = await _reservationService.CreateAsync(
+                request,
+                currentUserId.Value);
+
             return result.IsSuccess
                 ? CreatedAtAction(nameof(GetById), new { id = result.Data!.Id }, result.Data)
                 : ToActionResult(result);
@@ -53,9 +70,12 @@ namespace HotelServiceManagement.Api.Controllers
 
         [HttpPut("{id:int}")]
         [Authorize(Roles = "Admin,Manager,Receptionist")]
-        public async Task<IActionResult> Update(int id, [FromBody] UpdateReservationRequest request)
+        public async Task<IActionResult> Update(
+            int id,
+            [FromBody] UpdateReservationRequest request)
         {
-            return ToActionResult(await _reservationService.UpdateAsync(id, request));
+            return ToActionResult(
+                await _reservationService.UpdateAsync(id, request));
         }
 
         [HttpPatch("{id:int}/cancel")]
@@ -65,17 +85,14 @@ namespace HotelServiceManagement.Api.Controllers
             return ToActionResult(await _reservationService.CancelAsync(id));
         }
 
-        private int GetCurrentUserId()
+        private int? GetCurrentUserId()
         {
-            var userIdValue = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
-                ?? User.FindFirst("userId")?.Value;
+            var userIdValue = User.FindFirstValue(ClaimTypes.NameIdentifier)
+                ?? User.FindFirstValue("userId");
 
-            if (!int.TryParse(userIdValue, out var userId))
-            {
-                throw new UnauthorizedAccessException("Invalid user token.");
-            }
-
-            return userId;
+            return int.TryParse(userIdValue, out var userId) && userId > 0
+                ? userId
+                : null;
         }
 
         private IActionResult ToActionResult<T>(AuthServiceResult<T> result)
