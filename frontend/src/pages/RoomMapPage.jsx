@@ -21,10 +21,11 @@ const shortName = (name) => {
 /* Nội dung 2 dòng dưới của thẻ theo trạng thái: dòng chính + dòng thời gian (gợi ý #1) */
 const tileInfo = (room) => {
   switch (room.status) {
+    // API thật chưa trả guestName/checkOutAt/eta -> phải có chữ thay thế, không để dòng tên trống
     case 'Occupied':
-      return { main: shortName(room.guestName ?? ''), sub: room.checkOutAt ? `CO ${room.checkOutAt}` : 'đang ở', subCls: 'text-rose-700' }
+      return { main: room.guestName ? shortName(room.guestName) : 'Có khách', sub: room.checkOutAt ? `CO ${room.checkOutAt}` : 'đang ở', subCls: 'text-rose-700' }
     case 'Reserved':
-      return { main: shortName(room.guestName ?? ''), sub: room.eta ? `Đến ${room.eta}` : 'chờ nhận phòng', subCls: 'text-sky-700' }
+      return { main: room.guestName ? shortName(room.guestName) : 'Đã có đặt phòng', sub: room.eta ? `Đến ${room.eta}` : 'chờ nhận phòng', subCls: 'text-sky-700' }
     case 'Cleaning':
       return { main: 'Đang dọn phòng', sub: room.cleaningEta ? `~ ${room.cleaningEta}` : 'sắp xong', subCls: 'text-amber-700' }
     case 'Maintenance':
@@ -146,8 +147,12 @@ function RoomDrawer({ room, onClose }) {
                   <p className="mt-1 text-sm font-bold">{(ROOM_STATUS[room.status] ?? {}).label}</p>
                 </div>
                 <div className="text-right">
+                  {/* Nhãn phải khớp giá trị thật đang có - API chưa trả checkOutAt/eta thì rơi về Giá/đêm */}
                   <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-ink-500">
-                    {room.status === 'Occupied' ? 'Check-out' : room.status === 'Reserved' ? 'Dự kiến đến' : room.status === 'Cleaning' ? 'Còn lại' : 'Giá / đêm'}
+                    {room.status === 'Occupied' && room.checkOutAt ? 'Check-out'
+                      : room.status === 'Reserved' && room.eta ? 'Dự kiến đến'
+                        : room.status === 'Cleaning' && room.cleaningEta ? 'Còn lại'
+                          : 'Giá / đêm'}
                   </p>
                   <p className="mt-1 text-sm font-bold tabular-nums">
                     {room.checkOutAt ?? room.eta ?? room.cleaningEta ?? formatVnd(room.basePrice)}

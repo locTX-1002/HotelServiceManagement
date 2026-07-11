@@ -84,6 +84,7 @@ export default function ServiceOrderPage() {
       .then((res) => { setOrders(res.data.map(normalizeServiceOrder)); setOrdersUsingMock(false) })
       .catch((err) => {
         if (isBackendMissing(err)) { setOrders(MOCK_SERVICE_ORDERS.map(normalizeServiceOrder)); setOrdersUsingMock(true) }
+        else toast.error(apiError(err)) // lỗi thật: phải báo, không âm thầm để danh sách đơn trống
       })
   }
 
@@ -272,13 +273,16 @@ export default function ServiceOrderPage() {
                                 Bắt đầu xử lý
                               </button>
                             )}
-                            <button
-                              onClick={() => changeStatus(o, 'Completed')}
-                              disabled={changingId === o.id}
-                              className={`rounded-full bg-emerald-50 px-3 py-1 text-[11px] font-bold text-emerald-700 ring-1 ring-emerald-600/15 ${EASE} hover:bg-emerald-600 hover:text-white disabled:opacity-40`}
-                            >
-                              Hoàn thành
-                            </button>
+                            {/* Backend chỉ cho Pending -> Processing/Cancelled, nên Hoàn thành chỉ hiện khi đang xử lý */}
+                            {o.status === 'Processing' && (
+                              <button
+                                onClick={() => changeStatus(o, 'Completed')}
+                                disabled={changingId === o.id}
+                                className={`rounded-full bg-emerald-50 px-3 py-1 text-[11px] font-bold text-emerald-700 ring-1 ring-emerald-600/15 ${EASE} hover:bg-emerald-600 hover:text-white disabled:opacity-40`}
+                              >
+                                Hoàn thành
+                              </button>
+                            )}
                             <button
                               onClick={() => setToCancel(o)}
                               disabled={changingId === o.id}

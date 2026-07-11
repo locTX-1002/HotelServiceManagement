@@ -20,7 +20,8 @@ export default function ConfirmDialog({ open, title, message, confirmLabel = 'X�
   }, [open, onCancel])
 
   return (
-    <div className={`fixed inset-0 z-50 flex items-center justify-center px-6 ${open ? '' : 'pointer-events-none'}`}>
+    // inert khi đóng: dialog chỉ ẩn bằng opacity nên không có inert thì Tab vẫn tới được nút Xóa vô hình
+    <div inert={!open || undefined} className={`fixed inset-0 z-50 flex items-center justify-center px-6 ${open ? '' : 'pointer-events-none'}`}>
       <div onClick={onCancel} className={`absolute inset-0 bg-ink-900/30 ${EASE} ${open ? 'opacity-100' : 'opacity-0'}`} />
       <div
         className={`relative w-full max-w-sm rounded-2xl bg-cream-50 p-6 text-center shadow-lift ${EASE} ${
