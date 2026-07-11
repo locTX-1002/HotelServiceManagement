@@ -51,12 +51,17 @@ export default function ServiceOrderPage() {
   const [toCancel, setToCancel] = useState(null)
   const [cancelling, setCancelling] = useState(false)
   const [cancelError, setCancelError] = useState('')
+  const [changingId, setChangingId] = useState(null)
 
   const loadStays = () => {
     setStaysError(false)
     client
       .get('/api/stays/active')
-      .then((res) => { setStays(res.data); setStaysUsingMock(false) })
+      .then((res) => {
+        setStays(res.data); setStaysUsingMock(false)
+        // Khách vừa check-out từ nơi khác (RoomMap tự làm mới 30s) -> đóng panel, không cho tạo đơn cho stay đã đóng
+        setOpenStay((cur) => (cur && !res.data.some((s) => s.stayId === cur.stayId) ? null : cur))
+      })
       .catch((err) => {
         if (isBackendMissing(err)) { setStays(MOCK_ACTIVE_STAYS); setStaysUsingMock(true) }
         else setStaysError(true)
@@ -67,7 +72,10 @@ export default function ServiceOrderPage() {
     client
       .get('/api/service-items')
       .then((res) => setItems(res.data.filter((i) => i.isAvailable)))
-      .catch((err) => { if (isBackendMissing(err)) setItems(MOCK_SERVICE_ITEMS) })
+      .catch((err) => {
+        if (isBackendMissing(err)) setItems(MOCK_SERVICE_ITEMS)
+        else toast.error(apiError(err)) // lỗi thật: không âm thầm để trống danh sách dịch vụ
+      })
   }
 
   const loadOrders = () => {
@@ -139,10 +147,13 @@ export default function ServiceOrderPage() {
   }
 
   const changeStatus = (order, status) => {
+    if (changingId) return // chặn bấm nhanh 2 nút trong lúc PATCH trước chưa xong
+    setChangingId(order.id)
     client
       .patch(`/api/service-orders/${order.id}`, { status: denormalizeServiceOrderStatus(status) })
       .then(() => { toast.success(`Đơn #${order.id}: ${ORDER_STATUS[status].label}`); loadOrders() })
       .catch((err) => toast.error(apiError(err)))
+      .finally(() => setChangingId(null))
   }
 
   const confirmCancel = () => {
@@ -253,14 +264,26 @@ export default function ServiceOrderPage() {
                         {(o.status === 'Pending' || o.status === 'Processing') && (
                           <div className="mt-2.5 flex flex-wrap gap-1.5">
                             {o.status === 'Pending' && (
-                              <button onClick={() => changeStatus(o, 'Processing')} className={`rounded-full bg-sky-50 px-3 py-1 text-[11px] font-bold text-sky-700 ring-1 ring-sky-600/15 ${EASE} hover:bg-sky-600 hover:text-white`}>
+                              <button
+                                onClick={() => changeStatus(o, 'Processing')}
+                                disabled={changingId === o.id}
+                                className={`rounded-full bg-sky-50 px-3 py-1 text-[11px] font-bold text-sky-700 ring-1 ring-sky-600/15 ${EASE} hover:bg-sky-600 hover:text-white disabled:opacity-40`}
+                              >
                                 Bắt đầu xử lý
                               </button>
                             )}
-                            <button onClick={() => changeStatus(o, 'Completed')} className={`rounded-full bg-emerald-50 px-3 py-1 text-[11px] font-bold text-emerald-700 ring-1 ring-emerald-600/15 ${EASE} hover:bg-emerald-600 hover:text-white`}>
+                            <button
+                              onClick={() => changeStatus(o, 'Completed')}
+                              disabled={changingId === o.id}
+                              className={`rounded-full bg-emerald-50 px-3 py-1 text-[11px] font-bold text-emerald-700 ring-1 ring-emerald-600/15 ${EASE} hover:bg-emerald-600 hover:text-white disabled:opacity-40`}
+                            >
                               Hoàn thành
                             </button>
-                            <button onClick={() => setToCancel(o)} className={`rounded-full px-3 py-1 text-[11px] font-bold text-rose-700 ring-1 ring-rose-600/20 ${EASE} hover:bg-rose-50`}>
+                            <button
+                              onClick={() => setToCancel(o)}
+                              disabled={changingId === o.id}
+                              className={`rounded-full px-3 py-1 text-[11px] font-bold text-rose-700 ring-1 ring-rose-600/20 ${EASE} hover:bg-rose-50 disabled:opacity-40`}
+                            >
                               Hủy
                             </button>
                           </div>
