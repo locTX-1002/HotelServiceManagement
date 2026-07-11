@@ -1,11 +1,103 @@
 import { useEffect, useState } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
-import client from '../api/client'
+import client, { isBackendMissing } from '../api/client'
 import ErrorBoundary from '../components/ErrorBoundary'
+import SlideOver from '../components/SlideOver'
+import { useToast } from '../components/toastContext'
 import { ROLE_LABEL, canAccess, homeFor } from '../utils/roles'
 import { clearSession, getToken, getUser, saveSession } from '../utils/session'
 
 const EASE = 'transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]'
+const inputCls =
+  'w-full rounded-xl bg-white px-3.5 py-2.5 text-sm ring-1 ring-black/10 outline-none placeholder:text-ink-500/50 focus:ring-2 focus:ring-brand-500/40'
+const labelCls = 'mb-1.5 block text-[12px] font-semibold text-ink-700'
+
+// Form đổi mật khẩu trong ngăn kéo - POST /api/auth/change-password
+// { currentPassword, newPassword, confirmPassword } -> 200 { message } | 400 { message }
+function ChangePasswordDrawer({ open, onClose }) {
+  const toast = useToast()
+  const [form, setForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' })
+  const [error, setError] = useState('')
+  const [saving, setSaving] = useState(false)
+
+  // Mở lại thì xóa dữ liệu lần trước, không giữ mật khẩu cũ trong state
+  useEffect(() => {
+    if (open) { setForm({ currentPassword: '', newPassword: '', confirmPassword: '' }); setError('') }
+  }, [open])
+
+  const submit = (e) => {
+    e.preventDefault()
+    if (form.newPassword.length < 6) return setError('Mật khẩu mới phải từ 6 ký tự.')
+    if (form.newPassword !== form.confirmPassword) return setError('Xác nhận mật khẩu chưa khớp.')
+
+    setError('')
+    setSaving(true)
+    client
+      .post('/api/auth/change-password', form)
+      .then(() => {
+        toast.success('Đã đổi mật khẩu')
+        onClose()
+      })
+      .catch((err) => setError(
+        isBackendMissing(err)
+          ? 'Không kết nối được máy chủ. Vui lòng thử lại sau.'
+          : err.response?.data?.message ?? 'Máy chủ báo lỗi. Thử lại sau ít phút.',
+      ))
+      .finally(() => setSaving(false))
+  }
+
+  return (
+    <SlideOver open={open} eyebrow="tài khoản" title="Đổi mật khẩu" onClose={onClose}>
+      <form onSubmit={submit} className="space-y-5">
+        <div>
+          <label htmlFor="pw-current" className={labelCls}>Mật khẩu hiện tại *</label>
+          <input
+            id="pw-current"
+            type="password"
+            autoComplete="current-password"
+            className={inputCls}
+            value={form.currentPassword}
+            onChange={(e) => setForm({ ...form, currentPassword: e.target.value })}
+          />
+        </div>
+        <div>
+          <label htmlFor="pw-new" className={labelCls}>Mật khẩu mới *</label>
+          <input
+            id="pw-new"
+            type="password"
+            autoComplete="new-password"
+            className={inputCls}
+            value={form.newPassword}
+            onChange={(e) => setForm({ ...form, newPassword: e.target.value })}
+          />
+        </div>
+        <div>
+          <label htmlFor="pw-confirm" className={labelCls}>Nhập lại mật khẩu mới *</label>
+          <input
+            id="pw-confirm"
+            type="password"
+            autoComplete="new-password"
+            className={inputCls}
+            value={form.confirmPassword}
+            onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
+          />
+        </div>
+
+        {error && (
+          <p className="rounded-lg bg-amber-50 px-3.5 py-2.5 text-[12px] font-medium text-amber-800 ring-1 ring-amber-600/15">{error}</p>
+        )}
+
+        <button
+          type="submit"
+          disabled={saving || !form.currentPassword || !form.newPassword || !form.confirmPassword}
+          className={`w-full rounded-full bg-brand-600 py-3 text-[13px] font-bold text-white ${EASE} hover:bg-brand-700 active:scale-[0.98] disabled:opacity-40`}
+        >
+          {saving ? 'Đang đổi…' : 'Đổi mật khẩu'}
+        </button>
+      </form>
+    </SlideOver>
+  )
+}
 
 // `match` ghi đè active mặc định: mục Phòng sáng ở cả /rooms lẫn /rooms/types
 // nhưng không được sáng ở /rooms/map (mục riêng của Sơ đồ phòng)
@@ -32,6 +124,7 @@ export default function MainLayout() {
   const { pathname } = useLocation()
   const [user, setUser] = useState(getUser)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [pwOpen, setPwOpen] = useState(false)
 
   // Chuyển trang xong thì tự gập menu mobile lại
   useEffect(() => { setMenuOpen(false) }, [pathname])
@@ -108,6 +201,16 @@ export default function MainLayout() {
                 {ROLE_LABEL[user?.role] ?? user?.role ?? '—'}{user?.isDemo ? ' · demo' : ''}
               </p>
             </span>
+            {/* Phiên demo dùng token giả, gọi API đổi mật khẩu sẽ 401 -> ẩn luôn nút */}
+            {!user?.isDemo && (
+              <button
+                onClick={() => setPwOpen(true)}
+                title="Đổi mật khẩu"
+                className={`hidden rounded-full px-3.5 py-1.5 text-[12px] font-semibold text-ink-500 ring-1 ring-black/10 ${EASE} hover:bg-white hover:text-ink-900 sm:block`}
+              >
+                Đổi mật khẩu
+              </button>
+            )}
             <button
               onClick={logout}
               className={`hidden rounded-full px-3.5 py-1.5 text-[12px] font-semibold text-ink-500 ring-1 ring-black/10 ${EASE} hover:bg-white hover:text-ink-900 sm:block`}
@@ -151,9 +254,17 @@ export default function MainLayout() {
                 {item.label}
               </NavLink>
             ))}
+            {!user?.isDemo && (
+              <button
+                onClick={() => setPwOpen(true)}
+                className={`mt-1.5 block w-full rounded-xl border-t border-black/[0.06] px-3.5 pb-2 pt-3 text-left text-sm font-semibold text-ink-500 ${EASE} hover:text-ink-900`}
+              >
+                Đổi mật khẩu
+              </button>
+            )}
             <button
               onClick={logout}
-              className={`mt-1.5 block w-full rounded-xl border-t border-black/[0.06] px-3.5 pb-2 pt-3 text-left text-sm font-semibold text-ink-500 ${EASE} hover:text-ink-900 sm:hidden`}
+              className={`block w-full rounded-xl px-3.5 py-2.5 text-left text-sm font-semibold text-ink-500 ${EASE} hover:text-ink-900 sm:hidden`}
             >
               Đăng xuất
             </button>
@@ -167,6 +278,8 @@ export default function MainLayout() {
           <Outlet />
         </ErrorBoundary>
       </main>
+
+      <ChangePasswordDrawer open={pwOpen} onClose={() => setPwOpen(false)} />
     </div>
   )
 }
