@@ -57,7 +57,7 @@ export default function ReservationsPage() {
     const q = search.trim().toLowerCase()
     return (list ?? [])
       .filter((r) => (statusFilter === 'all' || r.status === statusFilter) &&
-        (!q || r.bookingCode.toLowerCase().includes(q) || (r.guestName ?? '').toLowerCase().includes(q) || String(r.roomNumber).includes(q)))
+        (!q || (r.bookingCode ?? '').toLowerCase().includes(q) || (r.guestName ?? '').toLowerCase().includes(q) || String(r.roomNumber).includes(q)))
       .sort((a, b) => dkey(b.checkInDate).localeCompare(dkey(a.checkInDate)))
   }, [list, statusFilter, search])
 

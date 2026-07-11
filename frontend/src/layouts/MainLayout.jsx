@@ -39,6 +39,7 @@ export default function MainLayout() {
   // Backend chạy thì làm mới thông tin user từ /api/auth/me; token hỏng sẽ bị
   // interceptor 401 đưa về /login. Backend chưa có endpoint -> giữ user lúc login.
   useEffect(() => {
+    if (getUser()?.isDemo) return // phiên demo dùng token giả -> gọi /api/auth/me sẽ 401 và bị đá về /login
     client
       .get('/api/auth/me')
       .then((res) => {

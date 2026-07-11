@@ -54,11 +54,11 @@ export default function RoomPage() {
         if (isBackendMissing(err)) { setRooms(MOCK_ROOMS); setUsingMock(true) }
         else setLoadError(true) // lỗi thật: không che bằng mock
       })
-    // Loại phòng chỉ phục vụ ô chọn trong form + tra tên, lỗi thì âm thầm dùng mock
+    // Loại phòng chỉ phục vụ ô chọn trong form + tra tên; chỉ dùng mock khi backend chưa có (404/mất mạng)
     client
       .get('/api/room-types')
       .then((res) => setTypes(res.data.map(normalizeRoomType)))
-      .catch(() => setTypes(MOCK_ROOM_TYPES_FULL))
+      .catch((err) => { if (isBackendMissing(err)) setTypes(MOCK_ROOM_TYPES_FULL) })
   }
   useEffect(load, [])
 
@@ -83,7 +83,8 @@ export default function RoomPage() {
   ]
 
   const openCreate = () => {
-    setForm({ ...EMPTY_FORM, roomTypeId: types[0]?.roomTypeId ?? '' })
+    const firstActive = types.find((t) => t.isActive !== false)
+    setForm({ ...EMPTY_FORM, roomTypeId: firstActive?.roomTypeId ?? '' })
     setFormError('')
     setDrawer({ mode: 'create' })
   }
@@ -357,7 +358,7 @@ export default function RoomPage() {
               onChange={(e) => setForm({ ...form, roomTypeId: e.target.value })}
             >
               <option value="">— Chọn loại phòng —</option>
-              {types.map((t) => (
+              {types.filter((t) => t.isActive !== false).map((t) => (
                 <option key={t.roomTypeId} value={t.roomTypeId}>
                   {t.typeName} — {formatVnd(t.basePrice)}/đêm
                 </option>
