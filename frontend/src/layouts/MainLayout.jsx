@@ -109,6 +109,7 @@ const MENU = [
   { to: '/checkin-checkout', label: 'Check-in' },
   { to: '/guests', label: 'Khách' },
   { to: '/service-orders', label: 'Dịch vụ' },
+  { to: '/service-items', label: 'Bảng giá DV' },
   { to: '/reports', label: 'Báo cáo' },
 ]
 

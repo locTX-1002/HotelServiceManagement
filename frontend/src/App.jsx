@@ -12,6 +12,7 @@ import ReportsPage from './pages/ReportsPage'
 import ReservationsPage from './pages/ReservationsPage'
 import RoomPage from './pages/RoomPage'
 import RoomTypePage from './pages/RoomTypePage'
+import ServiceCatalogPage from './pages/ServiceCatalogPage'
 import ServiceOrderPage from './pages/ServiceOrderPage'
 import InvoicePage from './pages/InvoicePage'
 import ProtectedRoute from './routes/ProtectedRoute'
@@ -37,6 +38,7 @@ export default function App() {
               <Route path="/checkin-checkout" element={<CheckInOutPage />} />
               <Route path="/guests" element={<GuestsPage />} />
               <Route path="/service-orders" element={<ServiceOrderPage />} />
+              <Route path="/service-items" element={<ServiceCatalogPage />} />
               <Route path="/invoices" element={<InvoicePage />} />
               <Route path="/reports" element={<ReportsPage />} />
             </Route>
