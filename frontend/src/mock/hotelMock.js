@@ -150,6 +150,14 @@ export const MOCK_SERVICE_ORDERS = [
   },
 ]
 
+// GET /api/users -> [{ id, fullName, email, isActive, roleId, role }] (chỉ Admin)
+export const MOCK_USERS = [
+  { id: 1, fullName: 'Admin User', email: 'admin@hotel.com', isActive: true, roleId: 1, role: 'Admin' },
+  { id: 2, fullName: 'Manager User', email: 'manager@hotel.com', isActive: true, roleId: 2, role: 'Manager' },
+  { id: 3, fullName: 'Receptionist User', email: 'receptionist@hotel.com', isActive: true, roleId: 3, role: 'Receptionist' },
+  { id: 4, fullName: 'Service Staff', email: 'service@hotel.com', isActive: false, roleId: 4, role: 'ServiceStaff' },
+]
+
 // GET /api/guests -> [{ id, fullName, email?, phoneNumber, identityNumber, reservationCount }]
 export const MOCK_GUESTS = [
   { id: 1, fullName: 'Nguyễn Văn An', email: 'an.nguyen@gmail.com', phoneNumber: '0901234567', identityNumber: '079203001234', reservationCount: 2 },

@@ -111,6 +111,7 @@ const MENU = [
   { to: '/service-orders', label: 'Dịch vụ' },
   { to: '/service-items', label: 'Bảng giá DV' },
   { to: '/reports', label: 'Báo cáo' },
+  { to: '/users', label: 'Người dùng' },
 ]
 
 // 'Nguyễn Văn An' -> 'NA' cho avatar; tên 1 chữ thì lấy 2 ký tự đầu

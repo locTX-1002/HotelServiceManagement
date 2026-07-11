@@ -23,6 +23,8 @@ export const ROUTE_ROLES = {
   '/service-items': ['Admin', 'Manager', 'ServiceStaff'],
   '/invoices': ['Admin', 'Receptionist'],
   '/reports': ['Admin', 'Manager'],
+  // Khớp [Authorize(Roles = "Admin")] của UsersController
+  '/users': ['Admin'],
 }
 
 export const ROLE_LABEL = { Admin: 'Quản trị', Manager: 'Quản lý', Receptionist: 'Lễ tân', ServiceStaff: 'NV dịch vụ' }

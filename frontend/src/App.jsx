@@ -15,6 +15,7 @@ import RoomTypePage from './pages/RoomTypePage'
 import ServiceCatalogPage from './pages/ServiceCatalogPage'
 import ServiceOrderPage from './pages/ServiceOrderPage'
 import InvoicePage from './pages/InvoicePage'
+import UsersPage from './pages/UsersPage'
 import ProtectedRoute from './routes/ProtectedRoute'
 import RequireRole from './routes/RequireRole'
 
@@ -41,6 +42,7 @@ export default function App() {
               <Route path="/service-items" element={<ServiceCatalogPage />} />
               <Route path="/invoices" element={<InvoicePage />} />
               <Route path="/reports" element={<ReportsPage />} />
+              <Route path="/users" element={<UsersPage />} />
             </Route>
           </Route>
         </Route>
