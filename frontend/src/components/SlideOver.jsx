@@ -7,6 +7,7 @@ const EASE = 'transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]'
 export default function SlideOver({ open, eyebrow, title, onClose, children }) {
   const panelRef = useRef(null)
 
+  // Esc để đóng + nhốt Tab trong panel (handler cần onClose nên tách riêng)
   useEffect(() => {
     if (!open) return
     const onKey = (e) => {
@@ -23,12 +24,18 @@ export default function SlideOver({ open, eyebrow, title, onClose, children }) {
       }
     }
     window.addEventListener('keydown', onKey)
-    // Đưa con trỏ vào ô nhập đầu tiên để nhập liền tay, không phải rê chuột
+    return () => window.removeEventListener('keydown', onKey)
+  }, [open, onClose])
+
+  // Auto-focus ô đầu CHỈ khi mở drawer - không phụ thuộc onClose, tránh re-arm timer
+  // mỗi lần re-render (bug: đang gõ ô giá thì focus nhảy về ô Tên sau 350ms)
+  useEffect(() => {
+    if (!open) return
     const timer = setTimeout(() => {
       panelRef.current?.querySelector('input, select, textarea')?.focus()
     }, 350)
-    return () => { window.removeEventListener('keydown', onKey); clearTimeout(timer) }
-  }, [open, onClose])
+    return () => clearTimeout(timer)
+  }, [open])
 
   return (
     <>
