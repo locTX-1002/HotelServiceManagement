@@ -2,6 +2,7 @@ using HotelServiceManagement.Application.DTOs.Auth;
 using HotelServiceManagement.Application.DTOs.RoomTypes;
 using HotelServiceManagement.Application.Interfaces;
 using HotelServiceManagement.Domain.Entities;
+using HotelServiceManagement.Domain.Enums;
 using HotelServiceManagement.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,6 +10,13 @@ namespace HotelServiceManagement.Infrastructure.Services
 {
     public class RoomTypeService : IRoomTypeService
     {
+        private static readonly ReservationStatus[] CapacityBlockingStatuses =
+        {
+            ReservationStatus.Pending,
+            ReservationStatus.Confirmed,
+            ReservationStatus.CheckedIn
+        };
+
         private readonly HotelDbContext _context;
 
         public RoomTypeService(HotelDbContext context)
@@ -23,11 +31,18 @@ namespace HotelServiceManagement.Infrastructure.Services
                 .OrderBy(rt => rt.Id)
                 .ToListAsync();
 
-            return AuthServiceResult<IReadOnlyList<RoomTypeResponse>>.Success(roomTypes.Select(ToResponse).ToList());
+            return AuthServiceResult<IReadOnlyList<RoomTypeResponse>>.Success(
+                roomTypes.Select(ToResponse).ToList());
         }
 
         public async Task<AuthServiceResult<RoomTypeResponse>> GetByIdAsync(int id)
         {
+            if (id <= 0)
+            {
+                return AuthServiceResult<RoomTypeResponse>.Failure(
+                    "Room type id must be greater than 0.");
+            }
+
             var roomType = await _context.RoomTypes
                 .Include(rt => rt.Rooms)
                 .FirstOrDefaultAsync(rt => rt.Id == id);
@@ -37,19 +52,33 @@ namespace HotelServiceManagement.Infrastructure.Services
                 : AuthServiceResult<RoomTypeResponse>.Success(ToResponse(roomType));
         }
 
-        public async Task<AuthServiceResult<RoomTypeResponse>> CreateAsync(CreateRoomTypeRequest request)
+        public async Task<AuthServiceResult<RoomTypeResponse>> CreateAsync(
+            CreateRoomTypeRequest request)
         {
-            var validationMessage = Validate(request.TypeName, request.Capacity, request.BasePrice);
+            if (request == null)
+            {
+                return AuthServiceResult<RoomTypeResponse>.Failure(
+                    "Request body is required.");
+            }
+
+            var validationMessage = Validate(
+                request.TypeName,
+                request.Capacity,
+                request.BasePrice);
+
             if (validationMessage != null)
             {
                 return AuthServiceResult<RoomTypeResponse>.Failure(validationMessage);
             }
 
             var normalizedName = request.TypeName.Trim().ToLower();
-            var nameExists = await _context.RoomTypes.AnyAsync(rt => rt.TypeName.ToLower() == normalizedName);
+            var nameExists = await _context.RoomTypes.AnyAsync(rt =>
+                rt.TypeName.ToLower() == normalizedName);
+
             if (nameExists)
             {
-                return AuthServiceResult<RoomTypeResponse>.Failure("Room type name already exists.", 409);
+                return AuthServiceResult<RoomTypeResponse>.Failure(
+                    "Room type name already exists.", 409);
             }
 
             var roomType = new RoomType
@@ -57,19 +86,43 @@ namespace HotelServiceManagement.Infrastructure.Services
                 TypeName = request.TypeName.Trim(),
                 Capacity = request.Capacity,
                 BasePrice = request.BasePrice,
-                Description = string.IsNullOrWhiteSpace(request.Description) ? null : request.Description.Trim(),
+                Description = NormalizeDescription(request.Description),
                 IsActive = request.IsActive
             };
 
             _context.RoomTypes.Add(roomType);
             await _context.SaveChangesAsync();
 
-            return AuthServiceResult<RoomTypeResponse>.Success(ToResponse(roomType), "Room type created successfully.");
+            return AuthServiceResult<RoomTypeResponse>.Success(
+                ToResponse(roomType),
+                "Room type created successfully.");
         }
 
-        public async Task<AuthServiceResult<RoomTypeResponse>> UpdateAsync(int id, UpdateRoomTypeRequest request)
+        /// <summary>
+        /// Prevents reducing Capacity below NumberOfGuests of any active reservation
+        /// belonging to rooms of this type.
+        /// </summary>
+        public async Task<AuthServiceResult<RoomTypeResponse>> UpdateAsync(
+            int id,
+            UpdateRoomTypeRequest request)
         {
-            var validationMessage = Validate(request.TypeName, request.Capacity, request.BasePrice);
+            if (id <= 0)
+            {
+                return AuthServiceResult<RoomTypeResponse>.Failure(
+                    "Room type id must be greater than 0.");
+            }
+
+            if (request == null)
+            {
+                return AuthServiceResult<RoomTypeResponse>.Failure(
+                    "Request body is required.");
+            }
+
+            var validationMessage = Validate(
+                request.TypeName,
+                request.Capacity,
+                request.BasePrice);
+
             if (validationMessage != null)
             {
                 return AuthServiceResult<RoomTypeResponse>.Failure(validationMessage);
@@ -78,48 +131,82 @@ namespace HotelServiceManagement.Infrastructure.Services
             var roomType = await _context.RoomTypes
                 .Include(rt => rt.Rooms)
                 .FirstOrDefaultAsync(rt => rt.Id == id);
+
             if (roomType == null)
             {
-                return AuthServiceResult<RoomTypeResponse>.Failure("Room type not found.", 404);
+                return AuthServiceResult<RoomTypeResponse>.Failure(
+                    "Room type not found.", 404);
             }
 
             var normalizedName = request.TypeName.Trim().ToLower();
-            var nameExists = await _context.RoomTypes.AnyAsync(rt => rt.Id != id && rt.TypeName.ToLower() == normalizedName);
+            var nameExists = await _context.RoomTypes.AnyAsync(rt =>
+                rt.Id != id
+                && rt.TypeName.ToLower() == normalizedName);
+
             if (nameExists)
             {
-                return AuthServiceResult<RoomTypeResponse>.Failure("Room type name already exists.", 409);
+                return AuthServiceResult<RoomTypeResponse>.Failure(
+                    "Room type name already exists.", 409);
+            }
+
+            if (request.Capacity < roomType.Capacity)
+            {
+                var hasReservationExceedingNewCapacity =
+                    await _context.Reservations.AnyAsync(r =>
+                        r.Room.RoomTypeId == id
+                        && CapacityBlockingStatuses.Contains(r.Status)
+                        && r.NumberOfGuests > request.Capacity);
+
+                if (hasReservationExceedingNewCapacity)
+                {
+                    return AuthServiceResult<RoomTypeResponse>.Failure(
+                        "Cannot reduce room type capacity because an active reservation exceeds the new capacity.",
+                        409);
+                }
             }
 
             roomType.TypeName = request.TypeName.Trim();
             roomType.Capacity = request.Capacity;
             roomType.BasePrice = request.BasePrice;
-            roomType.Description = string.IsNullOrWhiteSpace(request.Description) ? null : request.Description.Trim();
+            roomType.Description = NormalizeDescription(request.Description);
             roomType.IsActive = request.IsActive;
 
             await _context.SaveChangesAsync();
 
-            return AuthServiceResult<RoomTypeResponse>.Success(ToResponse(roomType), "Room type updated successfully.");
+            return AuthServiceResult<RoomTypeResponse>.Success(
+                ToResponse(roomType),
+                "Room type updated successfully.");
         }
 
         public async Task<AuthServiceResult<AuthMessageResponse>> DeleteAsync(int id)
         {
+            if (id <= 0)
+            {
+                return MessageFailure("Room type id must be greater than 0.");
+            }
+
             var roomType = await _context.RoomTypes
                 .Include(rt => rt.Rooms)
                 .FirstOrDefaultAsync(rt => rt.Id == id);
+
             if (roomType == null)
             {
                 return MessageFailure("Room type not found.", 404);
             }
 
+            // Keep history and foreign keys intact: types already used by rooms are soft-deleted.
             if (roomType.Rooms.Any())
             {
                 roomType.IsActive = false;
                 await _context.SaveChangesAsync();
-                return MessageSuccess("Room type is being used, so it was deactivated instead of deleted.");
+
+                return MessageSuccess(
+                    "Room type is being used, so it was deactivated instead of deleted.");
             }
 
             _context.RoomTypes.Remove(roomType);
             await _context.SaveChangesAsync();
+
             return MessageSuccess("Room type deleted successfully.");
         }
 
@@ -137,29 +224,53 @@ namespace HotelServiceManagement.Infrastructure.Services
             };
         }
 
-        private static string? Validate(string typeName, int capacity, decimal basePrice)
+        private static string? Validate(
+            string typeName,
+            int capacity,
+            decimal basePrice)
         {
             if (string.IsNullOrWhiteSpace(typeName))
             {
                 return "TypeName is required.";
             }
 
-            if (capacity <= 0)
+            if (typeName.Trim().Length > 50)
             {
-                return "Capacity must be greater than 0.";
+                return "TypeName cannot exceed 50 characters.";
             }
 
-            return basePrice < 0 ? "BasePrice must be greater than or equal to 0." : null;
+            if (capacity < 1)
+            {
+                return "Capacity must be at least 1.";
+            }
+
+            return basePrice < 0
+                ? "BasePrice must be greater than or equal to 0."
+                : null;
         }
 
-        private static AuthServiceResult<AuthMessageResponse> MessageSuccess(string message)
+        private static string? NormalizeDescription(string? description)
         {
-            return AuthServiceResult<AuthMessageResponse>.Success(new AuthMessageResponse { Message = message }, message);
+            return string.IsNullOrWhiteSpace(description)
+                ? null
+                : description.Trim();
         }
 
-        private static AuthServiceResult<AuthMessageResponse> MessageFailure(string message, int statusCode = 400)
+        private static AuthServiceResult<AuthMessageResponse> MessageSuccess(
+            string message)
         {
-            return AuthServiceResult<AuthMessageResponse>.Failure(message, statusCode);
+            return AuthServiceResult<AuthMessageResponse>.Success(
+                new AuthMessageResponse { Message = message },
+                message);
+        }
+
+        private static AuthServiceResult<AuthMessageResponse> MessageFailure(
+            string message,
+            int statusCode = 400)
+        {
+            return AuthServiceResult<AuthMessageResponse>.Failure(
+                message,
+                statusCode);
         }
     }
 }
