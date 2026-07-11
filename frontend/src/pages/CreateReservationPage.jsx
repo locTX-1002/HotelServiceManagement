@@ -205,6 +205,7 @@ export default function CreateReservationPage() {
         client.post('/api/reservations', {
           guestId: res.data.id,
           roomId: selected.roomId,
+          numberOfGuests: guests,
           checkInDate: checkIn,
           checkOutDate: checkOut,
           status: 1,
