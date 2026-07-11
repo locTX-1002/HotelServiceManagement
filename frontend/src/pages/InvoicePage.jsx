@@ -74,6 +74,9 @@ export default function InvoicePage() {
       })
   }
 
+  // Chỉ chạy khi stayId THẬT SỰ đổi (điều hướng trực tiếp sang hoá đơn khác) - không đụng vào lastPayment
+  // khi load() được gọi lại sau khi thanh toán xong, không thì biên nhận vừa hiện bị xoá ngay lập tức.
+  useEffect(() => { setLastPayment(null); setPayError('') }, [stayId])
   useEffect(load, [stayId])
 
   const createInvoice = () => {
