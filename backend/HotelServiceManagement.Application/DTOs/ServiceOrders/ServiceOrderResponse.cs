@@ -9,5 +9,7 @@ public class ServiceOrderResponse
     public DateTime OrderDate { get; set; }
     public ServiceOrderStatus Status { get; set; }
     public decimal TotalAmount { get; set; }
+    public int? CreatedByUserId { get; set; }
+    public string? CreatedByUserName { get; set; }
     public IReadOnlyList<ServiceOrderDetailResponse> Details { get; set; } = Array.Empty<ServiceOrderDetailResponse>();
 }

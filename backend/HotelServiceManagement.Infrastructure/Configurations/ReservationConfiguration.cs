@@ -1,6 +1,6 @@
+using HotelServiceManagement.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using HotelServiceManagement.Domain.Entities;
 
 namespace HotelServiceManagement.Infrastructure.Configurations
 {
@@ -9,13 +9,21 @@ namespace HotelServiceManagement.Infrastructure.Configurations
         public void Configure(EntityTypeBuilder<Reservation> builder)
         {
             builder.HasKey(r => r.Id);
-            builder.Property(r => r.BookingCode).IsRequired().HasMaxLength(50);
-            builder.Property(r => r.Status).HasConversion<string>().HasMaxLength(50);
 
-            // Unique BookingCode
+            builder.Property(r => r.BookingCode)
+                   .IsRequired()
+                   .HasMaxLength(50);
+
+            builder.Property(r => r.NumberOfGuests)
+                   .IsRequired()
+                   .HasDefaultValue(1);
+
+            builder.Property(r => r.Status)
+                   .HasConversion<string>()
+                   .HasMaxLength(50);
+
             builder.HasIndex(r => r.BookingCode).IsUnique();
 
-            // Relationships
             builder.HasOne(r => r.Guest)
                    .WithMany(g => g.Reservations)
                    .HasForeignKey(r => r.GuestId)
@@ -31,8 +39,18 @@ namespace HotelServiceManagement.Infrastructure.Configurations
                    .HasForeignKey(r => r.CreatedByUserId)
                    .OnDelete(DeleteBehavior.Restrict);
 
-            // Check Constraint: CheckOutDate > CheckInDate
-            builder.ToTable(t => t.HasCheckConstraint("CK_Reservation_CheckOutDate_CheckInDate", "[CheckOutDate] > [CheckInDate]"));
+            // DB can enforce rules that only depend on columns in Reservations.
+            // Maximum capacity still belongs in ReservationService because Capacity is in RoomTypes.
+            builder.ToTable(t =>
+            {
+                t.HasCheckConstraint(
+                    "CK_Reservation_CheckOutDate_CheckInDate",
+                    "[CheckOutDate] > [CheckInDate]");
+
+                t.HasCheckConstraint(
+                    "CK_Reservation_NumberOfGuests_MinValue",
+                    "[NumberOfGuests] >= 1");
+            });
         }
     }
 }
