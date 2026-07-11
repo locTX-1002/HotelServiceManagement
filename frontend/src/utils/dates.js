@@ -18,6 +18,13 @@ export const fmtShort = (dateStr) => {
   return new Intl.DateTimeFormat('vi-VN', { day: '2-digit', month: 'short' }).format(new Date(y, m - 1, day))
 }
 
+// Giờ hiện tại theo máy, KHÔNG có 'Z' - toISOString() trả UTC làm backend lưu lệch 7 tiếng,
+// hiển thị lại thành sớm hơn thực tế (backend serialize không kèm 'Z' nên FE hiểu là giờ local)
+export const localNowIso = () => {
+  const d = new Date()
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
+}
+
 // Chuỗi datetime ISO thật từ backend (có giờ) -> '06 thg 7, 14:05' theo giờ trình duyệt.
 // Khác fmtShort: đây nhận Date/instant thật (check-in, check-out), không phải ngày dạng chuỗi 'YYYY-MM-DD'.
 export const fmtDateTime = (iso) =>

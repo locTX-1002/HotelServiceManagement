@@ -127,28 +127,34 @@ export default function CreateReservationPage() {
   const [submitting, setSubmitting] = useState(false)
   const [walkInRooms, setWalkInRooms] = useState([])
   const [walkInUsingMock, setWalkInUsingMock] = useState(false)
+  const [walkInError, setWalkInError] = useState(false) // lỗi thật khi tải phòng trống, khác với hết phòng
 
   const [searchParams] = useSearchParams()
 
   const nights = useMemo(() => Math.max(Math.round((new Date(checkOut) - new Date(checkIn)) / 86400000), 0), [checkIn, checkOut])
 
-  // roomTypeId thật của backend (số) - 'all' nghĩa là không lọc
-  const search = (ci = checkIn, co = checkOut, g = guests, rt = roomType) => {
-    setSelected(null)
+  // roomTypeId thật của backend (số) - 'all' nghĩa là không lọc.
+  // preselect: phòng walk-in vừa bấm được chọn sẵn ở bước 2; nếu kết quả trả về không còn
+  // phòng đó (vd không đủ sức chứa) thì bỏ chọn để không đặt nhầm.
+  const search = (ci = checkIn, co = checkOut, g = guests, rt = roomType, preselect = null) => {
+    setSelected(preselect)
     client
       .get('/api/reservations/available-rooms', { params: { checkInDate: ci, checkOutDate: co, roomTypeId: rt === 'all' ? undefined : rt, capacity: g } })
-      .then((res) => { setResults(res.data.map(normalizeAvailableRoom)); setUsingMock(false); setSearchError(false) })
+      .then((res) => {
+        const list = res.data.map(normalizeAvailableRoom)
+        setResults(list); setUsingMock(false); setSearchError(false)
+        if (preselect) setSelected(list.find((r) => r.roomId === preselect.roomId) ?? null)
+      })
       .catch((err) => {
         if (isBackendMissing(err)) {
           const typeName = rt === 'all' ? null : roomTypes.find((t) => t.roomTypeId === rt)?.typeName
-          setResults(
-            MOCK_AVAILABLE_ROOMS
-              .filter((r) => (!typeName || r.typeName === typeName) && roomMeta(r.typeName).capacity >= g)
-              .map(normalizeAvailableRoom),
-          )
-          setUsingMock(true); setSearchError(false)
+          const list = MOCK_AVAILABLE_ROOMS
+            .filter((r) => (!typeName || r.typeName === typeName) && roomMeta(r.typeName).capacity >= g)
+            .map(normalizeAvailableRoom)
+          setResults(list); setUsingMock(true); setSearchError(false)
+          if (preselect) setSelected(list.find((r) => r.roomId === preselect.roomId) ?? null)
         } else {
-          setResults([]); setSearchError(true) // lỗi thật: không che bằng mock
+          setResults([]); setSelected(null); setSearchError(true) // lỗi thật: không che bằng mock
         }
       })
     setStep(2)
@@ -184,26 +190,38 @@ export default function CreateReservationPage() {
       .then((res) => { setWalkInRooms(res.data.map(normalizeAvailableRoom).slice(0, 8)); setWalkInUsingMock(false) })
       .catch((err) => {
         if (isBackendMissing(err)) { setWalkInRooms(MOCK_AVAILABLE_ROOMS.map(normalizeAvailableRoom)); setWalkInUsingMock(true) }
+        else setWalkInError(true) // lỗi thật: báo đúng bản chất, không hiện nhầm 'hết phòng'
       })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // Backend không nhận thông tin khách kèm luôn trong đặt phòng - phải tạo Guest trước rồi mới tạo Reservation với guestId.
+  // Khách quen (CCCD đã có hồ sơ) thì dùng lại hồ sơ cũ - POST thẳng sẽ dính 409 'Identity number already exists',
+  // và cũng nhờ vậy bấm 'Thử lại' sau khi tạo reservation lỗi không bị kẹt vì guest đã tạo ở lần trước.
   // Lễ tân tạo trực tiếp cho khách trước mặt nên xác nhận luôn (status=1 Confirmed), không qua bước chờ duyệt.
   const confirm = () => {
     if (submitting) return // KI-04: chặn bấm đúp tạo trùng đặt phòng
     setError(null)
     setSubmitting(true)
+    const idNum = guest.identityNumber.trim()
     client
-      .post('/api/guests', {
-        fullName: guest.fullName.trim(),
-        phoneNumber: guest.phoneNumber.trim(),
-        email: guest.email.trim() || undefined,
-        identityNumber: guest.identityNumber.trim(),
+      .get('/api/guests', { params: { keyword: idNum } })
+      .then((res) => {
+        // backend tìm kiểu Contains nên phải so khớp CCCD chính xác, không lấy bừa kết quả đầu
+        const existing = res.data.find((g) => g.identityNumber === idNum)
+        if (existing) return existing
+        return client
+          .post('/api/guests', {
+            fullName: guest.fullName.trim(),
+            phoneNumber: guest.phoneNumber.trim(),
+            email: guest.email.trim() || undefined,
+            identityNumber: idNum,
+          })
+          .then((r) => r.data)
       })
-      .then((res) =>
+      .then((g) =>
         client.post('/api/reservations', {
-          guestId: res.data.id,
+          guestId: g.id,
           roomId: selected.roomId,
           numberOfGuests: guests,
           checkInDate: checkIn,
@@ -322,7 +340,9 @@ export default function CreateReservationPage() {
               )}
             </div>
             {walkInRooms.length === 0 ? (
-              <p className="text-[13px] italic text-ink-500">Hết phòng trống cho hôm nay.</p>
+              <p className="text-[13px] italic text-ink-500">
+                {walkInError ? 'Không tải được danh sách phòng trống. Thử tải lại trang.' : 'Hết phòng trống cho hôm nay.'}
+              </p>
             ) : (
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
               {walkInRooms.map((room, idx) => (
@@ -331,7 +351,7 @@ export default function CreateReservationPage() {
                   onClick={() => {
                     const ci = today()
                     setCheckIn(ci); setCheckOut(addDays(ci, 1))
-                    search(ci, addDays(ci, 1), guests, 'all')
+                    search(ci, addDays(ci, 1), guests, 'all', room) // phòng vừa bấm được chọn sẵn ở bước 2
                   }}
                   className={`group rounded-t-[999px] rounded-b-2xl bg-white p-2.5 pb-4 text-center ring-1 ring-black/[0.07] shadow-soft ${EASE} hover:-translate-y-1 hover:shadow-lift`}
                 >

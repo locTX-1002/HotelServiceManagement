@@ -6,7 +6,7 @@ import ErrorState from '../components/ErrorState'
 import { useToast } from '../components/toastContext'
 import { MOCK_ACTIVE_STAYS, MOCK_RESERVATIONS } from '../mock/hotelMock'
 import { normalizeReservation } from '../utils/apiShape'
-import { fmtDateTime } from '../utils/dates'
+import { fmtDateTime, localNowIso } from '../utils/dates'
 import { formatVnd } from '../utils/roomStatus'
 
 const EASE = 'transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]'
@@ -149,7 +149,8 @@ export default function CheckInOutPage() {
     setCheckInError('')
     setCheckingIn(true)
     client
-      .post('/api/stays/check-in', { reservationId: toCheckIn.reservationId, actualCheckIn: new Date().toISOString() })
+      // localNowIso (không 'Z'): toISOString gửi UTC làm giờ nhận phòng lưu lệch -7 tiếng khi hiển thị lại
+      .post('/api/stays/check-in', { reservationId: toCheckIn.reservationId, actualCheckIn: localNowIso() })
       .then(() => {
         toast.success(`Đã check-in phòng ${toCheckIn.roomNumber} cho ${toCheckIn.guestName}`)
         setToCheckIn(null)
