@@ -49,3 +49,17 @@ export const normalizeReservation = (r) => ({
   typeName: r.typeName ?? r.roomTypeName,
   status: normalizeReservationStatus(r.status),
 })
+
+// Thứ tự PHẢI khớp enum ServiceOrderStatus của backend: Pending=0, Processing=1, Completed=2, Cancelled=3
+const SERVICE_ORDER_STATUS_ORDER = ['Pending', 'Processing', 'Completed', 'Cancelled']
+
+export const normalizeServiceOrderStatus = (s) =>
+  typeof s === 'number' ? SERVICE_ORDER_STATUS_ORDER[s] ?? 'Pending' : s
+
+export const denormalizeServiceOrderStatus = (s) => {
+  const i = SERVICE_ORDER_STATUS_ORDER.indexOf(s)
+  return i >= 0 ? i : 0
+}
+
+// GET /api/service-orders: status là số -> chuẩn hoá về chuỗi, giữ nguyên shape còn lại
+export const normalizeServiceOrder = (o) => ({ ...o, status: normalizeServiceOrderStatus(o.status) })

@@ -32,7 +32,7 @@ const SkeletonRows = () => (
 )
 
 // Biên nhận sau check-out: tổng tiền phòng + dịch vụ vừa tính từ backend, để lễ tân báo khách trước khi thu tiền.
-function ReceiptDialog({ receipt, onClose }) {
+function ReceiptDialog({ receipt, onClose, onPay }) {
   if (!receipt) return null
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-6">
@@ -62,12 +62,20 @@ function ReceiptDialog({ receipt, onClose }) {
             </div>
           </div>
 
-          <button
-            onClick={onClose}
-            className={`mt-6 w-full rounded-full bg-ink-900 py-2.5 text-[13px] font-bold text-cream-50 ${EASE} hover:bg-ink-700 active:scale-[0.98]`}
-          >
-            Đóng
-          </button>
+          <div className="mt-6 flex gap-2.5">
+            <button
+              onClick={onClose}
+              className={`flex-1 rounded-full py-2.5 text-[13px] font-semibold text-ink-700 ring-1 ring-black/10 ${EASE} hover:bg-white`}
+            >
+              Đóng
+            </button>
+            <button
+              onClick={onPay}
+              className={`flex-1 rounded-full bg-brand-600 py-2.5 text-[13px] font-bold text-white ${EASE} hover:bg-brand-700 active:scale-[0.98]`}
+            >
+              Ghi nhận thanh toán
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -363,7 +371,14 @@ export default function CheckInOutPage() {
         onCancel={() => setToCheckOut(null)}
       />
 
-      <ReceiptDialog receipt={receipt} onClose={() => setReceipt(null)} />
+      <ReceiptDialog
+        receipt={receipt}
+        onClose={() => setReceipt(null)}
+        onPay={() => {
+          const q = new URLSearchParams({ stayId: receipt.stayId, roomNumber: receipt.roomNumber, guestName: receipt.guestName })
+          navigate(`/invoices?${q}`)
+        }}
+      />
     </div>
   )
 }

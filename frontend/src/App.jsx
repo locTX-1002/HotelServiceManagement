@@ -12,6 +12,8 @@ import ReportsPage from './pages/ReportsPage'
 import ReservationsPage from './pages/ReservationsPage'
 import RoomPage from './pages/RoomPage'
 import RoomTypePage from './pages/RoomTypePage'
+import ServiceOrderPage from './pages/ServiceOrderPage'
+import InvoicePage from './pages/InvoicePage'
 import ProtectedRoute from './routes/ProtectedRoute'
 import RequireRole from './routes/RequireRole'
 
@@ -33,7 +35,8 @@ export default function App() {
               <Route path="/reservations" element={<ReservationsPage />} />
               <Route path="/reservations/new" element={<CreateReservationPage />} />
               <Route path="/checkin-checkout" element={<CheckInOutPage />} />
-              <Route path="/service-orders" element={<Placeholder title="Dịch vụ" />} />
+              <Route path="/service-orders" element={<ServiceOrderPage />} />
+              <Route path="/invoices" element={<InvoicePage />} />
               <Route path="/reports" element={<ReportsPage />} />
             </Route>
           </Route>

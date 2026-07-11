@@ -124,6 +124,9 @@ export default function CreateReservationPage() {
   const [done, setDone] = useState(null)
   const [error, setError] = useState(null)
   const [searchError, setSearchError] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [walkInRooms, setWalkInRooms] = useState([])
+  const [walkInUsingMock, setWalkInUsingMock] = useState(false)
 
   const [searchParams] = useSearchParams()
 
@@ -171,10 +174,26 @@ export default function CreateReservationPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // Phòng trống HÔM NAY cho khách walk-in bấm nhanh - tải riêng, độc lập với ô tìm kiếm chính,
+  // không phải danh sách tĩnh nữa (trước đây hiện cứng phòng có thể đã có khách, sai thực tế).
+  useEffect(() => {
+    const ci = today()
+    const co = addDays(ci, 1)
+    client
+      .get('/api/reservations/available-rooms', { params: { checkInDate: ci, checkOutDate: co } })
+      .then((res) => { setWalkInRooms(res.data.map(normalizeAvailableRoom).slice(0, 8)); setWalkInUsingMock(false) })
+      .catch((err) => {
+        if (isBackendMissing(err)) { setWalkInRooms(MOCK_AVAILABLE_ROOMS.map(normalizeAvailableRoom)); setWalkInUsingMock(true) }
+      })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   // Backend không nhận thông tin khách kèm luôn trong đặt phòng - phải tạo Guest trước rồi mới tạo Reservation với guestId.
   // Lễ tân tạo trực tiếp cho khách trước mặt nên xác nhận luôn (status=1 Confirmed), không qua bước chờ duyệt.
   const confirm = () => {
+    if (submitting) return // KI-04: chặn bấm đúp tạo trùng đặt phòng
     setError(null)
+    setSubmitting(true)
     client
       .post('/api/guests', {
         fullName: guest.fullName.trim(),
@@ -186,6 +205,7 @@ export default function CreateReservationPage() {
         client.post('/api/reservations', {
           guestId: res.data.id,
           roomId: selected.roomId,
+          numberOfGuests: guests,
           checkInDate: checkIn,
           checkOutDate: checkOut,
           status: 1,
@@ -198,6 +218,7 @@ export default function CreateReservationPage() {
             ? 'Không kết nối được máy chủ. Vui lòng thử lại sau.'
             : err.response?.data?.message ?? 'Máy chủ báo lỗi khi tạo đặt phòng. Thử lại hoặc báo quản trị viên.',
         ))
+      .finally(() => setSubmitting(false))
   }
 
   const sorted = useMemo(() => [...results].sort((a, b) => (sortAsc ? a.basePrice - b.basePrice : b.basePrice - a.basePrice)), [results, sortAsc])
@@ -291,14 +312,20 @@ export default function CreateReservationPage() {
           </div>
           {nights > 0 && <p className="mt-3 text-center text-[12px] text-ink-500">{nights} đêm · {fmtShort(checkIn)} → {fmtShort(checkOut)} · {guests} khách</p>}
 
-          {/* Walk-in nhanh: phòng đang trống, click là sang thẳng bước 2 với hôm nay -> mai */}
+          {/* Walk-in nhanh: phòng đang trống thật, click là sang thẳng bước 2 với hôm nay -> mai */}
           <div className="mt-10">
             <div className="mb-4 flex items-baseline gap-3">
               <h2 className="font-display text-xl font-semibold italic">Phòng trống hôm nay</h2>
               <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-ink-500">· khách walk-in nhận phòng ngay</p>
+              {walkInUsingMock && (
+                <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-800 ring-1 ring-amber-600/20">mẫu</span>
+              )}
             </div>
+            {walkInRooms.length === 0 ? (
+              <p className="text-[13px] italic text-ink-500">Hết phòng trống cho hôm nay.</p>
+            ) : (
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-              {MOCK_AVAILABLE_ROOMS.map((room, idx) => (
+              {walkInRooms.map((room, idx) => (
                 <button
                   key={room.roomId}
                   onClick={() => {
@@ -318,6 +345,7 @@ export default function CreateReservationPage() {
                 </button>
               ))}
             </div>
+            )}
           </div>
         </div>
       )}
@@ -344,7 +372,7 @@ export default function CreateReservationPage() {
 
           {usingMock && (
             <p className="mt-3 flex items-center gap-1.5 text-[11px] font-medium text-ink-500">
-              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-500" /> dữ liệu mẫu - chờ API available-rooms (T3)
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-500" /> dữ liệu mẫu, chưa kết nối được máy chủ
             </p>
           )}
 
@@ -401,10 +429,10 @@ export default function CreateReservationPage() {
                 </div>
                 <button
                   onClick={confirm}
-                  disabled={!guest.fullName.trim() || !guest.phoneNumber.trim() || !guest.identityNumber.trim()}
+                  disabled={submitting || !guest.fullName.trim() || !guest.phoneNumber.trim() || !guest.identityNumber.trim()}
                   className={`mt-5 w-full rounded-full bg-brand-500 py-3 text-sm font-bold text-white ${EASE} hover:bg-brand-600 active:scale-[0.98] disabled:opacity-30`}
                 >
-                  Xác nhận đặt phòng
+                  {submitting ? 'Đang xác nhận…' : 'Xác nhận đặt phòng'}
                 </button>
                 {(!guest.fullName.trim() || !guest.phoneNumber.trim() || !guest.identityNumber.trim()) && (
                   <p className="mt-2 text-center text-[11px] text-cream-50/50">Nhập đủ họ tên, số điện thoại và CMND/CCCD để xác nhận</p>
