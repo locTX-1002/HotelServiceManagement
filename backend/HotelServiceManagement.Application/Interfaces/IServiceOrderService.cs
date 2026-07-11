@@ -7,7 +7,14 @@ namespace HotelServiceManagement.Application.Interfaces
     {
         Task<AuthServiceResult<IReadOnlyList<ServiceOrderResponse>>> GetAllAsync();
         Task<AuthServiceResult<ServiceOrderResponse>> GetByIdAsync(int id);
-        Task<AuthServiceResult<ServiceOrderResponse>> CreateAsync(CreateServiceOrderRequest request);
-        Task<AuthServiceResult<ServiceOrderResponse>> UpdateStatusAsync(int id, UpdateServiceOrderStatusRequest request);
+
+        // createdByUserId is read from the authenticated JWT by the API controller.
+        Task<AuthServiceResult<ServiceOrderResponse>> CreateAsync(
+            CreateServiceOrderRequest request,
+            int createdByUserId);
+
+        Task<AuthServiceResult<ServiceOrderResponse>> UpdateStatusAsync(
+            int id,
+            UpdateServiceOrderStatusRequest request);
     }
 }
