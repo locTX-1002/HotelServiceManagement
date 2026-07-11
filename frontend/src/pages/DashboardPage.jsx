@@ -69,7 +69,13 @@ export default function DashboardPage() {
     setLoadError(false)
     client
       .get('/api/reports/dashboard')
-      .then((res) => { setData({ ...MOCK_DASHBOARD, ...res.data }); setUsingMock(false) })
+      // API cấp KPI + tổng doanh thu (TotalRevenue = tổng payment đã thu); các panel vận hành
+      // (khách đến/đi, cảnh báo, biểu đồ 7 ngày) chưa có endpoint nên vẫn là số minh hoạ.
+      .then((res) => {
+        const api = res.data ?? {}
+        setData({ ...MOCK_DASHBOARD, ...api, todayRevenue: api.totalRevenue ?? api.todayRevenue ?? MOCK_DASHBOARD.todayRevenue })
+        setUsingMock(false)
+      })
       .catch((err) => {
         if (isBackendMissing(err)) { setData(MOCK_DASHBOARD); setUsingMock(true) }
         else setLoadError(true) // lỗi thật: không che bằng mock
@@ -145,8 +151,8 @@ export default function DashboardPage() {
           <div className="col-span-2 bg-brand-50 px-5 py-4 sm:col-span-1">
             <p className="font-display text-2xl font-semibold tabular-nums leading-none text-brand-700">{formatVnd(data.todayRevenue)}</p>
             <p className="mt-1.5 flex items-center gap-2 text-[11px] font-medium text-ink-500">
-              doanh thu hôm nay
-              {typeof data.revenueDeltaPct === 'number' && (
+              {usingMock ? 'doanh thu hôm nay' : 'tổng doanh thu đã thu'}
+              {usingMock && typeof data.revenueDeltaPct === 'number' && (
                 <span className={`font-bold ${data.revenueDeltaPct >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
                   {data.revenueDeltaPct >= 0 ? '↑' : '↓'} {Math.abs(data.revenueDeltaPct)}% so hôm qua
                 </span>
@@ -155,6 +161,13 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* API vận hành (khách đến/đi, cảnh báo, biểu đồ 7 ngày) chưa có -> báo rõ đây là số minh hoạ */}
+      {!usingMock && (
+        <p className="mt-4 text-[11px] italic text-ink-500">
+          Các mục vận hành bên dưới (khách đến/đi, cảnh báo, biểu đồ 7 ngày) là số liệu minh hoạ — API vận hành chưa hỗ trợ.
+        </p>
+      )}
 
       {/* Dải Cần chú ý - thứ khiến trang này "làm việc" */}
       {data.alerts?.length > 0 && (

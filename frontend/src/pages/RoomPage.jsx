@@ -48,7 +48,8 @@ export default function RoomPage() {
     setLoadError(false)
     client
       .get('/api/rooms')
-      .then((res) => { setRooms(res.data.map(normalizeRoom)); setUsingMock(false) })
+      // Ẩn phòng đã ngừng dùng (soft-delete IsActive=false) khỏi danh sách quản lý
+      .then((res) => { setRooms(res.data.map(normalizeRoom).filter((r) => r.isActive !== false)); setUsingMock(false) })
       .catch((err) => {
         if (isBackendMissing(err)) { setRooms(MOCK_ROOMS); setUsingMock(true) }
         else setLoadError(true) // lỗi thật: không che bằng mock
@@ -141,8 +142,12 @@ export default function RoomPage() {
     setDeleting(true)
     client
       .delete(`/api/rooms/${toDelete.roomId}`)
-      .then(() => {
-        toast.success(`Đã xóa phòng ${toDelete.roomNumber}`)
+      .then((res) => {
+        // BE soft-delete (200 + message "deactivated") khi phòng còn ràng buộc dữ liệu; hard-delete khi không
+        const soft = /deactivat|being used/i.test(res.data?.message || '')
+        toast.success(soft
+          ? `Phòng ${toDelete.roomNumber} còn ràng buộc dữ liệu — đã chuyển sang ngừng sử dụng`
+          : `Đã xóa phòng ${toDelete.roomNumber}`)
         setToDelete(null)
         load()
       })
@@ -395,7 +400,7 @@ export default function RoomPage() {
       <ConfirmDialog
         open={toDelete !== null}
         title={`Xóa phòng ${toDelete?.roomNumber ?? ''}?`}
-        message="Lịch sử đặt phòng liên quan có thể bị ảnh hưởng. Hành động không hoàn tác được."
+        message="Phòng còn lịch sử đặt phòng sẽ được chuyển sang ngừng sử dụng thay vì xóa hẳn."
         busy={deleting}
         error={deleteError}
         onConfirm={confirmDelete}

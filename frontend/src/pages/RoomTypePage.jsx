@@ -101,8 +101,12 @@ export default function RoomTypePage() {
     setDeleting(true)
     client
       .delete(`/api/room-types/${toDelete.roomTypeId}`)
-      .then(() => {
-        toast.success(`Đã xóa loại phòng ${toDelete.typeName}`)
+      .then((res) => {
+        // BE soft-deactivate khi loại phòng còn phòng thuộc về; hard-delete khi không
+        const soft = /deactivat|being used/i.test(res.data?.message || '')
+        toast.success(soft
+          ? `Loại phòng ${toDelete.typeName} còn phòng thuộc về — đã chuyển sang ngừng sử dụng`
+          : `Đã xóa loại phòng ${toDelete.typeName}`)
         setToDelete(null)
         load()
       })
@@ -297,7 +301,7 @@ export default function RoomTypePage() {
       <ConfirmDialog
         open={toDelete !== null}
         title={`Xóa loại phòng ${toDelete?.typeName ?? ''}?`}
-        message="Các phòng đang thuộc loại này sẽ cần chuyển sang loại khác. Hành động không hoàn tác được."
+        message="Loại phòng còn phòng thuộc về sẽ được chuyển sang ngừng sử dụng thay vì xóa hẳn."
         busy={deleting}
         error={deleteError}
         onConfirm={confirmDelete}
