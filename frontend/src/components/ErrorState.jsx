@@ -1,3 +1,4 @@
+import { EASE } from '../utils/ui'
 
 // Trạng thái lỗi thật từ máy chủ - khác với fallback mock khi backend chưa chạy
 export default function ErrorState({ message, onRetry }) {
