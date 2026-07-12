@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import EmptyState from '../components/EmptyState'
 import { EASE } from '../utils/ui'
 import { useNavigate, useSearchParams } from 'react-router-dom'
@@ -41,6 +41,9 @@ export default function InvoicePage() {
   const [paying, setPaying] = useState(false)
   const [payError, setPayError] = useState('')
   const [lastPayment, setLastPayment] = useState(null)
+  // Khoá đồng bộ chống spam-click - state paying/creating cập nhật bất đồng bộ nên vẫn lọt request khi bấm liên tiếp nhanh
+  const payingRef = useRef(false)
+  const creatingRef = useRef(false)
 
   const load = () => {
     if (!stayId) return
@@ -68,18 +71,22 @@ export default function InvoicePage() {
   useEffect(load, [stayId])
 
   const createInvoice = () => {
+    if (creatingRef.current) return
+    creatingRef.current = true
     setCreating(true)
     client
       .post(`/api/invoices/stay/${stayId}`)
       .then(() => { toast.success('Đã tạo hoá đơn'); load() })
       .catch((err) => toast.error(apiError(err)))
-      .finally(() => setCreating(false))
+      .finally(() => { creatingRef.current = false; setCreating(false) })
   }
 
   const submitPayment = () => {
+    if (payingRef.current) return
     setPayError('')
     const amt = Number(amount)
     if (!amt || amt <= 0) { setPayError('Nhập số tiền hợp lệ.'); return }
+    payingRef.current = true
     setPaying(true)
     client
       .post('/api/payments', { invoiceId: invoice.invoiceId, amount: amt, paymentMethod: method })
@@ -89,7 +96,7 @@ export default function InvoicePage() {
         load()
       })
       .catch((err) => setPayError(apiError(err)))
-      .finally(() => setPaying(false))
+      .finally(() => { payingRef.current = false; setPaying(false) })
   }
 
   if (!stayId) {

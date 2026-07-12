@@ -179,7 +179,7 @@ export const MOCK_DASHBOARD = {
   availableRooms: 3,
   occupiedRooms: 2,
   todayBookings: 3,
-  todayRevenue: 3280000,
+  totalRevenue: 3280000,
   revenueDeltaPct: 12, // so với hôm qua
   alerts: [
     { id: 1, text: 'Phòng 102 quá giờ check-out 25 phút', action: 'Check-out', to: '/checkin-checkout' },

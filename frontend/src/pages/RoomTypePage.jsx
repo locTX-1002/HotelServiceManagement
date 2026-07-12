@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { EASE, errorCls, inputCls, labelCls } from '../utils/ui'
 import client, { isBackendMissing, apiError } from '../api/client'
 import ConfirmDialog from '../components/ConfirmDialog'
@@ -11,7 +11,7 @@ import { normalizeRoomType } from '../utils/apiShape'
 import { roomImage } from '../utils/roomImages'
 import { formatVnd } from '../utils/roomStatus'
 
-const EMPTY_FORM = { typeName: '', capacity: 2, basePrice: '' }
+const EMPTY_FORM = { typeName: '', capacity: 2, basePrice: '', description: '', isActive: true }
 
 // Backend chưa kết nối được -> báo chung; lỗi thật thì hiện message của máy chủ.
 
@@ -27,6 +27,8 @@ export default function RoomTypePage() {
   const [toDelete, setToDelete] = useState(null)
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState('')
+  const submittingRef = useRef(false)
+  const deletingRef = useRef(false)
 
   const load = () => {
     setLoadError(false)
@@ -35,14 +37,20 @@ export default function RoomTypePage() {
       .then((res) => { setTypes(res.data.map(normalizeRoomType)); setUsingMock(false) })
       .catch((err) => {
         if (isBackendMissing(err)) { setTypes(MOCK_ROOM_TYPES_FULL); setUsingMock(true) }
-        else setLoadError(true) // lỗi thật: không che bằng mock
+        else setLoadError(err.response?.data?.message ?? true) // lỗi thật: không che bằng mock
       })
   }
   useEffect(load, [])
 
   const openCreate = () => { setForm(EMPTY_FORM); setFormError(''); setDrawer({ mode: 'create' }) }
   const openEdit = (item) => {
-    setForm({ typeName: item.typeName, capacity: item.capacity, basePrice: item.basePrice })
+    setForm({
+      typeName: item.typeName,
+      capacity: item.capacity,
+      basePrice: item.basePrice,
+      description: item.description ?? '',
+      isActive: item.isActive !== false,
+    })
     setFormError('')
     setDrawer({ mode: 'edit', item })
   }
@@ -63,16 +71,19 @@ export default function RoomTypePage() {
 
   const submit = (e) => {
     e.preventDefault()
+    if (submittingRef.current) return
     const msg = validate()
     if (msg) return setFormError(msg)
 
+    submittingRef.current = true
     setFormError('')
     setSaving(true)
     const payload = {
       typeName: form.typeName.trim(),
       capacity: Number(form.capacity),
       basePrice: Number(form.basePrice),
-      isActive: drawer?.item?.isActive ?? true,
+      description: form.description.trim() || null,
+      isActive: form.isActive,
     }
     const req =
       drawer.mode === 'edit'
@@ -85,10 +96,12 @@ export default function RoomTypePage() {
         load()
       })
       .catch((err) => setFormError(apiError(err)))
-      .finally(() => setSaving(false))
+      .finally(() => { submittingRef.current = false; setSaving(false) })
   }
 
   const confirmDelete = () => {
+    if (deletingRef.current) return
+    deletingRef.current = true
     setDeleteError('')
     setDeleting(true)
     client
@@ -103,7 +116,7 @@ export default function RoomTypePage() {
         load()
       })
       .catch((err) => setDeleteError(apiError(err)))
-      .finally(() => setDeleting(false))
+      .finally(() => { deletingRef.current = false; setDeleting(false) })
   }
 
   const editing = drawer?.mode === 'edit'
@@ -145,7 +158,7 @@ export default function RoomTypePage() {
       )}
 
       {loadError && (
-        <div className="mt-6"><ErrorState onRetry={load} /></div>
+        <div className="mt-6"><ErrorState message={typeof loadError === 'string' ? loadError : undefined} onRetry={load} /></div>
       )}
 
       {!loadError && types !== null && types.length > 0 && (
@@ -266,7 +279,6 @@ export default function RoomTypePage() {
               id="rt-price"
               type="number"
               min="0"
-              step="50000"
               className={inputCls}
               placeholder="800000"
               value={form.basePrice}
@@ -274,6 +286,28 @@ export default function RoomTypePage() {
             />
             {pricePreview && <p className="mt-1.5 text-[12px] tabular-nums text-ink-500">= {pricePreview} /đêm</p>}
           </div>
+          <div>
+            <label htmlFor="rt-desc" className={labelCls}>Mô tả</label>
+            <textarea
+              id="rt-desc"
+              rows={3}
+              className={inputCls}
+              placeholder="Mô tả ngắn về hạng phòng…"
+              value={form.description}
+              onChange={(e) => setForm({ ...form, description: e.target.value })}
+            />
+          </div>
+          {editing && (
+            <label className="flex items-center gap-2.5 text-[13px] font-medium text-ink-700">
+              <input
+                type="checkbox"
+                checked={form.isActive}
+                onChange={(e) => setForm({ ...form, isActive: e.target.checked })}
+                className="h-4 w-4 rounded border-black/20 text-brand-600 focus:ring-brand-500/40"
+              />
+              Đang dùng — bỏ chọn để ngừng dùng, chọn lại để khôi phục
+            </label>
+          )}
 
           {formError && (
             <p className={errorCls}>{formError}</p>

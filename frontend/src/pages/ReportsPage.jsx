@@ -58,7 +58,7 @@ export default function ReportsPage() {
       .catch((err) => {
         if (stale) return
         if (isBackendMissing(err)) { setRevenue(mockRevenueSummary(from, to)); setUsingMock(true) }
-        else setLoadError(true) // lỗi thật: không che bằng mock
+        else setLoadError(err.response?.data?.message ?? true) // lỗi thật: không che bằng mock
       })
     // Công suất là ảnh chụp hiện tại - không theo dải ngày
     client
@@ -67,7 +67,7 @@ export default function ReportsPage() {
       .catch((err) => {
         if (stale) return
         if (isBackendMissing(err)) { setOccupancy(mockOccupancySnapshot()); setUsingMock(true) }
-        else setLoadError(true)
+        else setLoadError(err.response?.data?.message ?? true)
       })
     return () => { stale = true }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -146,7 +146,7 @@ export default function ReportsPage() {
       </div>
 
       {loadError && (
-        <div className="mt-6"><ErrorState onRetry={() => setRetryTick((t) => t + 1)} /></div>
+        <div className="mt-6"><ErrorState message={typeof loadError === 'string' ? loadError : undefined} onRetry={() => setRetryTick((t) => t + 1)} /></div>
       )}
 
       {loading && (

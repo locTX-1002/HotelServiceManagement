@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { EASE, errorCls, inputCls, labelCls } from '../utils/ui'
 import client, { isBackendMissing, apiError } from '../api/client'
 import ConfirmDialog from '../components/ConfirmDialog'
@@ -34,6 +34,10 @@ export default function RoomPage() {
   const [toDelete, setToDelete] = useState(null)
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState('')
+  // Khoá đồng bộ chống spam-click: state disabled cập nhật bất đồng bộ nên vẫn lọt click liên tiếp,
+  // ref đọc/ghi ngay lập tức nên chặn được request thứ 2 trở đi trước khi kịp gửi.
+  const submittingRef = useRef(false)
+  const deletingRef = useRef(false)
 
   const load = () => {
     setLoadError(false)
@@ -43,7 +47,7 @@ export default function RoomPage() {
       .then((res) => { setRooms(res.data.map(normalizeRoom).filter((r) => r.isActive !== false)); setUsingMock(false) })
       .catch((err) => {
         if (isBackendMissing(err)) { setRooms(MOCK_ROOMS); setUsingMock(true) }
-        else setLoadError(true) // lỗi thật: không che bằng mock
+        else setLoadError(err.response?.data?.message ?? true) // lỗi thật: không che bằng mock
       })
     // Loại phòng chỉ phục vụ ô chọn trong form + tra tên; chỉ dùng mock khi backend chưa có (404/mất mạng)
     client
@@ -105,9 +109,11 @@ export default function RoomPage() {
 
   const submit = (e) => {
     e.preventDefault()
+    if (submittingRef.current) return
     const msg = validate()
     if (msg) return setFormError(msg)
 
+    submittingRef.current = true
     setFormError('')
     setSaving(true)
     const payload = {
@@ -128,13 +134,15 @@ export default function RoomPage() {
         load()
       })
       .catch((err) => setFormError(apiError(err)))
-      .finally(() => setSaving(false))
+      .finally(() => { submittingRef.current = false; setSaving(false) })
   }
 
   const confirmDelete = () => {
+    if (deletingRef.current) return
     const blocked = deleteBlocked(toDelete)
     if (blocked) return setDeleteError(blocked)
 
+    deletingRef.current = true
     setDeleteError('')
     setDeleting(true)
     client
@@ -149,7 +157,7 @@ export default function RoomPage() {
         load()
       })
       .catch((err) => setDeleteError(apiError(err)))
-      .finally(() => setDeleting(false))
+      .finally(() => { deletingRef.current = false; setDeleting(false) })
   }
 
   const editing = drawer?.mode === 'edit'
@@ -219,7 +227,7 @@ export default function RoomPage() {
       )}
 
       {loadError && (
-        <div className="mt-6"><ErrorState onRetry={load} /></div>
+        <div className="mt-6"><ErrorState message={typeof loadError === 'string' ? loadError : undefined} onRetry={load} /></div>
       )}
 
       {!loadError && rooms !== null && visible.length > 0 && (

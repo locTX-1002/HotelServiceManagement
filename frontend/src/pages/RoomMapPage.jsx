@@ -7,6 +7,8 @@ import { MOCK_ROOM_MAP } from '../mock/hotelMock'
 import { normalizeRoom } from '../utils/apiShape'
 import { roomImage } from '../utils/roomImages'
 import ErrorState from '../components/ErrorState'
+import { canAccess } from '../utils/roles'
+import { getUser } from '../utils/session'
 
 const dateLabel = new Intl.DateTimeFormat('vi-VN', { weekday: 'long', day: '2-digit', month: 'long' }).format(new Date())
 
@@ -196,6 +198,7 @@ function RoomDrawer({ room, onClose }) {
 
 export default function RoomMapPage() {
   const navigate = useNavigate()
+  const canManageRooms = canAccess(getUser()?.role, '/rooms')
   const [floors, setFloors] = useState(null)
   const [usingMock, setUsingMock] = useState(false)
   const [statusFilter, setStatusFilter] = useState('all')
@@ -332,7 +335,7 @@ export default function RoomMapPage() {
             {f.rooms.map((room, idx) => (
               <RoomTile key={room.roomId} room={room} imgIdx={idx} delay={fi * 100 + idx * 45} onOpen={setOpenRoom} />
             ))}
-            {statusFilter === 'all' && f.rooms.length % 4 !== 0 && <GhostTile onClick={() => navigate('/rooms')} />}
+            {canManageRooms && statusFilter === 'all' && f.rooms.length % 4 !== 0 && <GhostTile onClick={() => navigate('/rooms')} />}
           </div>
         </section>
       ))}
