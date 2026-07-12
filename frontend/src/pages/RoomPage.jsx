@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import client, { isBackendMissing } from '../api/client'
 import ConfirmDialog from '../components/ConfirmDialog'
 import ErrorState from '../components/ErrorState'
@@ -43,6 +43,10 @@ export default function RoomPage() {
   const [toDelete, setToDelete] = useState(null)
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState('')
+  // Khoá đồng bộ chống spam-click: state disabled cập nhật bất đồng bộ nên vẫn lọt click liên tiếp,
+  // ref đọc/ghi ngay lập tức nên chặn được request thứ 2 trở đi trước khi kịp gửi.
+  const submittingRef = useRef(false)
+  const deletingRef = useRef(false)
 
   const load = () => {
     setLoadError(false)
@@ -51,13 +55,13 @@ export default function RoomPage() {
       .then((res) => { setRooms(res.data.map(normalizeRoom)); setUsingMock(false) })
       .catch((err) => {
         if (isBackendMissing(err)) { setRooms(MOCK_ROOMS); setUsingMock(true) }
-        else setLoadError(true) // lỗi thật: không che bằng mock
+        else setLoadError(err.response?.data?.message ?? true) // lỗi thật: không che bằng mock
       })
-    // Loại phòng chỉ phục vụ ô chọn trong form + tra tên, lỗi thì âm thầm dùng mock
+    // Loại phòng chỉ phục vụ ô chọn trong form + tra tên - mất kết nối thì dùng mock, lỗi thật thì giữ rỗng (không giả vờ có dữ liệu)
     client
       .get('/api/room-types')
       .then((res) => setTypes(res.data.map(normalizeRoomType)))
-      .catch(() => setTypes(MOCK_ROOM_TYPES_FULL))
+      .catch((err) => { if (isBackendMissing(err)) setTypes(MOCK_ROOM_TYPES_FULL) })
   }
   useEffect(load, [])
 
@@ -107,9 +111,11 @@ export default function RoomPage() {
 
   const submit = (e) => {
     e.preventDefault()
+    if (submittingRef.current) return
     const msg = validate()
     if (msg) return setFormError(msg)
 
+    submittingRef.current = true
     setFormError('')
     setSaving(true)
     const payload = {
@@ -130,13 +136,15 @@ export default function RoomPage() {
         load()
       })
       .catch((err) => setFormError(apiError(err)))
-      .finally(() => setSaving(false))
+      .finally(() => { submittingRef.current = false; setSaving(false) })
   }
 
   const confirmDelete = () => {
+    if (deletingRef.current) return
     const blocked = deleteBlocked(toDelete)
     if (blocked) return setDeleteError(blocked)
 
+    deletingRef.current = true
     setDeleteError('')
     setDeleting(true)
     client
@@ -147,7 +155,7 @@ export default function RoomPage() {
         load()
       })
       .catch((err) => setDeleteError(apiError(err)))
-      .finally(() => setDeleting(false))
+      .finally(() => { deletingRef.current = false; setDeleting(false) })
   }
 
   const editing = drawer?.mode === 'edit'
@@ -217,7 +225,7 @@ export default function RoomPage() {
       )}
 
       {loadError && (
-        <div className="mt-6"><ErrorState onRetry={load} /></div>
+        <div className="mt-6"><ErrorState message={typeof loadError === 'string' ? loadError : undefined} onRetry={load} /></div>
       )}
 
       {!loadError && rooms !== null && visible.length > 0 && (
