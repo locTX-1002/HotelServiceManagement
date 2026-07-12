@@ -13,6 +13,7 @@ namespace HotelServiceManagement.Infrastructure.Configurations
             builder.Property(g => g.Email).HasMaxLength(150);
             builder.Property(g => g.PhoneNumber).IsRequired().HasMaxLength(20);
             builder.Property(g => g.IdentityNumber).IsRequired().HasMaxLength(50);
+            builder.HasIndex(g => g.IdentityNumber).IsUnique();
         }
     }
 }
