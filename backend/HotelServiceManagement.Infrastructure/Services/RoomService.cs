@@ -125,7 +125,25 @@ namespace HotelServiceManagement.Infrastructure.Services
             };
 
             _context.Rooms.Add(room);
-            await _context.SaveChangesAsync();
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException)
+            {
+                // Yêu cầu khác vừa tạo cùng số phòng trong lúc chờ AnyAsync ở trên - unique index DB
+                // đã chặn đúng, chỉ cần dịch exception thành 409 sạch thay vì để lộ 500.
+                var stillDuplicate = await _context.Rooms.AnyAsync(r =>
+                    r.RoomNumber.ToLower() == roomNumber.ToLower());
+                if (!stillDuplicate)
+                {
+                    throw;
+                }
+
+                return AuthServiceResult<RoomResponse>.Failure(
+                    "Room number already exists.", 409);
+            }
 
             room.RoomType = roomType;
 
@@ -266,7 +284,22 @@ namespace HotelServiceManagement.Infrastructure.Services
             room.Status = request.Status;
             room.IsActive = request.IsActive;
 
-            await _context.SaveChangesAsync();
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException)
+            {
+                var stillDuplicate = await _context.Rooms.AnyAsync(r =>
+                    r.Id != id && r.RoomNumber.ToLower() == roomNumber.ToLower());
+                if (!stillDuplicate)
+                {
+                    throw;
+                }
+
+                return AuthServiceResult<RoomResponse>.Failure(
+                    "Room number already exists.", 409);
+            }
 
             return AuthServiceResult<RoomResponse>.Success(
                 ToResponse(room),

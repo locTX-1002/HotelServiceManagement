@@ -68,17 +68,15 @@ export default function DashboardPage() {
   const load = () => {
     setLoadError(false)
     client
-      .get('/api/reports/dashboard')
+      // Không gộp với MOCK_DASHBOARD khi có dữ liệu thật - backend hiện chưa trả alerts/arrivals/departures/revenue7d,
+      // gộp sẽ khiến các mục đó hiện mãi dữ liệu mẫu như thật dù đã kết nối server.
       // API cấp KPI + tổng doanh thu (TotalRevenue = tổng payment đã thu); các panel vận hành
-      // (khách đến/đi, cảnh báo, biểu đồ 7 ngày) chưa có endpoint nên vẫn là số minh hoạ.
-      .then((res) => {
-        const api = res.data ?? {}
-        setData({ ...MOCK_DASHBOARD, ...api, todayRevenue: api.totalRevenue ?? api.todayRevenue ?? MOCK_DASHBOARD.todayRevenue })
-        setUsingMock(false)
-      })
+      // (khách đến/đi, cảnh báo, biểu đồ 7 ngày) chưa có endpoint nên chỉ hiện khi dùng dữ liệu mẫu.
+      .get('/api/reports/dashboard')
+      .then((res) => { setData(res.data); setUsingMock(false) })
       .catch((err) => {
         if (isBackendMissing(err)) { setData(MOCK_DASHBOARD); setUsingMock(true) }
-        else setLoadError(true) // lỗi thật: không che bằng mock
+        else setLoadError(err.response?.data?.message ?? true) // lỗi thật: không che bằng mock
       })
   }
   useEffect(load, [])
@@ -87,7 +85,7 @@ export default function DashboardPage() {
     return (
       <div>
         <h1 className="font-display text-4xl font-semibold tracking-tight">Tổng quan</h1>
-        <div className="mt-8"><ErrorState onRetry={load} /></div>
+        <div className="mt-8"><ErrorState message={typeof loadError === 'string' ? loadError : undefined} onRetry={load} /></div>
       </div>
     )
   }
@@ -111,8 +109,8 @@ export default function DashboardPage() {
     { label: 'đang có khách', value: data.occupiedRooms },
     { label: 'booking hôm nay', value: data.todayBookings },
   ]
-  const maxRevenue = Math.max(...data.revenue7d.map((d) => d.amount))
-  const maxIdx = data.revenue7d.findIndex((d) => d.amount === maxRevenue)
+  const maxRevenue = data.revenue7d ? Math.max(...data.revenue7d.map((d) => d.amount)) : 0
+  const maxIdx = data.revenue7d ? data.revenue7d.findIndex((d) => d.amount === maxRevenue) : -1
 
   return (
     <div>
@@ -149,7 +147,7 @@ export default function DashboardPage() {
             </div>
           ))}
           <div className="col-span-2 bg-brand-50 px-5 py-4 sm:col-span-1">
-            <p className="font-display text-2xl font-semibold tabular-nums leading-none text-brand-700">{formatVnd(data.todayRevenue)}</p>
+            <p className="font-display text-2xl font-semibold tabular-nums leading-none text-brand-700">{formatVnd(data.totalRevenue)}</p>
             <p className="mt-1.5 flex items-center gap-2 text-[11px] font-medium text-ink-500">
               {usingMock ? 'doanh thu hôm nay' : 'tổng doanh thu đã thu'}
               {usingMock && typeof data.revenueDeltaPct === 'number' && (
@@ -192,6 +190,8 @@ export default function DashboardPage() {
         </div>
       )}
 
+      {/* Backend hiện chưa tính lượt check-in/trả phòng hôm nay - chỉ hiện khi có dữ liệu (mock/demo) */}
+      {data.arrivals && data.departures && (
       <div className="mt-5 grid gap-5 lg:grid-cols-2">
         {/* Khách đến hôm nay */}
         <Panel title="Khách đến hôm nay" hint={`${data.arrivals.length} lượt check-in`}>
@@ -239,8 +239,10 @@ export default function DashboardPage() {
           </div>
         </Panel>
       </div>
+      )}
 
-      {/* Doanh thu 7 ngày: cột hôm nay terracotta, còn lại be nhạt, đỉnh gắn nhãn */}
+      {/* Doanh thu 7 ngày: cột hôm nay terracotta, còn lại be nhạt, đỉnh gắn nhãn - chỉ hiện khi có dữ liệu (mock/demo) */}
+      {data.revenue7d && data.revenue7d.length > 0 && (
       <div className="mt-5">
         <Panel title="Doanh thu 7 ngày gần nhất">
           <div className="mt-2 flex h-36 items-end gap-3 sm:gap-5">
@@ -263,6 +265,7 @@ export default function DashboardPage() {
           </div>
         </Panel>
       </div>
+      )}
     </div>
   )
 }

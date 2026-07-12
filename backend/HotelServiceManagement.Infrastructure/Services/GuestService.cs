@@ -68,7 +68,23 @@ namespace HotelServiceManagement.Infrastructure.Services
             };
 
             _context.Guests.Add(guest);
-            await _context.SaveChangesAsync();
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException)
+            {
+                // Yêu cầu khác vừa tạo cùng CCCD/CMND trong lúc chờ AnyAsync ở trên - unique index DB
+                // đã chặn đúng, chỉ cần dịch exception thành 409 sạch thay vì để lộ 500 hoặc tạo trùng.
+                var stillDuplicate = await _context.Guests.AnyAsync(g => g.IdentityNumber == identityNumber);
+                if (!stillDuplicate)
+                {
+                    throw;
+                }
+
+                return AuthServiceResult<GuestResponse>.Failure("Identity number already exists.", 409);
+            }
 
             return AuthServiceResult<GuestResponse>.Success(ToResponse(guest), "Guest created successfully.");
         }
@@ -101,7 +117,20 @@ namespace HotelServiceManagement.Infrastructure.Services
             guest.PhoneNumber = request.PhoneNumber.Trim();
             guest.IdentityNumber = identityNumber;
 
-            await _context.SaveChangesAsync();
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException)
+            {
+                var stillDuplicate = await _context.Guests.AnyAsync(g => g.Id != id && g.IdentityNumber == identityNumber);
+                if (!stillDuplicate)
+                {
+                    throw;
+                }
+
+                return AuthServiceResult<GuestResponse>.Failure("Identity number already exists.", 409);
+            }
 
             return AuthServiceResult<GuestResponse>.Success(ToResponse(guest), "Guest updated successfully.");
         }

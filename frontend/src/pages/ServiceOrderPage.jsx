@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import client, { isBackendMissing } from '../api/client'
 import ConfirmDialog from '../components/ConfirmDialog'
 import ErrorState from '../components/ErrorState'
@@ -52,6 +52,8 @@ export default function ServiceOrderPage() {
   const [cancelling, setCancelling] = useState(false)
   const [cancelError, setCancelError] = useState('')
   const [changingId, setChangingId] = useState(null)
+  // Khoá đồng bộ chống spam-click tạo đơn trùng - state submitting cập nhật bất đồng bộ nên không đủ chặn click liên tiếp nhanh
+  const submittingRef = useRef(false)
 
   const loadStays = () => {
     setStaysError(false)
@@ -88,6 +90,7 @@ export default function ServiceOrderPage() {
       })
   }
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { loadStays(); loadItems(); loadOrders() }, [])
 
   const ordersForStay = useMemo(() => {
@@ -130,7 +133,8 @@ export default function ServiceOrderPage() {
   const cartTotal = cart.reduce((sum, c) => sum + c.unitPrice * c.quantity, 0)
 
   const submitOrder = () => {
-    if (cart.length === 0) return
+    if (cart.length === 0 || submittingRef.current) return
+    submittingRef.current = true
     setSubmitError('')
     setSubmitting(true)
     client
@@ -144,7 +148,7 @@ export default function ServiceOrderPage() {
         loadOrders()
       })
       .catch((err) => setSubmitError(apiError(err)))
-      .finally(() => setSubmitting(false))
+      .finally(() => { submittingRef.current = false; setSubmitting(false) })
   }
 
   const changeStatus = (order, status) => {
