@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import client, { isBackendMissing } from '../api/client'
 import { formatVnd } from '../utils/roomStatus'
@@ -127,6 +127,8 @@ export default function CreateReservationPage() {
   const [submitting, setSubmitting] = useState(false)
   const [walkInRooms, setWalkInRooms] = useState([])
   const [walkInUsingMock, setWalkInUsingMock] = useState(false)
+  // Khoá đồng bộ - state submitting cập nhật bất đồng bộ nên spam-click vẫn lọt qua vài request trước khi disabled kịp áp dụng
+  const submittingRef = useRef(false)
 
   const [searchParams] = useSearchParams()
 
@@ -191,7 +193,8 @@ export default function CreateReservationPage() {
   // Backend không nhận thông tin khách kèm luôn trong đặt phòng - phải tạo Guest trước rồi mới tạo Reservation với guestId.
   // Lễ tân tạo trực tiếp cho khách trước mặt nên xác nhận luôn (status=1 Confirmed), không qua bước chờ duyệt.
   const confirm = () => {
-    if (submitting) return // KI-04: chặn bấm đúp tạo trùng đặt phòng
+    if (submittingRef.current) return // KI-04: chặn bấm đúp tạo trùng đặt phòng (ref đọc đồng bộ, chặn được cả spam-click nhanh)
+    submittingRef.current = true
     setError(null)
     setSubmitting(true)
     client
@@ -218,7 +221,7 @@ export default function CreateReservationPage() {
             ? 'Không kết nối được máy chủ. Vui lòng thử lại sau.'
             : err.response?.data?.message ?? 'Máy chủ báo lỗi khi tạo đặt phòng. Thử lại hoặc báo quản trị viên.',
         ))
-      .finally(() => setSubmitting(false))
+      .finally(() => { submittingRef.current = false; setSubmitting(false) })
   }
 
   const sorted = useMemo(() => [...results].sort((a, b) => (sortAsc ? a.basePrice - b.basePrice : b.basePrice - a.basePrice)), [results, sortAsc])
