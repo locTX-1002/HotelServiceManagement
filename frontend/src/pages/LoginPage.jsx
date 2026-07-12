@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import client, { isBackendMissing } from '../api/client'
 import { homeFor } from '../utils/roles'
-import { getToken, getUser, readAuthResponse, saveSession, startDemoSession } from '../utils/session'
+import { getToken, getUser, readAuthResponse, saveSession } from '../utils/session'
 
 const EASE = 'transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]'
 const inputCls =
@@ -11,7 +11,7 @@ const labelCls = 'mb-1.5 block text-[11px] font-bold uppercase tracking-[0.18em]
 
 // Login tối giản nền trắng theo mẫu booking engine - POST /api/auth/login, lưu phiên vào localStorage
 export default function LoginPage() {
-  const [email, setEmail] = useState('receptionist@hotel.com')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
@@ -47,12 +47,6 @@ export default function LoginPage() {
       .finally(() => setLoading(false))
   }
 
-  // Phiên xem thử giao diện - token tạm sẽ bị 401 và tự đăng xuất khi máy chủ bật xác thực
-  const enterDemo = () => {
-    startDemoSession()
-    navigate(from ?? '/dashboard', { replace: true })
-  }
-
   return (
     <div className="relative flex min-h-screen flex-col items-center bg-cream-100 px-6">
       <div className="grain-overlay" />
@@ -82,6 +76,7 @@ export default function LoginPage() {
               required
               autoComplete="email"
               className={inputCls}
+              placeholder="ten@hotel.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
@@ -119,24 +114,9 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <button
-          type="button"
-          onClick={enterDemo}
-          className={`mt-4 w-max text-[12px] font-semibold text-ink-500 underline-offset-4 ${EASE} hover:text-ink-900 hover:underline`}
-        >
-          Xem thử giao diện
-        </button>
-
-        <div className="mt-10 border-t border-black/[0.07] pt-5">
-          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-ink-500">Tài khoản demo</p>
-          <p className="mt-2 text-[12px] leading-relaxed text-ink-500">
-            admin<span className="text-ink-700">/Admin123!</span> · manager<span className="text-ink-700">/Manager123!</span>
-          </p>
-          <p className="text-[12px] leading-relaxed text-ink-500">
-            receptionist<span className="text-ink-700">/Receptionist123!</span> · service<span className="text-ink-700">/Service123!</span>
-          </p>
-          <p className="mt-1 text-[11px] text-ink-500/70">đuôi email chung: @hotel.com</p>
-        </div>
+        <p className="mt-8 border-t border-black/[0.07] pt-4 text-[12px] leading-relaxed text-ink-500">
+          Quên mật khẩu? Liên hệ Quản trị viên để được cấp lại.
+        </p>
           </div>
         </div>
       </div>

@@ -34,9 +34,3 @@ export const clearSession = () => {
   localStorage.removeItem('token')
   localStorage.removeItem('user')
 }
-
-// Phiên xem thử giao diện khi chưa đăng nhập. Token tạm sẽ bị 401 khi máy chủ
-// bật xác thực -> interceptor tự đưa về /login.
-// Vai trò Admin để xem được mọi màn hình, không bị lớp chặn theo vai trò giấu mất.
-export const startDemoSession = () =>
-  saveSession('demo-token', { fullName: 'Admin Demo', role: 'Admin', isDemo: true })

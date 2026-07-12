@@ -135,7 +135,6 @@ export default function MainLayout() {
   // Backend chạy thì làm mới thông tin user từ /api/auth/me; token hỏng sẽ bị
   // interceptor 401 đưa về /login. Backend chưa có endpoint -> giữ user lúc login.
   useEffect(() => {
-    if (getUser()?.isDemo) return // phiên demo dùng token giả -> gọi /api/auth/me sẽ 401 và bị đá về /login
     client
       .get('/api/auth/me')
       .then((res) => {
@@ -201,19 +200,16 @@ export default function MainLayout() {
             <span className="hidden text-left leading-tight lg:block">
               <p className="max-w-36 truncate text-[12px] font-bold text-ink-900">{user?.fullName ?? 'Nhân viên'}</p>
               <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-500">
-                {ROLE_LABEL[user?.role] ?? user?.role ?? '—'}{user?.isDemo ? ' · demo' : ''}
+                {ROLE_LABEL[user?.role] ?? user?.role ?? '—'}
               </p>
             </span>
-            {/* Phiên demo dùng token giả, gọi API đổi mật khẩu sẽ 401 -> ẩn luôn nút */}
-            {!user?.isDemo && (
-              <button
-                onClick={() => setPwOpen(true)}
-                title="Đổi mật khẩu"
-                className={`hidden rounded-full px-3.5 py-1.5 text-[12px] font-semibold text-ink-500 ring-1 ring-black/10 ${EASE} hover:bg-white hover:text-ink-900 sm:block`}
-              >
-                Đổi mật khẩu
-              </button>
-            )}
+            <button
+              onClick={() => setPwOpen(true)}
+              title="Đổi mật khẩu"
+              className={`hidden rounded-full px-3.5 py-1.5 text-[12px] font-semibold text-ink-500 ring-1 ring-black/10 ${EASE} hover:bg-white hover:text-ink-900 sm:block`}
+            >
+              Đổi mật khẩu
+            </button>
             <button
               onClick={logout}
               className={`hidden rounded-full px-3.5 py-1.5 text-[12px] font-semibold text-ink-500 ring-1 ring-black/10 ${EASE} hover:bg-white hover:text-ink-900 sm:block`}
@@ -258,14 +254,12 @@ export default function MainLayout() {
               </NavLink>
             ))}
             {/* sm:hidden giống nút Đăng xuất: từ sm trở lên đã có nút trên header, tránh hiện đúp */}
-            {!user?.isDemo && (
-              <button
-                onClick={() => setPwOpen(true)}
-                className={`mt-1.5 block w-full rounded-xl border-t border-black/[0.06] px-3.5 pb-2 pt-3 text-left text-sm font-semibold text-ink-500 ${EASE} hover:text-ink-900 sm:hidden`}
-              >
-                Đổi mật khẩu
-              </button>
-            )}
+            <button
+              onClick={() => setPwOpen(true)}
+              className={`mt-1.5 block w-full rounded-xl border-t border-black/[0.06] px-3.5 pb-2 pt-3 text-left text-sm font-semibold text-ink-500 ${EASE} hover:text-ink-900 sm:hidden`}
+            >
+              Đổi mật khẩu
+            </button>
             <button
               onClick={logout}
               className={`block w-full rounded-xl px-3.5 py-2.5 text-left text-sm font-semibold text-ink-500 ${EASE} hover:text-ink-900 sm:hidden`}
