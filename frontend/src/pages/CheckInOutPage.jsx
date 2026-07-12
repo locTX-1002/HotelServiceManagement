@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
+import EmptyState from '../components/EmptyState'
+import { EASE } from '../utils/ui'
 import { useNavigate } from 'react-router-dom'
-import client, { isBackendMissing } from '../api/client'
+import client, { isBackendMissing, apiError } from '../api/client'
 import ConfirmDialog from '../components/ConfirmDialog'
 import ErrorState from '../components/ErrorState'
 import { useToast } from '../components/toastContext'
@@ -8,20 +10,6 @@ import { MOCK_ACTIVE_STAYS, MOCK_RESERVATIONS } from '../mock/hotelMock'
 import { normalizeReservation } from '../utils/apiShape'
 import { fmtDateTime, localNowIso } from '../utils/dates'
 import { formatVnd } from '../utils/roomStatus'
-
-const EASE = 'transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]'
-
-const apiError = (err) =>
-  isBackendMissing(err)
-    ? 'Không kết nối được máy chủ. Vui lòng thử lại sau.'
-    : err.response?.data?.message ?? 'Máy chủ báo lỗi. Thử lại sau ít phút.'
-
-const EmptyState = ({ text }) => (
-  <div className="mt-6 flex flex-col items-center rounded-2xl border border-dashed border-black/10 bg-white/60 px-6 py-14">
-    <span className="h-12 w-9 rounded-t-full rounded-b-md border-2 border-dashed border-brand-600/30" />
-    <p className="mt-4 font-display text-lg italic text-ink-700">{text}</p>
-  </div>
-)
 
 const SkeletonRows = () => (
   <div className="mt-6 space-y-3">

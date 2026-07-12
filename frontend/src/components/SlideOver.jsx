@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react'
-
-const EASE = 'transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]'
+import { EASE } from '../utils/ui'
 
 // Ngăn kéo trượt phải dùng chung cho form quản trị - cùng chuyển động
 // với RoomDrawer của sơ đồ phòng. Esc hoặc bấm nền mờ để đóng.

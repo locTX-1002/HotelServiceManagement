@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
+import { EASE, errorCls, labelCls } from '../utils/ui'
 import { useNavigate } from 'react-router-dom'
-import client, { isBackendMissing } from '../api/client'
+import client, { isBackendMissing, apiError } from '../api/client'
 import ConfirmDialog from '../components/ConfirmDialog'
 import ErrorState from '../components/ErrorState'
 import SlideOver from '../components/SlideOver'
@@ -9,10 +10,8 @@ import { MOCK_RESERVATIONS } from '../mock/hotelMock'
 import { denormalizeReservationStatus, normalizeReservation } from '../utils/apiShape'
 import { fmtShort, localToday } from '../utils/dates'
 
-const EASE = 'transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]'
 const inputCls =
   'w-full rounded-xl bg-white px-3.5 py-2.5 text-sm ring-1 ring-black/10 outline-none focus:ring-2 focus:ring-brand-500/40'
-const labelCls = 'mb-1.5 block text-[12px] font-semibold text-ink-700'
 
 // Nhãn + màu cho 5 trạng thái đặt phòng (khớp enum backend)
 const RES_STATUS = {
@@ -28,11 +27,6 @@ const STATUS_ORDER = ['Pending', 'Confirmed', 'CheckedIn', 'Completed', 'Cancell
 const canCancel = (r) => r.status === 'Pending' || r.status === 'Confirmed'
 const canEdit = canCancel
 const dkey = (d) => String(d).slice(0, 10)
-
-const apiError = (err) =>
-  isBackendMissing(err)
-    ? 'Không kết nối được máy chủ. Vui lòng thử lại sau.'
-    : err.response?.data?.message ?? 'Máy chủ báo lỗi. Thử lại sau ít phút.'
 
 export default function ReservationsPage() {
   const navigate = useNavigate()
@@ -257,9 +251,9 @@ export default function ReservationsPage() {
         <div className="mt-6 flex flex-col items-center rounded-2xl border border-dashed border-black/10 bg-white/60 px-6 py-14">
           <span className="h-12 w-9 rounded-t-full rounded-b-md border-2 border-dashed border-brand-600/30" />
           <p className="mt-4 font-display text-lg italic text-ink-700">
-            {(list ?? []).length === 0 ? 'Chưa có lượt đặt phòng nào' : 'Không có đặt phòng khớp bộ lọc'}
+            {list.length === 0 ? 'Chưa có lượt đặt phòng nào' : 'Không có đặt phòng khớp bộ lọc'}
           </p>
-          {(list ?? []).length === 0 ? (
+          {list.length === 0 ? (
             <button onClick={() => navigate('/reservations/new')} className="mt-2 text-[12px] font-bold uppercase tracking-wider text-brand-600 hover:underline">
               Tạo đặt phòng đầu tiên
             </button>
@@ -328,7 +322,7 @@ export default function ReservationsPage() {
             </div>
 
             {editError && (
-              <p className="rounded-lg bg-amber-50 px-3.5 py-2.5 text-[12px] font-medium text-amber-800 ring-1 ring-amber-600/15">{editError}</p>
+              <p className={errorCls}>{editError}</p>
             )}
 
             <button

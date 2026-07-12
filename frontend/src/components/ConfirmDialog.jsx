@@ -1,6 +1,5 @@
 import { useEffect } from 'react'
-
-const EASE = 'transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]'
+import { EASE } from '../utils/ui'
 
 // tone: 'danger' (đỏ, mặc định - xóa/hủy) hoặc 'primary' (xanh sky - hành động bình thường như check-in)
 const TONE = {

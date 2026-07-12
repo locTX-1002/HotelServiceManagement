@@ -28,4 +28,10 @@ client.interceptors.response.use(
 // Còn 4xx/5xx thật thì KHÔNG được che bằng mock - phải hiện lỗi cho người dùng biết.
 export const isBackendMissing = (err) => !err.response || err.response.status === 404
 
+// Thông báo lỗi chung cho các trang: backend chưa chạy -> báo mất kết nối; lỗi thật -> hiện message máy chủ.
+export const apiError = (err) =>
+  isBackendMissing(err)
+    ? 'Không kết nối được máy chủ. Vui lòng thử lại sau.'
+    : err.response?.data?.message ?? 'Máy chủ báo lỗi. Thử lại sau ít phút.'
+
 export default client

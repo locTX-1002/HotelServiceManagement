@@ -1,8 +1,7 @@
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { EASE } from '../utils/ui'
 import { ROLE_LABEL, canAccess, homeFor } from '../utils/roles'
 import { getUser } from '../utils/session'
-
-const EASE = 'transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]'
 
 // Chặn route theo vai trò (lớp UX - backend vẫn chặn thật bằng [Authorize]).
 // Vào thẳng URL không thuộc quyền -> panel giải thích thay vì trang trắng.

@@ -1,13 +1,13 @@
 import { useState } from 'react'
+import { EASE } from '../utils/ui'
 import { useNavigate } from 'react-router-dom'
-import { MOCK_ROOM_TYPES } from '../mock/hotelMock'
+import { MOCK_ROOM_TYPES, MOCK_ROOM_TYPES_FULL } from '../mock/hotelMock'
 import { roomImage } from '../utils/roomImages'
 import { roomMeta } from '../utils/roomMeta'
 import { formatVnd } from '../utils/roomStatus'
 import { localToday as today, addDays } from '../utils/dates'
 import { Reveal } from '../utils/useInView'
 
-const EASE = 'transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]'
 const EASE_SLOW = 'transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)]'
 
 // Nút "Đặt phòng" kiểu button-in-button: mũi tên nằm trong vòng tròn riêng, tách khỏi chữ
@@ -27,7 +27,8 @@ function BookButton({ onClick, dark }) {
   )
 }
 
-const TYPE_PRICES = { Standard: 500000, Deluxe: 800000, Suite: 1200000, 'Family Room': 1500000 }
+// Giá lấy thẳng từ bảng loại phòng mẫu, không hardcode lại kẻo lệch nhau
+const priceOf = (type) => MOCK_ROOM_TYPES_FULL.find((t) => t.typeName === type)?.basePrice ?? 0
 
 const cellLabel = 'text-[10px] font-bold uppercase tracking-[0.18em] text-ink-500'
 const cellInput = 'mt-1 w-full bg-transparent text-sm font-semibold text-ink-900 outline-none'
@@ -51,7 +52,7 @@ function RoomTile({ type, featured, wide, onBook }) {
       <div className="absolute inset-x-0 bottom-0 p-6">
         <h3 className="font-display text-2xl font-medium text-white">{type}</h3>
         <p className="mt-1 text-[12px] text-white/70">
-          {meta.capacity} khách · {meta.area} m² · {formatVnd(TYPE_PRICES[type])}/đêm
+          {meta.capacity} khách · {meta.area} m² · {formatVnd(priceOf(type))}/đêm
         </p>
         <button
           onClick={() => onBook(type)}

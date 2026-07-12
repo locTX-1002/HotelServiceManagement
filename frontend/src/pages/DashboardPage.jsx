@@ -1,20 +1,14 @@
 import { useEffect, useState } from 'react'
+import { EASE, initials } from '../utils/ui'
 import { useNavigate } from 'react-router-dom'
 import client, { isBackendMissing } from '../api/client'
 import ErrorState from '../components/ErrorState'
 import { formatVnd } from '../utils/roomStatus'
 import { MOCK_DASHBOARD } from '../mock/hotelMock'
 
-const EASE = 'transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]'
-
 const todayLabel = new Intl.DateTimeFormat('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit' }).format(new Date())
 
 // 'Nguyễn Văn An' -> 'NA' cho avatar vòm
-const initials = (name) => {
-  const p = name.trim().split(/\s+/)
-  return ((p[0]?.[0] ?? '') + (p[p.length - 1]?.[0] ?? '')).toUpperCase()
-}
-
 /* Avatar khung vòm - lặp motif thẻ chìa khóa của trang Sơ đồ phòng */
 function ArchAvatar({ name, tint }) {
   return (
@@ -125,7 +119,7 @@ export default function DashboardPage() {
         <div className="flex items-center gap-2.5">
           {usingMock && (
             <span className="mr-1 rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-800 ring-1 ring-amber-600/20">
-              dữ liệu mẫu, chờ API
+              Dữ liệu mẫu
             </span>
           )}
           <button onClick={() => navigate('/reservations/new')}

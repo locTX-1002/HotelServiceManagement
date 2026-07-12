@@ -1,14 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
+import { EASE, labelCls } from '../utils/ui'
 import client, { isBackendMissing } from '../api/client'
 import ErrorState from '../components/ErrorState'
 import { mockOccupancySnapshot, mockRevenueSummary } from '../mock/hotelMock'
 import { addDays, fmtShort, localToday as today } from '../utils/dates'
 import { formatVnd } from '../utils/roomStatus'
 
-const EASE = 'transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]'
 const inputCls =
   'w-full rounded-xl bg-white px-3.5 py-2.5 text-sm ring-1 ring-black/10 outline-none focus:ring-2 focus:ring-brand-500/40'
-const labelCls = 'mb-1.5 block text-[12px] font-semibold text-ink-700'
 
 // Ngày đầu tháng hiện tại cho chip "Tháng này"
 const monthStart = () => `${today().slice(0, 8)}01`

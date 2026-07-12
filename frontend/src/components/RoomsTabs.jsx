@@ -1,6 +1,5 @@
 import { NavLink } from 'react-router-dom'
-
-const EASE = 'transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]'
+import { EASE } from '../utils/ui'
 
 const TABS = [
   { to: '/rooms', label: 'Danh sách phòng', end: true },

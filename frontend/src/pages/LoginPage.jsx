@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
+import { EASE, errorCls } from '../utils/ui'
 import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import client, { isBackendMissing } from '../api/client'
 import { homeFor } from '../utils/roles'
 import { getToken, getUser, readAuthResponse, saveSession } from '../utils/session'
 
-const EASE = 'transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]'
 const inputCls =
   'w-full rounded-lg border border-black/15 bg-white px-3.5 py-3 text-sm outline-none placeholder:text-ink-500/40 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20'
 const labelCls = 'mb-1.5 block text-[11px] font-bold uppercase tracking-[0.18em] text-ink-700'
@@ -117,7 +117,7 @@ export default function LoginPage() {
             </div>
           </div>
 
-          {error && <p className="rounded-lg bg-amber-50 px-3.5 py-2.5 text-[12px] font-medium text-amber-800 ring-1 ring-amber-600/15">{error}</p>}
+          {error && <p className={errorCls}>{error}</p>}
 
           <button
             type="submit"

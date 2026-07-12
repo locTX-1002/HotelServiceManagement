@@ -1,4 +1,4 @@
-// Dữ liệu mẫu theo đúng contract API - xóa dần khi backend hoàn thành
+// Dữ liệu mẫu theo đúng contract API - chỉ dùng làm fallback khi backend chưa chạy (xem isBackendMissing ở api/client.js)
 // GET /api/rooms/map -> [{ floor, rooms: [{ roomId, roomNumber, typeName, basePrice, status, guestName? }] }]
 export const MOCK_ROOM_MAP = [
   {

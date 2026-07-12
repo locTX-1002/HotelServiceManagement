@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { EASE, errorCls, initials, inputCls, labelCls } from '../utils/ui'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import client, { isBackendMissing } from '../api/client'
 import ErrorBoundary from '../components/ErrorBoundary'
@@ -6,11 +7,6 @@ import SlideOver from '../components/SlideOver'
 import { useToast } from '../components/toastContext'
 import { ROLE_LABEL, canAccess, homeFor } from '../utils/roles'
 import { clearSession, getToken, getUser, saveSession } from '../utils/session'
-
-const EASE = 'transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]'
-const inputCls =
-  'w-full rounded-xl bg-white px-3.5 py-2.5 text-sm ring-1 ring-black/10 outline-none placeholder:text-ink-500/50 focus:ring-2 focus:ring-brand-500/40'
-const labelCls = 'mb-1.5 block text-[12px] font-semibold text-ink-700'
 
 // Form đổi mật khẩu trong ngăn kéo - POST /api/auth/change-password
 // { currentPassword, newPassword, confirmPassword } -> 200 { message } | 400 { message }
@@ -84,7 +80,7 @@ function ChangePasswordDrawer({ open, onClose }) {
         </div>
 
         {error && (
-          <p className="rounded-lg bg-amber-50 px-3.5 py-2.5 text-[12px] font-medium text-amber-800 ring-1 ring-amber-600/15">{error}</p>
+          <p className={errorCls}>{error}</p>
         )}
 
         <button
@@ -114,14 +110,6 @@ const MENU = [
   { to: '/users', label: 'Người dùng' },
 ]
 
-// 'Nguyễn Văn An' -> 'NA' cho avatar; tên 1 chữ thì lấy 2 ký tự đầu
-const initials = (name) => {
-  const p = (name ?? '').trim().split(/\s+/).filter(Boolean)
-  if (p.length === 0) return 'NV'
-  if (p.length === 1) return p[0].slice(0, 2).toUpperCase()
-  return (p[0][0] + p[p.length - 1][0]).toUpperCase()
-}
-
 export default function MainLayout() {
   const navigate = useNavigate()
   const { pathname } = useLocation()
@@ -132,8 +120,8 @@ export default function MainLayout() {
   // Chuyển trang xong thì tự gập menu mobile lại
   useEffect(() => { setMenuOpen(false) }, [pathname])
 
-  // Backend chạy thì làm mới thông tin user từ /api/auth/me; token hỏng sẽ bị
-  // interceptor 401 đưa về /login. Backend chưa có endpoint -> giữ user lúc login.
+  // Làm mới thông tin user từ /api/auth/me; token hỏng sẽ bị interceptor 401 đưa về /login.
+  // Backend chưa chạy / mất mạng -> giữ nguyên user đã lưu lúc login.
   useEffect(() => {
     client
       .get('/api/auth/me')
@@ -176,7 +164,6 @@ export default function MainLayout() {
               <NavLink
                 key={item.to}
                 to={item.to}
-                end={item.to === '/reservations/new'}
                 className={({ isActive }) =>
                   `whitespace-nowrap border-b-2 pb-0.5 text-[13.5px] ${EASE} ${
                     (item.match ? item.match(pathname) : isActive)
@@ -241,7 +228,6 @@ export default function MainLayout() {
               <NavLink
                 key={item.to}
                 to={item.to}
-                end={item.to === '/reservations/new'}
                 className={({ isActive }) =>
                   `block rounded-xl px-3.5 py-2.5 text-sm ${EASE} ${
                     (item.match ? item.match(pathname) : isActive)

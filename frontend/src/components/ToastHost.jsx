@@ -1,7 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
+import { EASE } from '../utils/ui'
 import { ToastContext } from './toastContext'
-
-const EASE = 'transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]'
 
 // Toast thông báo ngắn (thành công / lỗi) - tự biến mất sau 3.2s.
 // Dùng: const toast = useToast(); toast.success('Đã lưu').

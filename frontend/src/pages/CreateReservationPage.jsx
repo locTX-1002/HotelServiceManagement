@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { EASE, inputCls, labelCls } from '../utils/ui'
 import { useSearchParams } from 'react-router-dom'
 import client, { isBackendMissing } from '../api/client'
 import { formatVnd } from '../utils/roomStatus'
@@ -6,11 +7,6 @@ import { MOCK_AVAILABLE_ROOMS, MOCK_ROOM_TYPES_FULL } from '../mock/hotelMock'
 import { normalizeAvailableRoom, normalizeRoomType } from '../utils/apiShape'
 import { roomImage } from '../utils/roomImages'
 import { roomMeta } from '../utils/roomMeta'
-
-const EASE = 'transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]'
-const inputCls =
-  'w-full rounded-xl bg-white px-3.5 py-2.5 text-sm ring-1 ring-black/10 outline-none placeholder:text-ink-500/50 focus:ring-2 focus:ring-brand-500/40'
-const labelCls = 'mb-1.5 block text-[12px] font-semibold text-ink-700'
 
 import { localToday as today, addDays, fmtShort } from '../utils/dates'
 import ErrorState from '../components/ErrorState'

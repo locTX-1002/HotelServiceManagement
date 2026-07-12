@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import client, { isBackendMissing } from '../api/client'
+import { EASE, errorCls, inputCls, labelCls } from '../utils/ui'
+import client, { isBackendMissing, apiError } from '../api/client'
 import ConfirmDialog from '../components/ConfirmDialog'
 import ErrorState from '../components/ErrorState'
 import RoomsTabs from '../components/RoomsTabs'
@@ -10,17 +11,7 @@ import { denormalizeStatus, normalizeRoom, normalizeRoomType } from '../utils/ap
 import { roomImage } from '../utils/roomImages'
 import { ROOM_STATUS, formatVnd } from '../utils/roomStatus'
 
-const EASE = 'transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]'
-const inputCls =
-  'w-full rounded-xl bg-white px-3.5 py-2.5 text-sm ring-1 ring-black/10 outline-none placeholder:text-ink-500/50 focus:ring-2 focus:ring-brand-500/40'
-const labelCls = 'mb-1.5 block text-[12px] font-semibold text-ink-700'
-
 const EMPTY_FORM = { roomNumber: '', floor: 1, roomTypeId: '', status: 'Available' }
-
-const apiError = (err) =>
-  isBackendMissing(err)
-    ? 'Không kết nối được máy chủ. Vui lòng thử lại sau.'
-    : err.response?.data?.message ?? 'Máy chủ báo lỗi. Thử lại sau ít phút.'
 
 // Nghiệp vụ: không cho xóa phòng đang phục vụ khách - phải check-out / hủy đặt trước
 const deleteBlocked = (room) =>
@@ -390,7 +381,7 @@ export default function RoomPage() {
           )}
 
           {formError && (
-            <p className="rounded-lg bg-amber-50 px-3.5 py-2.5 text-[12px] font-medium text-amber-800 ring-1 ring-amber-600/15">{formError}</p>
+            <p className={errorCls}>{formError}</p>
           )}
 
           <button

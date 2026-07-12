@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import client, { isBackendMissing } from '../api/client'
+import { EASE, errorCls, inputCls, labelCls } from '../utils/ui'
+import client, { isBackendMissing, apiError } from '../api/client'
 import ConfirmDialog from '../components/ConfirmDialog'
 import ErrorState from '../components/ErrorState'
 import SlideOver from '../components/SlideOver'
@@ -7,11 +8,6 @@ import { useToast } from '../components/toastContext'
 import { MOCK_USERS } from '../mock/hotelMock'
 import { ROLE_LABEL } from '../utils/roles'
 import { getUser } from '../utils/session'
-
-const EASE = 'transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]'
-const inputCls =
-  'w-full rounded-xl bg-white px-3.5 py-2.5 text-sm ring-1 ring-black/10 outline-none placeholder:text-ink-500/50 focus:ring-2 focus:ring-brand-500/40'
-const labelCls = 'mb-1.5 block text-[12px] font-semibold text-ink-700'
 
 // roleId khớp seed backend: 1 Admin, 2 Manager, 3 Receptionist, 4 ServiceStaff
 const ROLES = [
@@ -22,11 +18,6 @@ const ROLES = [
 ]
 
 const EMPTY_FORM = { fullName: '', email: '', roleId: 3, password: '', confirmPassword: '' }
-
-const apiError = (err) =>
-  isBackendMissing(err)
-    ? 'Không kết nối được máy chủ. Vui lòng thử lại sau.'
-    : err.response?.data?.message ?? 'Máy chủ báo lỗi. Thử lại sau ít phút.'
 
 // Quản trị tài khoản nhân viên (chỉ Admin) - đủ 5 thao tác của /api/users:
 // danh sách, tạo, sửa, khóa/mở (PATCH status), cấp lại mật khẩu (PATCH reset-password).
@@ -351,7 +342,7 @@ export default function UsersPage() {
           )}
 
           {formError && (
-            <p className="rounded-lg bg-amber-50 px-3.5 py-2.5 text-[12px] font-medium text-amber-800 ring-1 ring-amber-600/15">{formError}</p>
+            <p className={errorCls}>{formError}</p>
           )}
 
           <button

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { EASE } from '../utils/ui'
 import { useNavigate } from 'react-router-dom'
 import client, { isBackendMissing } from '../api/client'
 import { ROOM_STATUS, formatVnd } from '../utils/roomStatus'
@@ -7,18 +8,16 @@ import { normalizeRoom } from '../utils/apiShape'
 import { roomImage } from '../utils/roomImages'
 import ErrorState from '../components/ErrorState'
 
-const EASE = 'transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]'
-
 const dateLabel = new Intl.DateTimeFormat('vi-VN', { weekday: 'long', day: '2-digit', month: 'long' }).format(new Date())
 
-// 'Nguyễn Văn An' -> 'Nguyễn V. An' (gợi ý #7: không cắt cụt tên)
+// 'Nguyễn Văn An' -> 'Nguyễn V. An' - viết tắt tên đệm, không cắt cụt tên
 const shortName = (name) => {
   const p = name.trim().split(/\s+/)
   if (p.length <= 2) return name
   return `${p[0]} ${p.slice(1, -1).map((x) => x[0] + '.').join(' ')} ${p[p.length - 1]}`
 }
 
-/* Nội dung 2 dòng dưới của thẻ theo trạng thái: dòng chính + dòng thời gian (gợi ý #1) */
+/* Nội dung 2 dòng dưới của thẻ theo trạng thái: dòng chính + dòng thời gian */
 const tileInfo = (room) => {
   switch (room.status) {
     // API thật chưa trả guestName/checkOutAt/eta -> phải có chữ thay thế, không để dòng tên trống
@@ -78,7 +77,7 @@ function RoomTile({ room, imgIdx = 0, delay, onOpen }) {
   )
 }
 
-/* Ô ma "+" lấp chỗ trống cuối hàng (gợi ý #4) */
+/* Ô ma "+" lấp chỗ trống cuối hàng */
 function GhostTile({ onClick }) {
   return (
     <button
@@ -92,7 +91,7 @@ function GhostTile({ onClick }) {
   )
 }
 
-/* Drawer chi tiết - hành động theo ngữ cảnh trạng thái (gợi ý #5) */
+/* Drawer chi tiết - hành động theo ngữ cảnh trạng thái */
 function RoomDrawer({ room, onClose }) {
   const navigate = useNavigate()
   useEffect(() => {
@@ -109,7 +108,7 @@ function RoomDrawer({ room, onClose }) {
         ],
         Reserved: [
           { label: 'Check-in khách', primary: true, onClick: () => navigate('/checkin-checkout') },
-          { label: 'Hủy đặt phòng', note: 'chờ API cancel' },
+          { label: 'Hủy đặt phòng', note: 'sơ đồ chưa có mã đặt phòng - hủy ở trang Đặt phòng' },
         ],
         Occupied: [
           { label: 'Check-out', primary: true, onClick: () => navigate('/checkin-checkout') },
@@ -225,7 +224,7 @@ export default function RoomMapPage() {
       })
   }
 
-  // Tự làm mới mỗi 30s (gợi ý #6) thay cho nút bấm tay
+  // Tự làm mới mỗi 30s thay cho nút bấm tay
   useEffect(() => {
     load()
     timer.current = setInterval(load, 30000)
@@ -303,7 +302,7 @@ export default function RoomMapPage() {
         <div className="ml-auto flex items-center gap-2.5">
           {usingMock && (
             <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-800 ring-1 ring-amber-600/20">
-              dữ liệu mẫu, chờ API
+              Dữ liệu mẫu
             </span>
           )}
           {updatedAt && (

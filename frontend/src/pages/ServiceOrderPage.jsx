@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
-import client, { isBackendMissing } from '../api/client'
+import EmptyState from '../components/EmptyState'
+import { EASE } from '../utils/ui'
+import client, { isBackendMissing, apiError } from '../api/client'
 import ConfirmDialog from '../components/ConfirmDialog'
 import ErrorState from '../components/ErrorState'
 import SlideOver from '../components/SlideOver'
@@ -9,26 +11,12 @@ import { denormalizeServiceOrderStatus, normalizeServiceOrder } from '../utils/a
 import { fmtDateTime } from '../utils/dates'
 import { formatVnd } from '../utils/roomStatus'
 
-const EASE = 'transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]'
-
 const ORDER_STATUS = {
   Pending: { label: 'Chờ xử lý', badge: 'bg-amber-50 text-amber-800 ring-1 ring-amber-600/15' },
   Processing: { label: 'Đang xử lý', badge: 'bg-sky-50 text-sky-700 ring-1 ring-sky-600/15' },
   Completed: { label: 'Hoàn thành', badge: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/15' },
   Cancelled: { label: 'Đã hủy', badge: 'bg-rose-50 text-rose-700 ring-1 ring-rose-600/15' },
 }
-
-const apiError = (err) =>
-  isBackendMissing(err)
-    ? 'Không kết nối được máy chủ. Vui lòng thử lại sau.'
-    : err.response?.data?.message ?? 'Máy chủ báo lỗi. Thử lại sau ít phút.'
-
-const EmptyState = ({ text }) => (
-  <div className="mt-6 flex flex-col items-center rounded-2xl border border-dashed border-black/10 bg-white/60 px-6 py-14">
-    <span className="h-12 w-9 rounded-t-full rounded-b-md border-2 border-dashed border-brand-600/30" />
-    <p className="mt-4 font-display text-lg italic text-ink-700">{text}</p>
-  </div>
-)
 
 export default function ServiceOrderPage() {
   const toast = useToast()
@@ -237,7 +225,7 @@ export default function ServiceOrderPage() {
             {/* Đơn đã có */}
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-ink-500">Đơn dịch vụ</p>
-              {ordersUsingMock && <p className="mt-1 text-[11px] text-amber-700">dữ liệu mẫu, chờ API</p>}
+              {ordersUsingMock && <p className="mt-1 text-[11px] text-amber-700">Dữ liệu mẫu</p>}
               {ordersForStay.length === 0 ? (
                 <p className="mt-2 text-[13px] italic text-ink-500">Chưa có đơn nào</p>
               ) : (

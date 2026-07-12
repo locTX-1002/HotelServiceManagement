@@ -1,6 +1,5 @@
 import { Component } from 'react'
-
-const EASE = 'transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]'
+import { EASE } from '../utils/ui'
 
 // Bắt lỗi runtime của cây con để 1 trang hỏng không làm trắng cả app.
 // Error boundary bắt buộc là class component (React chưa có bản hook).

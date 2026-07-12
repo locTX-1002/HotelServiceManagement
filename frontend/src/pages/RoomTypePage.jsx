@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import client, { isBackendMissing } from '../api/client'
+import { EASE, errorCls, inputCls, labelCls } from '../utils/ui'
+import client, { isBackendMissing, apiError } from '../api/client'
 import ConfirmDialog from '../components/ConfirmDialog'
 import ErrorState from '../components/ErrorState'
 import RoomsTabs from '../components/RoomsTabs'
@@ -10,18 +11,9 @@ import { normalizeRoomType } from '../utils/apiShape'
 import { roomImage } from '../utils/roomImages'
 import { formatVnd } from '../utils/roomStatus'
 
-const EASE = 'transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]'
-const inputCls =
-  'w-full rounded-xl bg-white px-3.5 py-2.5 text-sm ring-1 ring-black/10 outline-none placeholder:text-ink-500/50 focus:ring-2 focus:ring-brand-500/40'
-const labelCls = 'mb-1.5 block text-[12px] font-semibold text-ink-700'
-
 const EMPTY_FORM = { typeName: '', capacity: 2, basePrice: '' }
 
 // Backend chưa kết nối được -> báo chung; lỗi thật thì hiện message của máy chủ.
-const apiError = (err) =>
-  isBackendMissing(err)
-    ? 'Không kết nối được máy chủ. Vui lòng thử lại sau.'
-    : err.response?.data?.message ?? 'Máy chủ báo lỗi. Thử lại sau ít phút.'
 
 export default function RoomTypePage() {
   const toast = useToast()
@@ -284,7 +276,7 @@ export default function RoomTypePage() {
           </div>
 
           {formError && (
-            <p className="rounded-lg bg-amber-50 px-3.5 py-2.5 text-[12px] font-medium text-amber-800 ring-1 ring-amber-600/15">{formError}</p>
+            <p className={errorCls}>{formError}</p>
           )}
 
           <button

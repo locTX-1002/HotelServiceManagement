@@ -1,4 +1,3 @@
-const EASE = 'transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]'
 
 // Trạng thái lỗi thật từ máy chủ - khác với fallback mock khi backend chưa chạy
 export default function ErrorState({ message, onRetry }) {

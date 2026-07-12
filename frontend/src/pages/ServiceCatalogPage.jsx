@@ -1,22 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
-import client, { isBackendMissing } from '../api/client'
+import { EASE, errorCls, inputCls, labelCls } from '../utils/ui'
+import client, { isBackendMissing, apiError } from '../api/client'
 import ErrorState from '../components/ErrorState'
 import SlideOver from '../components/SlideOver'
 import { useToast } from '../components/toastContext'
 import { MOCK_SERVICE_CATEGORIES, MOCK_SERVICE_ITEMS } from '../mock/hotelMock'
 import { formatVnd } from '../utils/roomStatus'
 
-const EASE = 'transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]'
-const inputCls =
-  'w-full rounded-xl bg-white px-3.5 py-2.5 text-sm ring-1 ring-black/10 outline-none placeholder:text-ink-500/50 focus:ring-2 focus:ring-brand-500/40'
-const labelCls = 'mb-1.5 block text-[12px] font-semibold text-ink-700'
-
 const EMPTY_FORM = { serviceCategoryId: '', serviceName: '', unitPrice: '' }
-
-const apiError = (err) =>
-  isBackendMissing(err)
-    ? 'Không kết nối được máy chủ. Vui lòng thử lại sau.'
-    : err.response?.data?.message ?? 'Máy chủ báo lỗi. Thử lại sau ít phút.'
 
 // Bảng giá dịch vụ - GET /api/service-categories + GET/POST/PUT /api/service-items.
 // Backend không có DELETE: món ngừng bán thì tắt isAvailable qua PUT (soft-off).
@@ -252,7 +243,7 @@ export default function ServiceCatalogPage() {
         <div className="mt-6 flex flex-col items-center rounded-2xl border border-dashed border-black/10 bg-white/60 px-6 py-14">
           <span className="h-12 w-9 rounded-t-full rounded-b-md border-2 border-dashed border-brand-600/30" />
           <p className="mt-4 font-display text-lg italic text-ink-700">
-            {(items ?? []).length === 0 ? 'Chưa có dịch vụ nào' : 'Danh mục này chưa có món'}
+            {items.length === 0 ? 'Chưa có dịch vụ nào' : 'Danh mục này chưa có món'}
           </p>
           <button onClick={openCreate} className="mt-2 text-[12px] font-bold uppercase tracking-wider text-brand-600 hover:underline">
             Thêm dịch vụ
@@ -309,7 +300,7 @@ export default function ServiceCatalogPage() {
           </div>
 
           {formError && (
-            <p className="rounded-lg bg-amber-50 px-3.5 py-2.5 text-[12px] font-medium text-amber-800 ring-1 ring-amber-600/15">{formError}</p>
+            <p className={errorCls}>{formError}</p>
           )}
 
           <button
