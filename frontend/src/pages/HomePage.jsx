@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { EASE } from '../utils/ui'
+import { EASE, openDatePicker } from '../utils/ui'
 import { useNavigate } from 'react-router-dom'
 import { MOCK_ROOM_TYPES, MOCK_ROOM_TYPES_FULL } from '../mock/hotelMock'
 import { roomImage } from '../utils/roomImages'
@@ -127,12 +127,12 @@ export default function HomePage() {
             <div className="bezel-core grid grid-cols-2 overflow-hidden sm:grid-cols-[1fr_1fr_0.7fr_1fr_auto]">
               <div className="border-b border-r border-black/[0.06] px-5 py-4 sm:border-b-0">
                 <p className={cellLabel}>Ngày nhận phòng</p>
-                <input type="date" className={cellInput} value={checkIn} min={today()}
+                <input type="date" className={cellInput} value={checkIn} min={today()} onClick={openDatePicker}
                   onChange={(e) => { setCheckIn(e.target.value); if (e.target.value >= checkOut) setCheckOut(addDays(e.target.value, 1)) }} />
               </div>
               <div className="border-b border-black/[0.06] px-5 py-4 sm:border-b-0 sm:border-r">
                 <p className={cellLabel}>Ngày trả phòng</p>
-                <input type="date" className={cellInput} value={checkOut} min={addDays(checkIn, 1)} onChange={(e) => setCheckOut(e.target.value)} />
+                <input type="date" className={cellInput} value={checkOut} min={addDays(checkIn, 1)} onClick={openDatePicker} onChange={(e) => setCheckOut(e.target.value)} />
               </div>
               <div className="border-r border-black/[0.06] px-5 py-4">
                 <p className={cellLabel}>Khách</p>

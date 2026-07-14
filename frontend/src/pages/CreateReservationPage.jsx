@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { EASE, inputCls, labelCls } from '../utils/ui'
+import { EASE, inputCls, labelCls, openDatePicker } from '../utils/ui'
 import { useSearchParams } from 'react-router-dom'
 import client, { isBackendMissing } from '../api/client'
 import { formatVnd } from '../utils/roomStatus'
@@ -279,12 +279,12 @@ export default function CreateReservationPage() {
           <div className="relative z-10 mx-4 -mt-8 flex flex-wrap items-end gap-x-5 gap-y-4 rounded-2xl bg-white p-5 ring-1 ring-black/5 shadow-lift">
             <div className="min-w-36 flex-1">
               <label className={labelCls}>Nhận phòng</label>
-              <input type="date" className={inputCls} value={checkIn} min={today()}
+              <input type="date" className={inputCls} value={checkIn} min={today()} onClick={openDatePicker}
                 onChange={(e) => { setCheckIn(e.target.value); if (e.target.value >= checkOut) setCheckOut(addDays(e.target.value, 1)) }} />
             </div>
             <div className="min-w-36 flex-1">
               <label className={labelCls}>Trả phòng</label>
-              <input type="date" className={inputCls} value={checkOut} min={addDays(checkIn, 1)} onChange={(e) => setCheckOut(e.target.value)} />
+              <input type="date" className={inputCls} value={checkOut} min={addDays(checkIn, 1)} onClick={openDatePicker} onChange={(e) => setCheckOut(e.target.value)} />
             </div>
             <div>
               <label className={labelCls}>Số khách</label>
