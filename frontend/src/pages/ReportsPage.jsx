@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { EASE, labelCls } from '../utils/ui'
+import { EASE, labelCls, openDatePicker } from '../utils/ui'
 import client, { isBackendMissing } from '../api/client'
 import ErrorState from '../components/ErrorState'
 import { mockOccupancySnapshot, mockRevenueSummary } from '../mock/hotelMock'
@@ -11,6 +11,9 @@ const inputCls =
 
 // Ngày đầu tháng hiện tại cho chip "Tháng này"
 const monthStart = () => `${today().slice(0, 8)}01`
+
+// Số liệu tài chính đọc rõ hơn ở kiểu chữ thẳng có tabular-nums, khác phần tiêu đề/eyebrow (vẫn dùng font-display serif)
+const statNumCls = 'font-sans font-semibold tabular-nums leading-none text-ink-900'
 
 // Công suất % tính từ số phòng (đang ở + đã đặt) / tổng - ổn định, không phụ thuộc
 // field occupancyRate của backend (chưa rõ 0-1 hay 0-100)
@@ -36,6 +39,7 @@ export default function ReportsPage() {
   const [usingMock, setUsingMock] = useState(false)
   const [loadError, setLoadError] = useState(false)
   const [retryTick, setRetryTick] = useState(0) // Thử lại giữ nguyên dải ngày đang chọn
+  const [customOpen, setCustomOpen] = useState(false) // ô Từ ngày/Đến ngày chỉ hiện khi bấm "Tùy chỉnh", đỡ chiếm chỗ mặc định
 
   const rangeError = !from || !to
     ? 'Chọn đủ cả từ ngày và đến ngày.' // input date bị xóa trắng
@@ -90,46 +94,60 @@ export default function ReportsPage() {
   const available = (occupancy?.totalRooms ?? 0) - (occupancy?.occupiedRooms ?? 0) - (occupancy?.reservedRooms ?? 0)
 
   const quickRanges = [
-    { label: '7 ngày', from: addDays(today(), -6), to: today() },
-    { label: '30 ngày', from: addDays(today(), -29), to: today() },
-    { label: 'Tháng này', from: monthStart(), to: today() },
+    { key: '7d', label: '7 ngày', from: addDays(today(), -6), to: today() },
+    { key: '30d', label: '30 ngày', from: addDays(today(), -29), to: today() },
+    { key: 'month', label: 'Tháng này', from: monthStart(), to: today() },
   ]
+  const activePreset = quickRanges.find((q) => q.from === from && q.to === to)
 
   return (
     <div>
-      {/* Header + chọn dải ngày */}
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p className="font-display text-[15px] italic capitalize text-brand-600">quản lý · thống kê</p>
-          <h1 className="mt-1 font-display text-4xl font-semibold tracking-tight">Báo cáo</h1>
-          <p className="mt-1 text-sm text-ink-500">Doanh thu theo dải ngày và công suất phòng hiện tại.</p>
+      {/* Header */}
+      <div>
+        <p className="font-display text-[15px] italic capitalize text-brand-600">quản lý · thống kê</p>
+        <h1 className="mt-1 font-display text-4xl font-semibold tracking-tight">Báo cáo</h1>
+        <p className="mt-1 text-sm text-ink-500">Doanh thu theo dải ngày và công suất phòng hiện tại.</p>
+      </div>
+
+      {/* Bộ lọc dải ngày: gom nút nhanh + tùy chỉnh vào 1 thanh dạng segmented, ô Từ/Đến ngày chỉ hiện khi cần */}
+      <div className="mt-5 flex flex-wrap items-start gap-3">
+        <div className="inline-flex flex-wrap items-center gap-0.5 rounded-full bg-white p-1 ring-1 ring-black/10 shadow-soft">
+          {quickRanges.map((q) => (
+            <button
+              key={q.key}
+              onClick={() => { setFrom(q.from); setTo(q.to); setCustomOpen(false) }}
+              className={`rounded-full px-3.5 py-1.5 text-[12px] font-semibold ${EASE} active:scale-[0.97] ${
+                activePreset?.key === q.key && !customOpen ? 'bg-ink-900 text-cream-50' : 'text-ink-700 hover:bg-cream-100'
+              }`}
+            >
+              {q.label}
+            </button>
+          ))}
+          <button
+            onClick={() => setCustomOpen((o) => !o)}
+            className={`flex items-center gap-1 rounded-full px-3.5 py-1.5 text-[12px] font-semibold ${EASE} active:scale-[0.97] ${
+              customOpen || (!activePreset && !customOpen) ? 'bg-ink-900 text-cream-50' : 'text-ink-700 hover:bg-cream-100'
+            }`}
+          >
+            Tùy chỉnh
+            <svg width="8" height="8" viewBox="0 0 9 9" fill="none" className={`${EASE} ${customOpen ? 'rotate-180' : ''}`} aria-hidden>
+              <path d="M1.5 3L4.5 6L7.5 3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
         </div>
-        <div className="flex flex-wrap items-end gap-3 rounded-2xl bg-white p-4 ring-1 ring-black/5 shadow-soft">
-          <div>
-            <label htmlFor="report-from" className={labelCls}>Từ ngày</label>
-            <input id="report-from" type="date" className={inputCls} value={from} max={today()} onChange={(e) => setFrom(e.target.value)} />
+
+        {customOpen && (
+          <div className="card-rise flex flex-wrap items-end gap-3 rounded-2xl bg-white p-3.5 ring-1 ring-black/5 shadow-soft">
+            <div>
+              <label htmlFor="report-from" className={labelCls}>Từ ngày</label>
+              <input id="report-from" type="date" className={inputCls} value={from} max={today()} onClick={openDatePicker} onChange={(e) => setFrom(e.target.value)} />
+            </div>
+            <div>
+              <label htmlFor="report-to" className={labelCls}>Đến ngày</label>
+              <input id="report-to" type="date" className={inputCls} value={to} max={today()} onClick={openDatePicker} onChange={(e) => setTo(e.target.value)} />
+            </div>
           </div>
-          <div>
-            <label htmlFor="report-to" className={labelCls}>Đến ngày</label>
-            <input id="report-to" type="date" className={inputCls} value={to} max={today()} onChange={(e) => setTo(e.target.value)} />
-          </div>
-          <div className="flex gap-2 pb-0.5">
-            {quickRanges.map((q) => {
-              const active = from === q.from && to === q.to
-              return (
-                <button
-                  key={q.label}
-                  onClick={() => { setFrom(q.from); setTo(q.to) }}
-                  className={`rounded-full px-3 py-1.5 text-[12px] font-semibold ${EASE} active:scale-[0.97] ${
-                    active ? 'bg-ink-900 text-cream-50' : 'text-ink-700 ring-1 ring-black/10 hover:bg-cream-100'
-                  }`}
-                >
-                  {q.label}
-                </button>
-              )
-            })}
-          </div>
-        </div>
+        )}
       </div>
 
       <div className="mt-4 flex flex-wrap items-center gap-2.5">
@@ -165,19 +183,19 @@ export default function ReportsPage() {
           <div className="card-rise mt-5 bezel-shell">
             <div className="bezel-core grid grid-cols-2 overflow-hidden sm:grid-cols-4 sm:divide-x sm:divide-black/[0.06]">
               <div className="px-5 py-4">
-                <p className="font-display text-3xl font-semibold tabular-nums leading-none">{formatVnd(roomRevenue)}</p>
+                <p className={`${statNumCls} text-3xl`}>{formatVnd(roomRevenue)}</p>
                 <p className="mt-1.5 text-[11px] font-medium text-ink-500">tiền phòng</p>
               </div>
               <div className="px-5 py-4">
-                <p className="font-display text-3xl font-semibold tabular-nums leading-none">{formatVnd(serviceRevenue)}</p>
+                <p className={`${statNumCls} text-3xl`}>{formatVnd(serviceRevenue)}</p>
                 <p className="mt-1.5 text-[11px] font-medium text-ink-500">dịch vụ</p>
               </div>
               <div className="px-5 py-4">
-                <p className="font-display text-3xl font-semibold tabular-nums leading-none">{formatVnd(revenue?.paymentRevenue ?? totalRevenue)}</p>
+                <p className={`${statNumCls} text-3xl`}>{formatVnd(revenue?.paymentRevenue ?? totalRevenue)}</p>
                 <p className="mt-1.5 text-[11px] font-medium text-ink-500">đã thu</p>
               </div>
               <div className="col-span-2 bg-brand-50 px-5 py-4 sm:col-span-1">
-                <p className="font-display text-3xl font-semibold tabular-nums leading-none text-brand-700">{formatVnd(totalRevenue)}</p>
+                <p className={`${statNumCls} text-3xl text-brand-700`}>{formatVnd(totalRevenue)}</p>
                 <p className="mt-1.5 text-[11px] font-medium text-ink-500">tổng doanh thu kỳ này</p>
               </div>
             </div>
@@ -201,7 +219,7 @@ export default function ReportsPage() {
                 </div>
                 <div className="flex items-center justify-between border-t border-black/[0.06] pt-2.5 text-sm">
                   <span className="font-semibold text-ink-900">Tổng</span>
-                  <span className="font-display text-lg font-semibold tabular-nums text-brand-700">{formatVnd(totalRevenue)}</span>
+                  <span className={`${statNumCls} text-lg text-brand-700`}>{formatVnd(totalRevenue)}</span>
                 </div>
               </div>
             </Panel>
@@ -210,7 +228,7 @@ export default function ReportsPage() {
             <Panel title="Công suất phòng" hint="ảnh chụp hiện tại">
               <div className="flex items-center gap-6">
                 <div className="shrink-0 text-center">
-                  <p className="font-display text-5xl font-semibold leading-none text-brand-600">{overallRate}%</p>
+                  <p className={`${statNumCls} text-5xl text-brand-600`}>{overallRate}%</p>
                   <p className="mt-1 text-[11px] uppercase tracking-[0.14em] text-ink-500">lấp đầy</p>
                 </div>
                 <div className="flex-1 space-y-2 text-sm">
