@@ -25,15 +25,15 @@ namespace HotelServiceManagement.Infrastructure.Configurations
                    .HasForeignKey(si => si.ServiceCategoryId)
                    .OnDelete(DeleteBehavior.Restrict);
 
-            // Seed items
+            // Seed items - giá thực tế VND, trước đây dùng số nhỏ (2-25) chỉ để test cho gọn, không phải giá thật.
             // ServiceCategoryId 1 = Restaurant, 2 = Laundry
             builder.HasData(
-                new ServiceItem { Id = 1, ServiceName = "Breakfast Set", UnitPrice = 15.00m, ServiceCategoryId = 1, IsAvailable = true },
-                new ServiceItem { Id = 2, ServiceName = "Dinner Set", UnitPrice = 25.00m, ServiceCategoryId = 1, IsAvailable = true },
-                new ServiceItem { Id = 3, ServiceName = "Bottled Water", UnitPrice = 2.00m, ServiceCategoryId = 1, IsAvailable = true },
-                new ServiceItem { Id = 4, ServiceName = "Shirt Washing", UnitPrice = 5.00m, ServiceCategoryId = 2, IsAvailable = true },
-                new ServiceItem { Id = 5, ServiceName = "Pants Washing", UnitPrice = 5.00m, ServiceCategoryId = 2, IsAvailable = true },
-                new ServiceItem { Id = 6, ServiceName = "Ironing Service", UnitPrice = 3.00m, ServiceCategoryId = 2, IsAvailable = true }
+                new ServiceItem { Id = 1, ServiceName = "Breakfast Set", UnitPrice = 80000.00m, ServiceCategoryId = 1, IsAvailable = true },
+                new ServiceItem { Id = 2, ServiceName = "Dinner Set", UnitPrice = 150000.00m, ServiceCategoryId = 1, IsAvailable = true },
+                new ServiceItem { Id = 3, ServiceName = "Bottled Water", UnitPrice = 15000.00m, ServiceCategoryId = 1, IsAvailable = true },
+                new ServiceItem { Id = 4, ServiceName = "Shirt Washing", UnitPrice = 20000.00m, ServiceCategoryId = 2, IsAvailable = true },
+                new ServiceItem { Id = 5, ServiceName = "Pants Washing", UnitPrice = 25000.00m, ServiceCategoryId = 2, IsAvailable = true },
+                new ServiceItem { Id = 6, ServiceName = "Ironing Service", UnitPrice = 15000.00m, ServiceCategoryId = 2, IsAvailable = true }
             );
         }
     }

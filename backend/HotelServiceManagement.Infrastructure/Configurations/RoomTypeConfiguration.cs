@@ -26,12 +26,13 @@ namespace HotelServiceManagement.Infrastructure.Configurations
             // Unique Typename
             builder.HasIndex(rt => rt.TypeName).IsUnique();
 
-            // Seed RoomTypes
+            // Seed RoomTypes - giá thực tế VND (khớp TYPE_PRICES ở frontend/src/pages/HomePage.jsx),
+            // trước đây dùng số nhỏ (100/180/300/250) chỉ để test cho gọn, không phải giá thật.
             builder.HasData(
-                new RoomType { Id = 1, TypeName = "Standard", Capacity = 2, BasePrice = 100.00m, Description = "Standard Room with basic amenities", IsActive = true },
-                new RoomType { Id = 2, TypeName = "Deluxe", Capacity = 2, BasePrice = 180.00m, Description = "Deluxe Room with premium comfort", IsActive = true },
-                new RoomType { Id = 3, TypeName = "Suite", Capacity = 4, BasePrice = 300.00m, Description = "Luxurious Suite with separate living area", IsActive = true },
-                new RoomType { Id = 4, TypeName = "Family Room", Capacity = 6, BasePrice = 250.00m, Description = "Spacious Room ideal for families", IsActive = true }
+                new RoomType { Id = 1, TypeName = "Standard", Capacity = 2, BasePrice = 500000.00m, Description = "Standard Room with basic amenities", IsActive = true },
+                new RoomType { Id = 2, TypeName = "Deluxe", Capacity = 2, BasePrice = 800000.00m, Description = "Deluxe Room with premium comfort", IsActive = true },
+                new RoomType { Id = 3, TypeName = "Suite", Capacity = 4, BasePrice = 1200000.00m, Description = "Luxurious Suite with separate living area", IsActive = true },
+                new RoomType { Id = 4, TypeName = "Family Room", Capacity = 6, BasePrice = 1500000.00m, Description = "Spacious Room ideal for families", IsActive = true }
             );
         }
     }
