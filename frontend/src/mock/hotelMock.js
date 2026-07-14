@@ -113,7 +113,12 @@ export const MOCK_INVOICE = {
   invoiceDate: '2026-07-09T12:00:00',
   roomCharge: 200000,
   serviceCharge: 95000,
-  totalAmount: 295000,
+  surchargeAmount: 120000,
+  surcharges: [
+    { name: 'Khăn tắm', quantity: 1, unitPrice: 80000, subtotal: 80000 },
+    { name: 'Dép đi trong phòng', quantity: 1, unitPrice: 40000, subtotal: 40000 },
+  ],
+  totalAmount: 415000,
   status: 'Unpaid',
 }
 
