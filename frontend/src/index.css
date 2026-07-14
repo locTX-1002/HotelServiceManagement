@@ -33,6 +33,34 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Cuộn mượt khi bấm link mỏ neo (#rooms, #services…) ở trang chủ - tắt lại nếu người dùng đã chọn giảm hiệu ứng chuyển động */
+html {
+  scroll-behavior: smooth;
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
+
+/* Thanh cuộn mảnh theo màu chủ đạo, thay cho thanh cuộn hệ điều hành mặc định (nav tràn, bảng cuộn ngang…) */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(111 100 85 / 0.35) transparent;
+}
+*::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background-color: rgb(111 100 85 / 0.35);
+  border-radius: 999px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background-color: rgb(111 100 85 / 0.55);
+}
+
 /* Hiệu ứng card trồi lên lần lượt khi vào trang */
 @keyframes rise {
   from { opacity: 0; transform: translateY(14px); }

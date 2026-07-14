@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { EASE, errorCls, labelCls } from '../utils/ui'
+import { EASE, errorCls, labelCls, openDatePicker } from '../utils/ui'
 import { useNavigate } from 'react-router-dom'
 import client, { isBackendMissing, apiError } from '../api/client'
 import ConfirmDialog from '../components/ConfirmDialog'
@@ -286,6 +286,7 @@ export default function ReservationsPage() {
                 min={localToday()}
                 className={inputCls}
                 value={editForm.checkInDate}
+                onClick={openDatePicker}
                 onChange={(e) => setEditForm({ ...editForm, checkInDate: e.target.value })}
               />
             </div>
@@ -297,6 +298,7 @@ export default function ReservationsPage() {
                 min={localToday()}
                 className={inputCls}
                 value={editForm.checkOutDate}
+                onClick={openDatePicker}
                 onChange={(e) => setEditForm({ ...editForm, checkOutDate: e.target.value })}
               />
             </div>
