@@ -134,6 +134,19 @@ export const MOCK_SERVICE_ITEMS = [
   { id: 6, serviceCategoryId: 3, categoryName: 'Spa & Giải trí', serviceName: 'Massage 60 phút', unitPrice: 350000, isAvailable: true },
 ]
 
+// GET /api/surcharge-items -> [{ id, name, unitPrice, unit, isActive }]
+// Món phụ thu/đền bù niêm yết giá - lễ tân tick lúc check-out (đồ dùng thêm, hư, mất)
+export const MOCK_SURCHARGE_ITEMS = [
+  { id: 1, name: 'Khăn tắm', unitPrice: 80000, unit: 'cái', isActive: true },
+  { id: 2, name: 'Khăn mặt', unitPrice: 30000, unit: 'cái', isActive: true },
+  { id: 3, name: 'Dép đi trong phòng', unitPrice: 40000, unit: 'đôi', isActive: true },
+  { id: 4, name: 'Remote TV', unitPrice: 200000, unit: 'cái', isActive: true },
+  { id: 5, name: 'Thẻ từ / chìa khóa phòng', unitPrice: 100000, unit: 'cái', isActive: true },
+  { id: 6, name: 'Ấm siêu tốc', unitPrice: 250000, unit: 'cái', isActive: true },
+  { id: 7, name: 'Ly / cốc thủy tinh', unitPrice: 30000, unit: 'cái', isActive: true },
+  { id: 8, name: 'Chăn / ga (ố bẩn nặng)', unitPrice: 150000, unit: 'bộ', isActive: true },
+]
+
 // GET /api/service-orders -> [{ id, stayId, orderDate, status, totalAmount, details: [...] }]
 // status là SỐ theo enum backend: Pending=0, Processing=1, Completed=2, Cancelled=3
 // stayId=1 khớp MOCK_ACTIVE_STAYS ở trên (phòng 102 - Nguyễn Văn An)

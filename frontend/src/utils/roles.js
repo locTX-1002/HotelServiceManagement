@@ -21,6 +21,8 @@ export const ROUTE_ROLES = {
   '/service-orders': ['Admin', 'Receptionist', 'ServiceStaff'],
   // Khớp [Authorize] backend: POST/PUT /api/service-items cho Admin,Manager,ServiceStaff
   '/service-items': ['Admin', 'Manager', 'ServiceStaff'],
+  // Bảng giá phụ thu là dữ liệu cấu hình - chỉ Admin,Manager quản lý
+  '/surcharge-items': ['Admin', 'Manager'],
   '/invoices': ['Admin', 'Receptionist'],
   '/reports': ['Admin', 'Manager'],
   // Khớp [Authorize(Roles = "Admin")] của UsersController

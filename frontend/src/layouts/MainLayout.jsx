@@ -106,6 +106,7 @@ const MENU = [
   { to: '/guests', label: 'Khách' },
   { to: '/service-orders', label: 'Dịch vụ' },
   { to: '/service-items', label: 'Bảng giá DV' },
+  { to: '/surcharge-items', label: 'Giá phụ thu' },
   { to: '/reports', label: 'Báo cáo' },
   { to: '/users', label: 'Người dùng' },
 ]

@@ -14,6 +14,7 @@ import RoomPage from './pages/RoomPage'
 import RoomTypePage from './pages/RoomTypePage'
 import ServiceCatalogPage from './pages/ServiceCatalogPage'
 import ServiceOrderPage from './pages/ServiceOrderPage'
+import SurchargeCatalogPage from './pages/SurchargeCatalogPage'
 import InvoicePage from './pages/InvoicePage'
 import UsersPage from './pages/UsersPage'
 import ProtectedRoute from './routes/ProtectedRoute'
@@ -40,6 +41,7 @@ export default function App() {
               <Route path="/guests" element={<GuestsPage />} />
               <Route path="/service-orders" element={<ServiceOrderPage />} />
               <Route path="/service-items" element={<ServiceCatalogPage />} />
+              <Route path="/surcharge-items" element={<SurchargeCatalogPage />} />
               <Route path="/invoices" element={<InvoicePage />} />
               <Route path="/reports" element={<ReportsPage />} />
               <Route path="/users" element={<UsersPage />} />
