@@ -16,4 +16,8 @@ public class ReservationResponse
     public DateTime CheckInDate { get; set; }
     public DateTime CheckOutDate { get; set; }
     public ReservationStatus Status { get; set; }
+    public string? SpecialRequests { get; set; }
+    public decimal? DepositAmount { get; set; }
+    public string? DepositPaymentMethod { get; set; }
+    public DateTime? DepositPaidAt { get; set; }
 }

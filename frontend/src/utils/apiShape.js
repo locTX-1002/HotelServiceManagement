@@ -36,8 +36,9 @@ export const normalizeAvailableRoom = (r) => ({
   typeName: r.typeName ?? r.roomTypeName,
 })
 
-// Thứ tự PHẢI khớp enum ReservationStatus của backend: Pending=0, Confirmed=1, Cancelled=2, CheckedIn=3, Completed=4
-const RESERVATION_STATUS_ORDER = ['Pending', 'Confirmed', 'Cancelled', 'CheckedIn', 'Completed']
+// Thứ tự PHẢI khớp enum ReservationStatus của backend: Pending=0, Confirmed=1, Cancelled=2, CheckedIn=3, Completed=4, NoShow=5
+// NoShow PHẢI ở cuối - chèn giữa sẽ làm lệch số của mọi trạng thái phía sau.
+const RESERVATION_STATUS_ORDER = ['Pending', 'Confirmed', 'Cancelled', 'CheckedIn', 'Completed', 'NoShow']
 
 export const normalizeReservationStatus = (s) =>
   typeof s === 'number' ? RESERVATION_STATUS_ORDER[s] ?? 'Pending' : s
@@ -69,3 +70,17 @@ export const denormalizeServiceOrderStatus = (s) => {
 
 // GET /api/service-orders: status là số -> chuẩn hoá về chuỗi, giữ nguyên shape còn lại
 export const normalizeServiceOrder = (o) => ({ ...o, status: normalizeServiceOrderStatus(o.status) })
+
+// Thứ tự PHẢI khớp enum GuestTag của backend: None=0, Vip=1, Blacklisted=2
+const GUEST_TAG_ORDER = ['None', 'Vip', 'Blacklisted']
+
+export const normalizeGuestTag = (t) =>
+  typeof t === 'number' ? GUEST_TAG_ORDER[t] ?? 'None' : t
+
+export const denormalizeGuestTag = (t) => {
+  const i = GUEST_TAG_ORDER.indexOf(t)
+  return i >= 0 ? i : 0
+}
+
+// GET /api/guests: tag là số -> chuẩn hoá về chuỗi, giữ nguyên shape còn lại
+export const normalizeGuest = (g) => ({ ...g, tag: normalizeGuestTag(g.tag) })

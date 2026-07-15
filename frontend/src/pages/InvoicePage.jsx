@@ -8,6 +8,7 @@ import { useToast } from '../components/toastContext'
 import { MOCK_INVOICE } from '../mock/hotelMock'
 import { fmtDateTime } from '../utils/dates'
 import { formatVnd } from '../utils/roomStatus'
+import { PAYMENT_METHODS } from '../utils/paymentMethods'
 
 const INVOICE_STATUS = {
   Unpaid: { label: 'Chưa thanh toán', badge: 'bg-rose-50 text-rose-700 ring-1 ring-rose-600/15' },
@@ -15,12 +16,6 @@ const INVOICE_STATUS = {
   Paid: { label: 'Đã thanh toán', badge: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/15' },
   Cancelled: { label: 'Đã hủy', badge: 'bg-stone-100 text-stone-600 ring-1 ring-stone-500/15' },
 }
-
-const PAYMENT_METHODS = [
-  { value: 'Cash', label: 'Tiền mặt' },
-  { value: 'BankTransfer', label: 'Chuyển khoản' },
-  { value: 'Card', label: 'Thẻ' },
-]
 
 export default function InvoicePage() {
   const [searchParams] = useSearchParams()
@@ -36,6 +31,8 @@ export default function InvoicePage() {
   const [usingMock, setUsingMock] = useState(false)
   const [creating, setCreating] = useState(false)
 
+  const [promoCode, setPromoCode] = useState('')
+  const [applyingPromo, setApplyingPromo] = useState(false)
   const [amount, setAmount] = useState('')
   const [method, setMethod] = useState('Cash')
   const [paying, setPaying] = useState(false)
@@ -75,10 +72,22 @@ export default function InvoicePage() {
     creatingRef.current = true
     setCreating(true)
     client
-      .post(`/api/invoices/stay/${stayId}`)
+      .post(`/api/invoices/stay/${stayId}`, { promotionCode: promoCode.trim() || undefined })
       .then(() => { toast.success('Đã tạo hoá đơn'); load() })
       .catch((err) => toast.error(apiError(err)))
       .finally(() => { creatingRef.current = false; setCreating(false) })
+  }
+
+  // Hoá đơn thường đã được tạo sẵn ngay lúc check-out - áp mã khuyến mãi nghĩa là gọi lại
+  // đúng API tạo hoá đơn, backend tự tính lại tổng tiền trên hoá đơn đã có (không tạo trùng).
+  const applyPromo = () => {
+    if (!promoCode.trim()) return
+    setApplyingPromo(true)
+    client
+      .post(`/api/invoices/stay/${stayId}`, { promotionCode: promoCode.trim() })
+      .then(() => { toast.success(`Đã áp dụng mã ${promoCode.trim().toUpperCase()}`); load() })
+      .catch((err) => toast.error(apiError(err)))
+      .finally(() => setApplyingPromo(false))
   }
 
   const submitPayment = () => {
@@ -137,6 +146,16 @@ export default function InvoicePage() {
         <div className="mt-6 flex flex-col items-center rounded-2xl border border-dashed border-black/10 bg-white/60 px-6 py-14">
           <span className="h-12 w-9 rounded-t-full rounded-b-md border-2 border-dashed border-brand-600/30" />
           <p className="mt-4 font-display text-lg italic text-ink-700">Chưa có hoá đơn cho lượt ở này</p>
+          <div className="mt-4 w-full max-w-xs">
+            <label htmlFor="promo-code-new" className="mb-1 block text-[10px] font-bold uppercase tracking-[0.16em] text-ink-500">Mã khuyến mãi (tuỳ chọn)</label>
+            <input
+              id="promo-code-new"
+              className="w-full rounded-lg bg-white px-3 py-2.5 text-sm ring-1 ring-black/10 outline-none focus:ring-2 focus:ring-brand-500/40"
+              placeholder="SUMMER10"
+              value={promoCode}
+              onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+            />
+          </div>
           <button
             onClick={createInvoice}
             disabled={creating}
@@ -181,11 +200,39 @@ export default function InvoicePage() {
                   ))}
                 </>
               )}
+              {invoice.discountAmount > 0 && (
+                <div className="flex items-center justify-between text-[13px]">
+                  <span className="text-ink-500">Giảm giá{invoice.promotionCode ? ` (${invoice.promotionCode})` : ''}</span>
+                  <span className="font-semibold tabular-nums text-emerald-700">−{formatVnd(invoice.discountAmount)}</span>
+                </div>
+              )}
               <div className="flex items-center justify-between border-t border-black/[0.06] pt-2 text-sm">
                 <span className="font-semibold text-ink-900">Tổng cộng</span>
                 <span className="font-display text-lg font-semibold tabular-nums text-brand-700">{formatVnd(invoice.totalAmount)}</span>
               </div>
             </div>
+
+            {canPay && (
+              <div className="mt-4 flex items-end gap-2">
+                <div className="flex-1">
+                  <label htmlFor="promo-code-apply" className="mb-1 block text-[10px] font-bold uppercase tracking-[0.16em] text-ink-500">Mã khuyến mãi</label>
+                  <input
+                    id="promo-code-apply"
+                    className="w-full rounded-lg bg-cream-50 px-3 py-2.5 text-sm ring-1 ring-black/10 outline-none focus:ring-2 focus:ring-brand-500/40"
+                    placeholder={invoice.promotionCode ?? 'SUMMER10'}
+                    value={promoCode}
+                    onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                  />
+                </div>
+                <button
+                  onClick={applyPromo}
+                  disabled={applyingPromo || !promoCode.trim()}
+                  className={`rounded-lg px-4 py-2.5 text-[12px] font-bold text-ink-700 ring-1 ring-black/10 ${EASE} hover:bg-cream-100 disabled:opacity-40`}
+                >
+                  {applyingPromo ? 'Đang áp dụng…' : 'Áp dụng'}
+                </button>
+              </div>
+            )}
 
             {lastPayment && (
               <div className="mt-4 rounded-xl bg-emerald-50 p-4 text-[12px] text-emerald-800 ring-1 ring-emerald-600/15">

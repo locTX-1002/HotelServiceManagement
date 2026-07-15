@@ -4,9 +4,10 @@ import { useSearchParams } from 'react-router-dom'
 import client, { isBackendMissing } from '../api/client'
 import { formatVnd } from '../utils/roomStatus'
 import { MOCK_AVAILABLE_ROOMS, MOCK_ROOM_TYPES_FULL } from '../mock/hotelMock'
-import { normalizeAvailableRoom, normalizeRoomType } from '../utils/apiShape'
+import { normalizeAvailableRoom, normalizeRoomType, normalizeGuest } from '../utils/apiShape'
 import { roomImage } from '../utils/roomImages'
 import { roomMeta } from '../utils/roomMeta'
+import { PAYMENT_METHODS } from '../utils/paymentMethods'
 
 import { localToday as today, addDays, fmtShort } from '../utils/dates'
 import ErrorState from '../components/ErrorState'
@@ -117,6 +118,12 @@ export default function CreateReservationPage() {
   const [sortAsc, setSortAsc] = useState(true)
   const [selected, setSelected] = useState(null)
   const [guest, setGuest] = useState({ fullName: '', phoneNumber: '', email: '', identityNumber: '' })
+  const [specialRequests, setSpecialRequests] = useState('')
+  // Khách trùng CCCD tra được lúc rời khỏi ô CMND/CCCD - dùng để cảnh báo VIP/blacklist trước khi xác nhận
+  const [matchedGuest, setMatchedGuest] = useState(null)
+  const [blacklistAck, setBlacklistAck] = useState(false)
+  const [depositAmount, setDepositAmount] = useState('')
+  const [depositMethod, setDepositMethod] = useState('Cash')
   const [done, setDone] = useState(null)
   const [error, setError] = useState(null)
   const [searchError, setSearchError] = useState(false)
@@ -193,6 +200,20 @@ export default function CreateReservationPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // Tra CCCD ngay khi rời khỏi ô nhập (trước khi bấm Xác nhận) để lễ tân thấy cảnh báo VIP/blacklist sớm -
+  // dùng lại đúng cách so khớp chính xác của confirm() bên dưới, không đụng vào luồng submit đã test kỹ.
+  const checkGuestTag = () => {
+    const idNum = guest.identityNumber.trim()
+    if (!idNum) return
+    client
+      .get('/api/guests', { params: { keyword: idNum } })
+      .then((res) => {
+        const existing = res.data.find((g) => g.identityNumber === idNum)
+        setMatchedGuest(existing ? normalizeGuest(existing) : null)
+      })
+      .catch(() => {}) // tra cứu chỉ để cảnh báo sớm, lỗi mạng thì bỏ qua, confirm() vẫn tự tra lại
+  }
+
   // Backend không nhận thông tin khách kèm luôn trong đặt phòng - phải tạo Guest trước rồi mới tạo Reservation với guestId.
   // Khách quen (CCCD đã có hồ sơ) thì dùng lại hồ sơ cũ - POST thẳng sẽ dính 409 'Identity number already exists',
   // và cũng nhờ vậy bấm 'Thử lại' sau khi tạo reservation lỗi không bị kẹt vì guest đã tạo ở lần trước.
@@ -226,6 +247,9 @@ export default function CreateReservationPage() {
           checkInDate: checkIn,
           checkOutDate: checkOut,
           status: 1,
+          specialRequests: specialRequests.trim() || undefined,
+          depositAmount: depositAmount ? Number(depositAmount) : undefined,
+          depositPaymentMethod: depositAmount ? depositMethod : undefined,
         }),
       )
       .then((res) => setDone({ code: res.data.bookingCode ?? 'BK-XXXX' }))
@@ -426,13 +450,63 @@ export default function CreateReservationPage() {
               </div>
               <div>
                 <label className={labelCls}>CMND / CCCD *</label>
-                <input className={inputCls} placeholder="0790xxxxxxxx" value={guest.identityNumber} onChange={(e) => setGuest({ ...guest, identityNumber: e.target.value })} />
+                <input
+                  className={inputCls}
+                  placeholder="0790xxxxxxxx"
+                  value={guest.identityNumber}
+                  onChange={(e) => { setGuest({ ...guest, identityNumber: e.target.value }); setMatchedGuest(null); setBlacklistAck(false) }}
+                  onBlur={checkGuestTag}
+                />
               </div>
               <div className="sm:col-span-2">
                 <label className={labelCls}>Email</label>
                 <input className={inputCls} placeholder="khach@email.com" value={guest.email} onChange={(e) => setGuest({ ...guest, email: e.target.value })} />
               </div>
+              <div className="sm:col-span-2">
+                <label className={labelCls}>Yêu cầu đặc biệt (tuỳ chọn)</label>
+                <textarea
+                  rows={2}
+                  className={inputCls}
+                  placeholder="Giường phụ, tầng cao, không hút thuốc..."
+                  value={specialRequests}
+                  onChange={(e) => setSpecialRequests(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className={labelCls}>Đặt cọc (tuỳ chọn)</label>
+                <input
+                  type="number"
+                  min={0}
+                  className={inputCls}
+                  placeholder="Số tiền cọc"
+                  value={depositAmount}
+                  onChange={(e) => setDepositAmount(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className={labelCls}>Hình thức cọc</label>
+                <select className={inputCls} value={depositMethod} onChange={(e) => setDepositMethod(e.target.value)} disabled={!depositAmount}>
+                  {PAYMENT_METHODS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
+                </select>
+              </div>
             </div>
+
+            {matchedGuest?.tag === 'Blacklisted' && (
+              <div className="mt-4 rounded-xl bg-rose-50 p-4 ring-1 ring-rose-600/20">
+                <p className="text-[12px] font-bold text-rose-800">⚠ Khách nằm trong danh sách cảnh báo</p>
+                {matchedGuest.tagNote && <p className="mt-1 text-[12px] text-rose-700">{matchedGuest.tagNote}</p>}
+                <label className="mt-2.5 flex items-center gap-2 text-[12px] font-semibold text-rose-800">
+                  <input type="checkbox" checked={blacklistAck} onChange={(e) => setBlacklistAck(e.target.checked)} />
+                  Đã kiểm tra, vẫn tiếp tục đặt phòng cho khách này
+                </label>
+              </div>
+            )}
+            {matchedGuest?.tag === 'Vip' && (
+              <div className="mt-4 rounded-xl bg-amber-50 p-4 text-[12px] font-semibold text-amber-800 ring-1 ring-amber-600/20">
+                ✓ Khách VIP{matchedGuest.tagNote ? ` — ${matchedGuest.tagNote}` : ''}
+              </div>
+            )}
+
             <button onClick={() => setStep(2)} className="mt-5 text-[12px] font-semibold text-brand-600 underline-offset-2 hover:underline">← Chọn phòng khác</button>
           </div>
 
@@ -445,10 +519,19 @@ export default function CreateReservationPage() {
                   <p className="flex justify-between"><span className="text-cream-50/60">Ngày ở</span><span>{fmtShort(checkIn)} → {fmtShort(checkOut)}</span></p>
                   <p className="flex justify-between"><span className="text-cream-50/60">Số đêm × giá</span><span className="tabular-nums">{nights} × {formatVnd(selected.basePrice)}</span></p>
                   <p className="flex justify-between border-t border-white/10 pt-2 text-base"><span className="text-cream-50/60">Tạm tính</span><span className="font-display font-semibold tabular-nums">{formatVnd(selected.basePrice * nights)}</span></p>
+                  {depositAmount && (
+                    <p className="flex justify-between text-emerald-300"><span className="text-cream-50/60">Đã đặt cọc</span><span className="font-semibold tabular-nums">{formatVnd(Number(depositAmount))}</span></p>
+                  )}
                 </div>
                 <button
                   onClick={confirm}
-                  disabled={submitting || !guest.fullName.trim() || !guest.phoneNumber.trim() || !guest.identityNumber.trim()}
+                  disabled={
+                    submitting ||
+                    !guest.fullName.trim() ||
+                    !guest.phoneNumber.trim() ||
+                    !guest.identityNumber.trim() ||
+                    (matchedGuest?.tag === 'Blacklisted' && !blacklistAck)
+                  }
                   className={`mt-5 w-full rounded-full bg-brand-500 py-3 text-sm font-bold text-white ${EASE} hover:bg-brand-600 active:scale-[0.98] disabled:opacity-30`}
                 >
                   {submitting ? 'Đang xác nhận…' : 'Xác nhận đặt phòng'}

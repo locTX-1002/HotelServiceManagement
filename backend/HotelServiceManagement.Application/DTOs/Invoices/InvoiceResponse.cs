@@ -9,6 +9,8 @@ namespace HotelServiceManagement.Application.DTOs.Invoices
         public DateTime InvoiceDate { get; set; }
         public decimal RoomCharge { get; set; }
         public decimal ServiceCharge { get; set; }
+        public decimal DiscountAmount { get; set; }
+        public string? PromotionCode { get; set; }
         public decimal TotalAmount { get; set; }
         public string Status { get; set; } = string.Empty;
     }

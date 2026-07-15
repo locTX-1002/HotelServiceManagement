@@ -11,6 +11,8 @@ namespace HotelServiceManagement.Infrastructure.Configurations
             builder.HasKey(i => i.Id);
             builder.Property(i => i.RoomCharge).HasPrecision(18, 2);
             builder.Property(i => i.ServiceCharge).HasPrecision(18, 2);
+            builder.Property(i => i.DiscountAmount).HasPrecision(18, 2);
+            builder.Property(i => i.PromotionCode).HasMaxLength(30);
             builder.Property(i => i.TotalAmount).HasPrecision(18, 2);
             builder.Property(i => i.Status).HasConversion<string>().HasMaxLength(50);
 

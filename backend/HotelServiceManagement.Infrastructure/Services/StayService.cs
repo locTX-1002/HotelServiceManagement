@@ -152,6 +152,25 @@ namespace HotelServiceManagement.Infrastructure.Services
                     Status = InvoiceStatus.Unpaid
                 };
                 _context.Invoices.Add(invoice);
+
+                // Cọc đã thu lúc đặt phòng -> tạo Payment thật để tái dùng nguyên vẹn logic tính số dư
+                // còn lại (đã hardened chống race-condition) trong ResolveInvoiceStatus/PaymentService.
+                // Đây là nơi hoá đơn THẬT SỰ được tạo lần đầu (check-out tự sinh hoá đơn ngay),
+                // InvoiceService.CreateInvoiceAsync chỉ là đường tạo lại thủ công khi thiếu hoá đơn.
+                if (stay.Reservation.DepositAmount is > 0 and var deposit)
+                {
+                    invoice.Payments.Add(new Payment
+                    {
+                        PaymentDate = stay.Reservation.DepositPaidAt ?? actualCheckOut,
+                        Amount = deposit,
+                        PaymentMethod = stay.Reservation.DepositPaymentMethod ?? PaymentMethod.Cash,
+                        Status = PaymentStatus.Completed,
+                        TransactionId = $"DEP-{stay.Reservation.BookingCode}",
+                        ReceivedByUserId = stay.Reservation.CreatedByUserId,
+                    });
+                }
+
+                invoice.Status = ResolveInvoiceStatus(invoice);
             }
             else
             {

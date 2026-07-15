@@ -22,6 +22,16 @@ namespace HotelServiceManagement.Infrastructure.Configurations
                    .HasConversion<string>()
                    .HasMaxLength(50);
 
+            builder.Property(r => r.SpecialRequests)
+                   .HasMaxLength(500);
+
+            builder.Property(r => r.DepositAmount)
+                   .HasPrecision(18, 2);
+
+            builder.Property(r => r.DepositPaymentMethod)
+                   .HasConversion<string>()
+                   .HasMaxLength(50);
+
             builder.HasIndex(r => r.BookingCode).IsUnique();
 
             builder.HasOne(r => r.Guest)
@@ -50,6 +60,10 @@ namespace HotelServiceManagement.Infrastructure.Configurations
                 t.HasCheckConstraint(
                     "CK_Reservation_NumberOfGuests_MinValue",
                     "[NumberOfGuests] >= 1");
+
+                t.HasCheckConstraint(
+                    "CK_Reservation_DepositAmount_NonNegative",
+                    "[DepositAmount] IS NULL OR [DepositAmount] >= 0");
             });
         }
     }

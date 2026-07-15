@@ -1,3 +1,4 @@
+using HotelServiceManagement.Application.DTOs.Auth;
 using HotelServiceManagement.Application.DTOs.Invoices;
 using HotelServiceManagement.Application.Interfaces;
 using HotelServiceManagement.Domain.Entities;
@@ -34,7 +35,15 @@ namespace HotelServiceManagement.Infrastructure.Services
             return invoice == null ? null : ToResponse(invoice);
         }
 
-        public async Task<InvoiceResponse?> CreateInvoiceAsync(int stayId, int createdByUserId)
+        /// <summary>
+        /// Check-out already auto-generates the invoice (see StayService.CheckOutAsync), so most calls
+        /// here hit an EXISTING invoice - used to (re)apply a promotion code before payment, or as a
+        /// manual repair path if a stay somehow completed without one.
+        /// </summary>
+        public async Task<AuthServiceResult<InvoiceResponse>> CreateInvoiceAsync(
+            int stayId,
+            int createdByUserId,
+            string? promotionCode = null)
         {
             var stay = await _context.Stays
                 .AsSplitQuery()
@@ -48,21 +57,55 @@ namespace HotelServiceManagement.Infrastructure.Services
 
             if (stay == null)
             {
-                return null;
+                return AuthServiceResult<InvoiceResponse>.Failure("Stay not found.", 404);
             }
 
             if (stay.Status != StayStatus.Completed || stay.ActualCheckOut == null)
             {
-                return null;
+                return AuthServiceResult<InvoiceResponse>.Failure(
+                    "Stay must be completed with an actual check-out before an invoice can be created.");
             }
 
             var invoiceDate = stay.ActualCheckOut.Value;
             var roomCharge = CalculateRoomCharge(stay, invoiceDate);
             var serviceCharge = CalculateServiceCharge(stay);
-            var totalAmount = roomCharge + serviceCharge;
+            var subtotal = roomCharge + serviceCharge;
 
             var invoice = stay.Invoice;
-            if (invoice == null)
+            var isNewInvoice = invoice == null;
+
+            var discountAmount = invoice?.DiscountAmount ?? 0;
+            var appliedPromotionCode = invoice?.PromotionCode;
+            var trimmedCode = promotionCode?.Trim();
+            if (!string.IsNullOrEmpty(trimmedCode))
+            {
+                var normalizedCode = trimmedCode.ToUpperInvariant();
+                var promotion = await _context.Promotions.FirstOrDefaultAsync(p => p.Code == normalizedCode);
+                if (promotion == null)
+                {
+                    return AuthServiceResult<InvoiceResponse>.Failure("Promotion code not found.");
+                }
+
+                if (!promotion.IsActive)
+                {
+                    return AuthServiceResult<InvoiceResponse>.Failure("Promotion code is inactive.");
+                }
+
+                if (invoiceDate.Date < promotion.StartDate.Date || invoiceDate.Date > promotion.EndDate.Date)
+                {
+                    return AuthServiceResult<InvoiceResponse>.Failure("Promotion code is not valid for this date.");
+                }
+
+                var rawDiscount = promotion.Type == PromotionType.Percentage
+                    ? subtotal * (promotion.Value / 100m)
+                    : promotion.Value;
+                discountAmount = Math.Max(0, Math.Min(rawDiscount, subtotal));
+                appliedPromotionCode = promotion.Code;
+            }
+
+            var totalAmount = subtotal - discountAmount;
+
+            if (isNewInvoice)
             {
                 invoice = new Invoice
                 {
@@ -72,20 +115,38 @@ namespace HotelServiceManagement.Infrastructure.Services
                     Status = InvoiceStatus.Unpaid
                 };
                 _context.Invoices.Add(invoice);
+
+                // Cọc đã thu lúc đặt phòng -> tạo Payment thật để tái dùng nguyên vẹn logic
+                // tính số dư còn lại (đã hardened chống race-condition) trong ResolveInvoiceStatus/PaymentService,
+                // không cần sửa gì ở PaymentService.
+                if (stay.Reservation.DepositAmount is > 0 and var deposit)
+                {
+                    invoice.Payments.Add(new Payment
+                    {
+                        PaymentDate = stay.Reservation.DepositPaidAt ?? invoiceDate,
+                        Amount = deposit,
+                        PaymentMethod = stay.Reservation.DepositPaymentMethod ?? PaymentMethod.Cash,
+                        Status = PaymentStatus.Completed,
+                        TransactionId = $"DEP-{stay.Reservation.BookingCode}",
+                        ReceivedByUserId = stay.Reservation.CreatedByUserId,
+                    });
+                }
             }
             else
             {
-                invoice.CreatedByUserId ??= createdByUserId;
+                invoice!.CreatedByUserId ??= createdByUserId;
             }
 
-            invoice.RoomCharge = roomCharge;
+            invoice!.RoomCharge = roomCharge;
             invoice.ServiceCharge = serviceCharge;
+            invoice.DiscountAmount = discountAmount;
+            invoice.PromotionCode = appliedPromotionCode;
             invoice.TotalAmount = totalAmount;
             invoice.Status = ResolveInvoiceStatus(invoice);
 
             await _context.SaveChangesAsync();
 
-            return ToResponse(invoice);
+            return AuthServiceResult<InvoiceResponse>.Success(ToResponse(invoice), "Invoice created successfully.");
         }
 
         private static decimal CalculateRoomCharge(Stay stay, DateTime invoiceDate)
@@ -126,6 +187,8 @@ namespace HotelServiceManagement.Infrastructure.Services
                 InvoiceDate = invoice.InvoiceDate,
                 RoomCharge = invoice.RoomCharge,
                 ServiceCharge = invoice.ServiceCharge,
+                DiscountAmount = invoice.DiscountAmount,
+                PromotionCode = invoice.PromotionCode,
                 TotalAmount = invoice.TotalAmount,
                 Status = invoice.Status.ToString()
             };

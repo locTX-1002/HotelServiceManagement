@@ -5,6 +5,8 @@ import ErrorState from '../components/ErrorState'
 import { mockOccupancySnapshot, mockRevenueSummary } from '../mock/hotelMock'
 import { addDays, fmtShort, localToday as today } from '../utils/dates'
 import { formatVnd } from '../utils/roomStatus'
+import { exportReportToExcel, exportReportToPdf } from '../utils/exportReport'
+import BarChart from '../components/BarChart'
 
 const inputCls =
   'w-full rounded-xl bg-white px-3.5 py-2.5 text-sm ring-1 ring-black/10 outline-none focus:ring-2 focus:ring-brand-500/40'
@@ -40,6 +42,7 @@ export default function ReportsPage() {
   const [loadError, setLoadError] = useState(false)
   const [retryTick, setRetryTick] = useState(0) // Thử lại giữ nguyên dải ngày đang chọn
   const [customOpen, setCustomOpen] = useState(false) // ô Từ ngày/Đến ngày chỉ hiện khi bấm "Tùy chỉnh", đỡ chiếm chỗ mặc định
+  const [exporting, setExporting] = useState('') // 'excel' | 'pdf' | '' - khoá đúng 1 nút đang xuất, nút còn lại vẫn bấm được
 
   const rangeError = !from || !to
     ? 'Chọn đủ cả từ ngày và đến ngày.' // input date bị xóa trắng
@@ -99,6 +102,16 @@ export default function ReportsPage() {
     { key: 'month', label: 'Tháng này', from: monthStart(), to: today() },
   ]
   const activePreset = quickRanges.find((q) => q.from === from && q.to === to)
+
+  const canExport = !loading && !rangeError && !loadError
+  const doExportExcel = () => {
+    setExporting('excel')
+    Promise.resolve(exportReportToExcel({ from, to, revenue, occupancy })).finally(() => setExporting(''))
+  }
+  const doExportPdf = () => {
+    setExporting('pdf')
+    Promise.resolve(exportReportToPdf({ from, to, revenue, occupancy })).finally(() => setExporting(''))
+  }
 
   return (
     <div>
@@ -161,6 +174,22 @@ export default function ReportsPage() {
             {rangeError}
           </span>
         )}
+        <div className="ml-auto flex items-center gap-2">
+          <button
+            onClick={doExportExcel}
+            disabled={!canExport || exporting !== ''}
+            className={`rounded-full px-3.5 py-1.5 text-[12px] font-semibold text-ink-700 ring-1 ring-black/10 ${EASE} hover:bg-cream-100 disabled:opacity-40`}
+          >
+            {exporting === 'excel' ? 'Đang xuất…' : 'Xuất Excel'}
+          </button>
+          <button
+            onClick={doExportPdf}
+            disabled={!canExport || exporting !== ''}
+            className={`rounded-full px-3.5 py-1.5 text-[12px] font-semibold text-ink-700 ring-1 ring-black/10 ${EASE} hover:bg-cream-100 disabled:opacity-40`}
+          >
+            {exporting === 'pdf' ? 'Đang xuất…' : 'Xuất PDF'}
+          </button>
+        </div>
       </div>
 
       {loadError && (
@@ -238,6 +267,28 @@ export default function ReportsPage() {
                   <div className="flex items-center justify-between border-t border-black/[0.06] pt-2"><span className="font-semibold text-ink-900">Tổng phòng</span><span className="font-semibold tabular-nums">{occupancy?.totalRooms ?? 0}</span></div>
                 </div>
               </div>
+            </Panel>
+          </div>
+
+          <div className="mt-5 grid gap-5 lg:grid-cols-2">
+            {/* Doanh thu theo ngày - biểu đồ cột, trục đầy đủ mọi ngày trong kỳ kể cả ngày 0 đồng */}
+            <Panel title="Doanh thu theo ngày" hint={`${fmtShort(from)} → ${fmtShort(to)}`}>
+              <BarChart
+                data={(revenue?.byDay ?? []).map((d) => ({ label: fmtShort(String(d.date).slice(0, 10)), value: d.totalRevenue }))}
+                formatValue={formatVnd}
+                orientation="vertical"
+                emptyText="Chưa có doanh thu trong kỳ này"
+              />
+            </Panel>
+
+            {/* Công suất theo tầng - biểu đồ ngang, số liệu chi tiết xem ở bảng bên dưới */}
+            <Panel title="Công suất theo tầng" hint="ảnh chụp hiện tại">
+              <BarChart
+                data={floors.map((f) => ({ label: `Tầng ${f.floor}`, value: rateOf(f) }))}
+                formatValue={(v) => `${v}%`}
+                orientation="horizontal"
+                emptyText="Chưa có dữ liệu công suất theo tầng"
+              />
             </Panel>
           </div>
 

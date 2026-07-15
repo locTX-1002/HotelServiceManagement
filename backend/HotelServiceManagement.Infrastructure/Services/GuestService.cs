@@ -116,6 +116,8 @@ namespace HotelServiceManagement.Infrastructure.Services
             guest.Email = string.IsNullOrWhiteSpace(request.Email) ? null : request.Email.Trim();
             guest.PhoneNumber = request.PhoneNumber.Trim();
             guest.IdentityNumber = identityNumber;
+            guest.Tag = request.Tag;
+            guest.TagNote = string.IsNullOrWhiteSpace(request.TagNote) ? null : request.TagNote.Trim();
 
             try
             {
@@ -144,6 +146,8 @@ namespace HotelServiceManagement.Infrastructure.Services
                 Email = guest.Email,
                 PhoneNumber = guest.PhoneNumber,
                 IdentityNumber = guest.IdentityNumber,
+                Tag = guest.Tag,
+                TagNote = guest.TagNote,
                 ReservationCount = guest.Reservations?.Count ?? 0
             };
         }

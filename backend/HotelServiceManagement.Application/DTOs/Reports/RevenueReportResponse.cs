@@ -8,4 +8,5 @@ public class RevenueReportResponse
     public decimal ServiceRevenue { get; set; }
     public decimal PaymentRevenue { get; set; }
     public decimal TotalRevenue { get; set; }
+    public List<RevenueByDayResponse> ByDay { get; set; } = new();
 }

@@ -118,9 +118,18 @@ export const MOCK_INVOICE = {
     { name: 'Khăn tắm', quantity: 1, unitPrice: 80000, subtotal: 80000 },
     { name: 'Dép đi trong phòng', quantity: 1, unitPrice: 40000, subtotal: 40000 },
   ],
+  discountAmount: 0,
+  promotionCode: null,
   totalAmount: 415000,
   status: 'Unpaid',
 }
+
+// GET /api/promotions -> [{ id, code, description, type, value, startDate, endDate, isActive }]
+// type là CHUỖI thật từ backend (Percentage/FixedAmount), không phải số như ReservationStatus.
+export const MOCK_PROMOTIONS = [
+  { id: 1, code: 'SUMMER10', description: 'Giảm giá hè 2026', type: 'Percentage', value: 10, startDate: '2026-06-01', endDate: '2026-08-31', isActive: true },
+  { id: 2, code: 'WELCOME50K', description: 'Ưu đãi khách mới', type: 'FixedAmount', value: 50000, startDate: '2026-01-01', endDate: '2026-12-31', isActive: true },
+]
 
 // GET /api/service-categories -> [{ id, categoryName, isActive }]
 export const MOCK_SERVICE_CATEGORIES = [

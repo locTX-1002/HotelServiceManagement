@@ -18,4 +18,7 @@ public class UpdateReservationRequest
     public DateTime CheckInDate { get; set; }
     public DateTime CheckOutDate { get; set; }
     public ReservationStatus Status { get; set; } = ReservationStatus.Pending;
+
+    [MaxLength(500)]
+    public string? SpecialRequests { get; set; }
 }

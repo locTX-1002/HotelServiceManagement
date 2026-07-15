@@ -15,6 +15,7 @@ import RoomTypePage from './pages/RoomTypePage'
 import ServiceCatalogPage from './pages/ServiceCatalogPage'
 import ServiceOrderPage from './pages/ServiceOrderPage'
 import SurchargeCatalogPage from './pages/SurchargeCatalogPage'
+import PromotionCatalogPage from './pages/PromotionCatalogPage'
 import InvoicePage from './pages/InvoicePage'
 import UsersPage from './pages/UsersPage'
 import ProtectedRoute from './routes/ProtectedRoute'
@@ -43,6 +44,7 @@ export default function App() {
               <Route path="/service-items" element={<ServiceCatalogPage />} />
               <Route path="/surcharge-items" element={<SurchargeCatalogPage />} />
               <Route path="/invoices" element={<InvoicePage />} />
+              <Route path="/promotions" element={<PromotionCatalogPage />} />
               <Route path="/reports" element={<ReportsPage />} />
               <Route path="/users" element={<UsersPage />} />
             </Route>

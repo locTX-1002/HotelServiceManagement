@@ -2,6 +2,8 @@ using System.Threading.Tasks;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using HotelServiceManagement.Application.DTOs.Auth;
+using HotelServiceManagement.Application.DTOs.Invoices;
 using HotelServiceManagement.Application.Interfaces;
 
 namespace HotelServiceManagement.Api.Controllers
@@ -45,14 +47,10 @@ namespace HotelServiceManagement.Api.Controllers
 
         [HttpPost("stay/{stayId}")]
         [Authorize(Roles = "Admin,Manager,Receptionist")]
-        public async Task<IActionResult> Create(int stayId)
+        public async Task<IActionResult> Create(int stayId, [FromBody] CreateInvoiceRequest? request)
         {
-            var invoice = await _invoiceService.CreateInvoiceAsync(stayId, GetCurrentUserId());
-            if (invoice == null)
-            {
-                return BadRequest(new { Message = "Failed to create invoice." });
-            }
-            return Ok(invoice);
+            return ToActionResult(
+                await _invoiceService.CreateInvoiceAsync(stayId, GetCurrentUserId(), request?.PromotionCode));
         }
 
         private int GetCurrentUserId()
@@ -66,6 +64,23 @@ namespace HotelServiceManagement.Api.Controllers
             }
 
             return userId;
+        }
+
+        private IActionResult ToActionResult<T>(AuthServiceResult<T> result)
+        {
+            if (result.IsSuccess)
+            {
+                return Ok(result.Data);
+            }
+
+            var body = new AuthMessageResponse { Message = result.Message };
+            return result.StatusCode switch
+            {
+                401 => Unauthorized(body),
+                404 => NotFound(body),
+                409 => Conflict(body),
+                _ => BadRequest(body)
+            };
         }
     }
 }

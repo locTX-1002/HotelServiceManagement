@@ -126,6 +126,19 @@ namespace HotelServiceManagement.Infrastructure.Services
                     "Room already has an active reservation in this date range.", 409);
             }
 
+            PaymentMethod? depositMethod = null;
+            if (request.DepositAmount is > 0)
+            {
+                if (string.IsNullOrWhiteSpace(request.DepositPaymentMethod)
+                    || !Enum.TryParse<PaymentMethod>(request.DepositPaymentMethod, ignoreCase: true, out var parsedDepositMethod))
+                {
+                    return AuthServiceResult<ReservationResponse>.Failure(
+                        "DepositPaymentMethod must be Cash, BankTransfer, or Card when DepositAmount is provided.");
+                }
+
+                depositMethod = parsedDepositMethod;
+            }
+
             var reservation = new Reservation
             {
                 BookingCode = await GenerateBookingCodeAsync(),
@@ -135,6 +148,10 @@ namespace HotelServiceManagement.Infrastructure.Services
                 CheckInDate = request.CheckInDate,
                 CheckOutDate = request.CheckOutDate,
                 Status = request.Status,
+                SpecialRequests = NormalizeSpecialRequests(request.SpecialRequests),
+                DepositAmount = request.DepositAmount is > 0 ? request.DepositAmount : null,
+                DepositPaymentMethod = depositMethod,
+                DepositPaidAt = request.DepositAmount is > 0 ? DateTime.UtcNow : null,
                 CreatedByUserId = createdByUserId
             };
 
@@ -259,6 +276,7 @@ namespace HotelServiceManagement.Infrastructure.Services
             reservation.CheckInDate = request.CheckInDate;
             reservation.CheckOutDate = request.CheckOutDate;
             reservation.Status = request.Status;
+            reservation.SpecialRequests = NormalizeSpecialRequests(request.SpecialRequests);
 
             // Save reservation first so RefreshRoomStatusAsync reads the new persisted state.
             await _context.SaveChangesAsync();
@@ -325,6 +343,49 @@ namespace HotelServiceManagement.Infrastructure.Services
             await _context.SaveChangesAsync();
 
             return MessageSuccess("Reservation cancelled successfully.");
+        }
+
+        /// <summary>
+        /// Marks a Confirmed reservation as No-show (guest never arrived). Deposit, if any, is not
+        /// auto-refunded/forfeited by this action - that stays a manual, off-system decision.
+        /// </summary>
+        public async Task<AuthServiceResult<AuthMessageResponse>> NoShowAsync(int id)
+        {
+            if (id <= 0)
+            {
+                return MessageFailure("Reservation id must be greater than 0.");
+            }
+
+            var reservation = await _context.Reservations
+                .FirstOrDefaultAsync(r => r.Id == id);
+
+            if (reservation == null)
+            {
+                return MessageFailure("Reservation not found.", 404);
+            }
+
+            if (reservation.Status != ReservationStatus.Confirmed)
+            {
+                return MessageFailure(
+                    "Only a Confirmed reservation can be marked as No-show.", 409);
+            }
+
+            var alreadyHasStay = await _context.Stays
+                .AnyAsync(s => s.ReservationId == id);
+
+            if (alreadyHasStay)
+            {
+                return MessageFailure(
+                    "Reservation that already has a stay cannot be marked as No-show.", 409);
+            }
+
+            reservation.Status = ReservationStatus.NoShow;
+            await _context.SaveChangesAsync();
+
+            await RefreshRoomStatusAsync(reservation.RoomId);
+            await _context.SaveChangesAsync();
+
+            return MessageSuccess("Reservation marked as No-show.");
         }
 
         /// <summary>
@@ -494,8 +555,17 @@ namespace HotelServiceManagement.Infrastructure.Services
                 NumberOfGuests = reservation.NumberOfGuests,
                 CheckInDate = reservation.CheckInDate,
                 CheckOutDate = reservation.CheckOutDate,
-                Status = reservation.Status
+                Status = reservation.Status,
+                SpecialRequests = reservation.SpecialRequests,
+                DepositAmount = reservation.DepositAmount,
+                DepositPaymentMethod = reservation.DepositPaymentMethod?.ToString(),
+                DepositPaidAt = reservation.DepositPaidAt
             };
+        }
+
+        private static string? NormalizeSpecialRequests(string? specialRequests)
+        {
+            return string.IsNullOrWhiteSpace(specialRequests) ? null : specialRequests.Trim();
         }
 
         private static string? ValidateReservationInput(

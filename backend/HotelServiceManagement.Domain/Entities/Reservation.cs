@@ -19,6 +19,13 @@ namespace HotelServiceManagement.Domain.Entities
         public DateTime CheckInDate { get; set; }
         public DateTime CheckOutDate { get; set; }
         public ReservationStatus Status { get; set; } = ReservationStatus.Pending;
+        public string? SpecialRequests { get; set; }
+
+        // Tiền cọc thu lúc đặt phòng (tuỳ chọn) - bất biến sau khi tạo, không có trong UpdateReservationRequest.
+        public decimal? DepositAmount { get; set; }
+        public PaymentMethod? DepositPaymentMethod { get; set; }
+        public DateTime? DepositPaidAt { get; set; }
+
         public int? CreatedByUserId { get; set; }
         public virtual User? CreatedByUser { get; set; }
 

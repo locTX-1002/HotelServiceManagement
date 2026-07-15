@@ -12,6 +12,8 @@ namespace HotelServiceManagement.Domain.Entities
 
         public decimal RoomCharge { get; set; }
         public decimal ServiceCharge { get; set; }
+        public decimal DiscountAmount { get; set; }
+        public string? PromotionCode { get; set; }
         public decimal TotalAmount { get; set; }
 
         public InvoiceStatus Status { get; set; } = InvoiceStatus.Unpaid;

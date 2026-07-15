@@ -5,6 +5,13 @@ import ErrorState from '../components/ErrorState'
 import SlideOver from '../components/SlideOver'
 import { useToast } from '../components/toastContext'
 import { MOCK_GUESTS } from '../mock/hotelMock'
+import { normalizeGuest, denormalizeGuestTag } from '../utils/apiShape'
+
+// Nhãn + màu cho phân loại khách - VIP tô điểm, Blacklist cảnh báo, None không hiện gì
+const GUEST_TAG = {
+  Vip: { label: 'VIP', badge: 'bg-amber-50 text-amber-800 ring-1 ring-amber-600/20' },
+  Blacklisted: { label: 'Cảnh báo', badge: 'bg-rose-50 text-rose-700 ring-1 ring-rose-600/20' },
+}
 
 // Quản lý hồ sơ khách - GET /api/guests?keyword= (tìm theo tên/sđt/CMND) + PUT /api/guests/{id}.
 // Tạo khách mới thì nằm sẵn trong luồng tạo đặt phòng nên trang này chỉ xem + sửa.
@@ -16,7 +23,7 @@ export default function GuestsPage() {
   const [keyword, setKeyword] = useState('')
   const [retryTick, setRetryTick] = useState(0) // bấm Thử lại thì tăng để effect chạy lại với keyword cũ
   const [toEdit, setToEdit] = useState(null)
-  const [form, setForm] = useState({ fullName: '', phoneNumber: '', identityNumber: '', email: '' })
+  const [form, setForm] = useState({ fullName: '', phoneNumber: '', identityNumber: '', email: '', tag: 'None', tagNote: '' })
   const [formError, setFormError] = useState('')
   const [saving, setSaving] = useState(false)
 
@@ -30,13 +37,13 @@ export default function GuestsPage() {
         .get('/api/guests', { params: { keyword: keyword.trim() || undefined } })
         .then((res) => {
           if (stale) return
-          setGuests(res.data); setUsingMock(false)
+          setGuests(res.data.map(normalizeGuest)); setUsingMock(false)
         })
         .catch((err) => {
           if (stale) return
           if (isBackendMissing(err)) {
             const q = keyword.trim().toLowerCase()
-            setGuests(MOCK_GUESTS.filter((g) => !q || g.fullName.toLowerCase().includes(q) || g.phoneNumber.includes(q)))
+            setGuests(MOCK_GUESTS.filter((g) => !q || g.fullName.toLowerCase().includes(q) || g.phoneNumber.includes(q)).map(normalizeGuest))
             setUsingMock(true)
           } else setLoadError(true) // lỗi thật: không che bằng mock
         })
@@ -47,7 +54,14 @@ export default function GuestsPage() {
   const reload = () => setRetryTick((t) => t + 1)
 
   const openEdit = (g) => {
-    setForm({ fullName: g.fullName, phoneNumber: g.phoneNumber, identityNumber: g.identityNumber, email: g.email ?? '' })
+    setForm({
+      fullName: g.fullName,
+      phoneNumber: g.phoneNumber,
+      identityNumber: g.identityNumber,
+      email: g.email ?? '',
+      tag: g.tag ?? 'None',
+      tagNote: g.tagNote ?? '',
+    })
     setFormError('')
     setToEdit(g)
   }
@@ -65,6 +79,8 @@ export default function GuestsPage() {
         phoneNumber: form.phoneNumber.trim(),
         identityNumber: form.identityNumber.trim(),
         email: form.email.trim() || null,
+        tag: denormalizeGuestTag(form.tag),
+        tagNote: form.tagNote.trim() || null,
       })
       .then(() => {
         toast.success(`Đã lưu hồ sơ ${form.fullName.trim()}`)
@@ -128,7 +144,17 @@ export default function GuestsPage() {
                   {guests.map((g) => (
                     <tr key={g.id} className={`${EASE} hover:bg-cream-50/60`}>
                       <td className="px-5 py-3.5">
-                        <p className="text-sm font-semibold">{g.fullName}</p>
+                        <p className="text-sm font-semibold">
+                          {g.fullName}
+                          {GUEST_TAG[g.tag] && (
+                            <span
+                              title={g.tagNote || undefined}
+                              className={`ml-2 rounded-full px-2 py-0.5 text-[10px] font-bold ${GUEST_TAG[g.tag].badge}`}
+                            >
+                              {GUEST_TAG[g.tag].label}
+                            </span>
+                          )}
+                        </p>
                         {g.email && <p className="text-[11px] text-ink-500">{g.email}</p>}
                       </td>
                       <td className="px-5 py-3.5 text-sm tabular-nums text-ink-700">{g.phoneNumber}</td>
@@ -211,6 +237,32 @@ export default function GuestsPage() {
               onChange={(e) => setForm({ ...form, email: e.target.value })}
             />
           </div>
+          <div>
+            <label htmlFor="guest-tag" className={labelCls}>Phân loại khách</label>
+            <select
+              id="guest-tag"
+              className={inputCls}
+              value={form.tag}
+              onChange={(e) => setForm({ ...form, tag: e.target.value })}
+            >
+              <option value="None">Bình thường</option>
+              <option value="Vip">VIP</option>
+              <option value="Blacklisted">Cảnh báo / Blacklist</option>
+            </select>
+          </div>
+          {form.tag !== 'None' && (
+            <div>
+              <label htmlFor="guest-tag-note" className={labelCls}>Ghi chú</label>
+              <textarea
+                id="guest-tag-note"
+                rows={2}
+                className={inputCls}
+                placeholder={form.tag === 'Blacklisted' ? 'Lý do (vd: bùng phòng, gây rối...)' : 'Ghi chú thêm (không bắt buộc)'}
+                value={form.tagNote}
+                onChange={(e) => setForm({ ...form, tagNote: e.target.value })}
+              />
+            </div>
+          )}
 
           {formError && (
             <p className={errorCls}>{formError}</p>

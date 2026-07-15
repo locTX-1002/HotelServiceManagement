@@ -9,23 +9,27 @@ import { useToast } from '../components/toastContext'
 import { MOCK_RESERVATIONS } from '../mock/hotelMock'
 import { denormalizeReservationStatus, normalizeReservation } from '../utils/apiShape'
 import { fmtShort, localToday } from '../utils/dates'
+import { formatVnd } from '../utils/roomStatus'
 
 const inputCls =
   'w-full rounded-xl bg-white px-3.5 py-2.5 text-sm ring-1 ring-black/10 outline-none focus:ring-2 focus:ring-brand-500/40'
 
-// Nhãn + màu cho 5 trạng thái đặt phòng (khớp enum backend)
+// Nhãn + màu cho các trạng thái đặt phòng (khớp enum backend)
 const RES_STATUS = {
   Pending: { label: 'Chờ xác nhận', badge: 'bg-amber-50 text-amber-800 ring-1 ring-amber-600/15', dot: 'bg-amber-500' },
   Confirmed: { label: 'Đã xác nhận', badge: 'bg-sky-50 text-sky-700 ring-1 ring-sky-600/15', dot: 'bg-sky-500' },
   CheckedIn: { label: 'Đã nhận phòng', badge: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/15', dot: 'bg-emerald-500' },
   Completed: { label: 'Hoàn tất', badge: 'bg-stone-100 text-stone-600 ring-1 ring-stone-500/15', dot: 'bg-stone-400' },
   Cancelled: { label: 'Đã hủy', badge: 'bg-rose-50 text-rose-700 ring-1 ring-rose-600/15', dot: 'bg-rose-400' },
+  NoShow: { label: 'Không đến', badge: 'bg-orange-50 text-orange-700 ring-1 ring-orange-600/15', dot: 'bg-orange-400' },
 }
-const STATUS_ORDER = ['Pending', 'Confirmed', 'CheckedIn', 'Completed', 'Cancelled']
+const STATUS_ORDER = ['Pending', 'Confirmed', 'CheckedIn', 'Completed', 'Cancelled', 'NoShow']
 
 // Chỉ hủy / sửa được khi chưa nhận phòng và chưa hủy
 const canCancel = (r) => r.status === 'Pending' || r.status === 'Confirmed'
 const canEdit = canCancel
+// Không đến chỉ áp dụng cho lượt đã xác nhận nhưng khách chưa tới nhận phòng
+const canNoShow = (r) => r.status === 'Confirmed'
 const dkey = (d) => String(d).slice(0, 10)
 
 export default function ReservationsPage() {
@@ -39,8 +43,11 @@ export default function ReservationsPage() {
   const [toCancel, setToCancel] = useState(null)
   const [cancelling, setCancelling] = useState(false)
   const [cancelError, setCancelError] = useState('')
+  const [toNoShow, setToNoShow] = useState(null)
+  const [noShowBusy, setNoShowBusy] = useState(false)
+  const [noShowError, setNoShowError] = useState('')
   const [toEdit, setToEdit] = useState(null) // reservation đang sửa
-  const [editForm, setEditForm] = useState({ checkInDate: '', checkOutDate: '', numberOfGuests: 1 })
+  const [editForm, setEditForm] = useState({ checkInDate: '', checkOutDate: '', numberOfGuests: 1, specialRequests: '' })
   const [editError, setEditError] = useState('')
   const [savingEdit, setSavingEdit] = useState(false)
 
@@ -84,8 +91,27 @@ export default function ReservationsPage() {
       .finally(() => setCancelling(false))
   }
 
+  const confirmNoShow = () => {
+    setNoShowError('')
+    setNoShowBusy(true)
+    client
+      .patch(`/api/reservations/${toNoShow.reservationId}/no-show`)
+      .then(() => {
+        toast.success(`Đã đánh dấu Không đến cho ${toNoShow.bookingCode}`)
+        setToNoShow(null)
+        load()
+      })
+      .catch((err) => setNoShowError(apiError(err)))
+      .finally(() => setNoShowBusy(false))
+  }
+
   const openEdit = (r) => {
-    setEditForm({ checkInDate: dkey(r.checkInDate), checkOutDate: dkey(r.checkOutDate), numberOfGuests: r.numberOfGuests ?? 1 })
+    setEditForm({
+      checkInDate: dkey(r.checkInDate),
+      checkOutDate: dkey(r.checkOutDate),
+      numberOfGuests: r.numberOfGuests ?? 1,
+      specialRequests: r.specialRequests ?? '',
+    })
     setEditError('')
     setToEdit(r)
   }
@@ -107,6 +133,7 @@ export default function ReservationsPage() {
         checkInDate: editForm.checkInDate,
         checkOutDate: editForm.checkOutDate,
         status: denormalizeReservationStatus(toEdit.status), // backend nhận enum dạng số
+        specialRequests: editForm.specialRequests.trim() || undefined,
       })
       .then(() => {
         toast.success(`Đã cập nhật đặt phòng ${toEdit.bookingCode}`)
@@ -204,7 +231,12 @@ export default function ReservationsPage() {
                           <span className="font-display text-base font-semibold tabular-nums">{r.bookingCode}</span>
                         </td>
                         <td className="px-5 py-3.5">
-                          <p className="text-sm font-semibold">{r.guestName || '—'}</p>
+                          <p className="text-sm font-semibold">
+                            {r.guestName || '—'}
+                            {r.specialRequests && (
+                              <span title={`Yêu cầu đặc biệt: ${r.specialRequests}`} className="ml-1 cursor-help text-ink-500/60">📝</span>
+                            )}
+                          </p>
                           {r.guestPhoneNumber && <p className="text-[11px] tabular-nums text-ink-500">{r.guestPhoneNumber}</p>}
                         </td>
                         <td className="px-5 py-3.5">
@@ -216,6 +248,9 @@ export default function ReservationsPage() {
                         </td>
                         <td className="px-5 py-3.5">
                           <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${s.badge}`}>{s.label}</span>
+                          {r.depositAmount > 0 && (
+                            <p className="mt-1 text-[11px] tabular-nums text-ink-500">Cọc {formatVnd(r.depositAmount)}</p>
+                          )}
                         </td>
                         <td className="px-5 py-3.5 text-right">
                           {canEdit(r) && (
@@ -226,14 +261,23 @@ export default function ReservationsPage() {
                               Sửa
                             </button>
                           )}
-                          {canCancel(r) ? (
+                          {canCancel(r) && (
                             <button
                               onClick={() => { setCancelError(''); setToCancel(r) }}
                               className={`ml-2 rounded-full px-3.5 py-1.5 text-[12px] font-semibold text-rose-700 ring-1 ring-rose-600/20 ${EASE} hover:bg-rose-50`}
                             >
                               Hủy
                             </button>
-                          ) : (
+                          )}
+                          {canNoShow(r) && (
+                            <button
+                              onClick={() => { setNoShowError(''); setToNoShow(r) }}
+                              className={`ml-2 rounded-full px-3.5 py-1.5 text-[12px] font-semibold text-orange-700 ring-1 ring-orange-600/20 ${EASE} hover:bg-orange-50`}
+                            >
+                              Không đến
+                            </button>
+                          )}
+                          {!canEdit(r) && !canCancel(r) && !canNoShow(r) && (
                             <span className="text-[12px] text-ink-500/50">—</span>
                           )}
                         </td>
@@ -322,6 +366,17 @@ export default function ReservationsPage() {
                 </button>
               </div>
             </div>
+            <div>
+              <label htmlFor="edit-special-requests" className={labelCls}>Yêu cầu đặc biệt (tuỳ chọn)</label>
+              <textarea
+                id="edit-special-requests"
+                rows={2}
+                className={inputCls}
+                placeholder="Giường phụ, tầng cao, không hút thuốc..."
+                value={editForm.specialRequests}
+                onChange={(e) => setEditForm({ ...editForm, specialRequests: e.target.value })}
+              />
+            </div>
 
             {editError && (
               <p className={errorCls}>{editError}</p>
@@ -348,6 +403,22 @@ export default function ReservationsPage() {
         error={cancelError}
         onConfirm={confirmCancel}
         onCancel={() => setToCancel(null)}
+      />
+
+      {/* Xác nhận Không đến */}
+      <ConfirmDialog
+        open={toNoShow !== null}
+        title={`Đánh dấu Không đến cho ${toNoShow?.bookingCode ?? ''}?`}
+        message={
+          toNoShow?.depositAmount > 0
+            ? `Khách ${toNoShow?.guestName ?? ''} không đến nhận phòng, phòng sẽ được mở lại. Tiền cọc ${formatVnd(toNoShow.depositAmount)} không tự động hoàn - xử lý thủ công nếu cần.`
+            : `Khách ${toNoShow?.guestName ?? 'khách'} không đến nhận phòng, phòng sẽ được mở lại. Hành động không hoàn tác được.`
+        }
+        confirmLabel="Đánh dấu Không đến"
+        busy={noShowBusy}
+        error={noShowError}
+        onConfirm={confirmNoShow}
+        onCancel={() => setToNoShow(null)}
       />
     </div>
   )

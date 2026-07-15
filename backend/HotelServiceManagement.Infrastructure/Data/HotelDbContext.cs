@@ -22,6 +22,7 @@ namespace HotelServiceManagement.Infrastructure.Data
         public DbSet<ServiceOrderDetail> ServiceOrderDetails { get; set; }
         public DbSet<Invoice> Invoices { get; set; }
         public DbSet<Payment> Payments { get; set; }
+        public DbSet<Promotion> Promotions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

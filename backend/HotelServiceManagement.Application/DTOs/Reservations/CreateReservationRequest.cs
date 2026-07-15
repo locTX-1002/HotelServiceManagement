@@ -18,4 +18,14 @@ public class CreateReservationRequest
     public DateTime CheckInDate { get; set; }
     public DateTime CheckOutDate { get; set; }
     public ReservationStatus Status { get; set; } = ReservationStatus.Pending;
+
+    [MaxLength(500)]
+    public string? SpecialRequests { get; set; }
+
+    [Range(0, double.MaxValue, ErrorMessage = "DepositAmount cannot be negative.")]
+    public decimal? DepositAmount { get; set; }
+
+    // Chuỗi (Cash/BankTransfer/Card) giống PaymentRequest.PaymentMethod, không phải enum số -
+    // tránh phải thêm 1 mảng ordinal mới vào apiShape.js chỉ cho field này.
+    public string? DepositPaymentMethod { get; set; }
 }

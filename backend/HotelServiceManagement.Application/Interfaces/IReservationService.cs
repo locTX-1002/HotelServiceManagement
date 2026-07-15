@@ -19,6 +19,8 @@ namespace HotelServiceManagement.Application.Interfaces
 
         Task<AuthServiceResult<AuthMessageResponse>> CancelAsync(int id);
 
+        Task<AuthServiceResult<AuthMessageResponse>> NoShowAsync(int id);
+
         Task<AuthServiceResult<IReadOnlyList<AvailableRoomResponse>>> GetAvailableRoomsAsync(
             DateTime checkInDate,
             DateTime checkOutDate,

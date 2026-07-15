@@ -105,6 +105,20 @@ namespace HotelServiceManagement.Infrastructure.Services
                 .Where(p => p.PaymentDate >= from && p.PaymentDate <= to && p.Status == PaymentStatus.Completed)
                 .ToListAsync();
 
+            var invoicesByDay = invoices.ToLookup(i => i.InvoiceDate.Date);
+            var byDay = new List<RevenueByDayResponse>();
+            for (var day = from.Date; day <= to.Date; day = day.AddDays(1))
+            {
+                var dayInvoices = invoicesByDay[day];
+                byDay.Add(new RevenueByDayResponse
+                {
+                    Date = day,
+                    RoomRevenue = dayInvoices.Sum(i => i.RoomCharge),
+                    ServiceRevenue = dayInvoices.Sum(i => i.ServiceCharge),
+                    TotalRevenue = dayInvoices.Sum(i => i.TotalAmount)
+                });
+            }
+
             var response = new RevenueReportResponse
             {
                 FromDate = from,
@@ -112,7 +126,8 @@ namespace HotelServiceManagement.Infrastructure.Services
                 RoomRevenue = invoices.Sum(i => i.RoomCharge),
                 ServiceRevenue = invoices.Sum(i => i.ServiceCharge),
                 PaymentRevenue = payments.Sum(p => p.Amount),
-                TotalRevenue = invoices.Sum(i => i.TotalAmount)
+                TotalRevenue = invoices.Sum(i => i.TotalAmount),
+                ByDay = byDay
             };
 
             return AuthServiceResult<RevenueReportResponse>.Success(response);

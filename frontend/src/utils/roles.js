@@ -24,6 +24,8 @@ export const ROUTE_ROLES = {
   // Bảng giá phụ thu là dữ liệu cấu hình - chỉ Admin,Manager quản lý
   '/surcharge-items': ['Admin', 'Manager'],
   '/invoices': ['Admin', 'Receptionist'],
+  // Khớp [Authorize] backend: POST/PUT /api/promotions cho Admin,Manager
+  '/promotions': ['Admin', 'Manager'],
   '/reports': ['Admin', 'Manager'],
   // Khớp [Authorize(Roles = "Admin")] của UsersController
   '/users': ['Admin'],

@@ -85,6 +85,13 @@ namespace HotelServiceManagement.Api.Controllers
             return ToActionResult(await _reservationService.CancelAsync(id));
         }
 
+        [HttpPatch("{id:int}/no-show")]
+        [Authorize(Roles = "Admin,Manager,Receptionist")]
+        public async Task<IActionResult> NoShow(int id)
+        {
+            return ToActionResult(await _reservationService.NoShowAsync(id));
+        }
+
         private int? GetCurrentUserId()
         {
             var userIdValue = User.FindFirstValue(ClaimTypes.NameIdentifier)
