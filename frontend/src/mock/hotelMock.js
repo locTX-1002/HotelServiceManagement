@@ -113,7 +113,12 @@ export const MOCK_INVOICE = {
   invoiceDate: '2026-07-09T12:00:00',
   roomCharge: 200000,
   serviceCharge: 95000,
-  totalAmount: 295000,
+  surchargeAmount: 120000,
+  surcharges: [
+    { name: 'Khăn tắm', quantity: 1, unitPrice: 80000, subtotal: 80000 },
+    { name: 'Dép đi trong phòng', quantity: 1, unitPrice: 40000, subtotal: 40000 },
+  ],
+  totalAmount: 415000,
   status: 'Unpaid',
 }
 
@@ -132,6 +137,19 @@ export const MOCK_SERVICE_ITEMS = [
   { id: 4, serviceCategoryId: 2, categoryName: 'Giặt ủi', serviceName: 'Giặt áo sơ mi', unitPrice: 20000, isAvailable: true },
   { id: 5, serviceCategoryId: 2, categoryName: 'Giặt ủi', serviceName: 'Giặt quần', unitPrice: 25000, isAvailable: true },
   { id: 6, serviceCategoryId: 3, categoryName: 'Spa & Giải trí', serviceName: 'Massage 60 phút', unitPrice: 350000, isAvailable: true },
+]
+
+// GET /api/surcharge-items -> [{ id, name, unitPrice, unit, isActive }]
+// Món phụ thu/đền bù niêm yết giá - lễ tân tick lúc check-out (đồ dùng thêm, hư, mất)
+export const MOCK_SURCHARGE_ITEMS = [
+  { id: 1, name: 'Khăn tắm', unitPrice: 80000, unit: 'cái', isActive: true },
+  { id: 2, name: 'Khăn mặt', unitPrice: 30000, unit: 'cái', isActive: true },
+  { id: 3, name: 'Dép đi trong phòng', unitPrice: 40000, unit: 'đôi', isActive: true },
+  { id: 4, name: 'Remote TV', unitPrice: 200000, unit: 'cái', isActive: true },
+  { id: 5, name: 'Thẻ từ / chìa khóa phòng', unitPrice: 100000, unit: 'cái', isActive: true },
+  { id: 6, name: 'Ấm siêu tốc', unitPrice: 250000, unit: 'cái', isActive: true },
+  { id: 7, name: 'Ly / cốc thủy tinh', unitPrice: 30000, unit: 'cái', isActive: true },
+  { id: 8, name: 'Chăn / ga (ố bẩn nặng)', unitPrice: 150000, unit: 'bộ', isActive: true },
 ]
 
 // GET /api/service-orders -> [{ id, stayId, orderDate, status, totalAmount, details: [...] }]

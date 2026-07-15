@@ -113,10 +113,11 @@ const MENU = [
   },
   {
     label: 'Dịch vụ',
-    match: (p) => p === '/service-orders' || p === '/service-items',
+    match: (p) => p === '/service-orders' || p === '/service-items' || p === '/surcharge-items',
     items: [
       { to: '/service-orders', label: 'Gọi dịch vụ' },
       { to: '/service-items', label: 'Bảng giá dịch vụ' },
+      { to: '/surcharge-items', label: 'Giá phụ thu' },
     ],
   },
   {

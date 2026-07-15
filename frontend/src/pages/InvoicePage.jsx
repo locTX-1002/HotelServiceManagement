@@ -166,6 +166,21 @@ export default function InvoicePage() {
                 <span className="text-ink-500">Tiền dịch vụ</span>
                 <span className="font-semibold tabular-nums">{formatVnd(invoice.serviceCharge)}</span>
               </div>
+              {invoice.surchargeAmount > 0 && (
+                <>
+                  <div className="flex items-center justify-between text-[13px]">
+                    <span className="text-ink-500">Phụ thu / đền bù</span>
+                    <span className="font-semibold tabular-nums text-amber-800">{formatVnd(invoice.surchargeAmount)}</span>
+                  </div>
+                  {/* Chi tiết từng món phụ thu (backend trả trong invoice.surcharges) */}
+                  {invoice.surcharges?.map((s, idx) => (
+                    <div key={idx} className="flex items-center justify-between pl-3 text-[11px] text-ink-500">
+                      <span>· {s.name} ×{s.quantity}</span>
+                      <span className="tabular-nums">{formatVnd(s.subtotal)}</span>
+                    </div>
+                  ))}
+                </>
+              )}
               <div className="flex items-center justify-between border-t border-black/[0.06] pt-2 text-sm">
                 <span className="font-semibold text-ink-900">Tổng cộng</span>
                 <span className="font-display text-lg font-semibold tabular-nums text-brand-700">{formatVnd(invoice.totalAmount)}</span>
