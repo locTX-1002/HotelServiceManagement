@@ -45,6 +45,7 @@ builder.Services.AddScoped<IServiceItemService, ServiceItemService>();
 builder.Services.AddScoped<IServiceOrderService, ServiceOrderService>();
 builder.Services.AddScoped<IReportService, ReportService>();
 builder.Services.AddScoped<IPromotionService, PromotionService>();
+builder.Services.AddScoped<ISurchargeItemService, SurchargeItemService>();
 
 // 3. Configure JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("Jwt");

@@ -22,5 +22,6 @@ namespace HotelServiceManagement.Domain.Entities
 
         // Navigation property for ServiceOrders
         public virtual ICollection<ServiceOrder> ServiceOrders { get; set; } = new List<ServiceOrder>();
+        public virtual ICollection<Surcharge> Surcharges { get; set; } = new List<Surcharge>();
     }
 }

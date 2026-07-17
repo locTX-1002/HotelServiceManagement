@@ -31,6 +31,72 @@ namespace HotelServiceManagement.Infrastructure.Services
                 .Where(p => p.Status == PaymentStatus.Completed)
                 .SumAsync(p => (decimal?)p.Amount) ?? 0;
 
+            var arrivalRows = await _context.Reservations
+                .AsNoTracking()
+                .Where(r => r.CheckInDate >= today && r.CheckInDate < tomorrow && r.Status == ReservationStatus.Confirmed)
+                .OrderBy(r => r.CheckInDate)
+                .Select(r => new
+                {
+                    r.BookingCode,
+                    GuestName = r.Guest.FullName,
+                    r.Room.RoomNumber,
+                    r.Room.RoomType.TypeName,
+                    r.CheckInDate
+                })
+                .ToListAsync();
+            var arrivals = arrivalRows.Select(r => new ArrivalItem
+            {
+                BookingCode = r.BookingCode,
+                GuestName = r.GuestName,
+                RoomNumber = r.RoomNumber,
+                TypeName = r.TypeName,
+                Eta = r.CheckInDate.TimeOfDay == TimeSpan.Zero ? "14:00" : r.CheckInDate.ToString("HH:mm")
+            }).ToList();
+
+            var departureRows = await _context.Stays
+                .AsNoTracking()
+                .AsSplitQuery()
+                .Include(s => s.Reservation).ThenInclude(r => r.Guest)
+                .Include(s => s.Reservation).ThenInclude(r => r.Room).ThenInclude(r => r.RoomType)
+                .Include(s => s.ServiceOrders)
+                .Where(s => s.Status == StayStatus.Active &&
+                            s.Reservation.CheckOutDate >= today && s.Reservation.CheckOutDate < tomorrow)
+                .OrderBy(s => s.Reservation.CheckOutDate)
+                .ToListAsync();
+            var departures = departureRows.Select(s =>
+            {
+                var nights = Math.Max(1, (s.Reservation.CheckOutDate.Date - s.Reservation.CheckInDate.Date).Days);
+                var roomCharge = nights * s.Reservation.Room.RoomType.BasePrice;
+                var serviceCharge = s.ServiceOrders
+                    .Where(o => o.Status != ServiceOrderStatus.Cancelled)
+                    .Sum(o => o.TotalAmount);
+                return new DepartureItem
+                {
+                    BookingCode = s.Reservation.BookingCode,
+                    GuestName = s.Reservation.Guest.FullName,
+                    RoomNumber = s.Reservation.Room.RoomNumber,
+                    Nights = nights,
+                    AmountDue = roomCharge + serviceCharge
+                };
+            }).ToList();
+
+            var revenueFrom = today.AddDays(-6);
+            var revenueRows = await _context.Payments
+                .AsNoTracking()
+                .Where(p => p.Status == PaymentStatus.Completed && p.PaymentDate >= revenueFrom && p.PaymentDate < tomorrow)
+                .GroupBy(p => p.PaymentDate.Date)
+                .Select(g => new { Date = g.Key, Amount = g.Sum(p => p.Amount) })
+                .ToListAsync();
+            var revenueByDate = revenueRows.ToDictionary(r => r.Date, r => r.Amount);
+            var revenue7d = Enumerable.Range(0, 7)
+                .Select(offset => revenueFrom.AddDays(offset))
+                .Select(date => new RevenueDayItem
+                {
+                    Day = ToVietnameseDayLabel(date.DayOfWeek),
+                    Amount = revenueByDate.GetValueOrDefault(date.Date)
+                })
+                .ToList();
+
             var response = new DashboardReportResponse
             {
                 TotalRooms = totalRooms,
@@ -39,7 +105,11 @@ namespace HotelServiceManagement.Infrastructure.Services
                 OccupiedRooms = occupiedRooms,
                 TodayBookings = todayBookings,
                 ActiveStays = activeStays,
-                TotalRevenue = totalRevenue
+                TotalRevenue = totalRevenue,
+                Arrivals = arrivals,
+                Departures = departures,
+                Revenue7d = revenue7d,
+                Alerts = Array.Empty<AlertItem>()
             };
 
             return AuthServiceResult<DashboardReportResponse>.Success(response);
@@ -137,5 +207,16 @@ namespace HotelServiceManagement.Infrastructure.Services
         {
             return totalRooms == 0 ? 0 : Math.Round((decimal)usedRooms / totalRooms * 100, 2);
         }
+
+        private static string ToVietnameseDayLabel(DayOfWeek day) => day switch
+        {
+            DayOfWeek.Monday => "T2",
+            DayOfWeek.Tuesday => "T3",
+            DayOfWeek.Wednesday => "T4",
+            DayOfWeek.Thursday => "T5",
+            DayOfWeek.Friday => "T6",
+            DayOfWeek.Saturday => "T7",
+            _ => "CN"
+        };
     }
 }
