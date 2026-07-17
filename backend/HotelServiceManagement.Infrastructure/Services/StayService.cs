@@ -106,7 +106,7 @@ namespace HotelServiceManagement.Infrastructure.Services
             };
         }
 
-        public async Task<CheckOutResponse> CheckOutAsync(int stayId, int checkedOutByUserId)
+        public async Task<CheckOutResponse> CheckOutAsync(int stayId, CheckOutRequest request, int checkedOutByUserId)
         {
             var stay = await _context.Stays
                 .AsSplitQuery()
@@ -114,6 +114,8 @@ namespace HotelServiceManagement.Infrastructure.Services
                     .ThenInclude(r => r.Room)
                         .ThenInclude(r => r.RoomType)
                 .Include(s => s.ServiceOrders)
+                .Include(s => s.Surcharges)
+                    .ThenInclude(s => s.SurchargeItem)
                 .Include(s => s.Invoice)
                     .ThenInclude(i => i!.Payments)
                 .FirstOrDefaultAsync(s => s.Id == stayId);
@@ -128,10 +130,61 @@ namespace HotelServiceManagement.Infrastructure.Services
                 return Failure("Only active stays can be checked out.");
             }
 
+            var requestedSurcharges = request.Surcharges ?? new List<CheckOutSurchargeRequest>();
+            if (requestedSurcharges.Any(s => s.SurchargeItemId <= 0 || s.Quantity <= 0))
+            {
+                return Failure("Each surcharge must have a valid SurchargeItemId and Quantity greater than 0.");
+            }
+
+            if (requestedSurcharges.Select(s => s.SurchargeItemId).Distinct().Count() != requestedSurcharges.Count)
+            {
+                return Failure("Duplicate surcharge items are not allowed.");
+            }
+
+            var requestedItemIds = requestedSurcharges.Select(s => s.SurchargeItemId).ToList();
+            var surchargeItems = requestedItemIds.Count == 0
+                ? new List<SurchargeItem>()
+                : await _context.SurchargeItems
+                    .Where(i => requestedItemIds.Contains(i.Id))
+                    .ToListAsync();
+
+            if (surchargeItems.Count != requestedItemIds.Count)
+            {
+                return Failure("One or more surcharge items do not exist.");
+            }
+
+            if (surchargeItems.Any(i => !i.IsActive))
+            {
+                return Failure("Inactive surcharge items cannot be added at check-out.");
+            }
+
             var actualCheckOut = DateTime.UtcNow;
             var roomCharge = CalculateRoomCharge(stay, actualCheckOut);
             var serviceCharge = CalculateServiceCharge(stay);
-            var totalAmount = roomCharge + serviceCharge;
+            var itemById = surchargeItems.ToDictionary(i => i.Id);
+            var surchargeLines = requestedSurcharges.Select(line =>
+            {
+                var item = itemById[line.SurchargeItemId];
+                return new Surcharge
+                {
+                    StayId = stay.Id,
+                    SurchargeItemId = item.Id,
+                    SurchargeItem = item,
+                    Quantity = line.Quantity,
+                    UnitPriceSnapshot = item.UnitPrice,
+                    Subtotal = item.UnitPrice * line.Quantity,
+                    CreatedByUserId = checkedOutByUserId,
+                    CreatedAt = actualCheckOut
+                };
+            }).ToList();
+            var surchargeAmount = surchargeLines.Sum(s => s.Subtotal);
+            var subtotal = roomCharge + serviceCharge + surchargeAmount;
+
+            _context.Surcharges.AddRange(surchargeLines);
+            foreach (var surcharge in surchargeLines)
+            {
+                stay.Surcharges.Add(surcharge);
+            }
 
             stay.ActualCheckOut = actualCheckOut;
             stay.Status = StayStatus.Completed;
@@ -144,10 +197,12 @@ namespace HotelServiceManagement.Infrastructure.Services
                 var invoice = new Invoice
                 {
                     StayId = stay.Id,
+                    Stay = stay,
                     InvoiceDate = actualCheckOut,
                     RoomCharge = roomCharge,
                     ServiceCharge = serviceCharge,
-                    TotalAmount = totalAmount,
+                    SurchargeAmount = surchargeAmount,
+                    TotalAmount = subtotal,
                     CreatedByUserId = checkedOutByUserId,
                     Status = InvoiceStatus.Unpaid
                 };
@@ -177,7 +232,9 @@ namespace HotelServiceManagement.Infrastructure.Services
                 stay.Invoice.InvoiceDate = actualCheckOut;
                 stay.Invoice.RoomCharge = roomCharge;
                 stay.Invoice.ServiceCharge = serviceCharge;
-                stay.Invoice.TotalAmount = totalAmount;
+                stay.Invoice.SurchargeAmount = surchargeAmount;
+                stay.Invoice.DiscountAmount = Math.Min(stay.Invoice.DiscountAmount, subtotal);
+                stay.Invoice.TotalAmount = subtotal - stay.Invoice.DiscountAmount;
                 stay.Invoice.Status = ResolveInvoiceStatus(stay.Invoice);
                 stay.Invoice.CreatedByUserId ??= checkedOutByUserId;
             }
@@ -190,7 +247,8 @@ namespace HotelServiceManagement.Infrastructure.Services
                 ActualCheckOut = actualCheckOut,
                 TotalRoomCharges = roomCharge,
                 TotalServiceCharges = serviceCharge,
-                TotalAmount = totalAmount,
+                TotalSurchargeCharges = surchargeAmount,
+                TotalAmount = stay.Invoice?.TotalAmount ?? subtotal,
                 IsSuccess = true,
                 Message = "Check-out successful. Invoice has been generated."
             };
