@@ -6,5 +6,6 @@ namespace HotelServiceManagement.Application.Interfaces
     {
         (string Token, DateTime ExpiresAt) GenerateAccessToken(User user);
         string GenerateToken(User user);
+        (string Token, DateTime ExpiresAt) GenerateGuestAccessToken(Guest guest);
     }
 }

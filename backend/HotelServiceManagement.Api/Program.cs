@@ -1,5 +1,6 @@
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -31,6 +32,7 @@ builder.Services.AddDataProtection()
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IGuestAuthService, GuestAuthService>();
 builder.Services.AddScoped<IUserManagementService, UserManagementService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
@@ -74,7 +76,23 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-builder.Services.AddAuthorization();
+// DefaultPolicy ap dung cho MOI [Authorize]/[Authorize(Roles=...)] khong khai bao Policy rieng -
+// tuc la toan bo API van hanh hien co (da phan lon chi dung [Authorize] tran, khong loc theo Role).
+// Bat buoc claim token_scope=staff o day de token cua guest portal (JwtService.GenerateGuestAccessToken)
+// khong the nao lot duoc vao bat ky endpoint nao trong so do, du controller nao quen loc Role.
+// Nguoc lai, GuestOnly danh rieng cho GuestAuthController - token nhan vien khong co claim nay nen
+// cung khong the goi duoc API cua khach.
+builder.Services.AddAuthorization(options =>
+{
+    options.DefaultPolicy = new AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser()
+        .RequireClaim(JwtService.TokenScopeClaimType, JwtService.StaffTokenScope)
+        .Build();
+
+    options.AddPolicy("GuestOnly", policy => policy
+        .RequireAuthenticatedUser()
+        .RequireClaim(JwtService.TokenScopeClaimType, JwtService.GuestTokenScope));
+});
 
 // 4. Configure Controllers
 builder.Services.AddControllers();

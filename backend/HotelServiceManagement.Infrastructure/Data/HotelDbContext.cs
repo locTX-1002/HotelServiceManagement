@@ -26,6 +26,8 @@ namespace HotelServiceManagement.Infrastructure.Data
         public DbSet<SurchargeItem> SurchargeItems { get; set; }
         public DbSet<Surcharge> Surcharges { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
+        public DbSet<GuestAccount> GuestAccounts { get; set; }
+        public DbSet<GuestRefreshToken> GuestRefreshTokens { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
