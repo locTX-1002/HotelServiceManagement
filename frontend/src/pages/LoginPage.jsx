@@ -108,26 +108,38 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="relative flex min-h-screen flex-col items-center px-6">
-      {/* Nen anh khach san + overlay toi theo mau template booking - card cream noi len tren */}
-      <img src="/img/v3.jpg" alt="" className="fixed inset-0 h-full w-full object-cover" />
-      <div className="fixed inset-0 bg-ink-900/60" />
-      <Link
-        to="/"
-        className={`absolute left-5 top-5 z-10 flex items-center gap-1.5 text-[12px] font-semibold text-white/80 ${EASE} hover:text-white`}
-      >
-        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden>
-          <path d="M10 3L5 8L10 13" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-        Trang chủ
-      </Link>
-      <div className="relative z-10 flex w-full max-w-md flex-1 flex-col justify-center py-10">
+    <div className="relative flex min-h-screen bg-cream-100">
+      {/* Nua trai: anh + overlay - dong bo dung bo cuc tach doi voi trang dang nhap khach */}
+      <div className="relative hidden w-1/2 lg:block">
+        <img src="/img/v3.jpg" alt="" className="absolute inset-0 h-full w-full object-cover" />
+        <div className="absolute inset-0 bg-gradient-to-t from-ink-900/80 via-ink-900/25 to-ink-900/30" />
+        <div className="absolute bottom-12 left-12 right-12 text-white">
+          <p className="font-display text-[15px] italic text-white/80">★★★★★ hotel & service</p>
+          <p className="mt-2 font-display text-4xl font-medium leading-tight">Ca làm việc hôm nay bắt đầu từ đây</p>
+          <p className="mt-2.5 max-w-md text-sm leading-relaxed text-white/70">
+            Sơ đồ phòng, đặt phòng, dịch vụ và hoá đơn — mọi thứ theo đúng vai trò của bạn.
+          </p>
+        </div>
+      </div>
+
+      <div className="relative flex flex-1 flex-col items-center px-6">
+        <div className="grain-overlay" />
+        <Link
+          to="/"
+          className={`absolute left-5 top-5 flex items-center gap-1.5 text-[12px] font-semibold text-ink-500 ${EASE} hover:text-ink-900`}
+        >
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden>
+            <path d="M10 3L5 8L10 13" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          Trang chủ
+        </Link>
+      <div className="flex w-full max-w-md flex-1 flex-col justify-center py-6">
         {/* Double-bezel: vỏ vòm mềm bọc lấy card đăng nhập - chất Amanoi */}
         <div className="bezel-shell">
-          <div className="bezel-core px-7 py-9 sm:px-10 sm:py-12">
+          <div className="bezel-core px-7 py-7 sm:px-10 sm:py-8">
         <PortalSwitch active="staff" />
         {/* Logo vòm đồng bộ với nav */}
-        <div className="mt-8 flex flex-col items-center text-center">
+        <div className="mt-6 flex flex-col items-center text-center">
           <span className="flex h-12 w-10 items-end justify-center rounded-t-full rounded-b-md bg-brand-600 pb-2 font-display text-lg font-bold text-white">
             H
           </span>
@@ -135,12 +147,12 @@ export default function LoginPage() {
           <p className="mt-1 text-[9px] font-semibold tracking-[0.32em] text-ink-500">★★★★★ HOTEL & SERVICE MANAGEMENT</p>
         </div>
 
-        <h1 className="mt-10 font-display text-4xl font-medium tracking-tight">Chào mừng trở lại</h1>
+        <h1 className="mt-6 font-display text-4xl font-medium tracking-tight">Chào mừng trở lại</h1>
         <p className="mt-2 text-sm leading-relaxed text-ink-500">
           Đăng nhập bằng tài khoản nhân viên để bắt đầu ca làm việc và truy cập mọi chức năng theo vai trò của bạn.
         </p>
 
-        <form onSubmit={onSubmit} className="mt-8 space-y-5">
+        <form onSubmit={onSubmit} className="mt-6 space-y-5">
           <div>
             <label className={labelCls}>E-mail address</label>
             <input
@@ -209,7 +221,7 @@ export default function LoginPage() {
           </>
         )}
 
-        <p className="mt-8 border-t border-black/[0.07] pt-4 text-[12px] leading-relaxed text-ink-500">
+        <p className="mt-6 border-t border-black/[0.07] pt-4 text-[12px] leading-relaxed text-ink-500">
           Quên mật khẩu?{' '}
           <button
             type="button"
@@ -222,7 +234,8 @@ export default function LoginPage() {
           </div>
         </div>
       </div>
-      <p className="relative z-10 pb-5 text-[11px] text-cream-50/70">Group 2 · SE1919 · FPT University</p>
+      <p className="pb-5 text-[11px] text-ink-500/60">Group 2 · SE1919 · FPT University</p>
+      </div>
 
       {/* Tự đặt lại mật khẩu qua email - server luôn trả cùng 1 thông báo chung dù email có tồn tại
           hay không (chống dò email), chỉ thực sự gửi mail khi tài khoản tồn tại và đang hoạt động. */}

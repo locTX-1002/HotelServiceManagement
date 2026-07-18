@@ -159,11 +159,11 @@ export default function GuestLoginPage() {
           </svg>
           Trang chủ
         </Link>
-      <div className="flex w-full max-w-md flex-1 flex-col justify-center py-10">
+      <div className="flex w-full max-w-md flex-1 flex-col justify-center py-6">
         <div className="bezel-shell">
-          <div className="bezel-core px-7 py-9 sm:px-10 sm:py-12">
+          <div className="bezel-core px-7 py-7 sm:px-10 sm:py-8">
             <PortalSwitch active="guest" />
-            <div className="mt-8 flex flex-col items-center text-center">
+            <div className="mt-6 flex flex-col items-center text-center">
               <span className="flex h-12 w-10 items-end justify-center rounded-t-full rounded-b-md bg-brand-600 pb-2 font-display text-lg font-bold text-white">
                 H
               </span>
@@ -173,7 +173,7 @@ export default function GuestLoginPage() {
 
             {pendingGoogleToken ? (
               <>
-                <h1 className="mt-10 font-display text-4xl font-medium tracking-tight">Hoàn tất hồ sơ</h1>
+                <h1 className="mt-6 font-display text-4xl font-medium tracking-tight">Hoàn tất hồ sơ</h1>
                 <p className="mt-2 text-sm leading-relaxed text-ink-500">
                   Lần đầu dùng tài khoản Google này trên HSMS — điền vài thông tin để hoàn tất tài khoản của bạn.
                 </p>
@@ -253,12 +253,12 @@ export default function GuestLoginPage() {
               </>
             ) : (
               <>
-                <h1 className="mt-10 font-display text-4xl font-medium tracking-tight">Xin chào</h1>
+                <h1 className="mt-6 font-display text-4xl font-medium tracking-tight">Xin chào</h1>
                 <p className="mt-2 text-sm leading-relaxed text-ink-500">
                   Đăng nhập để xem thông tin đặt phòng của bạn.
                 </p>
 
-                <form onSubmit={onSubmit} className="mt-8 space-y-5">
+                <form onSubmit={onSubmit} className="mt-6 space-y-5">
                   <div>
                     <label className={labelCls}>Số điện thoại</label>
                     <input
@@ -318,7 +318,7 @@ export default function GuestLoginPage() {
                   </>
                 )}
 
-                <div className="mt-8 space-y-2 border-t border-black/[0.07] pt-4 text-[12px] leading-relaxed text-ink-500">
+                <div className="mt-6 space-y-2 border-t border-black/[0.07] pt-4 text-[12px] leading-relaxed text-ink-500">
                   <p>
                     Chưa có tài khoản?{' '}
                     <Link to="/guest/dang-ky" className={`font-semibold text-brand-600 underline-offset-4 ${EASE} hover:underline`}>
