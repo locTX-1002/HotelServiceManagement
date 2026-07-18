@@ -71,6 +71,45 @@ namespace HotelServiceManagement.Api.Controllers
         }
 
         [Authorize(Policy = "GuestOnly")]
+        [HttpGet("me/profile")]
+        public async Task<IActionResult> GetMyProfile()
+        {
+            var guestId = GetCurrentGuestId();
+            if (guestId == null)
+            {
+                return Unauthorized(new AuthMessageResponse { Message = "Invalid guest identity in token." });
+            }
+
+            return ToActionResult(await _guestAuthService.GetMyProfileAsync(guestId.Value));
+        }
+
+        [Authorize(Policy = "GuestOnly")]
+        [HttpPut("me/profile")]
+        public async Task<IActionResult> UpdateMyProfile([FromBody] UpdateGuestProfileRequest request)
+        {
+            var guestId = GetCurrentGuestId();
+            if (guestId == null)
+            {
+                return Unauthorized(new AuthMessageResponse { Message = "Invalid guest identity in token." });
+            }
+
+            return ToActionResult(await _guestAuthService.UpdateMyProfileAsync(guestId.Value, request));
+        }
+
+        [Authorize(Policy = "GuestOnly")]
+        [HttpPost("me/change-password")]
+        public async Task<IActionResult> ChangeMyPassword([FromBody] GuestChangePasswordRequest request)
+        {
+            var guestId = GetCurrentGuestId();
+            if (guestId == null)
+            {
+                return Unauthorized(new AuthMessageResponse { Message = "Invalid guest identity in token." });
+            }
+
+            return ToActionResult(await _guestAuthService.ChangeMyPasswordAsync(guestId.Value, request));
+        }
+
+        [Authorize(Policy = "GuestOnly")]
         [HttpGet("me/reservations")]
         public async Task<IActionResult> GetMyReservations()
         {

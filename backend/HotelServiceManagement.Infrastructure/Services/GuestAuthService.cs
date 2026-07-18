@@ -383,6 +383,85 @@ namespace HotelServiceManagement.Infrastructure.Services
                 reservations.Select(ToReservationResponse).ToList());
         }
 
+        public async Task<AuthServiceResult<GuestProfileResponse>> GetMyProfileAsync(int guestId)
+        {
+            var guest = await _context.Guests.FirstOrDefaultAsync(g => g.Id == guestId);
+            if (guest == null)
+            {
+                return AuthServiceResult<GuestProfileResponse>.Failure("Guest not found.", 404);
+            }
+
+            var hasPassword = await _context.GuestAccounts.AnyAsync(a => a.GuestId == guestId && a.PasswordHash != null);
+            return AuthServiceResult<GuestProfileResponse>.Success(ToProfileResponse(guest, hasPassword));
+        }
+
+        public async Task<AuthServiceResult<GuestProfileResponse>> UpdateMyProfileAsync(int guestId, UpdateGuestProfileRequest request)
+        {
+            if (string.IsNullOrWhiteSpace(request?.FullName))
+            {
+                return AuthServiceResult<GuestProfileResponse>.Failure("Full name is required.");
+            }
+
+            var guest = await _context.Guests.FirstOrDefaultAsync(g => g.Id == guestId);
+            if (guest == null)
+            {
+                return AuthServiceResult<GuestProfileResponse>.Failure("Guest not found.", 404);
+            }
+
+            guest.FullName = request.FullName.Trim();
+            guest.Email = string.IsNullOrWhiteSpace(request.Email) ? null : request.Email.Trim();
+            await _context.SaveChangesAsync();
+
+            var hasPassword = await _context.GuestAccounts.AnyAsync(a => a.GuestId == guestId && a.PasswordHash != null);
+            return AuthServiceResult<GuestProfileResponse>.Success(
+                ToProfileResponse(guest, hasPassword), "Profile updated successfully.");
+        }
+
+        public async Task<AuthServiceResult<AuthMessageResponse>> ChangeMyPasswordAsync(int guestId, GuestChangePasswordRequest request)
+        {
+            if (string.IsNullOrWhiteSpace(request?.NewPassword) || request.NewPassword.Length < 6)
+            {
+                return AuthServiceResult<AuthMessageResponse>.Failure("New password must be at least 6 characters.");
+            }
+
+            if (request.NewPassword != request.ConfirmPassword)
+            {
+                return AuthServiceResult<AuthMessageResponse>.Failure("ConfirmPassword must match NewPassword.");
+            }
+
+            var account = await _context.GuestAccounts.FirstOrDefaultAsync(a => a.GuestId == guestId);
+            if (account == null)
+            {
+                return AuthServiceResult<AuthMessageResponse>.Failure("Guest account not found.", 404);
+            }
+
+            // Da tung dat mat khau roi thi bat buoc xac minh mat khau hien tai - tai khoan chi dang
+            // nhap Google (PasswordHash con null) thi cho dat lan dau khong can xac minh, giong het
+            // luc "Hoan tat ho so" o GoogleLoginAsync.
+            if (account.PasswordHash != null)
+            {
+                if (string.IsNullOrWhiteSpace(request.CurrentPassword) ||
+                    !_passwordHasher.VerifyPassword(request.CurrentPassword, account.PasswordHash))
+                {
+                    return AuthServiceResult<AuthMessageResponse>.Failure("Current password is incorrect.");
+                }
+            }
+
+            account.PasswordHash = _passwordHasher.HashPassword(request.NewPassword);
+            await _context.SaveChangesAsync();
+
+            return AuthServiceResult<AuthMessageResponse>.Success(
+                new AuthMessageResponse { Message = "Password changed successfully." });
+        }
+
+        private static GuestProfileResponse ToProfileResponse(Guest guest, bool hasPassword) => new()
+        {
+            FullName = guest.FullName,
+            Email = guest.Email,
+            PhoneNumber = guest.PhoneNumber,
+            HasPassword = hasPassword,
+        };
+
         private GuestRefreshToken IssueRefreshToken(int guestAccountId, DateTime expiresAt)
         {
             var token = new GuestRefreshToken

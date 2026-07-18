@@ -14,5 +14,8 @@ namespace HotelServiceManagement.Application.Interfaces
         Task<AuthServiceResult<AuthMessageResponse>> ForgotPasswordAsync(string phoneNumber);
         Task<AuthServiceResult<AuthMessageResponse>> ResetPasswordWithTokenAsync(string token, string newPassword);
         Task<AuthServiceResult<IReadOnlyList<ReservationResponse>>> GetMyReservationsAsync(int guestId);
+        Task<AuthServiceResult<GuestProfileResponse>> GetMyProfileAsync(int guestId);
+        Task<AuthServiceResult<GuestProfileResponse>> UpdateMyProfileAsync(int guestId, UpdateGuestProfileRequest request);
+        Task<AuthServiceResult<AuthMessageResponse>> ChangeMyPasswordAsync(int guestId, GuestChangePasswordRequest request);
     }
 }
