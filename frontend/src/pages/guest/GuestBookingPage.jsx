@@ -5,6 +5,7 @@ import { formatVnd } from '../../utils/roomStatus'
 import { EASE, errorCls, inputCls, labelCls, openDatePicker } from '../../utils/ui'
 import { roomImage } from '../../utils/roomImages'
 import { roomMeta } from '../../utils/roomMeta'
+import RoomTypeDetailModal from '../../components/RoomTypeDetailModal'
 import { localToday as today, addDays, fmtShort } from '../../utils/dates'
 
 // Rap khuon dung 3-buoc cua trang dat phong le tan (CreateReservationPage.jsx) de dong bo giao
@@ -46,119 +47,6 @@ function Steps({ current, onBack }) {
 // roomImage()/roomMeta() (tra theo ten loai phong, khong can du lieu anh tu backend). Khac
 // RoomResultCard o cho day la THE LOAI PHONG (khong phai 1 phong cu the) nen khong co so
 // phong/tang, thay bang badge "Còn X phòng".
-// Modal chi tiet loai phong - anh lon + mo ta (tu backend) + tien nghi, theo dung pattern modal
-// cua RoomTypeSelect ben HomePage (backdrop toi, Escape dong, panel cream cuon doc).
-function RoomTypeDetailModal({ rt, selected, onSelect, onClose }) {
-  const meta = roomMeta(rt.roomTypeName)
-  const [imgIdx, setImgIdx] = useState(0)
-  const active = selected?.roomTypeId === rt.roomTypeId
-
-  useEffect(() => {
-    const onKey = (e) => e.key === 'Escape' && onClose()
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [onClose])
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center px-4 pb-4 sm:items-center">
-      <div onClick={onClose} className="absolute inset-0 bg-ink-900/40" />
-      <div className="card-rise relative max-h-[85vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-cream-50 shadow-lift">
-        <div className="group relative">
-          <img src={roomImage(rt.roomTypeName, imgIdx)} alt={rt.roomTypeName} className="h-52 w-full object-cover sm:h-60" />
-          <button
-            type="button"
-            onClick={() => setImgIdx((imgIdx + 3) % 4)}
-            className="absolute left-3 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-sm font-bold text-ink-700 backdrop-blur-sm"
-            aria-label="Ảnh trước"
-          >
-            ‹
-          </button>
-          <button
-            type="button"
-            onClick={() => setImgIdx((imgIdx + 1) % 4)}
-            className="absolute right-3 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-sm font-bold text-ink-700 backdrop-blur-sm"
-            aria-label="Ảnh sau"
-          >
-            ›
-          </button>
-          {/* Bo dem goc anh kieu booking engine ("1/4") thay cho cham tron */}
-          <span className="absolute bottom-2.5 left-3 rounded-full bg-ink-900/70 px-2.5 py-0.5 text-[11px] font-semibold text-white">
-            {imgIdx + 1}/4
-          </span>
-          <button
-            type="button"
-            onClick={onClose}
-            className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-white/85 text-sm font-bold text-ink-700 backdrop-blur-sm"
-            aria-label="Đóng"
-          >
-            ✕
-          </button>
-        </div>
-
-        {/* Dai thumbnail doi goc nhin - bam truc tiep tung goc phong thay vi chi bam ‹ › mo */}
-        <div className="flex gap-2 px-6 pt-4">
-          {[0, 1, 2, 3].map((i) => (
-            <button
-              key={i}
-              type="button"
-              onClick={() => setImgIdx(i)}
-              className={`h-14 w-20 shrink-0 overflow-hidden rounded-lg ring-2 ${EASE} ${
-                i === imgIdx ? 'ring-brand-600' : 'ring-transparent opacity-60 hover:opacity-100'
-              }`}
-              aria-label={`Góc ảnh ${i + 1}`}
-            >
-              <img src={roomImage(rt.roomTypeName, i)} alt="" className="h-full w-full object-cover" />
-            </button>
-          ))}
-        </div>
-
-        <div className="p-6 pt-4">
-          <div className="flex items-start justify-between gap-3">
-            <p className="font-display text-2xl font-semibold">{rt.roomTypeName}</p>
-            <span className="shrink-0 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700 ring-1 ring-emerald-600/15">
-              Còn {rt.availableCount} phòng
-            </span>
-          </div>
-          <p className="mt-1.5 text-[11px] uppercase tracking-[0.16em] text-ink-500">
-            {meta.capacity} khách &nbsp;·&nbsp; {meta.area} m² &nbsp;·&nbsp; {meta.bed}
-          </p>
-
-          <p className="mt-3.5 text-sm leading-relaxed text-ink-700">{rt.description || meta.desc}</p>
-
-          <p className="mt-4 text-[11px] font-bold uppercase tracking-[0.18em] text-ink-500">Tiện nghi</p>
-          <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1.5">
-            {meta.amenities.map((a) => (
-              <p key={a} className="flex items-center gap-2 text-[12.5px] text-ink-700">
-                <span className="font-bold text-emerald-600">✓</span>
-                {a}
-              </p>
-            ))}
-          </div>
-
-          <div className="mt-5 flex items-end justify-between border-t border-black/[0.06] pt-4">
-            <p className="font-display text-xl font-semibold tabular-nums">
-              {formatVnd(rt.basePrice)}
-              <span className="font-sans text-[11px] font-normal text-ink-500"> / đêm</span>
-            </p>
-            <button
-              type="button"
-              onClick={() => {
-                onSelect(active ? null : rt)
-                onClose()
-              }}
-              className={`rounded-full px-5 py-2 text-[13px] font-bold ${EASE} active:scale-[0.98] ${
-                active ? 'bg-emerald-500 text-white' : 'bg-ink-900 text-cream-50 hover:bg-ink-700'
-              }`}
-            >
-              {active ? '✓ Đã chọn' : 'Chọn loại phòng này'}
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
 function RoomTypeCard({ rt, idx, selected, onSelect, onDetail }) {
   const meta = roomMeta(rt.roomTypeName)
   const [imgIdx, setImgIdx] = useState(idx)
@@ -190,44 +78,41 @@ function RoomTypeCard({ rt, idx, selected, onSelect, onDetail }) {
           >
             ›
           </button>
-          {/* Re chuot vao anh -> hien mo ta so cua loai phong (khong can mo modal moi biet) */}
-          <div
-            className={`pointer-events-none absolute inset-x-3 bottom-3 rounded-xl bg-ink-900/75 p-3 text-[12px] leading-relaxed text-white opacity-0 backdrop-blur-sm ${EASE} group-hover:opacity-100`}
-          >
-            {rt.description || meta.desc}
-          </div>
         </div>
         <div className="flex flex-1 flex-col p-5">
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="font-display text-xl font-semibold">{rt.roomTypeName}</p>
-              <p className="mt-2 text-[11px] uppercase tracking-[0.16em] text-ink-500">
-                {meta.capacity} khách &nbsp;·&nbsp; {meta.area} m² &nbsp;·&nbsp; {meta.bed}
+              <p className="mt-1.5 text-[12px] text-ink-700">
+                🛏 {meta.bed} &nbsp;&nbsp; ⛶ {meta.area} m² &nbsp;&nbsp; 👤 {meta.capacity} khách
               </p>
             </div>
             <span className="shrink-0 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700 ring-1 ring-emerald-600/15">
               Còn {rt.availableCount} phòng
             </span>
           </div>
-          <div className="mt-3 flex flex-wrap gap-1.5">
-            {meta.amenities.map((a) => (
-              <span key={a} className="rounded-full bg-cream-100 px-2.5 py-1 text-[11px] font-medium text-ink-700">
+          {/* Mo ta hien thang tren card nhu mau booking engine - khong bat khach re chuot/mo modal moi biet */}
+          <p className="mt-2.5 line-clamp-2 text-[12.5px] leading-relaxed text-ink-500">{rt.description || meta.desc}</p>
+          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1">
+            {meta.amenities.slice(0, 4).map((a) => (
+              <span key={a} className="flex items-center gap-1.5 text-[12px] text-ink-700">
+                <span className="font-bold text-emerald-600">✓</span>
                 {a}
               </span>
             ))}
           </div>
-          <div className="mt-auto flex items-end justify-between pt-4">
+          <div className="mt-auto flex flex-wrap items-end justify-between gap-3 pt-4">
             <p className="font-display text-xl font-semibold tabular-nums">
               {formatVnd(rt.basePrice)}
               <span className="font-sans text-[11px] font-normal text-ink-500"> / đêm</span>
             </p>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2.5">
               <button
                 type="button"
                 onClick={() => onDetail(rt)}
-                className="text-[12px] font-semibold text-brand-600 underline-offset-4 hover:underline"
+                className={`rounded-full px-4 py-2 text-[12px] font-semibold text-ink-700 ring-1 ring-black/10 ${EASE} hover:bg-cream-50`}
               >
-                Xem chi tiết
+                Xem thêm thông tin phòng
               </button>
               <button
                 type="button"
@@ -288,6 +173,8 @@ export default function GuestBookingPage() {
   // Den tu trang chu ("Đặt phòng →"/thanh tim kiem cong khai): nhan ngay + so khach qua query,
   // dien san va tim luon - khach khong phai nhap lai sau khi qua man dang nhap.
   useEffect(() => {
+    const v = searchParams.get('voucher')
+    if (v) setVoucher(v)
     const ci = searchParams.get('checkIn')
     if (!ci) return
     const co = searchParams.get('checkOut') ?? addDays(ci, 1)
