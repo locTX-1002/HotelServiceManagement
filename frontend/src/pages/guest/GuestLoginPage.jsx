@@ -119,13 +119,13 @@ export default function GuestLoginPage() {
               <p>
                 Chưa có tài khoản?{' '}
                 <Link to="/guest/dang-ky" className={`font-semibold text-brand-600 underline-offset-4 ${EASE} hover:underline`}>
-                  Đăng ký bằng mã đặt phòng
+                  Đăng ký ngay
                 </Link>
               </p>
               <p>
                 Quên mật khẩu?{' '}
                 <Link to="/guest/quen-mat-khau" className={`font-semibold text-brand-600 underline-offset-4 ${EASE} hover:underline`}>
-                  Đặt lại bằng mã đặt phòng
+                  Đặt lại qua email
                 </Link>
               </p>
             </div>
