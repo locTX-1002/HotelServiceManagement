@@ -185,6 +185,12 @@ export default function InvoicePage() {
                 <span className="text-ink-500">Tiền dịch vụ</span>
                 <span className="font-semibold tabular-nums">{formatVnd(invoice.serviceCharge)}</span>
               </div>
+              {invoice.depositAmount > 0 && (
+                <div className="flex items-center justify-between text-[13px]">
+                  <span className="text-ink-500">Đã đặt cọc (đã ghi nhận thu)</span>
+                  <span className="font-semibold tabular-nums text-emerald-700">{formatVnd(invoice.depositAmount)}</span>
+                </div>
+              )}
               {invoice.surchargeAmount > 0 && (
                 <>
                   <div className="flex items-center justify-between text-[13px]">

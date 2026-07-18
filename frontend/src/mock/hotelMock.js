@@ -120,6 +120,7 @@ export const MOCK_INVOICE = {
   ],
   discountAmount: 0,
   promotionCode: null,
+  depositAmount: null,
   totalAmount: 415000,
   status: 'Unpaid',
 }
