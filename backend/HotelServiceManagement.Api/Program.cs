@@ -1,6 +1,7 @@
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -76,6 +77,21 @@ builder.Services.AddAuthorization();
 
 // 4. Configure Controllers
 builder.Services.AddControllers();
+
+// Lỗi validate tự động từ [ApiController] ([Required], [Range]...) mặc định trả về ValidationProblemDetails,
+// khác shape { message } mà mọi lỗi nghiệp vụ khác dùng (AuthServiceResult) - khiến FE apiError() không đọc
+// được message cụ thể, rơi về text chung chung. Đưa về cùng shape để lỗi nào cũng hiện rõ ràng trên FE.
+builder.Services.Configure<ApiBehaviorOptions>(options =>
+{
+    options.InvalidModelStateResponseFactory = context =>
+    {
+        var firstError = context.ModelState.Values
+            .SelectMany(v => v.Errors)
+            .Select(e => e.ErrorMessage)
+            .FirstOrDefault(m => !string.IsNullOrWhiteSpace(m)) ?? "Dữ liệu không hợp lệ.";
+        return new BadRequestObjectResult(new { message = firstError });
+    };
+});
 
 // 5. Configure Swagger with JWT Bearer support
 builder.Services.AddEndpointsApiExplorer();
