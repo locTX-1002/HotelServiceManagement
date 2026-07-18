@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import EmptyState from '../components/EmptyState'
 import { EASE } from '../utils/ui'
+import PageHero from '../components/PageHero'
 import client, { isBackendMissing, apiError } from '../api/client'
 import ConfirmDialog from '../components/ConfirmDialog'
 import ErrorState from '../components/ErrorState'
@@ -171,18 +172,18 @@ export default function ServiceOrderPage() {
 
   return (
     <div>
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p className="font-display text-[15px] italic capitalize text-brand-600">dịch vụ · khách đang ở</p>
-          <h1 className="mt-1 font-display text-4xl font-semibold tracking-tight">Đơn dịch vụ</h1>
-          <p className="mt-1 text-sm text-ink-500">Gọi dịch vụ cho khách đang ở và theo dõi trạng thái đơn.</p>
-        </div>
+      <PageHero
+        image="/img/deluxe.jpg"
+        kicker="dịch vụ · khách đang ở"
+        title="Đơn dịch vụ"
+        subtitle="Gọi dịch vụ cho khách đang ở và theo dõi trạng thái đơn."
+      >
         {staysUsingMock && (
           <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-800 ring-1 ring-amber-600/20">
             Dữ liệu mẫu
           </span>
         )}
-      </div>
+      </PageHero>
 
       {stays === null && !staysError && (
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

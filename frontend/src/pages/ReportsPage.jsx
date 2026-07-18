@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { EASE, inputCls, labelCls, openDatePicker } from '../utils/ui'
+import PageHero from '../components/PageHero'
 import client, { isBackendMissing } from '../api/client'
 import ErrorState from '../components/ErrorState'
 import { mockOccupancySnapshot, mockRevenueSummary } from '../mock/hotelMock'
@@ -112,12 +113,12 @@ export default function ReportsPage() {
 
   return (
     <div>
-      {/* Header */}
-      <div>
-        <p className="font-display text-[15px] italic capitalize text-brand-600">quản lý · thống kê</p>
-        <h1 className="mt-1 font-display text-4xl font-semibold tracking-tight">Báo cáo</h1>
-        <p className="mt-1 text-sm text-ink-500">Doanh thu theo dải ngày và công suất phòng hiện tại.</p>
-      </div>
+      <PageHero
+        image="/img/v3.jpg"
+        kicker="quản lý · thống kê"
+        title="Báo cáo"
+        subtitle="Doanh thu theo dải ngày và công suất phòng hiện tại."
+      />
 
       {/* Bộ lọc dải ngày: gom nút nhanh + tùy chỉnh vào 1 thanh dạng segmented, ô Từ/Đến ngày chỉ hiện khi cần */}
       <div className="mt-5 flex flex-wrap items-start gap-3">

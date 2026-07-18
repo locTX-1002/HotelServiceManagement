@@ -11,6 +11,8 @@ import { MOCK_RESERVATIONS } from '../mock/hotelMock'
 import { denormalizeReservationStatus, normalizeReservation } from '../utils/apiShape'
 import { fmtShort, localToday } from '../utils/dates'
 import { formatVnd } from '../utils/roomStatus'
+import { roomImage } from '../utils/roomImages'
+import PageHero from '../components/PageHero'
 
 // Nhãn + màu cho các trạng thái đặt phòng (khớp enum backend)
 const RES_STATUS = {
@@ -185,20 +187,19 @@ export default function ReservationsPage() {
 
   return (
     <div>
-      {/* Header */}
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p className="font-display text-[15px] italic capitalize text-brand-600">lễ tân · đặt phòng</p>
-          <h1 className="mt-1 font-display text-4xl font-semibold tracking-tight">Danh sách đặt phòng</h1>
-          <p className="mt-1 text-sm text-ink-500">Theo dõi và hủy các lượt đặt phòng theo trạng thái.</p>
-        </div>
+      <PageHero
+        image="/img/v2.jpg"
+        kicker="lễ tân · đặt phòng"
+        title="Danh sách đặt phòng"
+        subtitle="Duyệt đơn chờ xác nhận, theo dõi và hủy các lượt đặt phòng theo trạng thái."
+      >
         <button
           onClick={() => navigate('/reservations/new')}
-          className={`rounded-full bg-ink-900 px-5 py-2.5 text-[13px] font-bold text-cream-50 ${EASE} hover:bg-ink-700 active:scale-[0.98]`}
+          className={`rounded-full bg-brand-500 px-5 py-2.5 text-[13px] font-bold text-white ${EASE} hover:bg-brand-600 active:scale-[0.98]`}
         >
           + Tạo đặt phòng
         </button>
-      </div>
+      </PageHero>
 
       {/* Bộ lọc: chips trạng thái + tìm */}
       <div className="mt-5 flex flex-wrap items-center gap-3">
@@ -280,8 +281,13 @@ export default function ReservationsPage() {
                           {r.guestPhoneNumber && <p className="text-[11px] tabular-nums text-ink-500">{r.guestPhoneNumber}</p>}
                         </td>
                         <td className="px-5 py-3.5">
-                          <p className="text-sm font-semibold tabular-nums">{r.roomNumber}</p>
-                          <p className="text-[11px] text-ink-500">{r.typeName}</p>
+                          <div className="flex items-center gap-3">
+                            <img src={roomImage(r.typeName, 0)} alt={r.typeName} className="h-11 w-14 rounded-lg object-cover ring-1 ring-black/10" />
+                            <div>
+                              <p className="text-sm font-semibold tabular-nums">{r.roomNumber}</p>
+                              <p className="text-[11px] text-ink-500">{r.typeName}</p>
+                            </div>
+                          </div>
                         </td>
                         <td className="px-5 py-3.5 text-sm tabular-nums text-ink-700">
                           {fmtShort(dkey(r.checkInDate))} → {fmtShort(dkey(r.checkOutDate))}

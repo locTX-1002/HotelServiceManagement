@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { EASE, errorCls, inputCls, labelCls } from '../utils/ui'
+import PageHero from '../components/PageHero'
 import client, { isBackendMissing, apiError } from '../api/client'
 import ConfirmDialog from '../components/ConfirmDialog'
 import ErrorState from '../components/ErrorState'
@@ -124,23 +125,20 @@ export default function RoomTypePage() {
 
   return (
     <div>
-      {/* Header: tiêu đề trái, tabs + nút thêm phải */}
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p className="font-display text-[15px] italic capitalize text-brand-600">quản lý khách sạn</p>
-          <h1 className="mt-1 font-display text-4xl font-semibold tracking-tight">Loại phòng</h1>
-          <p className="mt-1 text-sm text-ink-500">Sức chứa và giá mỗi đêm của từng hạng phòng — nguồn dữ liệu cho sơ đồ phòng và đặt phòng.</p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2.5">
-          <RoomsTabs />
-          <button
-            onClick={openCreate}
-            className={`rounded-full bg-ink-900 px-5 py-2.5 text-[13px] font-bold text-cream-50 ${EASE} hover:bg-ink-700 active:scale-[0.98]`}
-          >
-            + Thêm loại phòng
-          </button>
-        </div>
-      </div>
+      <PageHero
+        image="/img/standard.jpg"
+        kicker="quản lý khách sạn"
+        title="Loại phòng"
+        subtitle="Sức chứa và giá mỗi đêm của từng hạng phòng — nguồn dữ liệu cho sơ đồ phòng và đặt phòng."
+      >
+        <RoomsTabs />
+        <button
+          onClick={openCreate}
+          className={`rounded-full bg-brand-500 px-5 py-2.5 text-[13px] font-bold text-white ${EASE} hover:bg-brand-600 active:scale-[0.98]`}
+        >
+          + Thêm loại phòng
+        </button>
+      </PageHero>
 
       {usingMock && (
         <span className="mt-4 inline-block rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-800 ring-1 ring-amber-600/20">

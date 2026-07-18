@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { EASE, errorCls, inputCls, labelCls } from '../utils/ui'
+import PageHero from '../components/PageHero'
 import client, { isBackendMissing, apiError } from '../api/client'
 import ErrorState from '../components/ErrorState'
 import SlideOver from '../components/SlideOver'
@@ -93,27 +94,24 @@ export default function GuestsPage() {
 
   return (
     <div>
-      {/* Header */}
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p className="font-display text-[15px] italic capitalize text-brand-600">lễ tân · hồ sơ khách</p>
-          <h1 className="mt-1 font-display text-4xl font-semibold tracking-tight">Danh sách khách</h1>
-          <p className="mt-1 text-sm text-ink-500">Tra cứu và cập nhật thông tin khách — khách mới được tạo trong lúc đặt phòng.</p>
-        </div>
-        <div className="flex items-center gap-2.5">
-          {usingMock && (
-            <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-800 ring-1 ring-amber-600/20">
-              Dữ liệu mẫu
-            </span>
-          )}
-          <input
-            className="w-56 rounded-full bg-white px-4 py-2 text-[13px] ring-1 ring-black/10 outline-none placeholder:text-ink-500/50 focus:ring-2 focus:ring-brand-500/40"
-            placeholder="Tìm tên / SĐT / CMND…"
-            value={keyword}
-            onChange={(e) => setKeyword(e.target.value)}
-          />
-        </div>
-      </div>
+      <PageHero
+        image="/img/family.jpg"
+        kicker="lễ tân · hồ sơ khách"
+        title="Danh sách khách"
+        subtitle="Tra cứu và cập nhật thông tin khách — khách mới được tạo trong lúc đặt phòng."
+      >
+        {usingMock && (
+          <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-800 ring-1 ring-amber-600/20">
+            Dữ liệu mẫu
+          </span>
+        )}
+        <input
+          className="w-56 rounded-full bg-white px-4 py-2 text-[13px] ring-1 ring-black/10 outline-none placeholder:text-ink-500/50 focus:ring-2 focus:ring-brand-500/40"
+          placeholder="Tìm tên / SĐT / CMND…"
+          value={keyword}
+          onChange={(e) => setKeyword(e.target.value)}
+        />
+      </PageHero>
 
       {/* Bảng khách */}
       {guests === null && !loadError && (
