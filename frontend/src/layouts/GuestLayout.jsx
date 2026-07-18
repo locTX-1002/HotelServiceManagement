@@ -23,7 +23,7 @@ export default function GuestLayout() {
     <div className="min-h-screen bg-cream-100">
       <div className="grain-overlay" />
       <header className="border-b border-black/[0.07] bg-cream-50/80 backdrop-blur">
-        <div className="mx-auto flex max-w-3xl flex-wrap items-center justify-between gap-x-6 gap-y-3 px-6 py-4">
+        <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-x-6 gap-y-3 px-6 py-4">
           <Link to="/" className={`flex items-center gap-2 font-display text-lg font-semibold ${EASE} hover:opacity-70`}>
             <span className="flex h-8 w-7 items-end justify-center rounded-t-full rounded-b-md bg-brand-600 pb-1.5 font-display text-sm font-bold text-white">
               H
@@ -53,7 +53,9 @@ export default function GuestLayout() {
           </div>
         </div>
       </header>
-      <main className="mx-auto max-w-3xl px-6 py-10">
+      {/* 5xl de trang dat phong dung duoc bo cuc hero + thanh tim kiem noi cua le tan;
+          cac trang doc nhu Dashboard/Ho so tu bo hep lai bang max-w-3xl rieng ben trong */}
+      <main className="mx-auto max-w-5xl px-6 py-10">
         <Outlet />
       </main>
     </div>

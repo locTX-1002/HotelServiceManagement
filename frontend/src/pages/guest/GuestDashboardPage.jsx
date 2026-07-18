@@ -119,7 +119,7 @@ export default function GuestDashboardPage() {
   }
 
   return (
-    <div>
+    <div className="mx-auto max-w-3xl">
       <p className="font-display text-[13px] italic text-brand-600">xin chào</p>
       <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight">{guest?.fullName ?? 'Khách lưu trú'}</h1>
       <p className="mt-2 text-sm text-ink-500">Danh sách đặt phòng của bạn tại khách sạn.</p>

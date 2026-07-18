@@ -97,7 +97,7 @@ export default function GuestProfilePage() {
   if (loadError) return <p className={errorCls}>{loadError}</p>
 
   return (
-    <div>
+    <div className="mx-auto max-w-3xl">
       <p className="font-display text-[13px] italic text-brand-600">hồ sơ của tôi</p>
       <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight">Thông tin cá nhân</h1>
       <p className="mt-2 text-sm text-ink-500">Cập nhật tên hiển thị, email và mật khẩu đăng nhập.</p>

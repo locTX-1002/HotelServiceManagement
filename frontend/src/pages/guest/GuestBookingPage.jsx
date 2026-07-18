@@ -2,19 +2,49 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import guestClient, { apiError } from '../../api/guestClient'
 import { formatVnd } from '../../utils/roomStatus'
-import { EASE, errorCls } from '../../utils/ui'
+import { EASE, errorCls, inputCls, labelCls, openDatePicker } from '../../utils/ui'
 import { roomImage } from '../../utils/roomImages'
 import { roomMeta } from '../../utils/roomMeta'
+import { localToday as today, addDays, fmtShort } from '../../utils/dates'
 
-const inputCls =
-  'w-full rounded-lg border border-black/15 bg-white px-3.5 py-3 text-sm outline-none placeholder:text-ink-500/40 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20'
-const labelCls = 'mb-1.5 block text-[11px] font-bold uppercase tracking-[0.18em] text-ink-700'
+// Rap khuon dung 3-buoc cua trang dat phong le tan (CreateReservationPage.jsx) de dong bo giao
+// dien toan he thong - chi bo phan rieng cua le tan (nhap thong tin khach, CCCD, walk-in, coc):
+// khach da dang nhap san nen biet la ai, khong thu coc online (chua co cong thanh toan that), va
+// KHONG dung du lieu mau khi mat ket noi (mock lam khach tuong dat duoc phong ao).
+function Steps({ current, onBack }) {
+  const items = ['Ngày ở & khách', 'Chọn loại phòng', 'Xác nhận']
+  return (
+    <div className="flex items-center justify-center gap-3">
+      {items.map((label, i) => {
+        const n = i + 1
+        const state = n < current ? 'done' : n === current ? 'active' : 'todo'
+        const Tag = state === 'done' ? 'button' : 'div'
+        return (
+          <div key={label} className="flex items-center gap-3">
+            <Tag
+              onClick={state === 'done' ? () => onBack(n) : undefined}
+              className={`flex items-center gap-2 ${state === 'done' ? 'cursor-pointer hover:opacity-70' : ''} ${EASE}`}
+            >
+              <span
+                className={`flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-bold ${EASE} ${
+                  state === 'done' ? 'bg-emerald-500 text-white' : state === 'active' ? 'bg-ink-900 text-cream-50' : 'bg-black/[0.07] text-ink-500'
+                }`}
+              >
+                {state === 'done' ? '✓' : n}
+              </span>
+              <span className={`text-[13px] ${state === 'active' ? 'font-bold' : 'font-medium text-ink-500'}`}>{label}</span>
+            </Tag>
+            {n < 3 && <span className={`h-px w-10 sm:w-16 ${EASE} ${n < current ? 'bg-emerald-500/50' : 'bg-black/10'}`} />}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
 
-const todayIso = () => new Date().toISOString().slice(0, 10)
-
-// Card kieu booking engine giong het RoomResultCard cua trang le tan (CreateReservationPage.jsx)
-// - dung chung roomImage()/roomMeta() (tra theo ten loai phong, khong can du lieu anh tu backend).
-// Khac RoomResultCard o cho day la THE LOAI PHONG (khong phai 1 phong cu the) nen khong co so
+// Card kieu booking engine giong het RoomResultCard cua trang le tan - dung chung
+// roomImage()/roomMeta() (tra theo ten loai phong, khong can du lieu anh tu backend). Khac
+// RoomResultCard o cho day la THE LOAI PHONG (khong phai 1 phong cu the) nen khong co so
 // phong/tang, thay bang badge "Còn X phòng".
 function RoomTypeCard({ rt, idx, selected, onSelect }) {
   const meta = roomMeta(rt.roomTypeName)
@@ -79,7 +109,7 @@ function RoomTypeCard({ rt, idx, selected, onSelect }) {
                 active ? 'bg-emerald-500 text-white' : 'bg-ink-900 text-cream-50 hover:bg-ink-700'
               }`}
             >
-              {active ? '✓ Đã chọn' : 'Chọn phòng này'}
+              {active ? '✓ Đã chọn' : 'Chọn loại phòng này'}
             </button>
           </div>
         </div>
@@ -88,16 +118,14 @@ function RoomTypeCard({ rt, idx, selected, onSelect }) {
   )
 }
 
-// Khach tu dat phong online - chon loai phong (khong chon so phong cu the, he thong tu gan luc
-// xac nhan), luon o trang thai "Chờ xác nhận" - le tan phai duyet, khong tu dong xac nhan vi day
-// la luong tu phuc vu chua co xac minh danh tinh (giong het tinh than thiet ke dang ky tu do).
 export default function GuestBookingPage() {
-  const [checkInDate, setCheckInDate] = useState('')
-  const [checkOutDate, setCheckOutDate] = useState('')
+  const [step, setStep] = useState(1)
+  const [checkInDate, setCheckInDate] = useState(today())
+  const [checkOutDate, setCheckOutDate] = useState(addDays(today(), 1))
   const [numberOfGuests, setNumberOfGuests] = useState(2)
   const [searching, setSearching] = useState(false)
   const [searchError, setSearchError] = useState('')
-  const [roomTypes, setRoomTypes] = useState(null)
+  const [roomTypes, setRoomTypes] = useState([])
 
   const [bookingType, setBookingType] = useState(null)
   const [specialRequests, setSpecialRequests] = useState('')
@@ -105,29 +133,21 @@ export default function GuestBookingPage() {
   const [bookingError, setBookingError] = useState('')
   const [bookingSuccess, setBookingSuccess] = useState(null)
 
-  const search = (e) => {
-    e.preventDefault()
-    if (searching) return
+  const nights = Math.max(Math.round((new Date(checkOutDate) - new Date(checkInDate)) / 86400000), 0)
+
+  const search = (ci = checkInDate, co = checkOutDate, g = numberOfGuests) => {
     setSearchError('')
-    setBookingSuccess(null)
-    if (!checkInDate || !checkOutDate) {
-      setSearchError('Vui lòng chọn ngày nhận và trả phòng.')
-      return
-    }
-    if (checkOutDate <= checkInDate) {
-      setSearchError('Ngày trả phòng phải sau ngày nhận phòng.')
-      return
-    }
     setSearching(true)
-    setRoomTypes(null)
     setBookingType(null)
     guestClient
-      .get('/api/guest/available-room-types', {
-        params: { checkInDate, checkOutDate, numberOfGuests },
-      })
+      .get('/api/guest/available-room-types', { params: { checkInDate: ci, checkOutDate: co, numberOfGuests: g } })
       .then((res) => setRoomTypes(res.data ?? []))
-      .catch((err) => setSearchError(apiError(err)))
+      .catch((err) => {
+        setSearchError(apiError(err))
+        setRoomTypes([])
+      })
       .finally(() => setSearching(false))
+    setStep(2)
   }
 
   const confirmBooking = () => {
@@ -142,15 +162,10 @@ export default function GuestBookingPage() {
         checkOutDate,
         specialRequests: specialRequests.trim() || undefined,
       })
-      .then((res) => {
-        setBookingSuccess(res.data)
-        setRoomTypes(null)
-        setBookingType(null)
-        setSpecialRequests('')
-      })
+      .then((res) => setBookingSuccess(res.data))
       .catch((err) => {
         if (err.response?.status === 409) {
-          setBookingError('Loại phòng này vừa hết trống cho khoảng ngày đã chọn — vui lòng tìm lại.')
+          setBookingError('Loại phòng này vừa hết trống cho khoảng ngày đã chọn — vui lòng quay lại tìm.')
         } else {
           setBookingError(apiError(err))
         }
@@ -158,134 +173,288 @@ export default function GuestBookingPage() {
       .finally(() => setBooking(false))
   }
 
-  return (
-    <div>
-      <p className="font-display text-[13px] italic text-brand-600">đặt phòng mới</p>
-      <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight">Tìm phòng trống</h1>
-      <p className="mt-2 text-sm text-ink-500">
-        Chọn ngày nhận/trả phòng — yêu cầu sẽ ở trạng thái "Chờ xác nhận" cho tới khi lễ tân duyệt.
-      </p>
-
-      {bookingSuccess && (
-        <div className="mt-6 rounded-2xl bg-emerald-50 p-5 ring-1 ring-emerald-600/15">
-          <p className="text-[13px] font-bold text-emerald-800">
-            ✓ Đã gửi yêu cầu đặt phòng {bookingSuccess.bookingCode}
+  // Man hinh sau khi gui - kieu "boarding pass" giong man thanh cong cua le tan, nhung nhan luon
+  // "Chờ xác nhận" vi day la tu phuc vu, chua duoc le tan duyet.
+  if (bookingSuccess) {
+    return (
+      <div className="mx-auto max-w-lg pt-10 text-center">
+        <p className="font-display text-[15px] italic text-brand-600">đã gửi yêu cầu đặt phòng</p>
+        <div className="mt-4 rounded-2xl bg-white p-8 ring-1 ring-black/5 shadow-lift">
+          <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-ink-500">Mã đặt phòng</p>
+          <p className="mt-2 font-display text-5xl font-semibold tracking-tight text-brand-600">{bookingSuccess.bookingCode}</p>
+          <span className="mt-3 inline-block rounded-full bg-amber-50 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-amber-800 ring-1 ring-amber-600/15">
+            Chờ xác nhận
+          </span>
+          <div className="my-5 border-t border-dashed border-black/10" />
+          <p className="text-sm text-ink-700">{bookingSuccess.roomTypeName}</p>
+          <p className="mt-1 text-sm text-ink-500">
+            {fmtShort(checkInDate)} → {fmtShort(checkOutDate)} · {nights} đêm
           </p>
-          <p className="mt-1 text-[12px] text-emerald-700">
-            Trạng thái: Chờ xác nhận — lễ tân sẽ xác nhận sớm nhất. Bạn có thể theo dõi trong{' '}
-            <Link to="/guest/dashboard" className="font-semibold underline underline-offset-2">
+          <p className="mt-3 text-[12px] text-ink-500">
+            Lễ tân sẽ xác nhận sớm nhất — theo dõi trong{' '}
+            <Link to="/guest/dashboard" className="font-semibold text-brand-600 underline underline-offset-2">
               Đặt phòng của tôi
             </Link>
             .
           </p>
         </div>
-      )}
-
-      <form onSubmit={search} className="mt-8 max-w-lg space-y-4 rounded-2xl bg-cream-50 p-5 ring-1 ring-black/[0.06]">
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className={labelCls}>Nhận phòng</label>
-            <input
-              type="date"
-              required
-              min={todayIso()}
-              className={inputCls}
-              value={checkInDate}
-              onChange={(e) => setCheckInDate(e.target.value)}
-            />
-          </div>
-          <div>
-            <label className={labelCls}>Trả phòng</label>
-            <input
-              type="date"
-              required
-              min={checkInDate || todayIso()}
-              className={inputCls}
-              value={checkOutDate}
-              onChange={(e) => setCheckOutDate(e.target.value)}
-            />
-          </div>
-        </div>
-        <div>
-          <label className={labelCls}>Số khách</label>
-          <input
-            type="number"
-            required
-            min={1}
-            className={inputCls}
-            value={numberOfGuests}
-            onChange={(e) => setNumberOfGuests(Math.max(1, Number(e.target.value) || 1))}
-          />
-        </div>
-
-        {searchError && <p className={errorCls}>{searchError}</p>}
-
         <button
-          type="submit"
-          disabled={searching}
-          className={`rounded-full bg-brand-600 px-6 py-2.5 text-[12px] font-bold uppercase tracking-wider text-white ${EASE} hover:bg-brand-700 active:scale-[0.98] disabled:opacity-50`}
+          type="button"
+          onClick={() => window.location.reload()}
+          className={`mt-6 rounded-full bg-ink-900 px-6 py-2.5 text-sm font-bold text-cream-50 ${EASE} hover:bg-ink-700`}
         >
-          {searching ? 'Đang tìm…' : 'Tìm phòng trống'}
+          Đặt phòng khác
         </button>
-      </form>
+      </div>
+    )
+  }
 
-      {roomTypes && roomTypes.length === 0 && (
-        <p className="mt-6 text-sm text-ink-500">Không còn loại phòng nào trống cho khoảng ngày này.</p>
-      )}
+  return (
+    <div className="pb-24">
+      <Steps current={step} onBack={setStep} />
 
-      {roomTypes && roomTypes.length > 0 && (
-        <div className="mt-6 max-w-2xl space-y-4">
-          {roomTypes.map((rt, idx) => (
-            <RoomTypeCard key={rt.roomTypeId} rt={rt} idx={idx} selected={bookingType} onSelect={setBookingType} />
-          ))}
+      {step === 1 && (
+        <div className="mt-6">
+          <div className="relative h-44 overflow-hidden rounded-2xl">
+            <img src="/img/v2.jpg" alt="" className="h-full w-full object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-r from-ink-900/75 to-transparent" />
+            <div className="absolute left-7 top-1/2 -translate-y-1/2">
+              <p className="font-display text-[15px] italic text-white/80">cổng khách · đặt phòng mới</p>
+              <p className="mt-1.5 font-display text-3xl font-medium text-white">Kỳ lưu trú tiếp theo</p>
+              <p className="mt-1.5 text-[13px] text-white/70">Chọn ngày ở và số khách để tìm phòng trống</p>
+            </div>
+          </div>
+
+          <div className="relative z-10 mx-4 -mt-8 flex flex-wrap items-end gap-x-5 gap-y-4 rounded-2xl bg-white p-5 ring-1 ring-black/5 shadow-lift">
+            <div className="min-w-36 flex-1">
+              <label className={labelCls}>Nhận phòng</label>
+              <input
+                type="date"
+                className={inputCls}
+                value={checkInDate}
+                min={today()}
+                onClick={openDatePicker}
+                onChange={(e) => {
+                  setCheckInDate(e.target.value)
+                  if (e.target.value >= checkOutDate) setCheckOutDate(addDays(e.target.value, 1))
+                }}
+              />
+            </div>
+            <div className="min-w-36 flex-1">
+              <label className={labelCls}>Trả phòng</label>
+              <input
+                type="date"
+                className={inputCls}
+                value={checkOutDate}
+                min={addDays(checkInDate, 1)}
+                onClick={openDatePicker}
+                onChange={(e) => setCheckOutDate(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className={labelCls}>Số khách</label>
+              <div className="flex items-center gap-1 rounded-xl bg-white ring-1 ring-black/10">
+                <button
+                  type="button"
+                  onClick={() => setNumberOfGuests(Math.max(1, numberOfGuests - 1))}
+                  className="px-3 py-2.5 text-sm font-bold text-ink-500 hover:text-ink-900"
+                >
+                  −
+                </button>
+                <span className="w-8 text-center text-sm font-bold tabular-nums">{numberOfGuests}</span>
+                <button
+                  type="button"
+                  onClick={() => setNumberOfGuests(Math.min(8, numberOfGuests + 1))}
+                  className="px-3 py-2.5 text-sm font-bold text-ink-500 hover:text-ink-900"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => search()}
+              disabled={nights <= 0}
+              className={`h-11 rounded-full bg-brand-600 px-7 text-sm font-bold text-white ${EASE} hover:bg-brand-700 active:scale-[0.98] disabled:opacity-40`}
+            >
+              Tìm phòng trống
+            </button>
+
+            <div className="flex w-full flex-wrap items-center gap-2 border-t border-black/[0.06] pt-3.5">
+              <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-ink-500">Chọn nhanh</span>
+              {[
+                { label: 'Hôm nay · 1 đêm', start: 0, nights: 1 },
+                { label: 'Hôm nay · 2 đêm', start: 0, nights: 2 },
+                { label: 'Ngày mai · 1 đêm', start: 1, nights: 1 },
+              ].map((q) => (
+                <button
+                  key={q.label}
+                  type="button"
+                  onClick={() => {
+                    const ci = addDays(today(), q.start)
+                    setCheckInDate(ci)
+                    setCheckOutDate(addDays(ci, q.nights))
+                  }}
+                  className={`rounded-full px-3 py-1.5 text-[12px] font-semibold text-ink-700 ring-1 ring-black/10 ${EASE} hover:bg-cream-100 hover:ring-black/20 active:scale-[0.97]`}
+                >
+                  {q.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          {nights > 0 && (
+            <p className="mt-3 text-center text-[12px] text-ink-500">
+              {nights} đêm · {fmtShort(checkInDate)} → {fmtShort(checkOutDate)} · {numberOfGuests} khách
+            </p>
+          )}
         </div>
       )}
 
-      {bookingType && (
-        <div className="mt-6 max-w-lg overflow-hidden rounded-2xl bg-cream-50 ring-1 ring-black/[0.06]">
-          <img
-            src={roomImage(bookingType.roomTypeName, 0)}
-            alt=""
-            className="h-32 w-full object-cover opacity-80"
-          />
-          <div className="p-5">
-            <p className="font-display text-lg font-semibold">Xác nhận đặt phòng</p>
-            <p className="mt-1 text-[12px] text-ink-500">
-              {bookingType.roomTypeName} · {checkInDate} → {checkOutDate} · {numberOfGuests} khách ·{' '}
-              {formatVnd(bookingType.basePrice)} / đêm
-            </p>
-            <label className={`${labelCls} mt-4`}>Yêu cầu đặc biệt (không bắt buộc)</label>
-            <textarea
-              rows={2}
-              maxLength={500}
-              className={inputCls}
-              placeholder="VD: phòng tầng cao, không hút thuốc…"
-              value={specialRequests}
-              onChange={(e) => setSpecialRequests(e.target.value)}
-            />
-
-            {bookingError && <p className={`mt-3 ${errorCls}`}>{bookingError}</p>}
-
-            <div className="mt-3 flex gap-2.5">
+      {step === 2 && (
+        <div className="mt-6">
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-white px-5 py-3.5 ring-1 ring-black/5 shadow-soft">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] font-semibold">
+              <span className="tabular-nums">
+                {fmtShort(checkInDate)} → {fmtShort(checkOutDate)}
+              </span>
+              <span className="text-ink-500/40">|</span>
+              <span>{numberOfGuests} khách</span>
+              <span className="text-ink-500/40">|</span>
+              <span>{nights} đêm</span>
               <button
                 type="button"
-                onClick={() => setBookingType(null)}
-                className={`rounded-full px-5 py-2.5 text-[12px] font-semibold text-ink-700 ring-1 ring-black/10 ${EASE} hover:bg-white`}
+                onClick={() => setStep(1)}
+                className="text-[11px] font-bold uppercase tracking-[0.14em] text-brand-600 underline-offset-4 hover:underline"
               >
-                Huỷ
+                Đổi tìm kiếm
               </button>
-              <button
-                type="button"
-                onClick={confirmBooking}
-                disabled={booking}
-                className={`flex-1 rounded-full bg-brand-600 px-6 py-2.5 text-[12px] font-bold uppercase tracking-wider text-white ${EASE} hover:bg-brand-700 disabled:opacity-50`}
-              >
-                {booking ? 'Đang gửi…' : 'Xác nhận đặt phòng'}
-              </button>
+            </div>
+          </div>
+
+          {searching && <p className="mt-4 text-sm text-ink-500">Đang tìm phòng trống…</p>}
+          {searchError && <p className={`mt-4 ${errorCls}`}>{searchError}</p>}
+
+          {!searching && !searchError && (
+            <div className="mt-4 space-y-4">
+              {roomTypes.map((rt, idx) => (
+                <RoomTypeCard key={rt.roomTypeId} rt={rt} idx={idx} selected={bookingType} onSelect={setBookingType} />
+              ))}
+              {roomTypes.length === 0 && (
+                <div className="rounded-2xl border border-dashed border-black/10 bg-white/60 p-10 text-center">
+                  <p className="font-display text-lg italic text-ink-700">Không còn loại phòng nào trống</p>
+                  <p className="mt-1 text-[13px] text-ink-500">Thử giảm số khách hoặc đổi khoảng ngày.</p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* BUOC 3: 2 cot nhu trang le tan - card trang ben trai (quy trinh + yeu cau dac biet),
+          card toi tom tat gia ben phai. Khong de card toi dung don doc giua trang sang. */}
+      {step === 3 && bookingType && (
+        <div className="mt-6 grid gap-6 lg:grid-cols-5">
+          <div className="rounded-2xl bg-white p-6 ring-1 ring-black/5 shadow-soft lg:col-span-3">
+            <h2 className="text-sm font-bold uppercase tracking-[0.14em] text-ink-500">Sau khi gửi yêu cầu</h2>
+            <div className="mt-4 space-y-4">
+              {[
+                { n: 1, title: 'Lễ tân xác nhận', desc: 'Yêu cầu ở trạng thái "Chờ xác nhận" — lễ tân sẽ giữ phòng và xác nhận với bạn sớm nhất.' },
+                { n: 2, title: 'Nhận phòng tại quầy', desc: `Đến khách sạn ngày ${fmtShort(checkInDate)}, mang theo CMND/CCCD để lễ tân làm thủ tục nhận phòng.` },
+                { n: 3, title: 'Thanh toán khi trả phòng', desc: 'Tiền phòng và dịch vụ (nếu có) thanh toán tại quầy — chưa cần trả trước khoản nào lúc này.' },
+              ].map((s) => (
+                <div key={s.n} className="flex gap-3.5">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-cream-100 font-display text-[13px] font-semibold text-brand-600">
+                    {s.n}
+                  </span>
+                  <div>
+                    <p className="text-[13px] font-bold">{s.title}</p>
+                    <p className="mt-0.5 text-[12px] leading-relaxed text-ink-500">{s.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-6 border-t border-black/[0.06] pt-5">
+              <label className={labelCls}>Yêu cầu đặc biệt (tuỳ chọn)</label>
+              <textarea
+                rows={2}
+                maxLength={500}
+                className={inputCls}
+                placeholder="Giường phụ, tầng cao, không hút thuốc..."
+                value={specialRequests}
+                onChange={(e) => setSpecialRequests(e.target.value)}
+              />
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setStep(2)}
+              className="mt-5 text-[12px] font-semibold text-brand-600 underline-offset-2 hover:underline"
+            >
+              ← Chọn loại phòng khác
+            </button>
+          </div>
+
+          <div className="lg:col-span-2">
+            <div className="overflow-hidden rounded-2xl bg-ink-900 text-cream-50 shadow-lift">
+              <img src={roomImage(bookingType.roomTypeName, 0)} alt="" className="h-32 w-full object-cover opacity-80" />
+              <div className="p-5">
+                <p className="font-display text-lg font-semibold">{bookingType.roomTypeName}</p>
+                <div className="mt-3 space-y-1.5 text-sm">
+                  <p className="flex justify-between">
+                    <span className="text-cream-50/60">Ngày ở</span>
+                    <span>{fmtShort(checkInDate)} → {fmtShort(checkOutDate)}</span>
+                  </p>
+                  <p className="flex justify-between">
+                    <span className="text-cream-50/60">Số khách</span>
+                    <span>{numberOfGuests} người</span>
+                  </p>
+                  <p className="flex justify-between">
+                    <span className="text-cream-50/60">Số đêm × giá</span>
+                    <span className="tabular-nums">{nights} × {formatVnd(bookingType.basePrice)}</span>
+                  </p>
+                  <p className="flex justify-between border-t border-white/10 pt-2 text-base">
+                    <span className="text-cream-50/60">Tạm tính</span>
+                    <span className="font-display font-semibold tabular-nums">{formatVnd(bookingType.basePrice * nights)}</span>
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={confirmBooking}
+                  disabled={booking}
+                  className={`mt-5 w-full rounded-full bg-brand-500 py-3 text-sm font-bold text-white ${EASE} hover:bg-brand-600 active:scale-[0.98] disabled:opacity-40`}
+                >
+                  {booking ? 'Đang gửi…' : 'Gửi yêu cầu đặt phòng'}
+                </button>
+                <p className="mt-2 text-center text-[11px] text-cream-50/50">
+                  Chưa thu tiền — lễ tân xác nhận rồi thanh toán tại quầy.
+                </p>
+                {bookingError && <p className="mt-3 text-[12px] font-medium text-amber-300">{bookingError}</p>}
+              </div>
             </div>
           </div>
         </div>
       )}
+
+      {/* Sticky bar khi da chon loai phong o buoc 2 - kieu BOOK NOW cua trang le tan */}
+      <div className={`fixed inset-x-0 bottom-0 z-20 ${EASE} duration-500 ${step === 2 && bookingType ? 'translate-y-0' : 'translate-y-full'}`}>
+        <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 rounded-t-2xl bg-ink-900 px-6 py-4 text-cream-50 shadow-lift">
+          {bookingType && (
+            <p className="text-sm">
+              <span className="font-display font-semibold">{bookingType.roomTypeName}</span>
+              <span className="text-cream-50/60"> · {nights} đêm · </span>
+              <span className="font-display font-semibold tabular-nums">{formatVnd(bookingType.basePrice * nights)}</span>
+            </p>
+          )}
+          <button
+            type="button"
+            onClick={() => setStep(3)}
+            className={`rounded-full bg-brand-500 px-7 py-2.5 text-sm font-bold text-white ${EASE} hover:bg-brand-600 active:scale-[0.98]`}
+          >
+            Tiếp tục →
+          </button>
+        </div>
+      </div>
     </div>
   )
 }
