@@ -3,6 +3,7 @@ import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { EASE, errorCls } from '../../utils/ui'
 import guestClient, { isBackendMissing } from '../../api/guestClient'
 import GoogleSignInButton from '../../components/GoogleSignInButton'
+import PortalSwitch from '../../components/PortalSwitch'
 import { getGuestToken, saveGuestSession } from '../../utils/guestSession'
 
 const inputCls =
@@ -132,21 +133,37 @@ export default function GuestLoginPage() {
   }
 
   return (
-    <div className="relative flex min-h-screen flex-col items-center bg-cream-100 px-6">
-      <div className="grain-overlay" />
-      <Link
-        to="/"
-        className={`absolute left-5 top-5 flex items-center gap-1.5 text-[12px] font-semibold text-ink-500 ${EASE} hover:text-ink-900`}
-      >
-        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden>
-          <path d="M10 3L5 8L10 13" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-        Trang chủ
-      </Link>
+    <div className="relative flex min-h-screen bg-cream-100">
+      {/* Nua trai: anh khach san lon + overlay theo mau template booking - chi hien tu lg tro len,
+          mobile van giu the cream gon (anh nua man hinh tren dien thoai chi con 1 dai hep vo nghia) */}
+      <div className="relative hidden w-1/2 lg:block">
+        <img src="/img/login-hero.jpg" alt="" className="absolute inset-0 h-full w-full object-cover" />
+        <div className="absolute inset-0 bg-gradient-to-t from-ink-900/80 via-ink-900/25 to-ink-900/30" />
+        <div className="absolute bottom-12 left-12 right-12 text-white">
+          <p className="font-display text-[15px] italic text-white/80">★★★★★ hotel & service</p>
+          <p className="mt-2 font-display text-4xl font-medium leading-tight">Kỳ nghỉ của bạn bắt đầu từ đây</p>
+          <p className="mt-2.5 max-w-md text-sm leading-relaxed text-white/70">
+            Đặt phòng, gọi dịch vụ và theo dõi kỳ lưu trú — tất cả trong một tài khoản.
+          </p>
+        </div>
+      </div>
+
+      <div className="relative flex flex-1 flex-col items-center px-6">
+        <div className="grain-overlay" />
+        <Link
+          to="/"
+          className={`absolute left-5 top-5 flex items-center gap-1.5 text-[12px] font-semibold text-ink-500 ${EASE} hover:text-ink-900`}
+        >
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden>
+            <path d="M10 3L5 8L10 13" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          Trang chủ
+        </Link>
       <div className="flex w-full max-w-md flex-1 flex-col justify-center py-10">
         <div className="bezel-shell">
           <div className="bezel-core px-7 py-9 sm:px-10 sm:py-12">
-            <div className="flex flex-col items-center text-center">
+            <PortalSwitch active="guest" />
+            <div className="mt-8 flex flex-col items-center text-center">
               <span className="flex h-12 w-10 items-end justify-center rounded-t-full rounded-b-md bg-brand-600 pb-2 font-display text-lg font-bold text-white">
                 H
               </span>
@@ -321,6 +338,7 @@ export default function GuestLoginPage() {
         </div>
       </div>
       <p className="pb-5 text-[11px] text-ink-500/60">Group 2 · SE1919 · FPT University</p>
+      </div>
     </div>
   )
 }

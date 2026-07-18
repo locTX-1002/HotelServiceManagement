@@ -3,6 +3,7 @@ import { EASE, errorCls } from '../utils/ui'
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import client, { isBackendMissing } from '../api/client'
 import GoogleSignInButton from '../components/GoogleSignInButton'
+import PortalSwitch from '../components/PortalSwitch'
 import { homeFor } from '../utils/roles'
 import { getToken, getUser, readAuthResponse, saveSession } from '../utils/session'
 
@@ -107,23 +108,26 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="relative flex min-h-screen flex-col items-center bg-cream-100 px-6">
-      <div className="grain-overlay" />
+    <div className="relative flex min-h-screen flex-col items-center px-6">
+      {/* Nen anh khach san + overlay toi theo mau template booking - card cream noi len tren */}
+      <img src="/img/v3.jpg" alt="" className="fixed inset-0 h-full w-full object-cover" />
+      <div className="fixed inset-0 bg-ink-900/60" />
       <Link
         to="/"
-        className={`absolute left-5 top-5 flex items-center gap-1.5 text-[12px] font-semibold text-ink-500 ${EASE} hover:text-ink-900`}
+        className={`absolute left-5 top-5 z-10 flex items-center gap-1.5 text-[12px] font-semibold text-white/80 ${EASE} hover:text-white`}
       >
         <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden>
           <path d="M10 3L5 8L10 13" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
         Trang chủ
       </Link>
-      <div className="flex w-full max-w-md flex-1 flex-col justify-center py-10">
+      <div className="relative z-10 flex w-full max-w-md flex-1 flex-col justify-center py-10">
         {/* Double-bezel: vỏ vòm mềm bọc lấy card đăng nhập - chất Amanoi */}
         <div className="bezel-shell">
           <div className="bezel-core px-7 py-9 sm:px-10 sm:py-12">
+        <PortalSwitch active="staff" />
         {/* Logo vòm đồng bộ với nav */}
-        <div className="flex flex-col items-center text-center">
+        <div className="mt-8 flex flex-col items-center text-center">
           <span className="flex h-12 w-10 items-end justify-center rounded-t-full rounded-b-md bg-brand-600 pb-2 font-display text-lg font-bold text-white">
             H
           </span>
@@ -218,7 +222,7 @@ export default function LoginPage() {
           </div>
         </div>
       </div>
-      <p className="pb-5 text-[11px] text-ink-500/60">Group 2 · SE1919 · FPT University</p>
+      <p className="relative z-10 pb-5 text-[11px] text-cream-50/70">Group 2 · SE1919 · FPT University</p>
 
       {/* Tự đặt lại mật khẩu qua email - server luôn trả cùng 1 thông báo chung dù email có tồn tại
           hay không (chống dò email), chỉ thực sự gửi mail khi tài khoản tồn tại và đang hoạt động. */}
