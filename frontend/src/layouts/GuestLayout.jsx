@@ -1,4 +1,4 @@
-import { Link, Outlet, useNavigate } from 'react-router-dom'
+import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { EASE } from '../utils/ui'
 import guestClient from '../api/guestClient'
 import { clearGuestSession, getGuest, getGuestRefreshToken } from '../utils/guestSession'
@@ -16,19 +16,30 @@ export default function GuestLayout() {
     navigate('/guest/dang-nhap')
   }
 
+  const navLinkCls = ({ isActive }) =>
+    `text-[12px] font-bold uppercase tracking-wider ${EASE} hover:text-ink-900 ${isActive ? 'text-brand-600' : 'text-ink-500'}`
+
   return (
     <div className="min-h-screen bg-cream-100">
       <div className="grain-overlay" />
       <header className="border-b border-black/[0.07] bg-cream-50/80 backdrop-blur">
-        <div className="mx-auto flex max-w-3xl items-center justify-between px-6 py-4">
+        <div className="mx-auto flex max-w-3xl flex-wrap items-center justify-between gap-x-6 gap-y-3 px-6 py-4">
           <Link to="/" className={`flex items-center gap-2 font-display text-lg font-semibold ${EASE} hover:opacity-70`}>
             <span className="flex h-8 w-7 items-end justify-center rounded-t-full rounded-b-md bg-brand-600 pb-1.5 font-display text-sm font-bold text-white">
               H
             </span>
             HSMS
           </Link>
+          <nav className="flex items-center gap-5">
+            <NavLink to="/guest/dashboard" className={navLinkCls}>
+              Đặt phòng của tôi
+            </NavLink>
+            <NavLink to="/guest/ho-so" className={navLinkCls}>
+              Hồ sơ
+            </NavLink>
+          </nav>
           <div className="flex items-center gap-4">
-            {guest && <span className="text-[13px] font-medium text-ink-700">{guest.fullName}</span>}
+            {guest && <span className="hidden text-[13px] font-medium text-ink-700 sm:inline">{guest.fullName}</span>}
             <button
               type="button"
               onClick={logout}

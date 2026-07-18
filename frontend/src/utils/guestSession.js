@@ -22,6 +22,13 @@ export const saveGuestSession = (data) => {
   }))
 }
 
+// Sua ten hien thi tren header ngay sau khi luu ho so, khong bat khach dang nhap lai moi thay ten moi.
+export const updateGuestFullName = (fullName) => {
+  const guest = getGuest()
+  if (!guest) return
+  localStorage.setItem('guest', JSON.stringify({ ...guest, fullName }))
+}
+
 export const clearGuestSession = () => {
   localStorage.removeItem('guestToken')
   localStorage.removeItem('guestRefreshToken')
