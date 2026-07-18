@@ -20,6 +20,12 @@ import InvoicePage from './pages/InvoicePage'
 import UsersPage from './pages/UsersPage'
 import ProtectedRoute from './routes/ProtectedRoute'
 import RequireRole from './routes/RequireRole'
+import GuestProtectedRoute from './routes/GuestProtectedRoute'
+import GuestLayout from './layouts/GuestLayout'
+import GuestLoginPage from './pages/guest/GuestLoginPage'
+import GuestRegisterPage from './pages/guest/GuestRegisterPage'
+import GuestResetPasswordPage from './pages/guest/GuestResetPasswordPage'
+import GuestDashboardPage from './pages/guest/GuestDashboardPage'
 
 export default function App() {
   return (
@@ -28,6 +34,15 @@ export default function App() {
         <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
+        {/* Cổng thông tin khách - tách hoàn toàn khỏi khu nhân viên bên dưới, session/API riêng */}
+        <Route path="/guest/dang-nhap" element={<GuestLoginPage />} />
+        <Route path="/guest/dang-ky" element={<GuestRegisterPage />} />
+        <Route path="/guest/quen-mat-khau" element={<GuestResetPasswordPage />} />
+        <Route element={<GuestProtectedRoute />}>
+          <Route element={<GuestLayout />}>
+            <Route path="/guest/dashboard" element={<GuestDashboardPage />} />
+          </Route>
+        </Route>
         {/* Khu nghiệp vụ: bắt buộc có phiên đăng nhập + đúng quyền vai trò */}
         <Route element={<ProtectedRoute />}>
           <Route element={<MainLayout />}>

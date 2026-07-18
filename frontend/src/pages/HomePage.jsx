@@ -85,6 +85,7 @@ export default function HomePage() {
   }
 
   const goStaff = () => navigate('/login')
+  const goGuestPortal = () => navigate('/guest/dang-nhap')
 
   return (
     <div className="bg-cream-50">
@@ -102,8 +103,14 @@ export default function HomePage() {
             <a href="#services" className={`${EASE} hover:text-white`}>Dịch vụ</a>
             <a href="#footer" className={`${EASE} hover:text-white`}>Liên hệ</a>
           </nav>
-          <div className="flex items-center gap-5">
+          <div className="flex items-center gap-3">
             <span className="hidden text-[12px] font-medium tracking-wide text-white/80 sm:block">1900 636 999</span>
+            <button
+              onClick={goGuestPortal}
+              className={`rounded-full px-5 py-2 text-[11px] font-bold uppercase tracking-[0.15em] text-white ring-1 ring-white/40 ${EASE} hover:bg-white hover:text-ink-900`}
+            >
+              Khách lưu trú
+            </button>
             <button
               onClick={goStaff}
               className={`rounded-full px-5 py-2 text-[11px] font-bold uppercase tracking-[0.15em] text-white ring-1 ring-white/40 ${EASE} hover:bg-white hover:text-ink-900`}
