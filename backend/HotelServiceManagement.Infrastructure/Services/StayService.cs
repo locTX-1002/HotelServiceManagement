@@ -71,7 +71,18 @@ namespace HotelServiceManagement.Infrastructure.Services
             if (!reservation.Room.IsActive ||
                 reservation.Room.Status is not (RoomStatus.Available or RoomStatus.Reserved))
             {
-                return Failure("Room is not available for check-in.");
+                // Generic "not available" left receptionists guessing - name the actual blocker so
+                // they know the next step (wait for checkout, finish cleaning, or reopen the room).
+                var reason = !reservation.Room.IsActive
+                    ? "the room is inactive"
+                    : reservation.Room.Status switch
+                    {
+                        RoomStatus.Occupied => "the previous guest has not checked out yet",
+                        RoomStatus.Cleaning => "housekeeping has not finished cleaning it",
+                        RoomStatus.Maintenance => "it is under maintenance",
+                        _ => "the room is not ready"
+                    };
+                return Failure($"Cannot check in room {reservation.Room.RoomNumber}: {reason}.");
             }
 
             var actualCheckIn = request.ActualCheckIn == default
