@@ -50,6 +50,8 @@ export default function ReservationsPage() {
   // Khoá đồng bộ chống spam-click - state cancelling/noShowBusy cập nhật bất đồng bộ nên vẫn lọt request khi bấm liên tiếp nhanh
   const cancellingRef = useRef(false)
   const noShowRef = useRef(false)
+  // Xác nhận chạy thẳng trên từng dòng (không qua dialog) nên khoá theo id, không khoá cả bảng
+  const confirmingRef = useRef({})
 
   const load = () => {
     setLoadError(false)
@@ -107,6 +109,31 @@ export default function ReservationsPage() {
       })
       .catch((err) => setNoShowError(apiError(err)))
       .finally(() => { noShowRef.current = false; setNoShowBusy(false) })
+  }
+
+  // Duyet don "Chờ xác nhận" bang 1 cham - PUT giu nguyen toan bo du lieu, chi doi trang thai sang
+  // Confirmed. Khong can dialog nhu Huy/Khong den vi xac nhan khong pha huy (sau do van huy duoc).
+  const confirmBooking = (r) => {
+    if (confirmingRef.current[r.reservationId]) return
+    confirmingRef.current[r.reservationId] = true
+    client
+      .put(`/api/reservations/${r.reservationId}`, {
+        guestId: r.guestId,
+        roomId: r.roomId,
+        numberOfGuests: r.numberOfGuests,
+        checkInDate: dkey(r.checkInDate),
+        checkOutDate: dkey(r.checkOutDate),
+        status: denormalizeReservationStatus('Confirmed'),
+        specialRequests: r.specialRequests ?? undefined,
+      })
+      .then(() => {
+        toast.success(`Đã xác nhận đặt phòng ${r.bookingCode}`)
+        load()
+      })
+      .catch((err) => toast.error(apiError(err)))
+      .finally(() => {
+        confirmingRef.current[r.reservationId] = false
+      })
   }
 
   const openEdit = (r) => {
@@ -257,6 +284,14 @@ export default function ReservationsPage() {
                           )}
                         </td>
                         <td className="px-5 py-3.5 text-right">
+                          {r.status === 'Pending' && (
+                            <button
+                              onClick={() => confirmBooking(r)}
+                              className={`mr-2 rounded-full bg-emerald-600 px-3.5 py-1.5 text-[12px] font-bold text-white ${EASE} hover:bg-emerald-700 active:scale-[0.98]`}
+                            >
+                              Xác nhận
+                            </button>
+                          )}
                           {canEdit(r) && (
                             <button
                               onClick={() => openEdit(r)}
