@@ -61,7 +61,23 @@ namespace HotelServiceManagement.Infrastructure.Services
             };
 
             _context.Promotions.Add(promotion);
-            await _context.SaveChangesAsync();
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException)
+            {
+                // Yêu cầu khác vừa tạo cùng mã trong lúc chờ AnyAsync ở trên - unique index DB đã chặn
+                // đúng, chỉ cần dịch exception thành 409 sạch thay vì để lộ 500 hoặc tạo trùng.
+                var stillDuplicate = await _context.Promotions.AnyAsync(p => p.Code == code);
+                if (!stillDuplicate)
+                {
+                    throw;
+                }
+
+                return AuthServiceResult<PromotionResponse>.Failure("Promotion code already exists.", 409);
+            }
 
             return AuthServiceResult<PromotionResponse>.Success(ToResponse(promotion), "Promotion created successfully.");
         }
@@ -95,7 +111,20 @@ namespace HotelServiceManagement.Infrastructure.Services
             promotion.EndDate = request.EndDate;
             promotion.IsActive = request.IsActive;
 
-            await _context.SaveChangesAsync();
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException)
+            {
+                var stillDuplicate = await _context.Promotions.AnyAsync(p => p.Id != id && p.Code == code);
+                if (!stillDuplicate)
+                {
+                    throw;
+                }
+
+                return AuthServiceResult<PromotionResponse>.Failure("Promotion code already exists.", 409);
+            }
 
             return AuthServiceResult<PromotionResponse>.Success(ToResponse(promotion), "Promotion updated successfully.");
         }
