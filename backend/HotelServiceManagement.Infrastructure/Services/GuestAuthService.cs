@@ -6,6 +6,7 @@ using HotelServiceManagement.Application.Interfaces;
 using HotelServiceManagement.Domain.Entities;
 using HotelServiceManagement.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 
 namespace HotelServiceManagement.Infrastructure.Services
 {
@@ -14,42 +15,78 @@ namespace HotelServiceManagement.Infrastructure.Services
         // Khong co "remember me" nhu nhan vien - khach hiem khi dang nhap moi ngay, co dinh 1 thoi
         // han du dai la vua, khong can them lua chon lam phuc tap UI dang ky/dang nhap.
         private static readonly TimeSpan RefreshLifetime = TimeSpan.FromDays(7);
+        private static readonly TimeSpan PasswordResetTokenLifetime = TimeSpan.FromMinutes(30);
 
         private readonly HotelDbContext _context;
         private readonly IJwtService _jwtService;
         private readonly IPasswordHasher _passwordHasher;
+        private readonly IEmailService _emailService;
+        private readonly IConfiguration _configuration;
 
-        public GuestAuthService(HotelDbContext context, IJwtService jwtService, IPasswordHasher passwordHasher)
+        public GuestAuthService(
+            HotelDbContext context,
+            IJwtService jwtService,
+            IPasswordHasher passwordHasher,
+            IEmailService emailService,
+            IConfiguration configuration)
         {
             _context = context;
             _jwtService = jwtService;
             _passwordHasher = passwordHasher;
+            _emailService = emailService;
+            _configuration = configuration;
         }
 
+        // Tu dang ky tu do bang SDT - khong con doi hoi chung minh so huu 1 dat phong cu the (xac
+        // minh danh tinh that dien ra o quay le tan luc check-in, cong khach online chi la lop tien
+        // ich). Khop theo SDT voi Guest le tan da tao san (neu co) de khach thay ngay dat phong cu;
+        // khong khop thi tao Guest moi trong. Khop nhieu hon 1 Guest (SDT khong duoc rang buoc duy
+        // nhat trong DB, hiem gap) thi CHU DONG khong gan vao ai ca - tranh gan nham nguoi la, tao
+        // Guest moi rieng cho chac.
         public async Task<AuthServiceResult<GuestAuthResponse>> RegisterAsync(GuestRegisterRequest request)
         {
+            if (string.IsNullOrWhiteSpace(request.FullName))
+            {
+                return AuthServiceResult<GuestAuthResponse>.Failure("Full name is required.");
+            }
+
+            var phoneNumber = request.PhoneNumber?.Trim() ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(phoneNumber))
+            {
+                return AuthServiceResult<GuestAuthResponse>.Failure("Phone number is required.");
+            }
+
             if (string.IsNullOrWhiteSpace(request.Password) || request.Password.Length < 6)
             {
                 return AuthServiceResult<GuestAuthResponse>.Failure("Password must be at least 6 characters.");
             }
 
-            var guest = await FindVerifiedGuestAsync(request.BookingCode, request.FullName, request.PhoneNumber);
-            if (guest == null)
+            var matches = await _context.Guests.Where(g => g.PhoneNumber == phoneNumber).ToListAsync();
+            Guest guest;
+            if (matches.Count == 1)
             {
-                return AuthServiceResult<GuestAuthResponse>.Failure(
-                    "Booking code, full name or phone number does not match any reservation.", 404);
+                guest = matches[0];
+                var alreadyHasAccount = await _context.GuestAccounts.AnyAsync(a => a.GuestId == guest.Id);
+                if (alreadyHasAccount)
+                {
+                    return AuthServiceResult<GuestAuthResponse>.Failure(
+                        "This phone number already has an account. Please login instead.", 409);
+                }
             }
-
-            var existingAccount = await _context.GuestAccounts.AnyAsync(a => a.GuestId == guest.Id);
-            if (existingAccount)
+            else
             {
-                return AuthServiceResult<GuestAuthResponse>.Failure(
-                    "This guest already has an account. Please login instead.", 409);
+                guest = new Guest
+                {
+                    FullName = request.FullName.Trim(),
+                    Email = string.IsNullOrWhiteSpace(request.Email) ? null : request.Email.Trim(),
+                    PhoneNumber = phoneNumber
+                };
+                _context.Guests.Add(guest);
             }
 
             var account = new GuestAccount
             {
-                GuestId = guest.Id,
+                Guest = guest,
                 PasswordHash = _passwordHasher.HashPassword(request.Password),
                 CreatedAt = DateTime.UtcNow
             };
@@ -61,16 +98,15 @@ namespace HotelServiceManagement.Infrastructure.Services
             }
             catch (DbUpdateException)
             {
-                // Request khac vua dang ky xong cho dung Guest nay trong luc cho SaveChangesAsync -
-                // unique index GuestId da chan dung, chi can dich thanh 409 sach.
-                var stillExists = await _context.GuestAccounts.AnyAsync(a => a.GuestId == guest.Id);
+                // Request khac vua dang ky xong cho dung SDT nay trong luc cho SaveChangesAsync.
+                var stillExists = await _context.GuestAccounts.AnyAsync(a => a.Guest.PhoneNumber == phoneNumber);
                 if (!stillExists)
                 {
                     throw;
                 }
 
                 return AuthServiceResult<GuestAuthResponse>.Failure(
-                    "This guest already has an account. Please login instead.", 409);
+                    "This phone number already has an account. Please login instead.", 409);
             }
 
             var refreshToken = IssueRefreshToken(account.Id, DateTime.UtcNow.Add(RefreshLifetime));
@@ -142,37 +178,69 @@ namespace HotelServiceManagement.Infrastructure.Services
             await _context.SaveChangesAsync();
         }
 
-        public async Task<AuthServiceResult<AuthMessageResponse>> ResetPasswordAsync(GuestResetPasswordRequest request)
+        public async Task<AuthServiceResult<AuthMessageResponse>> ForgotPasswordAsync(string phoneNumber)
         {
-            if (string.IsNullOrWhiteSpace(request.NewPassword) || request.NewPassword.Length < 6)
+            const string genericMessage = "If that phone number has an account with an email on file, a reset link has been sent.";
+
+            var normalizedPhone = phoneNumber?.Trim() ?? string.Empty;
+            if (normalizedPhone.Length == 0)
+            {
+                return AuthServiceResult<AuthMessageResponse>.Failure("Phone number is required.");
+            }
+
+            var account = await _context.GuestAccounts
+                .Include(a => a.Guest)
+                .FirstOrDefaultAsync(a => a.Guest.PhoneNumber == normalizedPhone);
+
+            // Tra ve cung 1 thong bao chung du tai khoan co ton tai/co email hay khong - tranh lo cho
+            // ke tan cong do so dien thoai nao da dang ky trong he thong.
+            if (account == null || string.IsNullOrWhiteSpace(account.Guest.Email))
+            {
+                return AuthServiceResult<AuthMessageResponse>.Success(new AuthMessageResponse { Message = genericMessage });
+            }
+
+            var token = new GuestPasswordResetToken
+            {
+                Token = GenerateSecureToken(),
+                GuestAccountId = account.Id,
+                CreatedAt = DateTime.UtcNow,
+                ExpiresAt = DateTime.UtcNow.Add(PasswordResetTokenLifetime)
+            };
+            _context.GuestPasswordResetTokens.Add(token);
+            await _context.SaveChangesAsync();
+
+            var frontendOrigin = _configuration["Cors:FrontendOrigin"] ?? "http://localhost:5173";
+            var resetLink = $"{frontendOrigin}/guest/dat-lai-mat-khau?token={Uri.EscapeDataString(token.Token)}";
+            await _emailService.SendPasswordResetEmailAsync(account.Guest.Email, account.Guest.FullName, resetLink);
+
+            return AuthServiceResult<AuthMessageResponse>.Success(new AuthMessageResponse { Message = genericMessage });
+        }
+
+        public async Task<AuthServiceResult<AuthMessageResponse>> ResetPasswordWithTokenAsync(string token, string newPassword)
+        {
+            if (string.IsNullOrWhiteSpace(newPassword) || newPassword.Length < 6)
             {
                 return AuthServiceResult<AuthMessageResponse>.Failure("New password must be at least 6 characters.");
             }
 
-            var guest = await FindVerifiedGuestAsync(request.BookingCode, request.FullName, request.PhoneNumber);
-            if (guest == null)
+            var existing = await _context.GuestPasswordResetTokens
+                .Include(t => t.GuestAccount)
+                .FirstOrDefaultAsync(t => t.Token == token);
+
+            if (existing == null || existing.UsedAt != null || existing.ExpiresAt < DateTime.UtcNow)
             {
-                return AuthServiceResult<AuthMessageResponse>.Failure(
-                    "Booking code, full name or phone number does not match any reservation.", 404);
+                return AuthServiceResult<AuthMessageResponse>.Failure("Reset link is invalid or expired.", 401);
             }
 
-            var account = await _context.GuestAccounts.FirstOrDefaultAsync(a => a.GuestId == guest.Id);
-            if (account == null)
-            {
-                return AuthServiceResult<AuthMessageResponse>.Failure(
-                    "This guest does not have an account yet. Please register instead.", 404);
-            }
+            existing.GuestAccount.PasswordHash = _passwordHasher.HashPassword(newPassword);
+            existing.UsedAt = DateTime.UtcNow;
 
-            account.PasswordHash = _passwordHasher.HashPassword(request.NewPassword);
-
-            // Doi mat khau xong thu hoi toan bo refresh token cu - phong truong hop mat khau bi lo,
-            // thiet bi/nguoi khac dang giu refresh token cu se khong the tiep tuc lam moi phien duoc nua.
             var activeTokens = await _context.GuestRefreshTokens
-                .Where(rt => rt.GuestAccountId == account.Id && rt.RevokedAt == null)
+                .Where(rt => rt.GuestAccountId == existing.GuestAccountId && rt.RevokedAt == null)
                 .ToListAsync();
-            foreach (var token in activeTokens)
+            foreach (var rt in activeTokens)
             {
-                token.RevokedAt = DateTime.UtcNow;
+                rt.RevokedAt = DateTime.UtcNow;
             }
 
             await _context.SaveChangesAsync();
@@ -192,36 +260,6 @@ namespace HotelServiceManagement.Infrastructure.Services
 
             return AuthServiceResult<IReadOnlyList<ReservationResponse>>.Success(
                 reservations.Select(ToReservationResponse).ToList());
-        }
-
-        // Xac minh khach la chu that cua 1 dat phong: BookingCode phai ton tai, VA ho ten + SDT tren
-        // dat phong do phai khop dung Guest tuong ung - dung chung cho ca dang ky lan quen mat khau,
-        // khong can ha tang gui email.
-        private async Task<Guest?> FindVerifiedGuestAsync(string? bookingCode, string? fullName, string? phoneNumber)
-        {
-            var normalizedCode = bookingCode?.Trim() ?? string.Empty;
-            if (normalizedCode.Length == 0)
-            {
-                return null;
-            }
-
-            var reservation = await _context.Reservations
-                .Include(r => r.Guest)
-                .FirstOrDefaultAsync(r => r.BookingCode == normalizedCode);
-
-            if (reservation == null)
-            {
-                return null;
-            }
-
-            var nameMatches = string.Equals(
-                reservation.Guest.FullName.Trim(), fullName?.Trim() ?? string.Empty,
-                StringComparison.OrdinalIgnoreCase);
-            var phoneMatches = string.Equals(
-                reservation.Guest.PhoneNumber.Trim(), phoneNumber?.Trim() ?? string.Empty,
-                StringComparison.Ordinal);
-
-            return nameMatches && phoneMatches ? reservation.Guest : null;
         }
 
         private GuestRefreshToken IssueRefreshToken(int guestAccountId, DateTime expiresAt)

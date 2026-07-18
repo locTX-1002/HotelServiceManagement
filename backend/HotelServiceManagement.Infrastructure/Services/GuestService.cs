@@ -25,7 +25,7 @@ namespace HotelServiceManagement.Infrastructure.Services
                 var normalizedKeyword = keyword.Trim().ToLower();
                 query = query.Where(g => g.FullName.ToLower().Contains(normalizedKeyword)
                     || g.PhoneNumber.Contains(normalizedKeyword)
-                    || g.IdentityNumber.Contains(normalizedKeyword)
+                    || (g.IdentityNumber != null && g.IdentityNumber.Contains(normalizedKeyword))
                     || (g.Email != null && g.Email.ToLower().Contains(normalizedKeyword)));
             }
 
@@ -145,7 +145,7 @@ namespace HotelServiceManagement.Infrastructure.Services
                 FullName = guest.FullName,
                 Email = guest.Email,
                 PhoneNumber = guest.PhoneNumber,
-                IdentityNumber = guest.IdentityNumber,
+                IdentityNumber = guest.IdentityNumber ?? string.Empty,
                 Tag = guest.Tag,
                 TagNote = guest.TagNote,
                 ReservationCount = guest.Reservations?.Count ?? 0

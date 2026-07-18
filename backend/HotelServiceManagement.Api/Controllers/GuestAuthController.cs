@@ -50,10 +50,17 @@ namespace HotelServiceManagement.Api.Controllers
             return Ok(new AuthMessageResponse { Message = "Logged out." });
         }
 
-        [HttpPost("auth/reset-password")]
-        public async Task<IActionResult> ResetPassword([FromBody] GuestResetPasswordRequest request)
+        [HttpPost("auth/forgot-password")]
+        public async Task<IActionResult> ForgotPassword([FromBody] GuestForgotPasswordRequest request)
         {
-            return ToActionResult(await _guestAuthService.ResetPasswordAsync(request));
+            return ToActionResult(await _guestAuthService.ForgotPasswordAsync(request?.PhoneNumber ?? string.Empty));
+        }
+
+        [HttpPost("auth/reset-password")]
+        public async Task<IActionResult> ResetPassword([FromBody] GuestResetPasswordWithTokenRequest request)
+        {
+            return ToActionResult(await _guestAuthService.ResetPasswordWithTokenAsync(
+                request?.Token ?? string.Empty, request?.NewPassword ?? string.Empty));
         }
 
         [Authorize(Policy = "GuestOnly")]
