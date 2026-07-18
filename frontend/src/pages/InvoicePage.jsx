@@ -41,6 +41,7 @@ export default function InvoicePage() {
   // Khoá đồng bộ chống spam-click - state paying/creating cập nhật bất đồng bộ nên vẫn lọt request khi bấm liên tiếp nhanh
   const payingRef = useRef(false)
   const creatingRef = useRef(false)
+  const promoRef = useRef(false)
 
   const load = () => {
     if (!stayId) return
@@ -81,13 +82,14 @@ export default function InvoicePage() {
   // Hoá đơn thường đã được tạo sẵn ngay lúc check-out - áp mã khuyến mãi nghĩa là gọi lại
   // đúng API tạo hoá đơn, backend tự tính lại tổng tiền trên hoá đơn đã có (không tạo trùng).
   const applyPromo = () => {
-    if (!promoCode.trim()) return
+    if (!promoCode.trim() || promoRef.current) return
+    promoRef.current = true
     setApplyingPromo(true)
     client
       .post(`/api/invoices/stay/${stayId}`, { promotionCode: promoCode.trim() })
       .then(() => { toast.success(`Đã áp dụng mã ${promoCode.trim().toUpperCase()}`); load() })
       .catch((err) => toast.error(apiError(err)))
-      .finally(() => setApplyingPromo(false))
+      .finally(() => { promoRef.current = false; setApplyingPromo(false) })
   }
 
   const submitPayment = () => {
