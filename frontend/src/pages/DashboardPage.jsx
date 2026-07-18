@@ -62,10 +62,8 @@ export default function DashboardPage() {
   const load = () => {
     setLoadError(false)
     client
-      // Không gộp với MOCK_DASHBOARD khi có dữ liệu thật - backend hiện chưa trả alerts/arrivals/departures/revenue7d,
-      // gộp sẽ khiến các mục đó hiện mãi dữ liệu mẫu như thật dù đã kết nối server.
-      // API cấp KPI + tổng doanh thu (TotalRevenue = tổng payment đã thu); các panel vận hành
-      // (khách đến/đi, cảnh báo, biểu đồ 7 ngày) chưa có endpoint nên chỉ hiện khi dùng dữ liệu mẫu.
+      // Không gộp với MOCK_DASHBOARD khi có dữ liệu thật - res.data đã có đủ alerts/arrivals/departures/revenue7d
+      // từ backend, gộp thêm mock sẽ ghi đè dữ liệu thật bằng số liệu minh hoạ.
       .get('/api/reports/dashboard')
       .then((res) => { setData(res.data); setUsingMock(false) })
       .catch((err) => {
@@ -154,13 +152,6 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* API vận hành (khách đến/đi, cảnh báo, biểu đồ 7 ngày) chưa có -> báo rõ đây là số minh hoạ */}
-      {!usingMock && (
-        <p className="mt-4 text-[11px] italic text-ink-500">
-          Các mục vận hành bên dưới (khách đến/đi, cảnh báo, biểu đồ 7 ngày) là số liệu minh hoạ — API vận hành chưa hỗ trợ.
-        </p>
-      )}
-
       {/* Dải Cần chú ý - thứ khiến trang này "làm việc" */}
       {data.alerts?.length > 0 && (
         <div className="mt-4 rounded-xl bg-amber-50/80 px-5 py-3.5 ring-1 ring-amber-600/15">
@@ -184,7 +175,7 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Backend hiện chưa tính lượt check-in/trả phòng hôm nay - chỉ hiện khi có dữ liệu (mock/demo) */}
+      {/* Chỉ hiện khi backend trả kèm dữ liệu (luôn có với API thật, tuỳ chọn với mock) */}
       {data.arrivals && data.departures && (
       <div className="mt-5 grid gap-5 lg:grid-cols-2">
         {/* Khách đến hôm nay */}
@@ -235,7 +226,7 @@ export default function DashboardPage() {
       </div>
       )}
 
-      {/* Doanh thu 7 ngày: cột hôm nay terracotta, còn lại be nhạt, đỉnh gắn nhãn - chỉ hiện khi có dữ liệu (mock/demo) */}
+      {/* Doanh thu 7 ngày: cột hôm nay terracotta, còn lại be nhạt, đỉnh gắn nhãn */}
       {data.revenue7d && data.revenue7d.length > 0 && (
       <div className="mt-5">
         <Panel title="Doanh thu 7 ngày gần nhất">
@@ -250,7 +241,7 @@ export default function DashboardPage() {
                   </p>
                   <div
                     className={`w-full max-w-12 rounded-t-md ${EASE} ${last ? 'bg-brand-600' : 'bg-cream-200 group-hover:bg-ink-900/20'}`}
-                    style={{ height: `${Math.max((d.amount / maxRevenue) * 100, 6)}%` }}
+                    style={{ height: `${maxRevenue > 0 ? Math.max((d.amount / maxRevenue) * 100, 6) : 6}%` }}
                   />
                   <p className={`text-[11px] ${last ? 'font-bold text-ink-900' : 'font-medium text-ink-500'}`}>{d.day}</p>
                 </div>
