@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { EASE, errorCls } from '../../utils/ui'
 import guestClient, { isBackendMissing } from '../../api/guestClient'
+import GoogleSignInButton from '../../components/GoogleSignInButton'
 import { getGuestToken, saveGuestSession } from '../../utils/guestSession'
 
 const inputCls =
@@ -16,9 +17,42 @@ export default function GuestLoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  // Lan dau dang nhap bang 1 tai khoan Google chua tung lien ket - BE tra 428 doi hoi SDT de khop/
+  // tao dung ho so khach (Google khong tra ve so dien thoai). Giu idToken lai de goi lai, khong bat
+  // khach dang nhap Google lan 2.
+  const [pendingGoogleToken, setPendingGoogleToken] = useState('')
+  const [googlePhone, setGooglePhone] = useState('')
+  const [googleLoading, setGoogleLoading] = useState(false)
+  const [googleError, setGoogleError] = useState('')
   const navigate = useNavigate()
   const location = useLocation()
   const from = location.state?.from ?? null
+
+  // submitGoogle/handleGoogleCredential phai khai bao TRUOC early-return ben duoi (Rules of Hooks -
+  // useCallback khong duoc goi co dieu kien) du chi dung sau khi da qua nhanh do.
+  const submitGoogle = useCallback(
+    (idToken, phoneNumber) => {
+      setGoogleError('')
+      setGoogleLoading(true)
+      guestClient
+        .post('/api/guest/auth/google-login', { idToken, phoneNumber: phoneNumber || undefined })
+        .then((res) => {
+          saveGuestSession(res.data)
+          navigate(from ?? '/guest/dashboard', { replace: true })
+        })
+        .catch((err) => {
+          if (err.response?.status === 428) setPendingGoogleToken(idToken)
+          else if (err.response?.status === 401) setGoogleError('Không xác minh được tài khoản Google, vui lòng thử lại.')
+          else if (isBackendMissing(err)) setGoogleError('Không kết nối được máy chủ. Vui lòng thử lại sau.')
+          else setGoogleError(err.response?.data?.message ?? 'Máy chủ báo lỗi. Thử lại sau ít phút.')
+        })
+        .finally(() => setGoogleLoading(false))
+    },
+    [navigate, from],
+  )
+
+  // Callback on dinh de GoogleSignInButton khong re-init GIS moi lan render
+  const handleGoogleCredential = useCallback((idToken) => submitGoogle(idToken, null), [submitGoogle])
 
   if (getGuestToken()) return <Navigate to={from ?? '/guest/dashboard'} replace />
 
@@ -39,6 +73,12 @@ export default function GuestLoginPage() {
         else setError(err.response?.data?.message ?? 'Máy chủ báo lỗi. Thử lại sau ít phút.')
       })
       .finally(() => setLoading(false))
+  }
+
+  const confirmGooglePhone = (e) => {
+    e.preventDefault()
+    if (googleLoading) return
+    submitGoogle(pendingGoogleToken, googlePhone.trim())
   }
 
   return (
@@ -114,6 +154,55 @@ export default function GuestLoginPage() {
                 {loading ? 'Đang đăng nhập…' : <>Đăng nhập <span aria-hidden>›</span></>}
               </button>
             </form>
+
+            {import.meta.env.VITE_GOOGLE_CLIENT_ID && (
+              <>
+                <div className="mt-6 flex items-center gap-3 text-[11px] font-semibold uppercase tracking-wider text-ink-500/60">
+                  <span className="h-px flex-1 bg-black/[0.08]" />
+                  hoặc
+                  <span className="h-px flex-1 bg-black/[0.08]" />
+                </div>
+
+                {pendingGoogleToken ? (
+                  <form onSubmit={confirmGooglePhone} className="mt-4 space-y-3">
+                    <p className="text-[12px] leading-relaxed text-ink-500">
+                      Lần đầu dùng Google này — nhập số điện thoại để nối vào đúng đặt phòng của bạn.
+                    </p>
+                    <input
+                      type="tel"
+                      required
+                      autoFocus
+                      className={inputCls}
+                      placeholder="09xxxxxxxx"
+                      value={googlePhone}
+                      onChange={(e) => setGooglePhone(e.target.value)}
+                    />
+                    {googleError && <p className={errorCls}>{googleError}</p>}
+                    <div className="flex gap-2.5">
+                      <button
+                        type="button"
+                        onClick={() => { setPendingGoogleToken(''); setGooglePhone(''); setGoogleError('') }}
+                        className={`rounded-full px-4 py-2.5 text-[12px] font-semibold text-ink-700 ring-1 ring-black/10 ${EASE} hover:bg-cream-50`}
+                      >
+                        Huỷ
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={googleLoading}
+                        className={`flex-1 rounded-full bg-brand-600 px-4 py-2.5 text-[12px] font-bold text-white ${EASE} hover:bg-brand-700 disabled:opacity-50`}
+                      >
+                        {googleLoading ? 'Đang xử lý…' : 'Tiếp tục'}
+                      </button>
+                    </div>
+                  </form>
+                ) : (
+                  <div className="mt-4">
+                    <GoogleSignInButton onCredential={handleGoogleCredential} />
+                    {googleError && <p className={`mt-3 ${errorCls}`}>{googleError}</p>}
+                  </div>
+                )}
+              </>
+            )}
 
             <div className="mt-8 space-y-2 border-t border-black/[0.07] pt-4 text-[12px] leading-relaxed text-ink-500">
               <p>
