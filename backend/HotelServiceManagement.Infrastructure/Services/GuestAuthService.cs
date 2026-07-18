@@ -143,11 +143,20 @@ namespace HotelServiceManagement.Infrastructure.Services
         // thoai nen can SDT de khop dung vao Guest le tan da tao san (neu co) hoac tao Guest moi,
         // giong het logic RegisterAsync. Thieu SDT o lan dau thi tra 428 de FE hien o nhap SDT roi
         // goi lai VOI CUNG idToken do (id_token con hieu luc ~1 tieng, khong can dang nhap Google lai).
-        public async Task<AuthServiceResult<GuestAuthResponse>> GoogleLoginAsync(string idToken, string? phoneNumber)
+        public async Task<AuthServiceResult<GuestAuthResponse>> GoogleLoginAsync(
+            string idToken, string? phoneNumber, string? fullName, string? password)
         {
             if (string.IsNullOrWhiteSpace(idToken))
             {
                 return AuthServiceResult<GuestAuthResponse>.Failure("Google ID token is required.");
+            }
+
+            // Rong = bo qua (khong dat mat khau luc nay, van dang nhap lai duoc qua Google). Co nhap
+            // thi phai dat rang buoc do dai giong het RegisterAsync/ResetPasswordWithTokenAsync.
+            var trimmedPassword = string.IsNullOrWhiteSpace(password) ? null : password.Trim();
+            if (trimmedPassword != null && trimmedPassword.Length < 6)
+            {
+                return AuthServiceResult<GuestAuthResponse>.Failure("Password must be at least 6 characters.");
             }
 
             var clientId = _configuration["Google:ClientId"];
@@ -200,9 +209,14 @@ namespace HotelServiceManagement.Infrastructure.Services
             }
             else
             {
+                // Guest hoan toan moi (khong khop SDT nao co san) - uu tien ten khach tu sua tren man
+                // hinh hoan tat ho so, sau do moi den ten Google, cuoi cung fallback mac dinh.
+                var resolvedName = !string.IsNullOrWhiteSpace(fullName)
+                    ? fullName.Trim()
+                    : (string.IsNullOrWhiteSpace(payload.Name) ? "Khach Google" : payload.Name);
                 guest = new Guest
                 {
-                    FullName = string.IsNullOrWhiteSpace(payload.Name) ? "Khach Google" : payload.Name,
+                    FullName = resolvedName,
                     Email = payload.Email,
                     PhoneNumber = normalizedPhone
                 };
@@ -219,6 +233,11 @@ namespace HotelServiceManagement.Infrastructure.Services
             {
                 targetAccount = new GuestAccount { Guest = guest, GoogleSubjectId = payload.Subject, CreatedAt = DateTime.UtcNow };
                 _context.GuestAccounts.Add(targetAccount);
+            }
+
+            if (trimmedPassword != null)
+            {
+                targetAccount.PasswordHash = _passwordHasher.HashPassword(trimmedPassword);
             }
 
             try

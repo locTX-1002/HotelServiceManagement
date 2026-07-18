@@ -39,7 +39,8 @@ namespace HotelServiceManagement.Api.Controllers
         [HttpPost("auth/google-login")]
         public async Task<IActionResult> GoogleLogin([FromBody] GuestGoogleLoginRequest request)
         {
-            return ToActionResult(await _guestAuthService.GoogleLoginAsync(request?.IdToken ?? string.Empty, request?.PhoneNumber));
+            return ToActionResult(await _guestAuthService.GoogleLoginAsync(
+                request?.IdToken ?? string.Empty, request?.PhoneNumber, request?.FullName, request?.Password));
         }
 
         // Khong [Authorize] - muc dich la lam moi access token DA het han.
