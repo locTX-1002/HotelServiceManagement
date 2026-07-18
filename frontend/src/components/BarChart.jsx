@@ -3,9 +3,12 @@
 export default function BarChart({ data, color = 'var(--color-brand-600)', formatValue = String, orientation = 'vertical', height = 200, emptyText = 'Chưa có dữ liệu' }) {
   const max = Math.max(...data.map((d) => d.value), 0)
 
-  if (data.length === 0 || max === 0) {
+  // Không có điểm dữ liệu nào mới coi là "chưa có dữ liệu" - toàn số 0 (VD: doanh thu 0đ cả khoảng ngày)
+  // vẫn là dữ liệu thật, phải vẽ biểu đồ (các cột phẳng) chứ không được báo nhầm là chưa có gì.
+  if (data.length === 0) {
     return <p className="py-8 text-center text-[13px] italic text-ink-500">{emptyText}</p>
   }
+  const ratio = (value) => (max === 0 ? 0 : value / max)
 
   if (orientation === 'horizontal') {
     return (
@@ -16,7 +19,7 @@ export default function BarChart({ data, color = 'var(--color-brand-600)', forma
             <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-cream-200">
               <div
                 className="h-full rounded-full transition-all duration-300"
-                style={{ width: `${(d.value / max) * 100}%`, backgroundColor: color }}
+                style={{ width: `${ratio(d.value) * 100}%`, backgroundColor: color }}
                 title={formatValue(d.value)}
               />
             </div>
@@ -32,7 +35,7 @@ export default function BarChart({ data, color = 'var(--color-brand-600)', forma
   return (
     <svg viewBox={`0 0 100 ${height}`} preserveAspectRatio="none" className="w-full" style={{ height }}>
       {data.map((d, i) => {
-        const barH = (d.value / max) * (height - 24)
+        const barH = ratio(d.value) * (height - 24)
         return (
           <g key={d.label}>
             <rect
