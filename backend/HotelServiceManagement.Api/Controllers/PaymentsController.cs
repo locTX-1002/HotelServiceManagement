@@ -20,7 +20,7 @@ namespace HotelServiceManagement.Api.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Admin,Manager,Receptionist")]
+        [Authorize(Roles = "Admin,Receptionist")]
         public async Task<IActionResult> ProcessPayment([FromBody] PaymentRequest request)
         {
             var result = await _paymentService.ProcessPaymentAsync(request, GetCurrentUserId());

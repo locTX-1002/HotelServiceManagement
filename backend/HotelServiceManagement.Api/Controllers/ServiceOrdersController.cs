@@ -32,7 +32,7 @@ namespace HotelServiceManagement.Api.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Admin,Manager,Receptionist,ServiceStaff")]
+        [Authorize(Roles = "Admin,Receptionist,ServiceStaff")]
         public async Task<IActionResult> Create([FromBody] CreateServiceOrderRequest request)
         {
             var currentUserId = GetCurrentUserId();
@@ -54,7 +54,7 @@ namespace HotelServiceManagement.Api.Controllers
         }
 
         [HttpPatch("{id:int}")]
-        [Authorize(Roles = "Admin,Manager,Receptionist,ServiceStaff")]
+        [Authorize(Roles = "Admin,Receptionist,ServiceStaff")]
         public async Task<IActionResult> UpdateStatus(
             int id,
             [FromBody] UpdateServiceOrderStatusRequest request)

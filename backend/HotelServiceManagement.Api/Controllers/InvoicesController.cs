@@ -46,7 +46,7 @@ namespace HotelServiceManagement.Api.Controllers
         }
 
         [HttpPost("stay/{stayId}")]
-        [Authorize(Roles = "Admin,Manager,Receptionist")]
+        [Authorize(Roles = "Admin,Receptionist")]
         public async Task<IActionResult> Create(int stayId, [FromBody] CreateInvoiceRequest? request)
         {
             return ToActionResult(

@@ -19,15 +19,17 @@ namespace HotelServiceManagement.Api.Controllers
             _stayService = stayService;
         }
 
+        // ServiceStaff cần xem lượt ở đang Active để chọn đúng khách khi tạo đơn dịch vụ (/service-orders).
+        // Manager không có trang Check-in/Check-out lẫn Gọi dịch vụ trên FE nên bỏ khỏi endpoint ghi/đọc vận hành này.
         [HttpGet("active")]
-        [Authorize(Roles = "Admin,Manager,Receptionist")]
+        [Authorize(Roles = "Admin,Receptionist,ServiceStaff")]
         public async Task<IActionResult> GetActive()
         {
             return Ok(await _stayService.GetActiveAsync());
         }
 
         [HttpPost("check-in")]
-        [Authorize(Roles = "Admin,Manager,Receptionist")]
+        [Authorize(Roles = "Admin,Receptionist")]
         public async Task<IActionResult> CheckIn([FromBody] CheckInRequest request)
         {
             var result = await _stayService.CheckInAsync(request, GetCurrentUserId());

@@ -47,7 +47,7 @@ namespace HotelServiceManagement.Api.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Admin,Manager,Receptionist")]
+        [Authorize(Roles = "Admin,Receptionist")]
         public async Task<IActionResult> Create([FromBody] CreateReservationRequest request)
         {
             var currentUserId = GetCurrentUserId();
@@ -69,7 +69,7 @@ namespace HotelServiceManagement.Api.Controllers
         }
 
         [HttpPut("{id:int}")]
-        [Authorize(Roles = "Admin,Manager,Receptionist")]
+        [Authorize(Roles = "Admin,Receptionist")]
         public async Task<IActionResult> Update(
             int id,
             [FromBody] UpdateReservationRequest request)
@@ -79,14 +79,14 @@ namespace HotelServiceManagement.Api.Controllers
         }
 
         [HttpPatch("{id:int}/cancel")]
-        [Authorize(Roles = "Admin,Manager,Receptionist")]
+        [Authorize(Roles = "Admin,Receptionist")]
         public async Task<IActionResult> Cancel(int id)
         {
             return ToActionResult(await _reservationService.CancelAsync(id));
         }
 
         [HttpPatch("{id:int}/no-show")]
-        [Authorize(Roles = "Admin,Manager,Receptionist")]
+        [Authorize(Roles = "Admin,Receptionist")]
         public async Task<IActionResult> NoShow(int id)
         {
             return ToActionResult(await _reservationService.NoShowAsync(id));
