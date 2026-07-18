@@ -29,6 +29,7 @@ import GuestResetPasswordPage from './pages/guest/GuestResetPasswordPage'
 import GuestResetPasswordWithTokenPage from './pages/guest/GuestResetPasswordWithTokenPage'
 import GuestDashboardPage from './pages/guest/GuestDashboardPage'
 import GuestProfilePage from './pages/guest/GuestProfilePage'
+import GuestBookingPage from './pages/guest/GuestBookingPage'
 
 export default function App() {
   return (
@@ -46,6 +47,7 @@ export default function App() {
         <Route element={<GuestProtectedRoute />}>
           <Route element={<GuestLayout />}>
             <Route path="/guest/dashboard" element={<GuestDashboardPage />} />
+            <Route path="/guest/dat-phong-moi" element={<GuestBookingPage />} />
             <Route path="/guest/ho-so" element={<GuestProfilePage />} />
           </Route>
         </Route>

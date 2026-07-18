@@ -30,9 +30,12 @@ export default function GuestLayout() {
             </span>
             HSMS
           </Link>
-          <nav className="flex items-center gap-5">
+          <nav className="flex flex-wrap items-center gap-5">
             <NavLink to="/guest/dashboard" className={navLinkCls}>
               Đặt phòng của tôi
+            </NavLink>
+            <NavLink to="/guest/dat-phong-moi" className={navLinkCls}>
+              Đặt phòng mới
             </NavLink>
             <NavLink to="/guest/ho-so" className={navLinkCls}>
               Hồ sơ
