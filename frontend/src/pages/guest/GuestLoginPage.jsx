@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { EASE, errorCls } from '../../utils/ui'
 import guestClient, { isBackendMissing } from '../../api/guestClient'
@@ -40,6 +40,15 @@ export default function GuestLoginPage() {
   const [googlePassword2, setGooglePassword2] = useState('')
   const [googleLoading, setGoogleLoading] = useState(false)
   const [googleError, setGoogleError] = useState('')
+  // Dang ky mo dang MODAL giua man hinh (giong o Quen mat khau ben nhan vien) - khong chuyen trang
+  const [regOpen, setRegOpen] = useState(false)
+  const [regFullName, setRegFullName] = useState('')
+  const [regPhone, setRegPhone] = useState('')
+  const [regEmail, setRegEmail] = useState('')
+  const [regPassword, setRegPassword] = useState('')
+  const [regConfirm, setRegConfirm] = useState('')
+  const [regError, setRegError] = useState('')
+  const [regLoading, setRegLoading] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
   const from = location.state?.from ?? null
@@ -80,6 +89,14 @@ export default function GuestLoginPage() {
 
   // Callback on dinh de GoogleSignInButton khong re-init GIS moi lan render
   const handleGoogleCredential = useCallback((idToken) => submitGoogle(idToken, null, null, null), [submitGoogle])
+
+  // Esc dong modal dang ky - hook nen phai nam TRUOC early-return ben duoi (Rules of Hooks)
+  useEffect(() => {
+    if (!regOpen) return
+    const onKey = (e) => e.key === 'Escape' && setRegOpen(false)
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [regOpen])
 
   if (getGuestToken()) return <Navigate to={from ?? '/guest/dashboard'} replace />
 
@@ -123,6 +140,34 @@ export default function GuestLoginPage() {
     submitGoogle(pendingGoogleToken, phone, googleFullName.trim(), googlePassword || null)
   }
 
+  const submitRegister = (e) => {
+    e.preventDefault()
+    if (regLoading) return
+    if (regPassword !== regConfirm) {
+      setRegError('Mật khẩu nhập lại không khớp.')
+      return
+    }
+    setRegError('')
+    setRegLoading(true)
+    guestClient
+      .post('/api/guest/auth/register', {
+        fullName: regFullName.trim(),
+        email: regEmail.trim() || null,
+        phoneNumber: regPhone.trim(),
+        password: regPassword,
+      })
+      .then((res) => {
+        saveGuestSession(res.data)
+        navigate(from ?? '/guest/dashboard', { replace: true })
+      })
+      .catch((err) => {
+        if (err.response?.status === 409) setRegError('Số điện thoại này đã có tài khoản. Vui lòng đăng nhập.')
+        else if (isBackendMissing(err)) setRegError('Không kết nối được máy chủ. Vui lòng thử lại sau.')
+        else setRegError(err.response?.data?.message ?? 'Máy chủ báo lỗi. Thử lại sau ít phút.')
+      })
+      .finally(() => setRegLoading(false))
+  }
+
   const cancelGoogleProfile = () => {
     setPendingGoogleToken('')
     setGooglePhone('')
@@ -163,17 +208,20 @@ export default function GuestLoginPage() {
         <div className="bezel-shell">
           <div className="bezel-core px-7 py-7 sm:px-10 sm:py-8">
             <PortalSwitch active="guest" />
-            <div className="mt-6 flex flex-col items-center text-center">
-              <span className="flex h-12 w-10 items-end justify-center rounded-t-full rounded-b-md bg-brand-600 pb-2 font-display text-lg font-bold text-white">
+            {/* Logo hang ngang thay vi xep doc - tiet kiem ~100px chieu cao de form vua 1 man hinh */}
+            <div className="mt-5 flex items-center justify-center gap-2.5">
+              <span className="flex h-9 w-7 items-end justify-center rounded-t-full rounded-b-md bg-brand-600 pb-1 font-display text-sm font-bold text-white">
                 H
               </span>
-              <p className="mt-3 font-display text-3xl font-semibold tracking-tight">HSMS</p>
-              <p className="mt-1 text-[9px] font-semibold tracking-[0.32em] text-ink-500">CỔNG THÔNG TIN KHÁCH LƯU TRÚ</p>
+              <div className="text-left">
+                <p className="font-display text-xl font-semibold leading-none tracking-tight">HSMS</p>
+                <p className="mt-1 text-[8px] font-semibold tracking-[0.28em] text-ink-500">CỔNG KHÁCH LƯU TRÚ</p>
+              </div>
             </div>
 
             {pendingGoogleToken ? (
               <>
-                <h1 className="mt-6 font-display text-4xl font-medium tracking-tight">Hoàn tất hồ sơ</h1>
+                <h1 className="mt-5 font-display text-3xl font-medium tracking-tight">Hoàn tất hồ sơ</h1>
                 <p className="mt-2 text-sm leading-relaxed text-ink-500">
                   Lần đầu dùng tài khoản Google này trên HSMS — điền vài thông tin để hoàn tất tài khoản của bạn.
                 </p>
@@ -253,7 +301,7 @@ export default function GuestLoginPage() {
               </>
             ) : (
               <>
-                <h1 className="mt-6 font-display text-4xl font-medium tracking-tight">Xin chào</h1>
+                <h1 className="mt-5 font-display text-3xl font-medium tracking-tight">Xin chào</h1>
                 <p className="mt-2 text-sm leading-relaxed text-ink-500">
                   Đăng nhập để xem thông tin đặt phòng của bạn.
                 </p>
@@ -321,9 +369,13 @@ export default function GuestLoginPage() {
                 <div className="mt-6 space-y-2 border-t border-black/[0.07] pt-4 text-[12px] leading-relaxed text-ink-500">
                   <p>
                     Chưa có tài khoản?{' '}
-                    <Link to="/guest/dang-ky" className={`font-semibold text-brand-600 underline-offset-4 ${EASE} hover:underline`}>
+                    <button
+                      type="button"
+                      onClick={() => setRegOpen(true)}
+                      className={`font-semibold text-brand-600 underline-offset-4 ${EASE} hover:underline`}
+                    >
                       Đăng ký ngay
-                    </Link>
+                    </button>
                   </p>
                   <p>
                     Quên mật khẩu?{' '}
@@ -339,6 +391,61 @@ export default function GuestLoginPage() {
       </div>
       <p className="pb-5 text-[11px] text-ink-500/60">Group 2 · SE1919 · FPT University</p>
       </div>
+
+      {/* Modal dang ky giua man hinh - giong modal Quen mat khau ben trang nhan vien */}
+      {regOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-6">
+          <div onClick={() => setRegOpen(false)} className="absolute inset-0 bg-ink-900/30" />
+          <div className="relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl bg-cream-50 p-7 shadow-lift">
+            <p className="font-display text-[13px] italic text-brand-600">cổng khách lưu trú</p>
+            <p className="mt-1 font-display text-2xl font-semibold tracking-tight">Tạo tài khoản</p>
+            <p className="mt-2 text-[13px] leading-relaxed text-ink-500">
+              Đăng ký bằng số điện thoại — nếu bạn đã từng đặt phòng, hệ thống tự nối vào đúng thông tin đó.
+            </p>
+            <form onSubmit={submitRegister} className="mt-5 space-y-3.5">
+              <div>
+                <label className={labelCls}>Họ và tên</label>
+                <input required className={inputCls} placeholder="Nguyễn Văn A" value={regFullName} onChange={(e) => setRegFullName(e.target.value)} />
+              </div>
+              <div>
+                <label className={labelCls}>Số điện thoại</label>
+                <input type="tel" required className={inputCls} placeholder="09xxxxxxxx" value={regPhone} onChange={(e) => setRegPhone(e.target.value)} />
+              </div>
+              <div>
+                <label className={labelCls}>Email (không bắt buộc)</label>
+                <input type="email" className={inputCls} placeholder="Dùng để đặt lại mật khẩu sau này" value={regEmail} onChange={(e) => setRegEmail(e.target.value)} />
+              </div>
+              <div>
+                <label className={labelCls}>Mật khẩu</label>
+                <input type="password" required minLength={6} autoComplete="new-password" className={inputCls} placeholder="Tối thiểu 6 ký tự" value={regPassword} onChange={(e) => setRegPassword(e.target.value)} />
+              </div>
+              <div>
+                <label className={labelCls}>Nhập lại mật khẩu</label>
+                <input type="password" required autoComplete="new-password" className={inputCls} value={regConfirm} onChange={(e) => setRegConfirm(e.target.value)} />
+              </div>
+
+              {regError && <p className={errorCls}>{regError}</p>}
+
+              <div className="flex flex-wrap justify-end gap-2.5 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setRegOpen(false)}
+                  className={`rounded-full px-5 py-2.5 text-[13px] font-semibold text-ink-700 ring-1 ring-black/10 ${EASE} hover:bg-white`}
+                >
+                  Đóng
+                </button>
+                <button
+                  type="submit"
+                  disabled={regLoading}
+                  className={`rounded-full bg-brand-600 px-5 py-2.5 text-[13px] font-bold text-white ${EASE} hover:bg-brand-700 active:scale-[0.98] disabled:opacity-50`}
+                >
+                  {regLoading ? 'Đang tạo…' : 'Tạo tài khoản'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

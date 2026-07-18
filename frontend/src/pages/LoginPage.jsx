@@ -138,16 +138,18 @@ export default function LoginPage() {
         <div className="bezel-shell">
           <div className="bezel-core px-7 py-7 sm:px-10 sm:py-8">
         <PortalSwitch active="staff" />
-        {/* Logo vòm đồng bộ với nav */}
-        <div className="mt-6 flex flex-col items-center text-center">
-          <span className="flex h-12 w-10 items-end justify-center rounded-t-full rounded-b-md bg-brand-600 pb-2 font-display text-lg font-bold text-white">
+        {/* Logo hang ngang - tiet kiem chieu cao de form vua 1 man hinh, khong phai keo trang */}
+        <div className="mt-5 flex items-center justify-center gap-2.5">
+          <span className="flex h-9 w-7 items-end justify-center rounded-t-full rounded-b-md bg-brand-600 pb-1 font-display text-sm font-bold text-white">
             H
           </span>
-          <p className="mt-3 font-display text-3xl font-semibold tracking-tight">HSMS</p>
-          <p className="mt-1 text-[9px] font-semibold tracking-[0.32em] text-ink-500">★★★★★ HOTEL & SERVICE MANAGEMENT</p>
+          <div className="text-left">
+            <p className="font-display text-xl font-semibold leading-none tracking-tight">HSMS</p>
+            <p className="mt-1 text-[8px] font-semibold tracking-[0.28em] text-ink-500">★★★★★ HOTEL & SERVICE</p>
+          </div>
         </div>
 
-        <h1 className="mt-6 font-display text-4xl font-medium tracking-tight">Chào mừng trở lại</h1>
+        <h1 className="mt-5 font-display text-3xl font-medium tracking-tight">Chào mừng trở lại</h1>
         <p className="mt-2 text-sm leading-relaxed text-ink-500">
           Đăng nhập bằng tài khoản nhân viên để bắt đầu ca làm việc và truy cập mọi chức năng theo vai trò của bạn.
         </p>
