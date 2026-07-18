@@ -11,6 +11,11 @@ namespace HotelServiceManagement.Application.DTOs.Invoices
         public decimal ServiceCharge { get; set; }
         public decimal DiscountAmount { get; set; }
         public string? PromotionCode { get; set; }
+
+        // Tiền cọc đã thu lúc đặt phòng (thông tin tham khảo cho lễ tân lúc thu tiền - đã được
+        // trừ vào số dư còn lại qua Payment "DEP-..." tự sinh, không phải một khoản trừ riêng ở đây).
+        public decimal? DepositAmount { get; set; }
+
         public decimal TotalAmount { get; set; }
         public string Status { get; set; } = string.Empty;
     }

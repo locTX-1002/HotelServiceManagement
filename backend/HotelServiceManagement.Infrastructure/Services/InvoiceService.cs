@@ -19,8 +19,7 @@ namespace HotelServiceManagement.Infrastructure.Services
 
         public async Task<InvoiceResponse?> GetByIdAsync(int id)
         {
-            var invoice = await _context.Invoices
-                .AsNoTracking()
+            var invoice = await QueryInvoices()
                 .FirstOrDefaultAsync(i => i.Id == id);
 
             return invoice == null ? null : ToResponse(invoice);
@@ -28,8 +27,7 @@ namespace HotelServiceManagement.Infrastructure.Services
 
         public async Task<InvoiceResponse?> GetInvoiceByStayIdAsync(int stayId)
         {
-            var invoice = await _context.Invoices
-                .AsNoTracking()
+            var invoice = await QueryInvoices()
                 .FirstOrDefaultAsync(i => i.StayId == stayId);
 
             return invoice == null ? null : ToResponse(invoice);
@@ -74,9 +72,18 @@ namespace HotelServiceManagement.Infrastructure.Services
             var invoice = stay.Invoice;
             var isNewInvoice = invoice == null;
 
+            var trimmedCode = promotionCode?.Trim();
+
+            // Hoá đơn đã thu đủ tiền thì không cho đổi khuyến mãi nữa - áp mã lúc này sẽ hạ TotalAmount
+            // xuống dưới số tiền đã thu thật, tạo ra khoản dư thừa không ai theo dõi/hoàn lại.
+            if (!isNewInvoice && invoice!.Status == InvoiceStatus.Paid && !string.IsNullOrEmpty(trimmedCode))
+            {
+                return AuthServiceResult<InvoiceResponse>.Failure(
+                    "Invoice is already fully paid. Cannot apply a promotion code after payment is complete.", 409);
+            }
+
             var discountAmount = invoice?.DiscountAmount ?? 0;
             var appliedPromotionCode = invoice?.PromotionCode;
-            var trimmedCode = promotionCode?.Trim();
             if (!string.IsNullOrEmpty(trimmedCode))
             {
                 var normalizedCode = trimmedCode.ToUpperInvariant();
@@ -146,7 +153,15 @@ namespace HotelServiceManagement.Infrastructure.Services
 
             await _context.SaveChangesAsync();
 
-            return AuthServiceResult<InvoiceResponse>.Success(ToResponse(invoice), "Invoice created successfully.");
+            return AuthServiceResult<InvoiceResponse>.Success(ToResponse(invoice, stay), "Invoice created successfully.");
+        }
+
+        private IQueryable<Invoice> QueryInvoices()
+        {
+            return _context.Invoices
+                .AsNoTracking()
+                .Include(i => i.Stay)
+                    .ThenInclude(s => s.Reservation);
         }
 
         private static decimal CalculateRoomCharge(Stay stay, DateTime invoiceDate)
@@ -178,9 +193,20 @@ namespace HotelServiceManagement.Infrastructure.Services
                 : InvoiceStatus.PartiallyPaid;
         }
 
+        /// <summary>
+        /// Used right after CreateAsync/CreateInvoiceAsync where we already have the Stay in hand
+        /// (avoids a second round-trip just to read back the deposit amount).
+        /// </summary>
+        private static InvoiceResponse ToResponse(Invoice invoice, Stay stay)
+        {
+            var response = ToResponse(invoice);
+            response.DepositAmount = stay.Reservation.DepositAmount;
+            return response;
+        }
+
         private static InvoiceResponse ToResponse(Invoice invoice)
         {
-            return new InvoiceResponse
+            var response = new InvoiceResponse
             {
                 InvoiceId = invoice.Id,
                 StayId = invoice.StayId,
@@ -192,6 +218,14 @@ namespace HotelServiceManagement.Infrastructure.Services
                 TotalAmount = invoice.TotalAmount,
                 Status = invoice.Status.ToString()
             };
+
+            // Stay chỉ chắc chắn có sẵn khi query đi qua QueryInvoices() (GetByIdAsync/GetInvoiceByStayIdAsync).
+            if (invoice.Stay != null)
+            {
+                response.DepositAmount = invoice.Stay.Reservation?.DepositAmount;
+            }
+
+            return response;
         }
     }
 }
