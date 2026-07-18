@@ -49,6 +49,7 @@ builder.Services.AddScoped<IGuestReservationService, GuestReservationService>();
 builder.Services.AddScoped<IServiceCategoryService, ServiceCategoryService>();
 builder.Services.AddScoped<IServiceItemService, ServiceItemService>();
 builder.Services.AddScoped<IServiceOrderService, ServiceOrderService>();
+builder.Services.AddScoped<IGuestServiceOrderService, GuestServiceOrderService>();
 builder.Services.AddScoped<IReportService, ReportService>();
 builder.Services.AddScoped<IPromotionService, PromotionService>();
 builder.Services.AddScoped<ISurchargeItemService, SurchargeItemService>();
