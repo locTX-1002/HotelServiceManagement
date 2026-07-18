@@ -3,6 +3,7 @@ import { EASE, errorCls, initials, inputCls, labelCls } from '../utils/ui'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import client, { isBackendMissing } from '../api/client'
 import ErrorBoundary from '../components/ErrorBoundary'
+import HousekeepingBell from '../components/HousekeepingBell'
 import SlideOver from '../components/SlideOver'
 import { useToast } from '../components/toastContext'
 import { ROLE_LABEL, canAccess, homeFor } from '../utils/roles'
@@ -296,6 +297,8 @@ export default function MainLayout() {
           </nav>
 
           <div className="flex shrink-0 items-center gap-2.5">
+            {/* Chuông chỉ cho vai trò trực tiếp xử lý yêu cầu khách - khớp [Authorize(Roles=...)] ở BE */}
+            {['Admin', 'Manager', 'Receptionist'].includes(user?.role) && <HousekeepingBell />}
             {/* Trong app không còn cách nào quay lại trang chủ công khai - mở tab mới để không mất phiên đang thao tác */}
             <a
               href="/"

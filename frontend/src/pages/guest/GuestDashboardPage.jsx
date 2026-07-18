@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import guestClient, { apiError } from '../../api/guestClient'
 import { formatVnd } from '../../utils/roomStatus'
 import { normalizeReservationStatus } from '../../utils/apiShape'
@@ -22,6 +22,11 @@ export default function GuestDashboardPage() {
   const [reservations, setReservations] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  // Ghi lai id da goi don phong thanh cong trong phien nay - hien "Đã gửi yêu cầu" thay vi cho bam lai.
+  const [housekeepingSent, setHousekeepingSent] = useState({})
+  const [housekeepingError, setHousekeepingError] = useState({})
+  // Ref dong bo (khac state cap nhat bat dong bo) chan spam-click, dung pattern da dung o cac trang nhan vien.
+  const housekeepingBusyRef = useRef({})
 
   useEffect(() => {
     guestClient
@@ -30,6 +35,19 @@ export default function GuestDashboardPage() {
       .catch((err) => setError(apiError(err)))
       .finally(() => setLoading(false))
   }, [])
+
+  const requestHousekeeping = (reservationId) => {
+    if (housekeepingBusyRef.current[reservationId]) return
+    housekeepingBusyRef.current[reservationId] = true
+    setHousekeepingError((prev) => ({ ...prev, [reservationId]: '' }))
+    guestClient
+      .post('/api/guest/me/housekeeping-requests', {})
+      .then(() => setHousekeepingSent((prev) => ({ ...prev, [reservationId]: true })))
+      .catch((err) => setHousekeepingError((prev) => ({ ...prev, [reservationId]: apiError(err) })))
+      .finally(() => {
+        housekeepingBusyRef.current[reservationId] = false
+      })
+  }
 
   return (
     <div>
@@ -82,6 +100,29 @@ export default function GuestDashboardPage() {
               )}
               {r.depositAmount != null && (
                 <p className="mt-1 text-[12px] text-emerald-700">Đã đặt cọc: {formatVnd(r.depositAmount)}</p>
+              )}
+
+              {normalizeReservationStatus(r.status) === 'CheckedIn' && (
+                <div className="mt-4 border-t border-black/[0.06] pt-4">
+                  {housekeepingSent[r.id] ? (
+                    <p className="text-[12px] font-semibold text-emerald-700">
+                      ✓ Đã gửi yêu cầu dọn phòng — lễ tân sẽ xử lý sớm nhất.
+                    </p>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => requestHousekeeping(r.id)}
+                        className="rounded-full bg-brand-600 px-4 py-2 text-[12px] font-bold uppercase tracking-wider text-white transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-brand-700 active:scale-[0.98]"
+                      >
+                        Gọi dọn phòng
+                      </button>
+                      {housekeepingError[r.id] && (
+                        <p className="mt-2 text-[12px] font-medium text-amber-800">{housekeepingError[r.id]}</p>
+                      )}
+                    </>
+                  )}
+                </div>
               )}
             </div>
           )
