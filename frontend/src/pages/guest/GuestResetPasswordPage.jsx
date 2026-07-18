@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { EASE, errorCls } from '../../utils/ui'
 import guestClient, { isBackendMissing } from '../../api/guestClient'
 
@@ -7,17 +7,13 @@ const inputCls =
   'w-full rounded-lg border border-black/15 bg-white px-3.5 py-3 text-sm outline-none placeholder:text-ink-500/40 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20'
 const labelCls = 'mb-1.5 block text-[11px] font-bold uppercase tracking-[0.18em] text-ink-700'
 
-// He thong chua co ha tang gui email nen dung lai chinh co che xac minh cua dang ky (ma dat phong +
-// ho ten + SDT) de chung minh chu so huu, thay vi gui token qua email.
+// Buoc 1 cua quen mat khau: nhap SDT, he thong gui link dat lai qua email (neu tai khoan co email).
+// Buoc 2 (nhap mat khau moi tu link) o GuestResetPasswordWithTokenPage.jsx.
 export default function GuestResetPasswordPage() {
-  const [bookingCode, setBookingCode] = useState('')
-  const [fullName, setFullName] = useState('')
   const [phoneNumber, setPhoneNumber] = useState('')
-  const [newPassword, setNewPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [done, setDone] = useState(false)
-  const navigate = useNavigate()
 
   const onSubmit = (e) => {
     e.preventDefault()
@@ -25,18 +21,10 @@ export default function GuestResetPasswordPage() {
     setError('')
     setLoading(true)
     guestClient
-      .post('/api/guest/auth/reset-password', {
-        bookingCode: bookingCode.trim(),
-        fullName: fullName.trim(),
-        phoneNumber: phoneNumber.trim(),
-        newPassword,
-      })
+      .post('/api/guest/auth/forgot-password', { phoneNumber: phoneNumber.trim() })
       .then(() => setDone(true))
       .catch((err) => {
-        if (err.response?.status === 404 && err.response?.data?.message?.includes('reservation'))
-          setError('Mã đặt phòng, họ tên hoặc số điện thoại không khớp với đặt phòng nào.')
-        else if (err.response?.status === 404) setError('Đặt phòng này chưa có tài khoản. Vui lòng đăng ký.')
-        else if (isBackendMissing(err)) setError('Không kết nối được máy chủ. Vui lòng thử lại sau.')
+        if (isBackendMissing(err)) setError('Không kết nối được máy chủ. Vui lòng thử lại sau.')
         else setError(err.response?.data?.message ?? 'Máy chủ báo lỗi. Thử lại sau ít phút.')
       })
       .finally(() => setLoading(false))
@@ -66,61 +54,32 @@ export default function GuestResetPasswordPage() {
 
             {done ? (
               <>
-                <h1 className="mt-10 font-display text-3xl font-medium tracking-tight">Đã đặt lại mật khẩu</h1>
+                <h1 className="mt-10 font-display text-3xl font-medium tracking-tight">Đã gửi yêu cầu</h1>
                 <p className="mt-2 text-sm leading-relaxed text-ink-500">
-                  Bạn có thể đăng nhập bằng mật khẩu mới ngay bây giờ.
+                  Nếu số điện thoại này có tài khoản và có email, một liên kết đặt lại mật khẩu đã được gửi tới email đó —
+                  kiểm tra hộp thư đến (và mục Spam). Liên kết có hiệu lực trong 30 phút.
                 </p>
-                <button
-                  type="button"
-                  onClick={() => navigate('/guest/dang-nhap', { replace: true })}
-                  className={`mt-8 inline-flex items-center gap-2.5 rounded-full bg-brand-600 px-8 py-3 text-[13px] font-bold uppercase tracking-[0.12em] text-white ${EASE} hover:bg-brand-700 active:scale-[0.98]`}
-                >
-                  Đăng nhập <span aria-hidden>›</span>
-                </button>
+                <p className="mt-3 text-[12px] leading-relaxed text-ink-500">
+                  Chưa có email trên tài khoản? Liên hệ lễ tân để được hỗ trợ.
+                </p>
               </>
             ) : (
               <>
-                <h1 className="mt-10 font-display text-4xl font-medium tracking-tight">Đặt lại mật khẩu</h1>
+                <h1 className="mt-10 font-display text-4xl font-medium tracking-tight">Quên mật khẩu</h1>
                 <p className="mt-2 text-sm leading-relaxed text-ink-500">
-                  Nhập đúng thông tin trên 1 mã đặt phòng của bạn để xác minh, không cần email.
+                  Nhập số điện thoại đăng ký, chúng tôi sẽ gửi liên kết đặt lại mật khẩu tới email trên tài khoản.
                 </p>
 
                 <form onSubmit={onSubmit} className="mt-8 space-y-5">
-                  <div>
-                    <label className={labelCls}>Mã đặt phòng</label>
-                    <input
-                      required
-                      className={inputCls}
-                      placeholder="RES-..."
-                      value={bookingCode}
-                      onChange={(e) => setBookingCode(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <label className={labelCls}>Họ và tên</label>
-                    <input required className={inputCls} value={fullName} onChange={(e) => setFullName(e.target.value)} />
-                  </div>
                   <div>
                     <label className={labelCls}>Số điện thoại</label>
                     <input
                       type="tel"
                       required
                       className={inputCls}
+                      placeholder="09xxxxxxxx"
                       value={phoneNumber}
                       onChange={(e) => setPhoneNumber(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <label className={labelCls}>Mật khẩu mới</label>
-                    <input
-                      type="password"
-                      required
-                      minLength={6}
-                      autoComplete="new-password"
-                      className={inputCls}
-                      placeholder="Tối thiểu 6 ký tự"
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
                     />
                   </div>
 
@@ -131,7 +90,7 @@ export default function GuestResetPasswordPage() {
                     disabled={loading}
                     className={`inline-flex items-center gap-2.5 rounded-full bg-brand-600 px-8 py-3 text-[13px] font-bold uppercase tracking-[0.12em] text-white ${EASE} hover:bg-brand-700 active:scale-[0.98] disabled:opacity-50`}
                   >
-                    {loading ? 'Đang xử lý…' : <>Đặt lại mật khẩu <span aria-hidden>›</span></>}
+                    {loading ? 'Đang gửi…' : <>Gửi liên kết đặt lại <span aria-hidden>›</span></>}
                   </button>
                 </form>
 

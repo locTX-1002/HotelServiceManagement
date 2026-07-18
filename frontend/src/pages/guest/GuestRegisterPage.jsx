@@ -8,11 +8,12 @@ const inputCls =
   'w-full rounded-lg border border-black/15 bg-white px-3.5 py-3 text-sm outline-none placeholder:text-ink-500/40 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20'
 const labelCls = 'mb-1.5 block text-[11px] font-bold uppercase tracking-[0.18em] text-ink-700'
 
-// Khach tu kich hoat dang nhap bang cach chung minh la chu 1 dat phong co that (ma dat phong +
-// ho ten + SDT khop dung voi dat phong le tan da tao) - khong dang ky doc lap kieu mang xa hoi.
+// Khach tu dang ky tu do bang SDT - khong can chung minh so huu 1 dat phong cu the (xac minh danh
+// tinh that dien ra o quay le tan luc check-in). He thong tu khop SDT voi dat phong da co san
+// (neu co) de khach thay ngay, khong co thi tao tai khoan trong cho lan dat phong tiep theo.
 export default function GuestRegisterPage() {
-  const [bookingCode, setBookingCode] = useState('')
   const [fullName, setFullName] = useState('')
+  const [email, setEmail] = useState('')
   const [phoneNumber, setPhoneNumber] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -33,8 +34,8 @@ export default function GuestRegisterPage() {
     setLoading(true)
     guestClient
       .post('/api/guest/auth/register', {
-        bookingCode: bookingCode.trim(),
         fullName: fullName.trim(),
+        email: email.trim() || null,
         phoneNumber: phoneNumber.trim(),
         password,
       })
@@ -43,8 +44,7 @@ export default function GuestRegisterPage() {
         navigate('/guest/dashboard', { replace: true })
       })
       .catch((err) => {
-        if (err.response?.status === 404) setError('Mã đặt phòng, họ tên hoặc số điện thoại không khớp với đặt phòng nào.')
-        else if (err.response?.status === 409) setError('Đặt phòng này đã có tài khoản. Vui lòng đăng nhập.')
+        if (err.response?.status === 409) setError('Số điện thoại này đã có tài khoản. Vui lòng đăng nhập.')
         else if (isBackendMissing(err)) setError('Không kết nối được máy chủ. Vui lòng thử lại sau.')
         else setError(err.response?.data?.message ?? 'Máy chủ báo lỗi. Thử lại sau ít phút.')
       })
@@ -76,26 +76,16 @@ export default function GuestRegisterPage() {
 
             <h1 className="mt-10 font-display text-4xl font-medium tracking-tight">Tạo tài khoản</h1>
             <p className="mt-2 text-sm leading-relaxed text-ink-500">
-              Nhập đúng thông tin trên mã đặt phòng lễ tân đã gửi để kích hoạt đăng nhập.
+              Đăng ký bằng số điện thoại của bạn. Nếu bạn đã từng đặt phòng, hệ thống sẽ tự nối vào đúng thông tin đó.
             </p>
 
             <form onSubmit={onSubmit} className="mt-8 space-y-5">
-              <div>
-                <label className={labelCls}>Mã đặt phòng</label>
-                <input
-                  required
-                  className={inputCls}
-                  placeholder="RES-..."
-                  value={bookingCode}
-                  onChange={(e) => setBookingCode(e.target.value)}
-                />
-              </div>
               <div>
                 <label className={labelCls}>Họ và tên</label>
                 <input
                   required
                   className={inputCls}
-                  placeholder="Đúng như trên đặt phòng"
+                  placeholder="Nguyễn Văn A"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                 />
@@ -109,6 +99,16 @@ export default function GuestRegisterPage() {
                   placeholder="09xxxxxxxx"
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className={labelCls}>Email (không bắt buộc)</label>
+                <input
+                  type="email"
+                  className={inputCls}
+                  placeholder="Dùng để đặt lại mật khẩu sau này"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                 />
               </div>
               <div>
