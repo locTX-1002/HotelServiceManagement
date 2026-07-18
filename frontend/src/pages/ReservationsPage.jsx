@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
-import { EASE, errorCls, labelCls, openDatePicker } from '../utils/ui'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { EASE, errorCls, inputCls, labelCls, openDatePicker } from '../utils/ui'
 import { useNavigate } from 'react-router-dom'
 import client, { isBackendMissing, apiError } from '../api/client'
 import ConfirmDialog from '../components/ConfirmDialog'
@@ -10,9 +10,6 @@ import { MOCK_RESERVATIONS } from '../mock/hotelMock'
 import { denormalizeReservationStatus, normalizeReservation } from '../utils/apiShape'
 import { fmtShort, localToday } from '../utils/dates'
 import { formatVnd } from '../utils/roomStatus'
-
-const inputCls =
-  'w-full rounded-xl bg-white px-3.5 py-2.5 text-sm ring-1 ring-black/10 outline-none focus:ring-2 focus:ring-brand-500/40'
 
 // Nhãn + màu cho các trạng thái đặt phòng (khớp enum backend)
 const RES_STATUS = {
@@ -50,6 +47,9 @@ export default function ReservationsPage() {
   const [editForm, setEditForm] = useState({ checkInDate: '', checkOutDate: '', numberOfGuests: 1, specialRequests: '' })
   const [editError, setEditError] = useState('')
   const [savingEdit, setSavingEdit] = useState(false)
+  // Khoá đồng bộ chống spam-click - state cancelling/noShowBusy cập nhật bất đồng bộ nên vẫn lọt request khi bấm liên tiếp nhanh
+  const cancellingRef = useRef(false)
+  const noShowRef = useRef(false)
 
   const load = () => {
     setLoadError(false)
@@ -78,6 +78,8 @@ export default function ReservationsPage() {
   ]
 
   const confirmCancel = () => {
+    if (cancellingRef.current) return
+    cancellingRef.current = true
     setCancelError('')
     setCancelling(true)
     client
@@ -88,10 +90,12 @@ export default function ReservationsPage() {
         load()
       })
       .catch((err) => setCancelError(apiError(err)))
-      .finally(() => setCancelling(false))
+      .finally(() => { cancellingRef.current = false; setCancelling(false) })
   }
 
   const confirmNoShow = () => {
+    if (noShowRef.current) return
+    noShowRef.current = true
     setNoShowError('')
     setNoShowBusy(true)
     client
@@ -102,7 +106,7 @@ export default function ReservationsPage() {
         load()
       })
       .catch((err) => setNoShowError(apiError(err)))
-      .finally(() => setNoShowBusy(false))
+      .finally(() => { noShowRef.current = false; setNoShowBusy(false) })
   }
 
   const openEdit = (r) => {
