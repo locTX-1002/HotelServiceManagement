@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using HotelServiceManagement.Domain.Entities;
+using HotelServiceManagement.Domain.Enums;
 
 namespace HotelServiceManagement.Infrastructure.Configurations
 {
@@ -12,6 +13,8 @@ namespace HotelServiceManagement.Infrastructure.Configurations
 
             builder.Property(r => r.Note).HasMaxLength(300);
             builder.Property(r => r.Status).HasConversion<string>().HasMaxLength(20);
+            builder.Property(r => r.RequestType).HasConversion<string>().HasMaxLength(20)
+                   .HasDefaultValue(HousekeepingRequestType.Other);
 
             builder.HasOne(r => r.Stay)
                    .WithMany()

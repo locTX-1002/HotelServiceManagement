@@ -9,6 +9,7 @@ namespace HotelServiceManagement.Domain.Entities
     {
         public int StayId { get; set; }
         public virtual Stay Stay { get; set; } = null!;
+        public HousekeepingRequestType RequestType { get; set; } = HousekeepingRequestType.Other;
         public string? Note { get; set; }
         public HousekeepingRequestStatus Status { get; set; } = HousekeepingRequestStatus.Pending;
         public DateTime RequestedAt { get; set; }

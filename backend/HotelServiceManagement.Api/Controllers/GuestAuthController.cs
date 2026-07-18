@@ -132,7 +132,7 @@ namespace HotelServiceManagement.Api.Controllers
                 return Unauthorized(new AuthMessageResponse { Message = "Invalid guest identity in token." });
             }
 
-            return ToActionResult(await _housekeepingRequestService.CreateForGuestAsync(guestId.Value, request?.Note));
+            return ToActionResult(await _housekeepingRequestService.CreateForGuestAsync(guestId.Value, request?.RequestType, request?.Note));
         }
 
         private int? GetCurrentGuestId()

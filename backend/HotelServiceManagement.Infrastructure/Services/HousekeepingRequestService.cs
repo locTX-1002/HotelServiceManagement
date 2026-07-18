@@ -17,8 +17,12 @@ namespace HotelServiceManagement.Infrastructure.Services
             _context = context;
         }
 
-        public async Task<AuthServiceResult<HousekeepingRequestResponse>> CreateForGuestAsync(int guestId, string? note)
+        public async Task<AuthServiceResult<HousekeepingRequestResponse>> CreateForGuestAsync(int guestId, string? requestType, string? note)
         {
+            var parsedType = Enum.TryParse<HousekeepingRequestType>(requestType, ignoreCase: true, out var parsed)
+                ? parsed
+                : HousekeepingRequestType.Other;
+
             var stay = await _context.Stays
                 .Include(s => s.Reservation).ThenInclude(r => r.Guest)
                 .Include(s => s.Reservation).ThenInclude(r => r.Room)
@@ -35,6 +39,7 @@ namespace HotelServiceManagement.Infrastructure.Services
             var request = new HousekeepingRequest
             {
                 StayId = stay.Id,
+                RequestType = parsedType,
                 Note = string.IsNullOrWhiteSpace(note) ? null : note.Trim(),
                 Status = HousekeepingRequestStatus.Pending,
                 RequestedAt = DateTime.UtcNow
@@ -121,6 +126,7 @@ namespace HotelServiceManagement.Infrastructure.Services
                 BookingCode = stay.Reservation?.BookingCode ?? string.Empty,
                 RoomNumber = stay.Reservation?.Room?.RoomNumber ?? string.Empty,
                 GuestName = stay.Reservation?.Guest?.FullName ?? string.Empty,
+                RequestType = request.RequestType,
                 Note = request.Note,
                 Status = request.Status,
                 RequestedAt = request.RequestedAt,
