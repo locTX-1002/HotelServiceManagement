@@ -42,6 +42,7 @@ namespace HotelServiceManagement.Infrastructure.Services
                 {
                     RoomTypeId = g.Key,
                     RoomTypeName = g.First().RoomTypeName,
+                    Description = g.First().Description,
                     Capacity = g.First().Capacity,
                     BasePrice = g.First().BasePrice,
                     AvailableCount = g.Count()

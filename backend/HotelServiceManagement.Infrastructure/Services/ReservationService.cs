@@ -476,7 +476,8 @@ namespace HotelServiceManagement.Infrastructure.Services
                     RoomTypeId = r.RoomTypeId,
                     RoomTypeName = r.RoomType.TypeName,
                     Capacity = r.RoomType.Capacity,
-                    BasePrice = r.RoomType.BasePrice
+                    BasePrice = r.RoomType.BasePrice,
+                    Description = r.RoomType.Description
                 })
                 .ToListAsync();
 
