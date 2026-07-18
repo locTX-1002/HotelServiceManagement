@@ -321,13 +321,18 @@ export default function GuestBookingPage() {
 
       {step === 1 && (
         <div className="mt-6">
-          <div className="relative h-44 overflow-hidden rounded-2xl">
+          {/* Hero chu giua + hoa van gach ngang theo mau template "Unique Experience / — ENJOY WITH US —" */}
+          <div className="relative h-56 overflow-hidden rounded-2xl">
             <img src="/img/v2.jpg" alt="" className="h-full w-full object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-r from-ink-900/75 to-transparent" />
-            <div className="absolute left-7 top-1/2 -translate-y-1/2">
+            <div className="absolute inset-0 bg-ink-900/50" />
+            <div className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center text-white">
               <p className="font-display text-[15px] italic text-white/80">cổng khách · đặt phòng mới</p>
-              <p className="mt-1.5 font-display text-3xl font-medium text-white">Kỳ lưu trú tiếp theo</p>
-              <p className="mt-1.5 text-[13px] text-white/70">Chọn ngày ở và số khách để tìm phòng trống</p>
+              <p className="mt-2 font-display text-4xl font-medium">Kỳ lưu trú tiếp theo</p>
+              <div className="mt-3.5 flex items-center gap-3 text-[11px] font-bold uppercase tracking-[0.3em] text-white/80">
+                <span className="h-px w-10 bg-white/40" />
+                Trải nghiệm cùng HSMS
+                <span className="h-px w-10 bg-white/40" />
+              </div>
             </div>
           </div>
 

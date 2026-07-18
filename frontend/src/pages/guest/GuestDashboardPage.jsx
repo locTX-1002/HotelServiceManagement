@@ -4,6 +4,7 @@ import { formatVnd } from '../../utils/roomStatus'
 import { normalizeReservationStatus } from '../../utils/apiShape'
 import { getGuest } from '../../utils/guestSession'
 import { EASE } from '../../utils/ui'
+import { roomImage } from '../../utils/roomImages'
 
 const HK_TYPES = [
   { value: 'Cleaning', label: 'Dọn phòng' },
@@ -120,9 +121,17 @@ export default function GuestDashboardPage() {
 
   return (
     <div className="mx-auto max-w-3xl">
-      <p className="font-display text-[13px] italic text-brand-600">xin chào</p>
-      <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight">{guest?.fullName ?? 'Khách lưu trú'}</h1>
-      <p className="mt-2 text-sm text-ink-500">Danh sách đặt phòng của bạn tại khách sạn.</p>
+      {/* Hero anh thay cho tieu de nen trang - theo mau template booking, dong bo voi hero cua
+          trang Dat phong moi */}
+      <div className="relative h-40 overflow-hidden rounded-2xl sm:h-48">
+        <img src="/img/v1.jpg" alt="" className="h-full w-full object-cover" />
+        <div className="absolute inset-0 bg-gradient-to-r from-ink-900/75 to-ink-900/15" />
+        <div className="absolute left-7 top-1/2 -translate-y-1/2 text-white">
+          <p className="font-display text-[14px] italic text-white/80">xin chào</p>
+          <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight">{guest?.fullName ?? 'Khách lưu trú'}</h1>
+          <p className="mt-1.5 text-[13px] text-white/70">Danh sách đặt phòng của bạn tại khách sạn.</p>
+        </div>
+      </div>
 
       {loading && <p className="mt-8 text-sm text-ink-500">Đang tải…</p>}
       {error && (
@@ -139,7 +148,16 @@ export default function GuestDashboardPage() {
         {reservations.map((r) => {
           const s = RES_STATUS[normalizeReservationStatus(r.status)] ?? RES_STATUS.Pending
           return (
-            <div key={r.id} className="card-rise rounded-2xl bg-cream-50 p-5 ring-1 ring-black/[0.06]">
+            <div key={r.id} className="card-rise overflow-hidden rounded-2xl bg-cream-50 ring-1 ring-black/[0.06]">
+              {/* Dai anh loai phong tren dau card - anh tinh theo ten loai, giong cac trang khac */}
+              <div className="relative h-28">
+                <img src={roomImage(r.roomTypeName, 0)} alt={r.roomTypeName} className="h-full w-full object-cover" loading="lazy" />
+                <div className="absolute inset-0 bg-gradient-to-t from-ink-900/50 to-transparent" />
+                <span className="absolute bottom-2.5 left-5 font-display text-lg font-semibold text-white">
+                  Phòng {r.roomNumber} · {r.roomTypeName}
+                </span>
+              </div>
+              <div className="p-5">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className="font-display text-lg font-semibold tabular-nums">{r.bookingCode}</span>
                 <span className={`rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-wide ${s.badge}`}>
@@ -278,6 +296,7 @@ export default function GuestDashboardPage() {
                   </div>
                 </div>
               )}
+              </div>
             </div>
           )
         })}
