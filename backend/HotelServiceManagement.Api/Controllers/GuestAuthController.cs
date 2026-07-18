@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using HotelServiceManagement.Application.DTOs.Auth;
 using HotelServiceManagement.Application.DTOs.GuestAuth;
+using HotelServiceManagement.Application.DTOs.Housekeeping;
 using HotelServiceManagement.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -15,10 +16,12 @@ namespace HotelServiceManagement.Api.Controllers
     public class GuestAuthController : ControllerBase
     {
         private readonly IGuestAuthService _guestAuthService;
+        private readonly IHousekeepingRequestService _housekeepingRequestService;
 
-        public GuestAuthController(IGuestAuthService guestAuthService)
+        public GuestAuthController(IGuestAuthService guestAuthService, IHousekeepingRequestService housekeepingRequestService)
         {
             _guestAuthService = guestAuthService;
+            _housekeepingRequestService = housekeepingRequestService;
         }
 
         [HttpPost("auth/register")]
@@ -64,6 +67,19 @@ namespace HotelServiceManagement.Api.Controllers
             }
 
             return ToActionResult(await _guestAuthService.GetMyReservationsAsync(guestId.Value));
+        }
+
+        [Authorize(Policy = "GuestOnly")]
+        [HttpPost("me/housekeeping-requests")]
+        public async Task<IActionResult> CreateHousekeepingRequest([FromBody] CreateHousekeepingRequestRequest request)
+        {
+            var guestId = GetCurrentGuestId();
+            if (guestId == null)
+            {
+                return Unauthorized(new AuthMessageResponse { Message = "Invalid guest identity in token." });
+            }
+
+            return ToActionResult(await _housekeepingRequestService.CreateForGuestAsync(guestId.Value, request?.Note));
         }
 
         private int? GetCurrentGuestId()

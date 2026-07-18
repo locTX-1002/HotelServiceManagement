@@ -29,6 +29,7 @@ namespace HotelServiceManagement.Infrastructure.Data
         public DbSet<GuestAccount> GuestAccounts { get; set; }
         public DbSet<GuestRefreshToken> GuestRefreshTokens { get; set; }
         public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
+        public DbSet<HousekeepingRequest> HousekeepingRequests { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
