@@ -1,15 +1,16 @@
 import { useEffect, useMemo, useState } from 'react'
 import EmptyState from '../components/EmptyState'
 import { EASE, errorCls } from '../utils/ui'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import client, { isBackendMissing, apiError } from '../api/client'
 import ConfirmDialog from '../components/ConfirmDialog'
 import ErrorState from '../components/ErrorState'
 import { useToast } from '../components/toastContext'
 import { MOCK_ACTIVE_STAYS, MOCK_RESERVATIONS, MOCK_SURCHARGE_ITEMS } from '../mock/hotelMock'
 import { normalizeReservation } from '../utils/apiShape'
-import { fmtDateTime, localNowIso } from '../utils/dates'
+import { fmtDateTime, fmtShort, localNowIso, localToday } from '../utils/dates'
 import { formatVnd } from '../utils/roomStatus'
+import { notifyDataChanged } from '../utils/refreshBus'
 
 const SkeletonRows = () => (
   <div className="mt-6 space-y-3">
@@ -155,8 +156,18 @@ function CheckoutDialog({ stay, items, busy, error, onConfirm, onCancel }) {
 export default function CheckInOutPage() {
   const navigate = useNavigate()
   const toast = useToast()
-  const [tab, setTab] = useState('checkin')
+  const [searchParams] = useSearchParams()
+  const [tab, setTab] = useState(searchParams.get('tab') === 'checkout' ? 'checkout' : 'checkin')
   const [search, setSearch] = useState('')
+  // Ma dat phong duoc chuong tro toi - to sang dong tuong ung de le tan thay ngay can xu ly ai
+  const focusCode = searchParams.get('focus')
+
+  // Dang o san trang nay ma bam tiep 1 muc trong chuong thi chi query string doi - phai tu dong
+  // nhay tab theo, khong thi nguoi dung tuong bam khong co tac dung
+  useEffect(() => {
+    const t = searchParams.get('tab')
+    if (t === 'checkout' || t === 'checkin') setTab(t)
+  }, [searchParams])
 
   const [reservations, setReservations] = useState(null)
   const [resUsingMock, setResUsingMock] = useState(false)
@@ -235,6 +246,7 @@ export default function CheckInOutPage() {
         setToCheckIn(null)
         loadReservations()
         loadStays()
+        notifyDataChanged()
       })
       .catch((err) => setCheckInError(apiError(err)))
       .finally(() => setCheckingIn(false))
@@ -251,6 +263,7 @@ export default function CheckInOutPage() {
         setReceipt({ ...toCheckOut, ...res.data })
         setToCheckOut(null)
         loadStays()
+        notifyDataChanged()
       })
       .catch((err) => setCheckOutError(apiError(err)))
       .finally(() => setCheckingOut(false))
@@ -326,7 +339,7 @@ export default function CheckInOutPage() {
       {/* ===== Tab: Chờ nhận phòng ===== */}
       {!loadError && listLoaded && tab === 'checkin' && (
         pendingCheckIn.length === 0 ? (
-          <EmptyState text="Không có đặt phòng nào đang chờ nhận phòng" />
+          <EmptyState text="Không có đặt phòng nào đang chờ nhận phòng. Đơn khách đặt online (Chờ xác nhận) cần được duyệt ở trang Đặt phòng trước, sau đó sẽ hiện ở đây để check-in." />
         ) : (
           <div className="card-rise mt-6 bezel-shell">
             <div className="bezel-core overflow-hidden">
@@ -342,32 +355,44 @@ export default function CheckInOutPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-black/[0.05]">
-                    {pendingCheckIn.map((r) => (
-                      <tr key={r.reservationId} className={`${EASE} hover:bg-cream-50/60`}>
-                        <td className="px-5 py-3.5">
-                          <span className="font-display text-base font-semibold tabular-nums">{r.bookingCode}</span>
-                        </td>
-                        <td className="px-5 py-3.5">
-                          <p className="text-sm font-semibold">{r.guestName || '—'}</p>
-                          {r.guestPhoneNumber && <p className="text-[11px] tabular-nums text-ink-500">{r.guestPhoneNumber}</p>}
-                        </td>
-                        <td className="px-5 py-3.5">
-                          <p className="text-sm font-semibold tabular-nums">{r.roomNumber}</p>
-                          <p className="text-[11px] text-ink-500">{r.typeName}</p>
-                        </td>
-                        <td className="px-5 py-3.5 text-sm tabular-nums text-ink-700">
-                          {String(r.checkInDate).slice(0, 10)} → {String(r.checkOutDate).slice(0, 10)}
-                        </td>
-                        <td className="px-5 py-3.5 text-right">
-                          <button
-                            onClick={() => { setCheckInError(''); setToCheckIn(r) }}
-                            className={`rounded-full bg-sky-600 px-4 py-1.5 text-[12px] font-bold text-white ${EASE} hover:bg-sky-700 active:scale-[0.97]`}
-                          >
-                            Check-in
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
+                    {pendingCheckIn.map((r) => {
+                      // Chua toi ngay nhan phong thi khoa nut - backend cung chan, nhung khoa truoc
+                      // o UI kem chu thich ro rang de le tan khong bam roi nhan loi kho hieu
+                      const checkInDay = String(r.checkInDate).slice(0, 10) // fmtShort chi nhan 'YYYY-MM-DD'
+                      const notYet = checkInDay > localToday()
+                      const focused = focusCode === r.bookingCode
+                      return (
+                        <tr key={r.reservationId} className={`${EASE} hover:bg-cream-50/60 ${focused ? 'bg-brand-50/60 ring-2 ring-inset ring-brand-500/40' : ''}`}>
+                          <td className="px-5 py-3.5">
+                            <span className="font-display text-base font-semibold tabular-nums">{r.bookingCode}</span>
+                          </td>
+                          <td className="px-5 py-3.5">
+                            <p className="text-sm font-semibold">{r.guestName || '—'}</p>
+                            {r.guestPhoneNumber && <p className="text-[11px] tabular-nums text-ink-500">{r.guestPhoneNumber}</p>}
+                          </td>
+                          <td className="px-5 py-3.5">
+                            <p className="text-sm font-semibold tabular-nums">{r.roomNumber}</p>
+                            <p className="text-[11px] text-ink-500">{r.typeName}</p>
+                          </td>
+                          <td className="px-5 py-3.5 text-sm tabular-nums text-ink-700">
+                            {String(r.checkInDate).slice(0, 10)} → {String(r.checkOutDate).slice(0, 10)}
+                            {notYet && (
+                              <p className="mt-0.5 text-[11px] font-semibold text-amber-800">Nhận từ {fmtShort(checkInDay)}</p>
+                            )}
+                          </td>
+                          <td className="px-5 py-3.5 text-right">
+                            <button
+                              onClick={() => { setCheckInError(''); setToCheckIn(r) }}
+                              disabled={notYet}
+                              title={notYet ? `Chưa tới ngày nhận phòng (${fmtShort(checkInDay)})` : undefined}
+                              className={`rounded-full bg-sky-600 px-4 py-1.5 text-[12px] font-bold text-white ${EASE} hover:bg-sky-700 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40`}
+                            >
+                              Check-in
+                            </button>
+                          </td>
+                        </tr>
+                      )
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -396,29 +421,44 @@ export default function CheckInOutPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-black/[0.05]">
-                    {activeStays.map((s) => (
-                      <tr key={s.stayId} className={`${EASE} hover:bg-cream-50/60`}>
-                        <td className="px-5 py-3.5">
-                          <span className="font-display text-base font-semibold tabular-nums">{s.bookingCode}</span>
-                        </td>
-                        <td className="px-5 py-3.5">
-                          <p className="text-sm font-semibold">{s.guestName || '—'}</p>
-                        </td>
-                        <td className="px-5 py-3.5">
-                          <p className="text-sm font-semibold tabular-nums">{s.roomNumber}</p>
-                        </td>
-                        <td className="px-5 py-3.5 text-sm tabular-nums text-ink-700">{fmtDateTime(s.actualCheckIn)}</td>
-                        <td className="px-5 py-3.5 text-sm tabular-nums text-ink-700">{fmtDateTime(s.plannedCheckOut)}</td>
-                        <td className="px-5 py-3.5 text-right">
-                          <button
-                            onClick={() => { setCheckOutError(''); setToCheckOut(s) }}
-                            className={`rounded-full bg-rose-600 px-4 py-1.5 text-[12px] font-bold text-white ${EASE} hover:bg-rose-700 active:scale-[0.97]`}
-                          >
-                            Check-out
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
+                    {activeStays.map((s) => {
+                      // Qua gio tra du kien ma van dang o -> danh dau do de le tan quet mat la thay
+                      // ngay ai can duoc check-out, khong phai tu doi tung dong ngay gio
+                      const overdue = new Date(s.plannedCheckOut).getTime() < Date.now()
+                      const focused = focusCode === s.bookingCode
+                      return (
+                        <tr key={s.stayId} className={`${EASE} hover:bg-cream-50/60 ${focused ? 'bg-brand-50/60 ring-2 ring-inset ring-brand-500/40' : ''}`}>
+                          <td className="px-5 py-3.5">
+                            <span className="font-display text-base font-semibold tabular-nums">{s.bookingCode}</span>
+                          </td>
+                          <td className="px-5 py-3.5">
+                            <p className="text-sm font-semibold">{s.guestName || '—'}</p>
+                          </td>
+                          <td className="px-5 py-3.5">
+                            <p className="text-sm font-semibold tabular-nums">{s.roomNumber}</p>
+                          </td>
+                          <td className="px-5 py-3.5 text-sm tabular-nums text-ink-700">{fmtDateTime(s.actualCheckIn)}</td>
+                          <td className="px-5 py-3.5">
+                            <span className={`text-sm tabular-nums ${overdue ? 'font-semibold text-rose-700' : 'text-ink-700'}`}>
+                              {fmtDateTime(s.plannedCheckOut)}
+                            </span>
+                            {overdue && (
+                              <span className="ml-2 rounded-full bg-rose-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-rose-700 ring-1 ring-rose-600/15">
+                                Quá giờ
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-5 py-3.5 text-right">
+                            <button
+                              onClick={() => { setCheckOutError(''); setToCheckOut(s) }}
+                              className={`rounded-full bg-rose-600 px-4 py-1.5 text-[12px] font-bold text-white ${EASE} hover:bg-rose-700 active:scale-[0.97]`}
+                            >
+                              Check-out
+                            </button>
+                          </td>
+                        </tr>
+                      )
+                    })}
                   </tbody>
                 </table>
               </div>

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import client, { apiError } from '../api/client'
 import { Link } from 'react-router-dom'
 import { normalizeHousekeepingStatus, normalizeHousekeepingRequestType, normalizeReservationStatus } from '../utils/apiShape'
+import { onDataChanged } from '../utils/refreshBus'
 
 const REQUEST_TYPE_LABEL = {
   Cleaning: 'Dọn phòng',
@@ -52,8 +53,15 @@ export default function NotificationBell() {
   useEffect(() => {
     fetchAll()
     const timer = setInterval(fetchAll, POLL_INTERVAL_MS)
-    return () => clearInterval(timer)
+    // Trang vua Xac nhan/Huy/Check-in xong se phat tin hieu - refetch ngay, khong doi het chu ky poll
+    const off = onDataChanged(fetchAll)
+    return () => { clearInterval(timer); off() }
   }, [])
+
+  // Mo dropdown la luc nguoi dung can so lieu dung nhat - refetch de khong hien trang thai cu
+  useEffect(() => {
+    if (open) fetchAll()
+  }, [open])
 
   // Bấm ra ngoài thì đóng dropdown
   useEffect(() => {
@@ -119,7 +127,7 @@ export default function NotificationBell() {
               {pendingBookings.slice(0, 4).map((r) => (
                 <Link
                   key={r.id}
-                  to="/reservations"
+                  to={`/reservations?focus=${r.bookingCode}`}
                   onClick={() => setOpen(false)}
                   className={`block rounded-xl bg-white p-3 ring-1 ring-black/[0.05] ${EASE} hover:ring-brand-600/40`}
                 >
@@ -150,9 +158,11 @@ export default function NotificationBell() {
               {checkoutSoon.map((s) => {
                 const overdue = new Date(s.plannedCheckOut).getTime() < Date.now()
                 return (
+                  // Tro thang tab "Dang o" va danh dau dung luot o do - truoc day link roi vao tab
+                  // "Cho nhan phong" (thuong rong) khien nguoi dung tuong bam vao "khong ra gi het"
                   <Link
                     key={s.stayId}
-                    to="/checkin-checkout"
+                    to={`/checkin-checkout?tab=checkout&focus=${s.bookingCode}`}
                     onClick={() => setOpen(false)}
                     className={`block rounded-xl bg-white p-3 ring-1 ring-black/[0.05] ${EASE} hover:ring-brand-600/40`}
                   >

@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { EASE, errorCls, inputCls, labelCls, openDatePicker } from '../utils/ui'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import client, { isBackendMissing, apiError } from '../api/client'
+import { notifyDataChanged } from '../utils/refreshBus'
 import ConfirmDialog from '../components/ConfirmDialog'
 import ErrorState from '../components/ErrorState'
 import SlideOver from '../components/SlideOver'
@@ -52,6 +53,9 @@ export default function ReservationsPage() {
   const noShowRef = useRef(false)
   // Xác nhận chạy thẳng trên từng dòng (không qua dialog) nên khoá theo id, không khoá cả bảng
   const confirmingRef = useRef({})
+  // Chuông trỏ tới đơn cụ thể qua ?focus=RES-... - tô sáng dòng đó cho lễ tân thấy ngay
+  const [searchParams] = useSearchParams()
+  const focusCode = searchParams.get('focus')
 
   const load = () => {
     setLoadError(false)
@@ -90,6 +94,7 @@ export default function ReservationsPage() {
         toast.success(`Đã hủy đặt phòng ${toCancel.bookingCode}`)
         setToCancel(null)
         load()
+        notifyDataChanged()
       })
       .catch((err) => setCancelError(apiError(err)))
       .finally(() => { cancellingRef.current = false; setCancelling(false) })
@@ -106,6 +111,7 @@ export default function ReservationsPage() {
         toast.success(`Đã đánh dấu Không đến cho ${toNoShow.bookingCode}`)
         setToNoShow(null)
         load()
+        notifyDataChanged()
       })
       .catch((err) => setNoShowError(apiError(err)))
       .finally(() => { noShowRef.current = false; setNoShowBusy(false) })
@@ -129,6 +135,7 @@ export default function ReservationsPage() {
       .then(() => {
         toast.success(`Đã xác nhận đặt phòng ${r.bookingCode}`)
         load()
+        notifyDataChanged()
       })
       .catch((err) => toast.error(apiError(err)))
       .finally(() => {
@@ -170,6 +177,7 @@ export default function ReservationsPage() {
         toast.success(`Đã cập nhật đặt phòng ${toEdit.bookingCode}`)
         setToEdit(null)
         load()
+        notifyDataChanged()
       })
       .catch((err) => setEditError(apiError(err)))
       .finally(() => setSavingEdit(false))
@@ -256,8 +264,9 @@ export default function ReservationsPage() {
                 <tbody className="divide-y divide-black/[0.05]">
                   {visible.map((r) => {
                     const s = RES_STATUS[r.status] ?? RES_STATUS.Pending
+                    const focused = focusCode === r.bookingCode
                     return (
-                      <tr key={r.reservationId} className={`${EASE} hover:bg-cream-50/60`}>
+                      <tr key={r.reservationId} className={`${EASE} hover:bg-cream-50/60 ${focused ? 'bg-brand-50/60 ring-2 ring-inset ring-brand-500/40' : ''}`}>
                         <td className="px-5 py-3.5">
                           <span className="font-display text-base font-semibold tabular-nums">{r.bookingCode}</span>
                         </td>
