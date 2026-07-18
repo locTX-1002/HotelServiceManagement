@@ -1,10 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import guestClient, { apiError } from '../../api/guestClient'
 import { formatVnd } from '../../utils/roomStatus'
 import { normalizeReservationStatus } from '../../utils/apiShape'
 import { getGuest } from '../../utils/guestSession'
-import { EASE } from '../../utils/ui'
+import { EASE, inputCls, labelCls, openDatePicker } from '../../utils/ui'
 import { roomImage } from '../../utils/roomImages'
+import RoomTypeDetailModal from '../../components/RoomTypeDetailModal'
+import { localToday as today, addDays } from '../../utils/dates'
 
 const HK_TYPES = [
   { value: 'Cleaning', label: 'Dọn phòng' },
@@ -28,9 +31,18 @@ const formatDate = (d) => new Date(d).toLocaleDateString('vi-VN', { day: '2-digi
 
 export default function GuestDashboardPage() {
   const guest = getGuest()
+  const navigate = useNavigate()
   const [reservations, setReservations] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  // Thanh dat phong kieu booking engine ngay tren trang dau - dien xong chuyen sang trang Dat
+  // phong moi kem query, ben do tu dien san va tim luon.
+  const [checkIn, setCheckIn] = useState(today())
+  const [checkOut, setCheckOut] = useState(addDays(today(), 1))
+  const [guests, setGuests] = useState(2)
+  const [voucher, setVoucher] = useState('')
+  // Ten loai phong dang xem chi tiet (modal dung chung voi trang Dat phong moi)
+  const [detailRoom, setDetailRoom] = useState(null)
   // Ghi lai id da goi don phong thanh cong trong phien nay - gia tri la loai da gui (Cleaning/...),
   // hien "Đã gửi yêu cầu (loại)" thay vi cho bam lai.
   const [housekeepingSent, setHousekeepingSent] = useState({})
@@ -123,14 +135,66 @@ export default function GuestDashboardPage() {
     <div className="mx-auto max-w-3xl">
       {/* Hero anh thay cho tieu de nen trang - theo mau template booking, dong bo voi hero cua
           trang Dat phong moi */}
-      <div className="relative h-40 overflow-hidden rounded-2xl sm:h-48">
+      <div className="relative h-48 overflow-hidden rounded-2xl sm:h-56">
         <img src="/img/v1.jpg" alt="" className="h-full w-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-r from-ink-900/75 to-ink-900/15" />
-        <div className="absolute left-7 top-1/2 -translate-y-1/2 text-white">
+        <div className="absolute left-7 top-[42%] -translate-y-1/2 text-white">
           <p className="font-display text-[14px] italic text-white/80">xin chào</p>
           <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight">{guest?.fullName ?? 'Khách lưu trú'}</h1>
-          <p className="mt-1.5 text-[13px] text-white/70">Danh sách đặt phòng của bạn tại khách sạn.</p>
+          <p className="mt-1.5 text-[13px] text-white/70">Kỳ lưu trú tiếp theo của bạn bắt đầu từ đây.</p>
         </div>
+      </div>
+
+      {/* Thanh dat phong noi de len hero - kieu booking bar cua template, luon kem o ma khuyen mai */}
+      <div className="relative z-10 mx-4 -mt-9 flex flex-wrap items-end gap-x-4 gap-y-3 rounded-2xl bg-white p-4 ring-1 ring-black/5 shadow-lift">
+        <div className="min-w-32 flex-1">
+          <label className={labelCls}>Nhận phòng</label>
+          <input
+            type="date"
+            className={inputCls}
+            value={checkIn}
+            min={today()}
+            onClick={openDatePicker}
+            onChange={(e) => {
+              setCheckIn(e.target.value)
+              if (e.target.value >= checkOut) setCheckOut(addDays(e.target.value, 1))
+            }}
+          />
+        </div>
+        <div className="min-w-32 flex-1">
+          <label className={labelCls}>Trả phòng</label>
+          <input
+            type="date"
+            className={inputCls}
+            value={checkOut}
+            min={addDays(checkIn, 1)}
+            onClick={openDatePicker}
+            onChange={(e) => setCheckOut(e.target.value)}
+          />
+        </div>
+        <div>
+          <label className={labelCls}>Khách</label>
+          <div className="flex items-center gap-1 rounded-xl bg-white ring-1 ring-black/10">
+            <button type="button" onClick={() => setGuests(Math.max(1, guests - 1))} className="px-2.5 py-2.5 text-sm font-bold text-ink-500 hover:text-ink-900">−</button>
+            <span className="w-6 text-center text-sm font-bold tabular-nums">{guests}</span>
+            <button type="button" onClick={() => setGuests(Math.min(8, guests + 1))} className="px-2.5 py-2.5 text-sm font-bold text-ink-500 hover:text-ink-900">+</button>
+          </div>
+        </div>
+        <div className="min-w-28 flex-1">
+          <label className={labelCls}>Mã khuyến mãi</label>
+          <input className={inputCls} placeholder="Nhập nếu có" value={voucher} onChange={(e) => setVoucher(e.target.value)} />
+        </div>
+        <button
+          type="button"
+          onClick={() => {
+            const q = new URLSearchParams({ checkIn, checkOut, guests: String(guests) })
+            if (voucher.trim()) q.set('voucher', voucher.trim())
+            navigate(`/guest/dat-phong-moi?${q}`)
+          }}
+          className={`h-11 rounded-full bg-brand-600 px-6 text-sm font-bold text-white ${EASE} hover:bg-brand-700 active:scale-[0.98]`}
+        >
+          Tìm phòng
+        </button>
       </div>
 
       {loading && <p className="mt-8 text-sm text-ink-500">Đang tải…</p>}
@@ -183,6 +247,13 @@ export default function GuestDashboardPage() {
                   <p className="mt-0.5">{r.numberOfGuests} người</p>
                 </div>
               </div>
+              <button
+                type="button"
+                onClick={() => setDetailRoom(r.roomTypeName)}
+                className={`mt-3 rounded-full px-4 py-1.5 text-[12px] font-semibold text-ink-700 ring-1 ring-black/10 ${EASE} hover:bg-white`}
+              >
+                Xem chi tiết phòng
+              </button>
               {r.specialRequests && (
                 <p className="mt-3 text-[12px] italic text-ink-500">Yêu cầu đặc biệt: {r.specialRequests}</p>
               )}
@@ -303,6 +374,10 @@ export default function GuestDashboardPage() {
           )
         })}
       </div>
+
+      {detailRoom && (
+        <RoomTypeDetailModal rt={{ roomTypeName: detailRoom }} onClose={() => setDetailRoom(null)} />
+      )}
     </div>
   )
 }
