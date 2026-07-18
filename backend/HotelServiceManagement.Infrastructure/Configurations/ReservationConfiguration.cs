@@ -32,6 +32,9 @@ namespace HotelServiceManagement.Infrastructure.Configurations
                    .HasConversion<string>()
                    .HasMaxLength(50);
 
+            builder.Property(r => r.RowVersion)
+                   .IsRowVersion();
+
             builder.HasIndex(r => r.BookingCode).IsUnique();
 
             builder.HasOne(r => r.Guest)

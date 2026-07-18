@@ -279,7 +279,17 @@ namespace HotelServiceManagement.Infrastructure.Services
             reservation.SpecialRequests = NormalizeSpecialRequests(request.SpecialRequests);
 
             // Save reservation first so RefreshRoomStatusAsync reads the new persisted state.
-            await _context.SaveChangesAsync();
+            // RowVersion concurrency check: if another request (e.g. check-in, cancel, no-show) already
+            // changed this same reservation since we read it above, SaveChangesAsync throws instead of
+            // silently overwriting that other change.
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                return ConcurrencyConflict<ReservationResponse>();
+            }
 
             await RefreshRoomStatusAsync(oldRoomId);
             if (request.RoomId != oldRoomId)
@@ -337,7 +347,15 @@ namespace HotelServiceManagement.Infrastructure.Services
             }
 
             reservation.Status = ReservationStatus.Cancelled;
-            await _context.SaveChangesAsync();
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                return ConcurrencyConflict<AuthMessageResponse>();
+            }
 
             await RefreshRoomStatusAsync(reservation.RoomId);
             await _context.SaveChangesAsync();
@@ -380,7 +398,15 @@ namespace HotelServiceManagement.Infrastructure.Services
             }
 
             reservation.Status = ReservationStatus.NoShow;
-            await _context.SaveChangesAsync();
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                return ConcurrencyConflict<AuthMessageResponse>();
+            }
 
             await RefreshRoomStatusAsync(reservation.RoomId);
             await _context.SaveChangesAsync();
@@ -670,6 +696,17 @@ namespace HotelServiceManagement.Infrastructure.Services
             return AuthServiceResult<AuthMessageResponse>.Failure(
                 message,
                 statusCode);
+        }
+
+        /// <summary>
+        /// Another request (check-in, cancel, update or no-show) changed this same reservation
+        /// between our read and our write (RowVersion mismatch). Caller should reload and retry.
+        /// </summary>
+        private static AuthServiceResult<T> ConcurrencyConflict<T>()
+        {
+            return AuthServiceResult<T>.Failure(
+                "Reservation was just modified by another action. Please reload and try again.",
+                409);
         }
     }
 }

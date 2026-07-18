@@ -31,5 +31,10 @@ namespace HotelServiceManagement.Domain.Entities
 
         // Navigation property for 0..1 relationship
         public virtual Stay? Stay { get; set; }
+
+        // Concurrency token - chặn 2 request đồng thời (VD: check-in và hủy cùng lúc) ghi đè lên nhau
+        // mà không hay biết. EF Core tự tăng giá trị này mỗi lần UPDATE, SaveChangesAsync ném
+        // DbUpdateConcurrencyException nếu giá trị đã đổi kể từ lúc đọc.
+        public byte[] RowVersion { get; set; } = Array.Empty<byte>();
     }
 }

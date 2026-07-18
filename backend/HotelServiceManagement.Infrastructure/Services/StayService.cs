@@ -95,7 +95,17 @@ namespace HotelServiceManagement.Infrastructure.Services
             reservation.Room.Status = RoomStatus.Occupied;
 
             _context.Stays.Add(stay);
-            await _context.SaveChangesAsync();
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                // Reservation was cancelled/marked no-show/updated by another request between our
+                // read above and this save (RowVersion mismatch) - don't check the guest in on top of that.
+                return Failure("Reservation was just modified by another action. Please reload and try again.");
+            }
 
             return new CheckOutResponse
             {
