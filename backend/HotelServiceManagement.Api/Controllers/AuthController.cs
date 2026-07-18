@@ -39,6 +39,12 @@ namespace HotelServiceManagement.Api.Controllers
             return Ok(new AuthMessageResponse { Message = "Logged out." });
         }
 
+        [HttpPost("google-login")]
+        public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginRequest request)
+        {
+            return ToActionResult(await _authService.GoogleLoginAsync(request?.IdToken ?? string.Empty, request?.RememberMe ?? false));
+        }
+
         // Khong [Authorize] - nguoi dang quen mat khau khong the co Bearer hop le.
         [HttpPost("forgot-password")]
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)

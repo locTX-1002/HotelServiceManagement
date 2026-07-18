@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using Google.Apis.Auth;
 using HotelServiceManagement.Application.DTOs.Auth;
 using HotelServiceManagement.Application.Interfaces;
 using HotelServiceManagement.Domain.Entities;
@@ -57,6 +58,59 @@ namespace HotelServiceManagement.Infrastructure.Services
             }
 
             var refreshLifetime = request.RememberMe ? RememberMeRefreshLifetime : DefaultRefreshLifetime;
+            var refreshToken = IssueRefreshToken(user.Id, DateTime.UtcNow.Add(refreshLifetime));
+            await _context.SaveChangesAsync();
+
+            return AuthServiceResult<LoginResponse>.Success(BuildLoginResponse(user, refreshToken));
+        }
+
+        // Dang nhap nhanh cho nhan vien DA CO tai khoan - khong tu tao tai khoan moi tu Google, vi
+        // tai khoan nhan vien luon do Admin cap phat (theo dung thiet ke Auth MVP hien co), khong tu
+        // dang ky cong khai. GoogleJsonWebSignature.ValidateAsync tu xac minh chu ky + audience +
+        // thoi han cua id_token voi khoa cong khai xoay vong cua Google - khong tu ky lai thu cong.
+        public async Task<AuthServiceResult<LoginResponse>> GoogleLoginAsync(string idToken, bool rememberMe)
+        {
+            if (string.IsNullOrWhiteSpace(idToken))
+            {
+                return AuthServiceResult<LoginResponse>.Failure("Google ID token is required.");
+            }
+
+            var clientId = _configuration["Google:ClientId"];
+            GoogleJsonWebSignature.Payload payload;
+            try
+            {
+                payload = await GoogleJsonWebSignature.ValidateAsync(idToken, new GoogleJsonWebSignature.ValidationSettings
+                {
+                    Audience = string.IsNullOrWhiteSpace(clientId) ? null : new[] { clientId }
+                });
+            }
+            catch (Exception)
+            {
+                // Google.Apis.Auth chi nem InvalidJwtException khi chu ky/audience/han sai, nhung nem
+                // thang JsonReaderException (khong bat duoc rieng, khong co kieu cong khai on dinh de
+                // catch dung) khi chuoi dau vao khong dung dang JWT (VD chuoi rac tu client). Bat rong
+                // o day de moi truong hop deu tra ve 401 sach thay vi lo stack trace qua 500 - day la
+                // bien xac thuc tu client, khong phai loi noi bo can biet chi tiet.
+                return AuthServiceResult<LoginResponse>.Failure("Google token is invalid or expired.", 401);
+            }
+
+            if (!payload.EmailVerified)
+            {
+                return AuthServiceResult<LoginResponse>.Failure("Google email is not verified.", 401);
+            }
+
+            var normalizedEmail = NormalizeEmail(payload.Email);
+            var user = await _context.Users
+                .Include(u => u.Role)
+                .FirstOrDefaultAsync(u => u.Email.ToLower() == normalizedEmail);
+
+            if (user == null || !user.IsActive)
+            {
+                return AuthServiceResult<LoginResponse>.Failure(
+                    "No staff account found for this Google email. Ask an Admin to create one first.", 404);
+            }
+
+            var refreshLifetime = rememberMe ? RememberMeRefreshLifetime : DefaultRefreshLifetime;
             var refreshToken = IssueRefreshToken(user.Id, DateTime.UtcNow.Add(refreshLifetime));
             await _context.SaveChangesAsync();
 

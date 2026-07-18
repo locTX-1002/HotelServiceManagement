@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { EASE, errorCls } from '../utils/ui'
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import client, { isBackendMissing } from '../api/client'
+import GoogleSignInButton from '../components/GoogleSignInButton'
 import { homeFor } from '../utils/roles'
 import { getToken, getUser, readAuthResponse, saveSession } from '../utils/session'
 
@@ -55,6 +56,28 @@ export default function LoginPage() {
       })
       .finally(() => setForgotLoading(false))
   }
+
+  // Callback on nen tang de useEffect trong GoogleSignInButton khong re-init lien tuc moi lan render
+  const handleGoogleCredential = useCallback(
+    (idToken) => {
+      setError('')
+      client
+        .post('/api/auth/google-login', { idToken, rememberMe })
+        .then((res) => {
+          const { token, refreshToken, user } = readAuthResponse(res.data)
+          if (!token) return setError('Máy chủ trả về thiếu token — báo backend kiểm tra /api/auth/google-login.')
+          saveSession(token, refreshToken, user)
+          navigate(from ?? homeFor(user?.role), { replace: true })
+        })
+        .catch((err) => {
+          if (err.response?.status === 404) setError('Email Google này chưa có tài khoản nhân viên. Liên hệ Admin để được tạo trước.')
+          else if (err.response?.status === 401) setError('Không xác minh được tài khoản Google, vui lòng thử lại.')
+          else if (isBackendMissing(err)) setError('Không kết nối được máy chủ. Vui lòng thử lại sau.')
+          else setError(err.response?.data?.message ?? 'Máy chủ báo lỗi. Thử lại sau ít phút.')
+        })
+    },
+    [rememberMe, from, navigate],
+  )
 
   // Còn phiên cũ (vd bấm nút back) thì khỏi đăng nhập lại
   if (getToken()) return <Navigate to={homeFor(getUser()?.role)} replace />
@@ -168,6 +191,19 @@ export default function LoginPage() {
             {loading ? 'Đang đăng nhập…' : <>Đăng nhập <span aria-hidden>›</span></>}
           </button>
         </form>
+
+        {import.meta.env.VITE_GOOGLE_CLIENT_ID && (
+          <>
+            <div className="mt-6 flex items-center gap-3 text-[11px] font-semibold uppercase tracking-wider text-ink-500/60">
+              <span className="h-px flex-1 bg-black/[0.08]" />
+              hoặc
+              <span className="h-px flex-1 bg-black/[0.08]" />
+            </div>
+            <div className="mt-4">
+              <GoogleSignInButton onCredential={handleGoogleCredential} />
+            </div>
+          </>
+        )}
 
         <p className="mt-8 border-t border-black/[0.07] pt-4 text-[12px] leading-relaxed text-ink-500">
           Quên mật khẩu?{' '}
