@@ -267,24 +267,17 @@ export default function ReportsPage() {
             </Panel>
           </div>
 
-          <div className="mt-5 grid gap-5 lg:grid-cols-2">
-            {/* Doanh thu theo ngày - biểu đồ cột, trục đầy đủ mọi ngày trong kỳ kể cả ngày 0 đồng */}
+          {/* Doanh thu theo ngày - biểu đồ cột, trục đầy đủ mọi ngày trong kỳ kể cả ngày 0 đồng.
+              Không còn panel "Công suất theo tầng" dạng biểu đồ cạnh đây nữa - trùng lặp hoàn toàn
+              với bảng chi tiết theo tầng ngay bên dưới (cùng % lấp đầy, bảng còn có số phòng chính
+              xác), gọn trang cho quản lý đỡ phải đọc 2 chỗ 1 số liệu. */}
+          <div className="mt-5">
             <Panel title="Doanh thu theo ngày" hint={`${fmtShort(from)} → ${fmtShort(to)}`}>
               <BarChart
                 data={(revenue?.byDay ?? []).map((d) => ({ label: fmtShort(String(d.date).slice(0, 10)), value: d.totalRevenue }))}
                 formatValue={formatVnd}
                 orientation="vertical"
                 emptyText="Chưa có doanh thu trong kỳ này"
-              />
-            </Panel>
-
-            {/* Công suất theo tầng - biểu đồ ngang, số liệu chi tiết xem ở bảng bên dưới */}
-            <Panel title="Công suất theo tầng" hint="ảnh chụp hiện tại">
-              <BarChart
-                data={floors.map((f) => ({ label: `Tầng ${f.floor}`, value: rateOf(f) }))}
-                formatValue={(v) => `${v}%`}
-                orientation="horizontal"
-                emptyText="Chưa có dữ liệu công suất theo tầng"
               />
             </Panel>
           </div>

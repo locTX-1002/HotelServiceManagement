@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { EASE, openDatePicker } from '../utils/ui'
 import { useNavigate } from 'react-router-dom'
 import { MOCK_ROOM_TYPES, MOCK_ROOM_TYPES_FULL } from '../mock/hotelMock'
@@ -71,6 +71,70 @@ const EXPERIENCES = [
   { title: 'Đưa đón sân bay', desc: 'Xe riêng đón tận nơi, đặt trước qua lễ tân ít nhất 2 giờ.', img: '/img/v3.jpg' },
   { title: 'Dịch vụ phòng 24/7', desc: 'Gọi món, yêu cầu thêm khăn hay gối vào bất kỳ giờ nào.', img: '/img/suite.jpg' },
 ]
+
+// Modal chon loai phong thay cho <select> nguyen sinh - trinh duyet KHONG cho CSS tuy bien phan
+// danh sach mo ra cua select (OS tu ve, xanh mac dinh nhu trong ticket) nen phai thay bang component
+// rieng. Nhan tien them mo ta ngan (suc chua/dien tich/gia) moi lua chon de khach hinh dung duoc,
+// thay vi chi thay 1 cai ten tran nhu truoc.
+function RoomTypeSelect({ value, onChange }) {
+  const [open, setOpen] = useState(false)
+
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e) => e.key === 'Escape' && setOpen(false)
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [open])
+
+  const pick = (v) => {
+    onChange(v)
+    setOpen(false)
+  }
+
+  return (
+    <>
+      <button type="button" onClick={() => setOpen(true)} className={`${cellInput} flex items-center justify-between gap-1 text-left`}>
+        <span className="truncate">{value === 'all' ? 'Tất cả' : value}</span>
+        <svg width="10" height="10" viewBox="0 0 12 12" fill="none" aria-hidden className="shrink-0 text-ink-500">
+          <path d="M2.5 4.5L6 8l3.5-3.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
+
+      {open && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center px-4 pb-4 sm:items-center sm:pb-4">
+          <div onClick={() => setOpen(false)} className="absolute inset-0 bg-ink-900/40" />
+          <div className="card-rise relative max-h-[80vh] w-full max-w-md overflow-y-auto rounded-2xl bg-cream-50 p-3 shadow-lift">
+            <p className="px-3 py-2 text-[11px] font-bold uppercase tracking-wider text-ink-500">Chọn loại phòng</p>
+            <button
+              type="button"
+              onClick={() => pick('all')}
+              className={`flex w-full items-center rounded-xl px-3 py-3 text-left text-sm font-semibold ${EASE} hover:bg-white ${value === 'all' ? 'bg-white ring-1 ring-brand-600/30' : ''}`}
+            >
+              Tất cả loại phòng
+            </button>
+            {MOCK_ROOM_TYPES.map((t) => {
+              const meta = roomMeta(t)
+              return (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => pick(t)}
+                  className={`flex w-full items-center justify-between gap-3 rounded-xl px-3 py-3 text-left ${EASE} hover:bg-white ${value === t ? 'bg-white ring-1 ring-brand-600/30' : ''}`}
+                >
+                  <span>
+                    <span className="block text-sm font-semibold">{t}</span>
+                    <span className="mt-0.5 block text-[12px] text-ink-500">{meta.capacity} khách · {meta.area} m² · {meta.bed}</span>
+                  </span>
+                  <span className="shrink-0 text-[13px] font-bold text-brand-700">{formatVnd(priceOf(t))}</span>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
+    </>
+  )
+}
 
 export default function HomePage() {
   const navigate = useNavigate()
@@ -151,10 +215,7 @@ export default function HomePage() {
               </div>
               <div className="px-5 py-4">
                 <p className={cellLabel}>Loại phòng</p>
-                <select className={`${cellInput} cursor-pointer`} value={roomType} onChange={(e) => setRoomType(e.target.value)}>
-                  <option value="all">Tất cả</option>
-                  {MOCK_ROOM_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
-                </select>
+                <RoomTypeSelect value={roomType} onChange={setRoomType} />
               </div>
               <button
                 onClick={() => book()}
