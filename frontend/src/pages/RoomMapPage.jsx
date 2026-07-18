@@ -26,7 +26,9 @@ const tileInfo = (room) => {
     case 'Occupied':
       return { main: room.guestName ? shortName(room.guestName) : 'Có khách', sub: room.checkOutAt ? `CO ${room.checkOutAt}` : 'đang ở', subCls: 'text-rose-700' }
     case 'Reserved':
-      return { main: room.guestName ? shortName(room.guestName) : 'Đã có đặt phòng', sub: room.eta ? `Đến ${room.eta}` : 'chờ nhận phòng', subCls: 'text-sky-700' }
+      // "da giu cho" chu khong phai "cho nhan phong" - phong Reserved co the do dat phong CHUA
+      // duyet (Pending) giu cho, luc do ben Check-in chua thay la dung, khong phai loi.
+      return { main: room.guestName ? shortName(room.guestName) : 'Đã có đặt phòng', sub: room.eta ? `Đến ${room.eta}` : 'đã giữ chỗ', subCls: 'text-sky-700' }
     case 'Cleaning':
       return { main: 'Đang dọn phòng', sub: room.cleaningEta ? `~ ${room.cleaningEta}` : 'sắp xong', subCls: 'text-amber-700' }
     case 'Maintenance':
