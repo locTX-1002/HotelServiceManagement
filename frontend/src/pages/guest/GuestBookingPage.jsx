@@ -147,6 +147,9 @@ export default function GuestBookingPage() {
   // luc thanh toan (nghiep vu san co phia le tan), nen ma khach nhap o day duoc ghi vao yeu cau
   // dat phong de le tan ap dung khi thu tien, khong tru tien truc tiep luc dat.
   const [voucher, setVoucher] = useState('')
+  // Loc theo ten loai phong khi den tu thanh tim kiem trang chu (chon "Suite" thi chi hien Suite) -
+  // truoc day tham so nay bi bo qua nen chon loai phong o trang chu khong co tac dung gi.
+  const [typeFilter, setTypeFilter] = useState('')
   const [booking, setBooking] = useState(false)
   const [bookingError, setBookingError] = useState('')
   const [bookingSuccess, setBookingSuccess] = useState(null)
@@ -175,6 +178,8 @@ export default function GuestBookingPage() {
   useEffect(() => {
     const v = searchParams.get('voucher')
     if (v) setVoucher(v)
+    const rtName = searchParams.get('roomType')
+    if (rtName && rtName !== 'all') setTypeFilter(rtName)
     const ci = searchParams.get('checkIn')
     if (!ci) return
     const co = searchParams.get('checkOut') ?? addDays(ci, 1)
@@ -388,26 +393,49 @@ export default function GuestBookingPage() {
           {searching && <p className="mt-4 text-sm text-ink-500">Đang tìm phòng trống…</p>}
           {searchError && <p className={`mt-4 ${errorCls}`}>{searchError}</p>}
 
-          {!searching && !searchError && (
-            <div className="mt-4 space-y-4">
-              {roomTypes.map((rt, idx) => (
-                <RoomTypeCard
-                  key={rt.roomTypeId}
-                  rt={rt}
-                  idx={idx}
-                  selected={bookingType}
-                  onSelect={setBookingType}
-                  onDetail={setDetailType}
-                />
-              ))}
-              {roomTypes.length === 0 && (
-                <div className="rounded-2xl border border-dashed border-black/10 bg-white/60 p-10 text-center">
-                  <p className="font-display text-lg italic text-ink-700">Không còn loại phòng nào trống</p>
-                  <p className="mt-1 text-[13px] text-ink-500">Thử giảm số khách hoặc đổi khoảng ngày.</p>
-                </div>
-              )}
+          {typeFilter && (
+            <div className="mt-3 flex items-center gap-2 text-[12px] text-ink-500">
+              Đang lọc theo loại phòng:
+              <span className="flex items-center gap-1.5 rounded-full bg-brand-600/10 px-3 py-1 font-bold text-brand-700">
+                {typeFilter}
+                <button type="button" onClick={() => setTypeFilter('')} aria-label="Bỏ lọc" className="font-bold hover:text-ink-900">✕</button>
+              </span>
             </div>
           )}
+
+          {!searching && !searchError && (() => {
+            const shown = typeFilter ? roomTypes.filter((t) => t.roomTypeName === typeFilter) : roomTypes
+            return (
+              <div className="mt-4 space-y-4">
+                {shown.map((rt, idx) => (
+                  <RoomTypeCard
+                    key={rt.roomTypeId}
+                    rt={rt}
+                    idx={idx}
+                    selected={bookingType}
+                    onSelect={setBookingType}
+                    onDetail={setDetailType}
+                  />
+                ))}
+                {shown.length === 0 && (
+                  <div className="rounded-2xl border border-dashed border-black/10 bg-white/60 p-10 text-center">
+                    <p className="font-display text-lg italic text-ink-700">
+                      {typeFilter && roomTypes.length > 0 ? `Loại ${typeFilter} đã hết trống cho khoảng ngày này` : 'Không còn loại phòng nào trống'}
+                    </p>
+                    <p className="mt-1 text-[13px] text-ink-500">
+                      {typeFilter && roomTypes.length > 0 ? (
+                        <button type="button" onClick={() => setTypeFilter('')} className="font-semibold text-brand-600 underline-offset-2 hover:underline">
+                          Xem {roomTypes.length} loại phòng còn trống khác →
+                        </button>
+                      ) : (
+                        'Thử giảm số khách hoặc đổi khoảng ngày.'
+                      )}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )
+          })()}
         </div>
       )}
 
