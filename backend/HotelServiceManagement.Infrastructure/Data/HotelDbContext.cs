@@ -25,6 +25,7 @@ namespace HotelServiceManagement.Infrastructure.Data
         public DbSet<Promotion> Promotions { get; set; }
         public DbSet<SurchargeItem> SurchargeItems { get; set; }
         public DbSet<Surcharge> Surcharges { get; set; }
+        public DbSet<RefreshToken> RefreshTokens { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

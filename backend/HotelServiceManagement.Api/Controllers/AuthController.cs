@@ -23,6 +23,22 @@ namespace HotelServiceManagement.Api.Controllers
             return ToActionResult(await _authService.LoginAsync(request));
         }
 
+        // Khong [Authorize] - muc dich chinh la lam moi access token DA het han, doi hoi Bearer con
+        // hop le se tu mau thuan.
+        [HttpPost("refresh")]
+        public async Task<IActionResult> Refresh([FromBody] RefreshTokenRequest request)
+        {
+            return ToActionResult(await _authService.RefreshTokenAsync(request?.RefreshToken ?? string.Empty));
+        }
+
+        // Luon tra 200 du token co hop le hay khong - client se xoa phien local bat ke ket qua.
+        [HttpPost("logout")]
+        public async Task<IActionResult> Logout([FromBody] RefreshTokenRequest request)
+        {
+            await _authService.LogoutAsync(request?.RefreshToken ?? string.Empty);
+            return Ok(new AuthMessageResponse { Message = "Logged out." });
+        }
+
         [Authorize]
         [HttpGet("me")]
         public async Task<IActionResult> GetMe()
