@@ -1,6 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import client, { apiError } from '../api/client'
-import { normalizeHousekeepingStatus } from '../utils/apiShape'
+import { normalizeHousekeepingStatus, normalizeHousekeepingRequestType } from '../utils/apiShape'
+
+const REQUEST_TYPE_LABEL = {
+  Cleaning: 'Dọn phòng',
+  ExtraTowels: 'Thêm khăn',
+  ExtraWater: 'Thêm nước',
+  Other: 'Khác',
+}
 import { EASE } from '../utils/ui'
 
 const POLL_INTERVAL_MS = 15000
@@ -144,7 +151,9 @@ export default function NotificationBell() {
                       {status === 'Pending' ? 'Mới' : 'Đang xử lý'}
                     </span>
                   </div>
-                  <p className="mt-0.5 text-[12px] text-ink-500">{r.guestName}</p>
+                  <p className="mt-0.5 text-[12px] text-ink-500">
+                    {r.guestName} · {REQUEST_TYPE_LABEL[normalizeHousekeepingRequestType(r.requestType)] ?? 'Khác'}
+                  </p>
                   {r.note && <p className="mt-1 text-[12px] italic text-ink-700">"{r.note}"</p>}
                   <div className="mt-2 flex justify-end gap-1.5">
                     {status === 'Pending' && (
