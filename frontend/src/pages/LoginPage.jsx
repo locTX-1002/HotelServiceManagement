@@ -13,6 +13,7 @@ const labelCls = 'mb-1.5 block text-[11px] font-bold uppercase tracking-[0.18em]
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [rememberMe, setRememberMe] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -43,13 +44,13 @@ export default function LoginPage() {
     setError('')
     setLoading(true)
     client
-      .post('/api/auth/login', { email: email.trim(), password })
+      .post('/api/auth/login', { email: email.trim(), password, rememberMe })
       .then((res) => {
         // Đọc được cả shape phẳng (accessToken + field phẳng) lẫn lồng ({token, user})
-        const { token, user } = readAuthResponse(res.data)
+        const { token, refreshToken, user } = readAuthResponse(res.data)
         // Không lưu phiên hỏng nếu backend trả 200 mà thiếu token
         if (!token) return setError('Máy chủ trả về thiếu token — báo backend kiểm tra /api/auth/login.')
-        saveSession(token, user)
+        saveSession(token, refreshToken, user)
         // Về trang bị chặn trước đó, không có thì về trang chính theo vai trò
         navigate(from ?? homeFor(user?.role), { replace: true })
       })
@@ -125,6 +126,16 @@ export default function LoginPage() {
               </button>
             </div>
           </div>
+
+          <label className="flex cursor-pointer items-center gap-2.5 text-[13px] text-ink-700">
+            <input
+              type="checkbox"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
+              className="h-4 w-4 rounded border-black/20 text-brand-600 focus:ring-brand-500/40"
+            />
+            Ghi nhớ đăng nhập
+          </label>
 
           {error && <p className={errorCls}>{error}</p>}
 

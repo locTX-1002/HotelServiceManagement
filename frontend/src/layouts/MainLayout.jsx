@@ -6,7 +6,7 @@ import ErrorBoundary from '../components/ErrorBoundary'
 import SlideOver from '../components/SlideOver'
 import { useToast } from '../components/toastContext'
 import { ROLE_LABEL, canAccess, homeFor } from '../utils/roles'
-import { clearSession, getToken, getUser, saveSession } from '../utils/session'
+import { clearSession, getRefreshToken, getToken, getUser, saveSession } from '../utils/session'
 
 // Form đổi mật khẩu trong ngăn kéo - POST /api/auth/change-password
 // { currentPassword, newPassword, confirmPassword } -> 200 { message } | 400 { message }
@@ -230,12 +230,16 @@ export default function MainLayout() {
         const me = res.data?.user ?? res.data
         // getToken() kiểm tra lại: nếu user đã đăng xuất trong lúc chờ mạng thì bỏ qua,
         // không được ghi đè phiên rỗng bằng dữ liệu cũ
-        if (me?.fullName && getToken()) { setUser(me); saveSession(getToken(), me) }
+        if (me?.fullName && getToken()) { setUser(me); saveSession(getToken(), getRefreshToken(), me) }
       })
       .catch(() => {})
   }, [])
 
   const logout = () => {
+    // Best-effort: thu hồi refresh token phía server để không ai dùng lại được, nhưng không chặn
+    // việc đăng xuất nếu mạng lỗi - vẫn xoá phiên local và điều hướng ngay.
+    const refreshToken = getRefreshToken()
+    if (refreshToken) client.post('/api/auth/logout', { refreshToken }).catch(() => {})
     clearSession()
     navigate('/login')
   }
