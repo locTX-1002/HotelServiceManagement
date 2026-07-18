@@ -8,7 +8,7 @@ import { roomMeta } from '../utils/roomMeta'
 // trai, ten/mo ta ben phai, tien nghi dang luoi ✓ ben duoi, hang nut o day. Dung chung cho ca
 // trang Dat phong moi (co gia + nut chon) lan Dat phong cua toi (chi xem - khong truyen onSelect/
 // gia/so phong trong thi cac phan do tu an).
-export default function RoomTypeDetailModal({ rt, selected, onSelect, onClose }) {
+export default function RoomTypeDetailModal({ rt, selected, onSelect, onClose, selectLabel }) {
   const meta = roomMeta(rt.roomTypeName)
   const [imgIdx, setImgIdx] = useState(0)
   const active = selected?.roomTypeId != null && selected.roomTypeId === rt.roomTypeId
@@ -134,7 +134,7 @@ export default function RoomTypeDetailModal({ rt, selected, onSelect, onClose })
                   active ? 'bg-emerald-500 text-white' : 'bg-ink-900 text-cream-50 hover:bg-ink-700'
                 }`}
               >
-                {active ? '✓ Đã chọn' : 'Chọn loại phòng này'}
+                {active ? '✓ Đã chọn' : (selectLabel ?? 'Chọn loại phòng này')}
               </button>
             )}
           </div>
