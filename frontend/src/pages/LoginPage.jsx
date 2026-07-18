@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { EASE, errorCls } from '../utils/ui'
-import { Navigate, useLocation, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import client, { isBackendMissing } from '../api/client'
 import { homeFor } from '../utils/roles'
 import { getToken, getUser, readAuthResponse, saveSession } from '../utils/session'
@@ -64,6 +64,15 @@ export default function LoginPage() {
   return (
     <div className="relative flex min-h-screen flex-col items-center bg-cream-100 px-6">
       <div className="grain-overlay" />
+      <Link
+        to="/"
+        className={`absolute left-5 top-5 flex items-center gap-1.5 text-[12px] font-semibold text-ink-500 ${EASE} hover:text-ink-900`}
+      >
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden>
+          <path d="M10 3L5 8L10 13" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+        Trang chủ
+      </Link>
       <div className="flex w-full max-w-md flex-1 flex-col justify-center py-10">
         {/* Double-bezel: vỏ vòm mềm bọc lấy card đăng nhập - chất Amanoi */}
         <div className="bezel-shell">
