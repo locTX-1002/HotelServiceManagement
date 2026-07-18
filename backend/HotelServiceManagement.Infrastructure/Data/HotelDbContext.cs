@@ -23,6 +23,8 @@ namespace HotelServiceManagement.Infrastructure.Data
         public DbSet<Invoice> Invoices { get; set; }
         public DbSet<Payment> Payments { get; set; }
         public DbSet<Promotion> Promotions { get; set; }
+        public DbSet<SurchargeItem> SurchargeItems { get; set; }
+        public DbSet<Surcharge> Surcharges { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

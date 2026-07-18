@@ -7,6 +7,6 @@ namespace HotelServiceManagement.Application.Interfaces
     {
         Task<IReadOnlyList<ActiveStayResponse>> GetActiveAsync();
         Task<CheckOutResponse> CheckInAsync(CheckInRequest request, int checkedInByUserId);
-        Task<CheckOutResponse> CheckOutAsync(int stayId, int checkedOutByUserId);
+        Task<CheckOutResponse> CheckOutAsync(int stayId, CheckOutRequest request, int checkedOutByUserId);
     }
 }

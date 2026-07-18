@@ -1,5 +1,6 @@
 using HotelServiceManagement.Application.DTOs.Auth;
 using HotelServiceManagement.Application.DTOs.Invoices;
+using HotelServiceManagement.Application.DTOs.Surcharges;
 using HotelServiceManagement.Application.Interfaces;
 using HotelServiceManagement.Domain.Entities;
 using HotelServiceManagement.Domain.Enums;
@@ -49,6 +50,8 @@ namespace HotelServiceManagement.Infrastructure.Services
                     .ThenInclude(r => r.Room)
                         .ThenInclude(r => r.RoomType)
                 .Include(s => s.ServiceOrders)
+                .Include(s => s.Surcharges)
+                    .ThenInclude(s => s.SurchargeItem)
                 .Include(s => s.Invoice)
                     .ThenInclude(i => i!.Payments)
                 .FirstOrDefaultAsync(s => s.Id == stayId);
@@ -67,7 +70,8 @@ namespace HotelServiceManagement.Infrastructure.Services
             var invoiceDate = stay.ActualCheckOut.Value;
             var roomCharge = CalculateRoomCharge(stay, invoiceDate);
             var serviceCharge = CalculateServiceCharge(stay);
-            var subtotal = roomCharge + serviceCharge;
+            var surchargeAmount = stay.Surcharges.Sum(s => s.Subtotal);
+            var subtotal = roomCharge + serviceCharge + surchargeAmount;
 
             var invoice = stay.Invoice;
             var isNewInvoice = invoice == null;
@@ -117,6 +121,7 @@ namespace HotelServiceManagement.Infrastructure.Services
                 invoice = new Invoice
                 {
                     StayId = stay.Id,
+                    Stay = stay,
                     InvoiceDate = invoiceDate,
                     CreatedByUserId = createdByUserId,
                     Status = InvoiceStatus.Unpaid
@@ -146,6 +151,7 @@ namespace HotelServiceManagement.Infrastructure.Services
 
             invoice!.RoomCharge = roomCharge;
             invoice.ServiceCharge = serviceCharge;
+            invoice.SurchargeAmount = surchargeAmount;
             invoice.DiscountAmount = discountAmount;
             invoice.PromotionCode = appliedPromotionCode;
             invoice.TotalAmount = totalAmount;
@@ -161,7 +167,10 @@ namespace HotelServiceManagement.Infrastructure.Services
             return _context.Invoices
                 .AsNoTracking()
                 .Include(i => i.Stay)
-                    .ThenInclude(s => s.Reservation);
+                    .ThenInclude(s => s.Reservation)
+                .Include(i => i.Stay)
+                    .ThenInclude(s => s.Surcharges)
+                        .ThenInclude(s => s.SurchargeItem);
         }
 
         private static decimal CalculateRoomCharge(Stay stay, DateTime invoiceDate)
@@ -213,6 +222,17 @@ namespace HotelServiceManagement.Infrastructure.Services
                 InvoiceDate = invoice.InvoiceDate,
                 RoomCharge = invoice.RoomCharge,
                 ServiceCharge = invoice.ServiceCharge,
+                SurchargeAmount = invoice.SurchargeAmount,
+                Surcharges = invoice.Stay.Surcharges
+                    .OrderBy(s => s.Id)
+                    .Select(s => new SurchargeLineResponse
+                    {
+                        Name = s.SurchargeItem.Name,
+                        Quantity = s.Quantity,
+                        UnitPrice = s.UnitPriceSnapshot,
+                        Subtotal = s.Subtotal
+                    })
+                    .ToList(),
                 DiscountAmount = invoice.DiscountAmount,
                 PromotionCode = invoice.PromotionCode,
                 TotalAmount = invoice.TotalAmount,

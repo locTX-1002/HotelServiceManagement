@@ -42,9 +42,9 @@ namespace HotelServiceManagement.Api.Controllers
 
         [HttpPost("{id}/check-out")]
         [Authorize(Roles = "Admin,Manager,Receptionist")]
-        public async Task<IActionResult> CheckOut(int id)
+        public async Task<IActionResult> CheckOut(int id, [FromBody] CheckOutRequest? request)
         {
-            var result = await _stayService.CheckOutAsync(id, GetCurrentUserId());
+            var result = await _stayService.CheckOutAsync(id, request ?? new CheckOutRequest(), GetCurrentUserId());
             if (!result.IsSuccess)
             {
                 return BadRequest(result);

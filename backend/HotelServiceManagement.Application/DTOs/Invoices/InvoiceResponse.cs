@@ -1,4 +1,5 @@
 using System;
+using HotelServiceManagement.Application.DTOs.Surcharges;
 
 namespace HotelServiceManagement.Application.DTOs.Invoices
 {
@@ -9,6 +10,8 @@ namespace HotelServiceManagement.Application.DTOs.Invoices
         public DateTime InvoiceDate { get; set; }
         public decimal RoomCharge { get; set; }
         public decimal ServiceCharge { get; set; }
+        public decimal SurchargeAmount { get; set; }
+        public IReadOnlyList<SurchargeLineResponse> Surcharges { get; set; } = Array.Empty<SurchargeLineResponse>();
         public decimal DiscountAmount { get; set; }
         public string? PromotionCode { get; set; }
 
