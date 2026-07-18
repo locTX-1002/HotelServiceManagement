@@ -8,6 +8,7 @@ namespace HotelServiceManagement.Application.Interfaces
     {
         Task<AuthServiceResult<GuestAuthResponse>> RegisterAsync(GuestRegisterRequest request);
         Task<AuthServiceResult<GuestAuthResponse>> LoginAsync(GuestLoginRequest request);
+        Task<AuthServiceResult<GuestAuthResponse>> GoogleLoginAsync(string idToken, string? phoneNumber);
         Task<AuthServiceResult<GuestAuthResponse>> RefreshTokenAsync(string refreshToken);
         Task LogoutAsync(string refreshToken);
         Task<AuthServiceResult<AuthMessageResponse>> ForgotPasswordAsync(string phoneNumber);

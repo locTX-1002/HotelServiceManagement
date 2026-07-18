@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using Google.Apis.Auth;
 using HotelServiceManagement.Application.DTOs.Auth;
 using HotelServiceManagement.Application.DTOs.GuestAuth;
 using HotelServiceManagement.Application.DTOs.Reservations;
@@ -123,7 +124,9 @@ namespace HotelServiceManagement.Infrastructure.Services
                 .Include(a => a.Guest)
                 .FirstOrDefaultAsync(a => a.Guest.PhoneNumber == phoneNumber);
 
-            if (account == null || !_passwordHasher.VerifyPassword(request.Password, account.PasswordHash))
+            // PasswordHash null = tai khoan chi dang nhap bang Google, chua tung dat mat khau -
+            // tu nhien khong dang nhap duoc bang duong nay, khong phai loi.
+            if (account?.PasswordHash == null || !_passwordHasher.VerifyPassword(request.Password, account.PasswordHash))
             {
                 return AuthServiceResult<GuestAuthResponse>.Failure("Phone number or password is incorrect.", 401);
             }
@@ -133,6 +136,105 @@ namespace HotelServiceManagement.Infrastructure.Services
             await _context.SaveChangesAsync();
 
             return AuthServiceResult<GuestAuthResponse>.Success(BuildAuthResponse(account.Guest, refreshToken));
+        }
+
+        // Dang nhap/dang ky bang Google. Lan dau tien dang nhap bang 1 tai khoan Google cu the (chua
+        // co GoogleSubjectId nao khop) BAT BUOC phai co SDT kem theo - Google khong tra ve so dien
+        // thoai nen can SDT de khop dung vao Guest le tan da tao san (neu co) hoac tao Guest moi,
+        // giong het logic RegisterAsync. Thieu SDT o lan dau thi tra 428 de FE hien o nhap SDT roi
+        // goi lai VOI CUNG idToken do (id_token con hieu luc ~1 tieng, khong can dang nhap Google lai).
+        public async Task<AuthServiceResult<GuestAuthResponse>> GoogleLoginAsync(string idToken, string? phoneNumber)
+        {
+            if (string.IsNullOrWhiteSpace(idToken))
+            {
+                return AuthServiceResult<GuestAuthResponse>.Failure("Google ID token is required.");
+            }
+
+            var clientId = _configuration["Google:ClientId"];
+            GoogleJsonWebSignature.Payload payload;
+            try
+            {
+                payload = await GoogleJsonWebSignature.ValidateAsync(idToken, new GoogleJsonWebSignature.ValidationSettings
+                {
+                    Audience = string.IsNullOrWhiteSpace(clientId) ? null : new[] { clientId }
+                });
+            }
+            catch (Exception)
+            {
+                // Google.Apis.Auth nem InvalidJwtException khi chu ky/audience/han sai, nhung nem
+                // thang JsonReaderException (khong co kieu on dinh de catch rieng) khi chuoi dau vao
+                // khong dung dang JWT - bat rong o day, day la bien xac thuc tu client.
+                return AuthServiceResult<GuestAuthResponse>.Failure("Google token is invalid or expired.", 401);
+            }
+
+            if (!payload.EmailVerified)
+            {
+                return AuthServiceResult<GuestAuthResponse>.Failure("Google email is not verified.", 401);
+            }
+
+            var existingLink = await _context.GuestAccounts
+                .Include(a => a.Guest)
+                .FirstOrDefaultAsync(a => a.GoogleSubjectId == payload.Subject);
+
+            if (existingLink != null)
+            {
+                existingLink.LastLoginAt = DateTime.UtcNow;
+                var rt = IssueRefreshToken(existingLink.Id, DateTime.UtcNow.Add(RefreshLifetime));
+                await _context.SaveChangesAsync();
+                return AuthServiceResult<GuestAuthResponse>.Success(BuildAuthResponse(existingLink.Guest, rt));
+            }
+
+            var normalizedPhone = phoneNumber?.Trim() ?? string.Empty;
+            if (normalizedPhone.Length == 0)
+            {
+                return AuthServiceResult<GuestAuthResponse>.Failure("PHONE_REQUIRED", 428);
+            }
+
+            var matches = await _context.Guests.Where(g => g.PhoneNumber == normalizedPhone).ToListAsync();
+            Guest guest;
+            GuestAccount? accountForGuest = null;
+            if (matches.Count == 1)
+            {
+                guest = matches[0];
+                accountForGuest = await _context.GuestAccounts.FirstOrDefaultAsync(a => a.GuestId == guest.Id);
+            }
+            else
+            {
+                guest = new Guest
+                {
+                    FullName = string.IsNullOrWhiteSpace(payload.Name) ? "Khach Google" : payload.Name,
+                    Email = payload.Email,
+                    PhoneNumber = normalizedPhone
+                };
+                _context.Guests.Add(guest);
+            }
+
+            GuestAccount targetAccount;
+            if (accountForGuest != null)
+            {
+                accountForGuest.GoogleSubjectId = payload.Subject;
+                targetAccount = accountForGuest;
+            }
+            else
+            {
+                targetAccount = new GuestAccount { Guest = guest, GoogleSubjectId = payload.Subject, CreatedAt = DateTime.UtcNow };
+                _context.GuestAccounts.Add(targetAccount);
+            }
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException)
+            {
+                return AuthServiceResult<GuestAuthResponse>.Failure(
+                    "This Google account or phone number is already linked to another account.", 409);
+            }
+
+            var refreshToken = IssueRefreshToken(targetAccount.Id, DateTime.UtcNow.Add(RefreshLifetime));
+            await _context.SaveChangesAsync();
+
+            return AuthServiceResult<GuestAuthResponse>.Success(BuildAuthResponse(guest, refreshToken));
         }
 
         public async Task<AuthServiceResult<GuestAuthResponse>> RefreshTokenAsync(string refreshToken)

@@ -10,12 +10,12 @@ namespace HotelServiceManagement.Infrastructure.Configurations
         {
             builder.HasKey(a => a.Id);
 
-            builder.Property(a => a.PasswordHash)
-                   .IsRequired()
-                   .HasMaxLength(200);
+            builder.Property(a => a.PasswordHash).HasMaxLength(200);
+            builder.Property(a => a.GoogleSubjectId).HasMaxLength(100);
 
             // Moi Guest chi kich hoat duoc 1 tai khoan dang nhap.
             builder.HasIndex(a => a.GuestId).IsUnique();
+            builder.HasIndex(a => a.GoogleSubjectId).IsUnique();
 
             builder.HasOne(a => a.Guest)
                    .WithOne()

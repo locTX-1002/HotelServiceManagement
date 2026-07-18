@@ -36,6 +36,12 @@ namespace HotelServiceManagement.Api.Controllers
             return ToActionResult(await _guestAuthService.LoginAsync(request));
         }
 
+        [HttpPost("auth/google-login")]
+        public async Task<IActionResult> GoogleLogin([FromBody] GuestGoogleLoginRequest request)
+        {
+            return ToActionResult(await _guestAuthService.GoogleLoginAsync(request?.IdToken ?? string.Empty, request?.PhoneNumber));
+        }
+
         // Khong [Authorize] - muc dich la lam moi access token DA het han.
         [HttpPost("auth/refresh")]
         public async Task<IActionResult> Refresh([FromBody] RefreshTokenRequest request)
@@ -108,6 +114,7 @@ namespace HotelServiceManagement.Api.Controllers
                 401 => Unauthorized(body),
                 404 => NotFound(body),
                 409 => Conflict(body),
+                428 => StatusCode(428, body),
                 _ => BadRequest(body)
             };
         }
