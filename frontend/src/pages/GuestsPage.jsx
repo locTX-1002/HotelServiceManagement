@@ -243,7 +243,7 @@ export default function GuestsPage() {
               id="guest-tag"
               className={inputCls}
               value={form.tag}
-              onChange={(e) => setForm({ ...form, tag: e.target.value })}
+              onChange={(e) => setForm({ ...form, tag: e.target.value, tagNote: e.target.value === 'None' ? '' : form.tagNote })}
             >
               <option value="None">Bình thường</option>
               <option value="Vip">VIP</option>
