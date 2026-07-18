@@ -54,6 +54,10 @@ function RoomTile({ type, featured, wide, onBook }) {
         <p className="mt-1 text-[12px] text-white/70">
           {meta.capacity} khách · {meta.area} m² · {formatVnd(priceOf(type))}/đêm
         </p>
+        {/* Mo ta so hien ra khi re chuot vao the - khach hinh dung duoc phong truoc khi bam dat */}
+        <p className={`max-h-0 overflow-hidden text-[12px] leading-relaxed text-white/80 opacity-0 ${EASE} group-hover:mt-2 group-hover:max-h-20 group-hover:opacity-100`}>
+          {meta.desc}
+        </p>
         <button
           onClick={() => onBook(type)}
           className={`mt-3 text-[11px] font-bold uppercase tracking-[0.16em] text-white underline-offset-4 ${EASE} hover:underline`}
@@ -143,9 +147,12 @@ export default function HomePage() {
   const [guests, setGuests] = useState(2)
   const [roomType, setRoomType] = useState('all')
 
+  // Dat phong tu trang chu la luong CUA KHACH -> sang trang dat phong cong khach (chua dang nhap
+  // thi GuestProtectedRoute tu day ve dang nhap KHACH kem duong quay lai). Truoc day tro nham vao
+  // /reservations/new cua nhan vien nen moi thao tac deu bi da ve login nhan vien.
   const book = (type = roomType) => {
     const q = new URLSearchParams({ checkIn, checkOut, guests: String(guests), roomType: type })
-    navigate(`/reservations/new?${q}`)
+    navigate(`/guest/dat-phong-moi?${q}`)
   }
 
   const goStaff = () => navigate('/login')
