@@ -30,36 +30,25 @@ export default function BarChart({ data, color = 'var(--color-brand-600)', forma
     )
   }
 
-  const barWidth = 100 / data.length
-
+  // HTML/CSS thuần thay vì SVG - SVG với viewBox 0-100 + preserveAspectRatio="none" kéo giãn text
+  // không đều theo trục X khi container thực rộng hơn nhiều so với 100 đơn vị viewBox, làm nhãn ngày
+  // chồng chéo lên nhau khi có nhiều cột (VD 7-30 ngày). flexbox item tự nhiên xuống dòng khi chật,
+  // không bao giờ chồng chữ.
   return (
-    <svg viewBox={`0 0 100 ${height}`} preserveAspectRatio="none" className="w-full" style={{ height }}>
-      {data.map((d, i) => {
-        const barH = ratio(d.value) * (height - 24)
-        return (
-          <g key={d.label}>
-            <rect
-              x={`${i * barWidth + barWidth * 0.15}%`}
-              y={height - 20 - barH}
-              width={`${barWidth * 0.7}%`}
-              height={barH}
-              rx={2}
-              fill={color}
-            >
-              <title>{`${d.label}: ${formatValue(d.value)}`}</title>
-            </rect>
-            <text
-              x={`${i * barWidth + barWidth / 2}%`}
-              y={height - 6}
-              textAnchor="middle"
-              fontSize="7"
-              fill="var(--color-ink-500)"
-            >
-              {d.label}
-            </text>
-          </g>
-        )
-      })}
-    </svg>
+    <div className="flex items-end gap-2 sm:gap-3" style={{ height }}>
+      {data.map((d) => (
+        <div key={d.label} className="group flex flex-1 flex-col items-center gap-1.5">
+          <p className={`text-[10px] tabular-nums text-ink-500 opacity-0 transition-opacity duration-200 group-hover:opacity-100`}>
+            {formatValue(d.value)}
+          </p>
+          <div
+            className="w-full max-w-12 rounded-t-md transition-all duration-300"
+            style={{ height: `${Math.max(ratio(d.value) * 100, 6)}%`, backgroundColor: color }}
+            title={`${d.label}: ${formatValue(d.value)}`}
+          />
+          <p className="text-center text-[10px] leading-tight text-ink-500">{d.label}</p>
+        </div>
+      ))}
+    </div>
   )
 }
