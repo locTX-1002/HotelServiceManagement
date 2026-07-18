@@ -83,6 +83,13 @@ namespace HotelServiceManagement.Infrastructure.Services
                 return Failure("Actual check-in must be before the planned check-out date.");
             }
 
+            // Same-day early arrival is fine, but checking in days ahead of the booked range would
+            // occupy a room that other reservations may legitimately hold for those dates.
+            if (actualCheckIn.Date < reservation.CheckInDate.Date)
+            {
+                return Failure($"Cannot check in before the reservation check-in date ({reservation.CheckInDate:dd/MM/yyyy}).");
+            }
+
             var stay = new Stay
             {
                 ReservationId = reservation.Id,
