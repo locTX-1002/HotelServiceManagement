@@ -170,6 +170,7 @@ export default function HomePage() {
         <header className="relative z-10 flex items-center justify-between px-6 py-3.5 sm:px-12">
           <p className="font-display text-2xl font-semibold tracking-tight text-white">HSMS</p>
           <nav className="hidden items-center gap-8 text-[11px] font-semibold uppercase tracking-[0.2em] text-white/80 lg:flex">
+            <a href="#about" className={`${EASE} hover:text-white`}>Về chúng tôi</a>
             <a href="#rooms" className={`${EASE} hover:text-white`}>Phòng nghỉ</a>
             <a href="#services" className={`${EASE} hover:text-white`}>Dịch vụ</a>
             <a href="#footer" className={`${EASE} hover:text-white`}>Liên hệ</a>
@@ -246,6 +247,46 @@ export default function HomePage() {
           </p>
           <div className="mx-auto mt-10 h-px w-16 bg-brand-600/40" />
         </Reveal>
+      </section>
+
+      {/* ===== VỀ CHÚNG TÔI: 2 ảnh so le + khối chữ, kiểu "Luxury & Comfort" của template ===== */}
+      <section id="about" className="mx-auto max-w-6xl px-6 pb-24 sm:px-12">
+        <div className="grid items-center gap-12 lg:grid-cols-2">
+          <Reveal>
+            <div className="relative pb-12 pr-12">
+              <div className="overflow-hidden rounded-2xl">
+                <img src="/img/v1.jpg" alt="Không gian phòng nghỉ HSMS" loading="lazy" className="aspect-[4/3] w-full object-cover" />
+              </div>
+              <div className="absolute bottom-0 right-0 w-1/2 overflow-hidden rounded-2xl shadow-lift ring-4 ring-cream-50">
+                <img src="/img/suite.jpg" alt="Phòng Suite" loading="lazy" className="aspect-square w-full object-cover" />
+              </div>
+            </div>
+          </Reveal>
+          <Reveal>
+            <p className="font-display text-[15px] italic text-brand-600">về chúng tôi</p>
+            <h2 className="mt-2 font-display text-4xl font-medium leading-tight [text-wrap:balance]">
+              Nghỉ dưỡng &amp; tiện nghi giữa lòng thành phố
+            </h2>
+            <p className="mt-5 max-w-lg text-[14px] leading-relaxed text-ink-500">
+              HSMS là khách sạn quy mô nhỏ với chín phòng nghỉ chia bốn hạng, vận hành bởi một đội ngũ
+              lễ tân và phục vụ làm việc suốt ngày đêm. Chúng tôi không có sảnh lớn hay hồ bơi vô cực —
+              đổi lại, mỗi yêu cầu của bạn đều được một người cụ thể tiếp nhận và xử lý trong vài phút,
+              từ bữa sáng tại phòng cho tới chiếc áo cần ủi gấp trước giờ họp.
+            </p>
+            <div className="mt-8 grid grid-cols-3 gap-6 border-t border-black/[0.07] pt-6">
+              {[
+                { n: '09', label: 'Phòng nghỉ' },
+                { n: '04', label: 'Hạng phòng' },
+                { n: '24/7', label: 'Phục vụ tận phòng' },
+              ].map((s) => (
+                <div key={s.label}>
+                  <p className="font-display text-3xl font-semibold text-brand-600 tabular-nums">{s.n}</p>
+                  <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.14em] text-ink-500">{s.label}</p>
+                </div>
+              ))}
+            </div>
+          </Reveal>
+        </div>
       </section>
 
       {/* ===== PHÒNG NGHỈ: lưới bento bất đối xứng, Suite làm tâm điểm ===== */}
