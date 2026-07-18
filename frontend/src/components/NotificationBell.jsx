@@ -89,7 +89,10 @@ export default function NotificationBell() {
       </button>
 
       {open && (
-        <div className="card-rise absolute right-0 top-11 z-30 w-80 rounded-2xl bg-cream-50 p-3 shadow-lift ring-1 ring-black/[0.06]">
+        // Dinh vi kieu fixed + inset-x tren mobile (khong phu thuoc vi tri nut chuong trong header,
+        // luon nam gon trong man hinh) - tu sm tro len quay lai kieu absolute neo theo nut nhu cu,
+        // vi man hinh du rong de w-80 khong bao gio tran.
+        <div className="card-rise fixed inset-x-4 top-16 z-30 rounded-2xl bg-cream-50 p-3 shadow-lift ring-1 ring-black/[0.06] sm:absolute sm:inset-x-auto sm:right-0 sm:top-11 sm:w-80">
           {error && <p className="px-2 py-1 text-[12px] text-amber-800">{error}</p>}
 
           <p className="px-2 py-1 text-[11px] font-bold uppercase tracking-wider text-ink-500">Sắp trả phòng</p>

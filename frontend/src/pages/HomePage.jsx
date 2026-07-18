@@ -103,17 +103,17 @@ export default function HomePage() {
             <a href="#services" className={`${EASE} hover:text-white`}>Dịch vụ</a>
             <a href="#footer" className={`${EASE} hover:text-white`}>Liên hệ</a>
           </nav>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5 sm:gap-3">
             <span className="hidden text-[12px] font-medium tracking-wide text-white/80 sm:block">1900 636 999</span>
             <button
               onClick={goGuestPortal}
-              className={`rounded-full px-5 py-2 text-[11px] font-bold uppercase tracking-[0.15em] text-white ring-1 ring-white/40 ${EASE} hover:bg-white hover:text-ink-900`}
+              className={`whitespace-nowrap rounded-full px-2.5 py-1.5 text-[9px] font-bold uppercase tracking-[0.08em] text-white ring-1 ring-white/40 ${EASE} hover:bg-white hover:text-ink-900 sm:px-5 sm:py-2 sm:text-[11px] sm:tracking-[0.15em]`}
             >
               Khách lưu trú
             </button>
             <button
               onClick={goStaff}
-              className={`rounded-full px-5 py-2 text-[11px] font-bold uppercase tracking-[0.15em] text-white ring-1 ring-white/40 ${EASE} hover:bg-white hover:text-ink-900`}
+              className={`whitespace-nowrap rounded-full px-2.5 py-1.5 text-[9px] font-bold uppercase tracking-[0.08em] text-white ring-1 ring-white/40 ${EASE} hover:bg-white hover:text-ink-900 sm:px-5 sm:py-2 sm:text-[11px] sm:tracking-[0.15em]`}
             >
               Nhân viên
             </button>
