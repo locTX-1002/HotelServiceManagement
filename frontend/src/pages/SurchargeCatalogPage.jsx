@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { EASE, errorCls, inputCls, labelCls } from '../utils/ui'
 import client, { isBackendMissing, apiError } from '../api/client'
 import ErrorState from '../components/ErrorState'
 import SlideOver from '../components/SlideOver'
+import ConfirmDialog from '../components/ConfirmDialog'
 import { useToast } from '../components/toastContext'
 import { MOCK_SURCHARGE_ITEMS } from '../mock/hotelMock'
 import { formatVnd } from '../utils/roomStatus'
@@ -22,6 +23,10 @@ export default function SurchargeCatalogPage() {
   const [formError, setFormError] = useState('')
   const [saving, setSaving] = useState(false)
   const [togglingId, setTogglingId] = useState(null)
+  const [toDeactivate, setToDeactivate] = useState(null)
+  // Khoá đồng bộ chống spam-click - state saving/togglingId cập nhật bất đồng bộ nên vẫn lọt request khi bấm liên tiếp nhanh
+  const savingRef = useRef(false)
+  const togglingRef = useRef(false)
 
   const load = () => {
     setLoadError(false)
@@ -57,9 +62,11 @@ export default function SurchargeCatalogPage() {
 
   const submit = (e) => {
     e.preventDefault()
+    if (savingRef.current) return
     const msg = validate()
     if (msg) return setFormError(msg)
 
+    savingRef.current = true
     setFormError('')
     setSaving(true)
     const payload = {
@@ -79,11 +86,13 @@ export default function SurchargeCatalogPage() {
         load()
       })
       .catch((err) => setFormError(apiError(err)))
-      .finally(() => setSaving(false))
+      .finally(() => { savingRef.current = false; setSaving(false) })
   }
 
   // Bật / tắt món: PUT nguyên món với isActive đảo lại
   const toggleActive = (item) => {
+    if (togglingRef.current) return
+    togglingRef.current = true
     setTogglingId(item.id)
     client
       .put(`/api/surcharge-items/${item.id}`, {
@@ -97,8 +106,11 @@ export default function SurchargeCatalogPage() {
         load()
       })
       .catch((err) => toast.error(apiError(err)))
-      .finally(() => setTogglingId(null))
+      .finally(() => { togglingRef.current = false; setTogglingId(null); setToDeactivate(null) })
   }
+
+  // Ngừng dùng mới cần xác nhận (ẩn khỏi danh sách phụ thu lúc check-out) - dùng lại vô hại, không cần hỏi.
+  const requestToggle = (item) => (item.isActive !== false ? setToDeactivate(item) : toggleActive(item))
 
   const editing = drawer?.mode === 'edit'
   const pricePreview = Number(form.unitPrice) > 0 ? formatVnd(Number(form.unitPrice)) : null
@@ -177,7 +189,7 @@ export default function SurchargeCatalogPage() {
                           Sửa
                         </button>
                         <button
-                          onClick={() => toggleActive(i)}
+                          onClick={() => requestToggle(i)}
                           disabled={togglingId === i.id}
                           className={`ml-2 rounded-full px-3.5 py-1.5 text-[12px] font-semibold ring-1 ${EASE} disabled:opacity-40 ${
                             i.isActive !== false
@@ -263,6 +275,17 @@ export default function SurchargeCatalogPage() {
           </button>
         </form>
       </SlideOver>
+
+      <ConfirmDialog
+        open={toDeactivate !== null}
+        title={`Ngừng dùng ${toDeactivate?.name ?? ''}?`}
+        message="Món sẽ ẩn khỏi danh sách phụ thu lúc check-out. Bạn có thể dùng lại bất cứ lúc nào."
+        confirmLabel="Ngừng dùng"
+        busyLabel="Đang cập nhật…"
+        busy={togglingId === toDeactivate?.id}
+        onConfirm={() => toggleActive(toDeactivate)}
+        onCancel={() => setToDeactivate(null)}
+      />
     </div>
   )
 }

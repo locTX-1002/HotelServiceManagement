@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { EASE, errorCls, inputCls, labelCls, openDatePicker } from '../utils/ui'
 import client, { isBackendMissing, apiError } from '../api/client'
 import ErrorState from '../components/ErrorState'
 import SlideOver from '../components/SlideOver'
+import ConfirmDialog from '../components/ConfirmDialog'
 import { useToast } from '../components/toastContext'
 import { MOCK_PROMOTIONS } from '../mock/hotelMock'
 import { formatVnd } from '../utils/roomStatus'
@@ -22,6 +23,10 @@ export default function PromotionCatalogPage() {
   const [formError, setFormError] = useState('')
   const [saving, setSaving] = useState(false)
   const [togglingId, setTogglingId] = useState(null)
+  const [toDeactivate, setToDeactivate] = useState(null)
+  // Khoá đồng bộ chống spam-click - state saving/togglingId cập nhật bất đồng bộ nên vẫn lọt request khi bấm liên tiếp nhanh
+  const savingRef = useRef(false)
+  const togglingRef = useRef(false)
 
   const load = () => {
     setLoadError(false)
@@ -71,9 +76,11 @@ export default function PromotionCatalogPage() {
 
   const submit = (e) => {
     e.preventDefault()
+    if (savingRef.current) return
     const msg = validate()
     if (msg) return setFormError(msg)
 
+    savingRef.current = true
     setFormError('')
     setSaving(true)
     const payload = {
@@ -96,11 +103,13 @@ export default function PromotionCatalogPage() {
         load()
       })
       .catch((err) => setFormError(apiError(err)))
-      .finally(() => setSaving(false))
+      .finally(() => { savingRef.current = false; setSaving(false) })
   }
 
   // Bật / tắt mã: PUT nguyên bản ghi với isActive đảo lại
   const toggleActive = (item) => {
+    if (togglingRef.current) return
+    togglingRef.current = true
     setTogglingId(item.id)
     client
       .put(`/api/promotions/${item.id}`, {
@@ -117,8 +126,11 @@ export default function PromotionCatalogPage() {
         load()
       })
       .catch((err) => toast.error(apiError(err)))
-      .finally(() => setTogglingId(null))
+      .finally(() => { togglingRef.current = false; setTogglingId(null); setToDeactivate(null) })
   }
+
+  // Tắt mã mới cần xác nhận (mã đang áp dụng dở dang cho khách sẽ ngưng hoạt động ngay) - bật lại vô hại.
+  const requestToggle = (item) => (item.isActive ? setToDeactivate(item) : toggleActive(item))
 
   const editing = drawer?.mode === 'edit'
   const valuePreview = useMemo(() => {
@@ -205,7 +217,7 @@ export default function PromotionCatalogPage() {
                           Sửa
                         </button>
                         <button
-                          onClick={() => toggleActive(p)}
+                          onClick={() => requestToggle(p)}
                           disabled={togglingId === p.id}
                           className={`ml-2 rounded-full px-3.5 py-1.5 text-[12px] font-semibold ring-1 ${EASE} disabled:opacity-40 ${
                             p.isActive
@@ -329,6 +341,17 @@ export default function PromotionCatalogPage() {
           </button>
         </form>
       </SlideOver>
+
+      <ConfirmDialog
+        open={toDeactivate !== null}
+        title={`Tắt mã ${toDeactivate?.code ?? ''}?`}
+        message="Mã sẽ không áp dụng được cho hoá đơn mới nữa. Bạn có thể bật lại bất cứ lúc nào."
+        confirmLabel="Tắt mã"
+        busyLabel="Đang cập nhật…"
+        busy={togglingId === toDeactivate?.id}
+        onConfirm={() => toggleActive(toDeactivate)}
+        onCancel={() => setToDeactivate(null)}
+      />
     </div>
   )
 }

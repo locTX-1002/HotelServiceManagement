@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { EASE, errorCls, inputCls, labelCls } from '../utils/ui'
 import client, { isBackendMissing, apiError } from '../api/client'
 import ErrorState from '../components/ErrorState'
 import SlideOver from '../components/SlideOver'
+import ConfirmDialog from '../components/ConfirmDialog'
 import { useToast } from '../components/toastContext'
 import { MOCK_SERVICE_CATEGORIES, MOCK_SERVICE_ITEMS } from '../mock/hotelMock'
 import { formatVnd } from '../utils/roomStatus'
@@ -23,6 +24,10 @@ export default function ServiceCatalogPage() {
   const [formError, setFormError] = useState('')
   const [saving, setSaving] = useState(false)
   const [togglingId, setTogglingId] = useState(null)
+  const [toDeactivate, setToDeactivate] = useState(null)
+  // Khoá đồng bộ chống spam-click - state saving/togglingId cập nhật bất đồng bộ nên vẫn lọt request khi bấm liên tiếp nhanh
+  const savingRef = useRef(false)
+  const togglingRef = useRef(false)
 
   const load = () => {
     setLoadError(false)
@@ -80,9 +85,11 @@ export default function ServiceCatalogPage() {
 
   const submit = (e) => {
     e.preventDefault()
+    if (savingRef.current) return
     const msg = validate()
     if (msg) return setFormError(msg)
 
+    savingRef.current = true
     setFormError('')
     setSaving(true)
     const payload = {
@@ -102,11 +109,13 @@ export default function ServiceCatalogPage() {
         load()
       })
       .catch((err) => setFormError(apiError(err)))
-      .finally(() => setSaving(false))
+      .finally(() => { savingRef.current = false; setSaving(false) })
   }
 
   // Bật / tắt bán món: PUT nguyên món với isAvailable đảo lại
   const toggleAvailable = (item) => {
+    if (togglingRef.current) return
+    togglingRef.current = true
     setTogglingId(item.id)
     client
       .put(`/api/service-items/${item.id}`, {
@@ -120,8 +129,11 @@ export default function ServiceCatalogPage() {
         load()
       })
       .catch((err) => toast.error(apiError(err)))
-      .finally(() => setTogglingId(null))
+      .finally(() => { togglingRef.current = false; setTogglingId(null); setToDeactivate(null) })
   }
+
+  // Ngừng bán mới cần xác nhận (ẩn món khỏi order đang diễn ra) - mở bán lại vô hại, không cần hỏi.
+  const requestToggle = (item) => (item.isAvailable !== false ? setToDeactivate(item) : toggleAvailable(item))
 
   const editing = drawer?.mode === 'edit'
   const pricePreview = Number(form.unitPrice) > 0 ? formatVnd(Number(form.unitPrice)) : null
@@ -219,7 +231,7 @@ export default function ServiceCatalogPage() {
                           Sửa
                         </button>
                         <button
-                          onClick={() => toggleAvailable(i)}
+                          onClick={() => requestToggle(i)}
                           disabled={togglingId === i.id}
                           className={`ml-2 rounded-full px-3.5 py-1.5 text-[12px] font-semibold ring-1 ${EASE} disabled:opacity-40 ${
                             i.isAvailable !== false
@@ -312,6 +324,17 @@ export default function ServiceCatalogPage() {
           </button>
         </form>
       </SlideOver>
+
+      <ConfirmDialog
+        open={toDeactivate !== null}
+        title={`Ngừng bán ${toDeactivate?.serviceName ?? ''}?`}
+        message="Món sẽ ẩn khỏi danh sách gọi dịch vụ. Bạn có thể mở bán lại bất cứ lúc nào."
+        confirmLabel="Ngừng bán"
+        busyLabel="Đang cập nhật…"
+        busy={togglingId === toDeactivate?.id}
+        onConfirm={() => toggleAvailable(toDeactivate)}
+        onCancel={() => setToDeactivate(null)}
+      />
     </div>
   )
 }
