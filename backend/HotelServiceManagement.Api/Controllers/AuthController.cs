@@ -39,6 +39,20 @@ namespace HotelServiceManagement.Api.Controllers
             return Ok(new AuthMessageResponse { Message = "Logged out." });
         }
 
+        // Khong [Authorize] - nguoi dang quen mat khau khong the co Bearer hop le.
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
+        {
+            return ToActionResult(await _authService.ForgotPasswordAsync(request?.Email ?? string.Empty));
+        }
+
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordWithTokenRequest request)
+        {
+            return ToActionResult(await _authService.ResetPasswordWithTokenAsync(
+                request?.Token ?? string.Empty, request?.NewPassword ?? string.Empty));
+        }
+
         [Authorize]
         [HttpGet("me")]
         public async Task<IActionResult> GetMe()

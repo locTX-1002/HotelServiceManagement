@@ -4,6 +4,7 @@ using HotelServiceManagement.Application.Interfaces;
 using HotelServiceManagement.Domain.Entities;
 using HotelServiceManagement.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 
 namespace HotelServiceManagement.Infrastructure.Services
 {
@@ -15,15 +16,27 @@ namespace HotelServiceManagement.Infrastructure.Services
         private static readonly TimeSpan DefaultRefreshLifetime = TimeSpan.FromDays(1);
         private static readonly TimeSpan RememberMeRefreshLifetime = TimeSpan.FromDays(30);
 
+        // Token dat lai mat khau song rat ngan - chi du thoi gian mo email va bam link.
+        private static readonly TimeSpan PasswordResetTokenLifetime = TimeSpan.FromMinutes(30);
+
         private readonly HotelDbContext _context;
         private readonly IJwtService _jwtService;
         private readonly IPasswordHasher _passwordHasher;
+        private readonly IEmailService _emailService;
+        private readonly IConfiguration _configuration;
 
-        public AuthService(HotelDbContext context, IJwtService jwtService, IPasswordHasher passwordHasher)
+        public AuthService(
+            HotelDbContext context,
+            IJwtService jwtService,
+            IPasswordHasher passwordHasher,
+            IEmailService emailService,
+            IConfiguration configuration)
         {
             _context = context;
             _jwtService = jwtService;
             _passwordHasher = passwordHasher;
+            _emailService = emailService;
+            _configuration = configuration;
         }
 
         public async Task<AuthServiceResult<LoginResponse>> LoginAsync(LoginRequest request)
@@ -156,6 +169,75 @@ namespace HotelServiceManagement.Infrastructure.Services
                 Role = user.Role?.RoleName ?? string.Empty,
                 IsActive = user.IsActive
             });
+        }
+
+        public async Task<AuthServiceResult<AuthMessageResponse>> ForgotPasswordAsync(string email)
+        {
+            const string genericMessage = "If that email exists, a reset link has been sent.";
+
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                return MessageFailure("Email is required.");
+            }
+
+            var normalizedEmail = NormalizeEmail(email);
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == normalizedEmail);
+
+            // Luon tra ve cung 1 thong bao chung du email co ton tai hay khong - tranh lo cho ke tan
+            // cong do email nao da dang ky trong he thong (user enumeration).
+            if (user == null || !user.IsActive)
+            {
+                return MessageSuccess(genericMessage);
+            }
+
+            var token = new PasswordResetToken
+            {
+                Token = GenerateSecureToken(),
+                UserId = user.Id,
+                CreatedAt = DateTime.UtcNow,
+                ExpiresAt = DateTime.UtcNow.Add(PasswordResetTokenLifetime)
+            };
+            _context.PasswordResetTokens.Add(token);
+            await _context.SaveChangesAsync();
+
+            var frontendOrigin = _configuration["Cors:FrontendOrigin"] ?? "http://localhost:5173";
+            var resetLink = $"{frontendOrigin}/reset-password?token={Uri.EscapeDataString(token.Token)}";
+            await _emailService.SendPasswordResetEmailAsync(user.Email, user.FullName, resetLink);
+
+            return MessageSuccess(genericMessage);
+        }
+
+        public async Task<AuthServiceResult<AuthMessageResponse>> ResetPasswordWithTokenAsync(string token, string newPassword)
+        {
+            if (string.IsNullOrWhiteSpace(newPassword) || newPassword.Length < 6)
+            {
+                return MessageFailure("New password must be at least 6 characters.");
+            }
+
+            var existing = await _context.PasswordResetTokens
+                .Include(t => t.User)
+                .FirstOrDefaultAsync(t => t.Token == token);
+
+            if (existing == null || existing.UsedAt != null || existing.ExpiresAt < DateTime.UtcNow)
+            {
+                return MessageFailure("Reset link is invalid or expired.", 401);
+            }
+
+            existing.User.PasswordHash = _passwordHasher.HashPassword(newPassword);
+            existing.UsedAt = DateTime.UtcNow;
+
+            // Doi mat khau xong thu hoi toan bo refresh token cu - thiet bi/nguoi khac dang giu
+            // refresh token cu (VD mat khau bi lo) se khong the tiep tuc lam moi phien duoc nua.
+            var activeTokens = await _context.RefreshTokens
+                .Where(rt => rt.UserId == existing.UserId && rt.RevokedAt == null)
+                .ToListAsync();
+            foreach (var rt in activeTokens)
+            {
+                rt.RevokedAt = DateTime.UtcNow;
+            }
+
+            await _context.SaveChangesAsync();
+            return MessageSuccess("Password reset successfully.");
         }
 
         private RefreshToken IssueRefreshToken(int userId, DateTime expiresAt)
