@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import guestClient, { apiError } from '../../api/guestClient'
 import { formatVnd } from '../../utils/roomStatus'
 import { EASE, errorCls, inputCls, labelCls, openDatePicker } from '../../utils/ui'
@@ -81,11 +81,10 @@ function RoomTypeDetailModal({ rt, selected, onSelect, onClose }) {
           >
             ›
           </button>
-          <div className="absolute bottom-2.5 left-1/2 flex -translate-x-1/2 gap-1.5">
-            {[0, 1, 2, 3].map((i) => (
-              <span key={i} className={`h-1.5 w-1.5 rounded-full ${i === imgIdx ? 'bg-white' : 'bg-white/45'}`} />
-            ))}
-          </div>
+          {/* Bo dem goc anh kieu booking engine ("1/4") thay cho cham tron */}
+          <span className="absolute bottom-2.5 left-3 rounded-full bg-ink-900/70 px-2.5 py-0.5 text-[11px] font-semibold text-white">
+            {imgIdx + 1}/4
+          </span>
           <button
             type="button"
             onClick={onClose}
@@ -96,7 +95,24 @@ function RoomTypeDetailModal({ rt, selected, onSelect, onClose }) {
           </button>
         </div>
 
-        <div className="p-6">
+        {/* Dai thumbnail doi goc nhin - bam truc tiep tung goc phong thay vi chi bam ‹ › mo */}
+        <div className="flex gap-2 px-6 pt-4">
+          {[0, 1, 2, 3].map((i) => (
+            <button
+              key={i}
+              type="button"
+              onClick={() => setImgIdx(i)}
+              className={`h-14 w-20 shrink-0 overflow-hidden rounded-lg ring-2 ${EASE} ${
+                i === imgIdx ? 'ring-brand-600' : 'ring-transparent opacity-60 hover:opacity-100'
+              }`}
+              aria-label={`Góc ảnh ${i + 1}`}
+            >
+              <img src={roomImage(rt.roomTypeName, i)} alt="" className="h-full w-full object-cover" />
+            </button>
+          ))}
+        </div>
+
+        <div className="p-6 pt-4">
           <div className="flex items-start justify-between gap-3">
             <p className="font-display text-2xl font-semibold">{rt.roomTypeName}</p>
             <span className="shrink-0 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700 ring-1 ring-emerald-600/15">
@@ -107,14 +123,15 @@ function RoomTypeDetailModal({ rt, selected, onSelect, onClose }) {
             {meta.capacity} khách &nbsp;·&nbsp; {meta.area} m² &nbsp;·&nbsp; {meta.bed}
           </p>
 
-          {rt.description && <p className="mt-3.5 text-sm leading-relaxed text-ink-700">{rt.description}</p>}
+          <p className="mt-3.5 text-sm leading-relaxed text-ink-700">{rt.description || meta.desc}</p>
 
           <p className="mt-4 text-[11px] font-bold uppercase tracking-[0.18em] text-ink-500">Tiện nghi</p>
-          <div className="mt-2 flex flex-wrap gap-1.5">
+          <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1.5">
             {meta.amenities.map((a) => (
-              <span key={a} className="rounded-full bg-cream-100 px-2.5 py-1 text-[11px] font-medium text-ink-700">
+              <p key={a} className="flex items-center gap-2 text-[12.5px] text-ink-700">
+                <span className="font-bold text-emerald-600">✓</span>
                 {a}
-              </span>
+              </p>
             ))}
           </div>
 
@@ -173,6 +190,12 @@ function RoomTypeCard({ rt, idx, selected, onSelect, onDetail }) {
           >
             ›
           </button>
+          {/* Re chuot vao anh -> hien mo ta so cua loai phong (khong can mo modal moi biet) */}
+          <div
+            className={`pointer-events-none absolute inset-x-3 bottom-3 rounded-xl bg-ink-900/75 p-3 text-[12px] leading-relaxed text-white opacity-0 backdrop-blur-sm ${EASE} group-hover:opacity-100`}
+          >
+            {rt.description || meta.desc}
+          </div>
         </div>
         <div className="flex flex-1 flex-col p-5">
           <div className="flex items-start justify-between gap-3">
@@ -235,9 +258,15 @@ export default function GuestBookingPage() {
   const [bookingType, setBookingType] = useState(null)
   const [detailType, setDetailType] = useState(null)
   const [specialRequests, setSpecialRequests] = useState('')
+  // Voucher luon co san tren khung tim kiem (kieu booking engine) - he thong chi ap ma vao hoa don
+  // luc thanh toan (nghiep vu san co phia le tan), nen ma khach nhap o day duoc ghi vao yeu cau
+  // dat phong de le tan ap dung khi thu tien, khong tru tien truc tiep luc dat.
+  const [voucher, setVoucher] = useState('')
   const [booking, setBooking] = useState(false)
   const [bookingError, setBookingError] = useState('')
   const [bookingSuccess, setBookingSuccess] = useState(null)
+
+  const [searchParams] = useSearchParams()
 
   const nights = Math.max(Math.round((new Date(checkOutDate) - new Date(checkInDate)) / 86400000), 0)
 
@@ -256,17 +285,35 @@ export default function GuestBookingPage() {
     setStep(2)
   }
 
+  // Den tu trang chu ("Đặt phòng →"/thanh tim kiem cong khai): nhan ngay + so khach qua query,
+  // dien san va tim luon - khach khong phai nhap lai sau khi qua man dang nhap.
+  useEffect(() => {
+    const ci = searchParams.get('checkIn')
+    if (!ci) return
+    const co = searchParams.get('checkOut') ?? addDays(ci, 1)
+    const g = Math.max(1, Number(searchParams.get('guests')) || 2)
+    setCheckInDate(ci)
+    setCheckOutDate(co)
+    setNumberOfGuests(g)
+    search(ci, co, g)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   const confirmBooking = () => {
     if (booking || !bookingType) return
     setBooking(true)
     setBookingError('')
+    const trimmedVoucher = voucher.trim().toUpperCase()
+    const note = [specialRequests.trim(), trimmedVoucher ? `[Mã khuyến mãi: ${trimmedVoucher}]` : '']
+      .filter(Boolean)
+      .join(' — ')
     guestClient
       .post('/api/guest/reservations', {
         roomTypeId: bookingType.roomTypeId,
         numberOfGuests,
         checkInDate,
         checkOutDate,
-        specialRequests: specialRequests.trim() || undefined,
+        specialRequests: note || undefined,
       })
       .then((res) => setBookingSuccess(res.data))
       .catch((err) => {
@@ -381,6 +428,15 @@ export default function GuestBookingPage() {
                   +
                 </button>
               </div>
+            </div>
+            <div className="min-w-36 flex-1">
+              <label className={labelCls}>Mã khuyến mãi</label>
+              <input
+                className={inputCls}
+                placeholder="Nhập nếu có"
+                value={voucher}
+                onChange={(e) => setVoucher(e.target.value)}
+              />
             </div>
             <button
               type="button"
@@ -535,6 +591,12 @@ export default function GuestBookingPage() {
                     <span className="text-cream-50/60">Tạm tính</span>
                     <span className="font-display font-semibold tabular-nums">{formatVnd(bookingType.basePrice * nights)}</span>
                   </p>
+                  {voucher.trim() && (
+                    <p className="flex justify-between text-emerald-300">
+                      <span className="text-cream-50/60">Mã khuyến mãi</span>
+                      <span className="font-semibold">{voucher.trim().toUpperCase()} · áp dụng khi thanh toán</span>
+                    </p>
+                  )}
                 </div>
                 <button
                   type="button"
