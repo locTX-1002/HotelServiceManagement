@@ -9,6 +9,18 @@ const inputCls =
   'w-full rounded-lg border border-black/15 bg-white px-3.5 py-3 text-sm outline-none placeholder:text-ink-500/40 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20'
 const labelCls = 'mb-1.5 block text-[11px] font-bold uppercase tracking-[0.18em] text-ink-700'
 
+// Doc rieng claim "name" trong idToken (JWT chuan 3 phan) chi de goi y dien san tren form - khong
+// dung de xac thuc, backend van tu giai ma+xac minh lai idToken khi submit.
+function decodeGoogleName(idToken) {
+  try {
+    const payload = idToken.split('.')[1]
+    const json = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')))
+    return json.name ?? ''
+  } catch {
+    return ''
+  }
+}
+
 // Dang nhap cho khach (guest portal) - phong theo dung mau LoginPage.jsx cua nhan vien nhung
 // tach rieng session/API, dang nhap bang SDT (khach khong co email luc dat phong).
 export default function GuestLoginPage() {
@@ -22,6 +34,9 @@ export default function GuestLoginPage() {
   // khach dang nhap Google lan 2.
   const [pendingGoogleToken, setPendingGoogleToken] = useState('')
   const [googlePhone, setGooglePhone] = useState('')
+  const [googleFullName, setGoogleFullName] = useState('')
+  const [googlePassword, setGooglePassword] = useState('')
+  const [googlePassword2, setGooglePassword2] = useState('')
   const [googleLoading, setGoogleLoading] = useState(false)
   const [googleError, setGoogleError] = useState('')
   const navigate = useNavigate()
@@ -31,20 +46,31 @@ export default function GuestLoginPage() {
   // submitGoogle/handleGoogleCredential phai khai bao TRUOC early-return ben duoi (Rules of Hooks -
   // useCallback khong duoc goi co dieu kien) du chi dung sau khi da qua nhanh do.
   const submitGoogle = useCallback(
-    (idToken, phoneNumber) => {
+    (idToken, phoneNumber, fullName, password) => {
       setGoogleError('')
       setGoogleLoading(true)
       guestClient
-        .post('/api/guest/auth/google-login', { idToken, phoneNumber: phoneNumber || undefined })
+        .post('/api/guest/auth/google-login', {
+          idToken,
+          phoneNumber: phoneNumber || undefined,
+          fullName: fullName || undefined,
+          password: password || undefined,
+        })
         .then((res) => {
           saveGuestSession(res.data)
           navigate(from ?? '/guest/dashboard', { replace: true })
         })
         .catch((err) => {
-          if (err.response?.status === 428) setPendingGoogleToken(idToken)
-          else if (err.response?.status === 401) setGoogleError('Không xác minh được tài khoản Google, vui lòng thử lại.')
-          else if (isBackendMissing(err)) setGoogleError('Không kết nối được máy chủ. Vui lòng thử lại sau.')
-          else setGoogleError(err.response?.data?.message ?? 'Máy chủ báo lỗi. Thử lại sau ít phút.')
+          if (err.response?.status === 428) {
+            setPendingGoogleToken(idToken)
+            setGoogleFullName((prev) => prev || decodeGoogleName(idToken))
+          } else if (err.response?.status === 401) {
+            setGoogleError('Không xác minh được tài khoản Google, vui lòng thử lại.')
+          } else if (isBackendMissing(err)) {
+            setGoogleError('Không kết nối được máy chủ. Vui lòng thử lại sau.')
+          } else {
+            setGoogleError(err.response?.data?.message ?? 'Máy chủ báo lỗi. Thử lại sau ít phút.')
+          }
         })
         .finally(() => setGoogleLoading(false))
     },
@@ -52,7 +78,7 @@ export default function GuestLoginPage() {
   )
 
   // Callback on dinh de GoogleSignInButton khong re-init GIS moi lan render
-  const handleGoogleCredential = useCallback((idToken) => submitGoogle(idToken, null), [submitGoogle])
+  const handleGoogleCredential = useCallback((idToken) => submitGoogle(idToken, null, null, null), [submitGoogle])
 
   if (getGuestToken()) return <Navigate to={from ?? '/guest/dashboard'} replace />
 
@@ -78,7 +104,31 @@ export default function GuestLoginPage() {
   const confirmGooglePhone = (e) => {
     e.preventDefault()
     if (googleLoading) return
-    submitGoogle(pendingGoogleToken, googlePhone.trim())
+    const phone = googlePhone.trim()
+    if (!phone) {
+      setGoogleError('Vui lòng nhập số điện thoại.')
+      return
+    }
+    if (googlePassword) {
+      if (googlePassword.length < 6) {
+        setGoogleError('Mật khẩu phải có ít nhất 6 ký tự.')
+        return
+      }
+      if (googlePassword !== googlePassword2) {
+        setGoogleError('Mật khẩu nhập lại không khớp.')
+        return
+      }
+    }
+    submitGoogle(pendingGoogleToken, phone, googleFullName.trim(), googlePassword || null)
+  }
+
+  const cancelGoogleProfile = () => {
+    setPendingGoogleToken('')
+    setGooglePhone('')
+    setGoogleFullName('')
+    setGooglePassword('')
+    setGooglePassword2('')
+    setGoogleError('')
   }
 
   return (
@@ -104,120 +154,169 @@ export default function GuestLoginPage() {
               <p className="mt-1 text-[9px] font-semibold tracking-[0.32em] text-ink-500">CỔNG THÔNG TIN KHÁCH LƯU TRÚ</p>
             </div>
 
-            <h1 className="mt-10 font-display text-4xl font-medium tracking-tight">Xin chào</h1>
-            <p className="mt-2 text-sm leading-relaxed text-ink-500">
-              Đăng nhập để xem thông tin đặt phòng của bạn.
-            </p>
-
-            <form onSubmit={onSubmit} className="mt-8 space-y-5">
-              <div>
-                <label className={labelCls}>Số điện thoại</label>
-                <input
-                  type="tel"
-                  required
-                  autoComplete="tel"
-                  className={inputCls}
-                  placeholder="09xxxxxxxx"
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
-                />
-              </div>
-              <div>
-                <label className={labelCls}>Mật khẩu</label>
-                <div className="relative">
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    required
-                    autoComplete="current-password"
-                    className={`${inputCls} pr-16`}
-                    placeholder="••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className={`absolute inset-y-0 right-0 flex items-center px-3.5 text-[11px] font-bold uppercase tracking-wider text-ink-500 ${EASE} hover:text-ink-900`}
-                  >
-                    {showPassword ? 'Ẩn' : 'Hiện'}
-                  </button>
-                </div>
-              </div>
-
-              {error && <p className={errorCls}>{error}</p>}
-
-              <button
-                type="submit"
-                disabled={loading}
-                className={`inline-flex items-center gap-2.5 rounded-full bg-brand-600 px-8 py-3 text-[13px] font-bold uppercase tracking-[0.12em] text-white ${EASE} hover:bg-brand-700 active:scale-[0.98] disabled:opacity-50`}
-              >
-                {loading ? 'Đang đăng nhập…' : <>Đăng nhập <span aria-hidden>›</span></>}
-              </button>
-            </form>
-
-            {import.meta.env.VITE_GOOGLE_CLIENT_ID && (
+            {pendingGoogleToken ? (
               <>
-                <div className="mt-6 flex items-center gap-3 text-[11px] font-semibold uppercase tracking-wider text-ink-500/60">
-                  <span className="h-px flex-1 bg-black/[0.08]" />
-                  hoặc
-                  <span className="h-px flex-1 bg-black/[0.08]" />
-                </div>
+                <h1 className="mt-10 font-display text-4xl font-medium tracking-tight">Hoàn tất hồ sơ</h1>
+                <p className="mt-2 text-sm leading-relaxed text-ink-500">
+                  Lần đầu dùng tài khoản Google này trên HSMS — điền vài thông tin để hoàn tất tài khoản của bạn.
+                </p>
 
-                {pendingGoogleToken ? (
-                  <form onSubmit={confirmGooglePhone} className="mt-4 space-y-3">
-                    <p className="text-[12px] leading-relaxed text-ink-500">
-                      Lần đầu dùng Google này — nhập số điện thoại để nối vào đúng đặt phòng của bạn.
-                    </p>
+                <form onSubmit={confirmGooglePhone} className="mt-8 space-y-5">
+                  <div>
+                    <label className={labelCls}>Số điện thoại</label>
                     <input
                       type="tel"
                       required
                       autoFocus
+                      autoComplete="tel"
                       className={inputCls}
                       placeholder="09xxxxxxxx"
                       value={googlePhone}
                       onChange={(e) => setGooglePhone(e.target.value)}
                     />
-                    {googleError && <p className={errorCls}>{googleError}</p>}
-                    <div className="flex gap-2.5">
+                  </div>
+                  <div>
+                    <label className={labelCls}>Họ và tên</label>
+                    <input
+                      type="text"
+                      className={inputCls}
+                      placeholder="Họ và tên của bạn"
+                      value={googleFullName}
+                      onChange={(e) => setGoogleFullName(e.target.value)}
+                    />
+                    <p className="mt-1.5 text-[11px] leading-relaxed text-ink-500/70">
+                      Nếu bạn đã từng đặt phòng bằng số điện thoại này, tên đã lưu trước đó sẽ được giữ
+                      nguyên để khớp với lễ tân.
+                    </p>
+                  </div>
+                  <div>
+                    <label className={labelCls}>Đặt mật khẩu (tuỳ chọn)</label>
+                    <input
+                      type="password"
+                      autoComplete="new-password"
+                      className={inputCls}
+                      placeholder="Để trống nếu chỉ muốn đăng nhập bằng Google"
+                      value={googlePassword}
+                      onChange={(e) => setGooglePassword(e.target.value)}
+                    />
+                  </div>
+                  {googlePassword && (
+                    <div>
+                      <label className={labelCls}>Nhập lại mật khẩu</label>
+                      <input
+                        type="password"
+                        autoComplete="new-password"
+                        className={inputCls}
+                        placeholder="••••••"
+                        value={googlePassword2}
+                        onChange={(e) => setGooglePassword2(e.target.value)}
+                      />
+                    </div>
+                  )}
+
+                  {googleError && <p className={errorCls}>{googleError}</p>}
+
+                  <div className="flex gap-2.5">
+                    <button
+                      type="button"
+                      onClick={cancelGoogleProfile}
+                      className={`rounded-full px-5 py-3 text-[12px] font-semibold text-ink-700 ring-1 ring-black/10 ${EASE} hover:bg-cream-50`}
+                    >
+                      Huỷ
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={googleLoading}
+                      className={`inline-flex flex-1 items-center justify-center gap-2.5 rounded-full bg-brand-600 px-8 py-3 text-[13px] font-bold uppercase tracking-[0.12em] text-white ${EASE} hover:bg-brand-700 active:scale-[0.98] disabled:opacity-50`}
+                    >
+                      {googleLoading ? 'Đang xử lý…' : <>Hoàn tất <span aria-hidden>›</span></>}
+                    </button>
+                  </div>
+                </form>
+              </>
+            ) : (
+              <>
+                <h1 className="mt-10 font-display text-4xl font-medium tracking-tight">Xin chào</h1>
+                <p className="mt-2 text-sm leading-relaxed text-ink-500">
+                  Đăng nhập để xem thông tin đặt phòng của bạn.
+                </p>
+
+                <form onSubmit={onSubmit} className="mt-8 space-y-5">
+                  <div>
+                    <label className={labelCls}>Số điện thoại</label>
+                    <input
+                      type="tel"
+                      required
+                      autoComplete="tel"
+                      className={inputCls}
+                      placeholder="09xxxxxxxx"
+                      value={phoneNumber}
+                      onChange={(e) => setPhoneNumber(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className={labelCls}>Mật khẩu</label>
+                    <div className="relative">
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        required
+                        autoComplete="current-password"
+                        className={`${inputCls} pr-16`}
+                        placeholder="••••••"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                      />
                       <button
                         type="button"
-                        onClick={() => { setPendingGoogleToken(''); setGooglePhone(''); setGoogleError('') }}
-                        className={`rounded-full px-4 py-2.5 text-[12px] font-semibold text-ink-700 ring-1 ring-black/10 ${EASE} hover:bg-cream-50`}
+                        onClick={() => setShowPassword(!showPassword)}
+                        className={`absolute inset-y-0 right-0 flex items-center px-3.5 text-[11px] font-bold uppercase tracking-wider text-ink-500 ${EASE} hover:text-ink-900`}
                       >
-                        Huỷ
-                      </button>
-                      <button
-                        type="submit"
-                        disabled={googleLoading}
-                        className={`flex-1 rounded-full bg-brand-600 px-4 py-2.5 text-[12px] font-bold text-white ${EASE} hover:bg-brand-700 disabled:opacity-50`}
-                      >
-                        {googleLoading ? 'Đang xử lý…' : 'Tiếp tục'}
+                        {showPassword ? 'Ẩn' : 'Hiện'}
                       </button>
                     </div>
-                  </form>
-                ) : (
-                  <div className="mt-4">
-                    <GoogleSignInButton onCredential={handleGoogleCredential} />
-                    {googleError && <p className={`mt-3 ${errorCls}`}>{googleError}</p>}
                   </div>
+
+                  {error && <p className={errorCls}>{error}</p>}
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className={`inline-flex items-center gap-2.5 rounded-full bg-brand-600 px-8 py-3 text-[13px] font-bold uppercase tracking-[0.12em] text-white ${EASE} hover:bg-brand-700 active:scale-[0.98] disabled:opacity-50`}
+                  >
+                    {loading ? 'Đang đăng nhập…' : <>Đăng nhập <span aria-hidden>›</span></>}
+                  </button>
+                </form>
+
+                {import.meta.env.VITE_GOOGLE_CLIENT_ID && (
+                  <>
+                    <div className="mt-6 flex items-center gap-3 text-[11px] font-semibold uppercase tracking-wider text-ink-500/60">
+                      <span className="h-px flex-1 bg-black/[0.08]" />
+                      hoặc
+                      <span className="h-px flex-1 bg-black/[0.08]" />
+                    </div>
+                    <div className="mt-4">
+                      <GoogleSignInButton onCredential={handleGoogleCredential} />
+                      {googleError && <p className={`mt-3 ${errorCls}`}>{googleError}</p>}
+                    </div>
+                  </>
                 )}
+
+                <div className="mt-8 space-y-2 border-t border-black/[0.07] pt-4 text-[12px] leading-relaxed text-ink-500">
+                  <p>
+                    Chưa có tài khoản?{' '}
+                    <Link to="/guest/dang-ky" className={`font-semibold text-brand-600 underline-offset-4 ${EASE} hover:underline`}>
+                      Đăng ký ngay
+                    </Link>
+                  </p>
+                  <p>
+                    Quên mật khẩu?{' '}
+                    <Link to="/guest/quen-mat-khau" className={`font-semibold text-brand-600 underline-offset-4 ${EASE} hover:underline`}>
+                      Đặt lại qua email
+                    </Link>
+                  </p>
+                </div>
               </>
             )}
-
-            <div className="mt-8 space-y-2 border-t border-black/[0.07] pt-4 text-[12px] leading-relaxed text-ink-500">
-              <p>
-                Chưa có tài khoản?{' '}
-                <Link to="/guest/dang-ky" className={`font-semibold text-brand-600 underline-offset-4 ${EASE} hover:underline`}>
-                  Đăng ký ngay
-                </Link>
-              </p>
-              <p>
-                Quên mật khẩu?{' '}
-                <Link to="/guest/quen-mat-khau" className={`font-semibold text-brand-600 underline-offset-4 ${EASE} hover:underline`}>
-                  Đặt lại qua email
-                </Link>
-              </p>
-            </div>
           </div>
         </div>
       </div>
