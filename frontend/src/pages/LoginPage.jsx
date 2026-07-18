@@ -18,11 +18,15 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [forgotOpen, setForgotOpen] = useState(false)
+  const [forgotEmail, setForgotEmail] = useState('')
+  const [forgotLoading, setForgotLoading] = useState(false)
+  const [forgotDone, setForgotDone] = useState(false)
+  const [forgotError, setForgotError] = useState('')
   const navigate = useNavigate()
   const location = useLocation()
   const from = location.state?.from ?? null
 
-  // Esc để đóng hướng dẫn quên mật khẩu
+  // Esc để đóng form quên mật khẩu
   useEffect(() => {
     if (!forgotOpen) return
     const onKey = (e) => e.key === 'Escape' && setForgotOpen(false)
@@ -30,10 +34,27 @@ export default function LoginPage() {
     return () => window.removeEventListener('keydown', onKey)
   }, [forgotOpen])
 
-  // Email soạn sẵn gửi Quản trị viên - điền luôn email đang gõ ở ô đăng nhập nếu có
-  const mailHref =
-    `mailto:admin@hotel.com?subject=${encodeURIComponent('[HSMS] Nhờ cấp lại mật khẩu')}` +
-    `&body=${encodeURIComponent(`Chào Quản trị viên,\n\nNhờ anh/chị cấp lại mật khẩu cho tài khoản: ${email.trim() || '(điền email của bạn)'}\n\nCảm ơn!`)}`
+  const openForgot = () => {
+    setForgotEmail(email.trim())
+    setForgotDone(false)
+    setForgotError('')
+    setForgotOpen(true)
+  }
+
+  const submitForgot = (e) => {
+    e.preventDefault()
+    if (forgotLoading) return
+    setForgotError('')
+    setForgotLoading(true)
+    client
+      .post('/api/auth/forgot-password', { email: forgotEmail.trim() })
+      .then(() => setForgotDone(true))
+      .catch((err) => {
+        if (isBackendMissing(err)) setForgotError('Không kết nối được máy chủ. Vui lòng thử lại sau.')
+        else setForgotError(err.response?.data?.message ?? 'Máy chủ báo lỗi. Thử lại sau ít phút.')
+      })
+      .finally(() => setForgotLoading(false))
+  }
 
   // Còn phiên cũ (vd bấm nút back) thì khỏi đăng nhập lại
   if (getToken()) return <Navigate to={homeFor(getUser()?.role)} replace />
@@ -152,10 +173,10 @@ export default function LoginPage() {
           Quên mật khẩu?{' '}
           <button
             type="button"
-            onClick={() => setForgotOpen(true)}
+            onClick={openForgot}
             className={`font-semibold text-brand-600 underline-offset-4 ${EASE} hover:underline`}
           >
-            Xem cách cấp lại
+            Đặt lại qua email
           </button>
         </p>
           </div>
@@ -163,44 +184,64 @@ export default function LoginPage() {
       </div>
       <p className="pb-5 text-[11px] text-ink-500/60">Group 2 · SE1919 · FPT University</p>
 
-      {/* Hướng dẫn cấp lại mật khẩu - HSMS là hệ thống nội bộ nên không tự reset
-          qua email; Quản trị viên cấp lại bằng nút "Cấp lại MK" ở trang Người dùng */}
+      {/* Tự đặt lại mật khẩu qua email - server luôn trả cùng 1 thông báo chung dù email có tồn tại
+          hay không (chống dò email), chỉ thực sự gửi mail khi tài khoản tồn tại và đang hoạt động. */}
       {forgotOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-6">
           <div onClick={() => setForgotOpen(false)} className="absolute inset-0 bg-ink-900/30" />
           <div className="relative w-full max-w-md rounded-2xl bg-cream-50 p-7 shadow-lift">
             <p className="font-display text-[13px] italic text-brand-600">hỗ trợ tài khoản</p>
             <p className="mt-1 font-display text-2xl font-semibold tracking-tight">Quên mật khẩu?</p>
-            <p className="mt-2 text-[13px] leading-relaxed text-ink-500">
-              Đây là hệ thống nội bộ nên mật khẩu không tự đặt lại qua email — Quản trị viên sẽ cấp lại cho bạn trong ít phút.
-            </p>
-            <ol className="mt-5 space-y-3">
-              {[
-                ['1', 'Báo cho Quản trị viên — bấm nút bên dưới để soạn sẵn email.'],
-                ['2', 'Quản trị viên mở trang Người dùng, bấm "Cấp lại MK" cho tài khoản của bạn rồi báo lại mật khẩu tạm.'],
-                ['3', 'Đăng nhập bằng mật khẩu tạm, sau đó bấm "Đổi mật khẩu" trên thanh menu để đặt mật khẩu riêng.'],
-              ].map(([n, text]) => (
-                <li key={n} className="flex gap-3 text-[13px] leading-relaxed text-ink-700">
-                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-600/10 text-[11px] font-bold text-brand-700">{n}</span>
-                  <span>{text}</span>
-                </li>
-              ))}
-            </ol>
-            <div className="mt-6 flex flex-wrap justify-end gap-2.5">
-              <button
-                type="button"
-                onClick={() => setForgotOpen(false)}
-                className={`rounded-full px-5 py-2.5 text-[13px] font-semibold text-ink-700 ring-1 ring-black/10 ${EASE} hover:bg-white`}
-              >
-                Đóng
-              </button>
-              <a
-                href={mailHref}
-                className={`rounded-full bg-brand-600 px-5 py-2.5 text-[13px] font-bold text-white ${EASE} hover:bg-brand-700 active:scale-[0.98]`}
-              >
-                Soạn email cho Quản trị viên
-              </a>
-            </div>
+
+            {forgotDone ? (
+              <>
+                <p className="mt-3 text-[13px] leading-relaxed text-ink-700">
+                  Nếu email này tồn tại trong hệ thống, một liên kết đặt lại mật khẩu đã được gửi tới — kiểm tra hộp thư
+                  đến (và mục Spam). Liên kết có hiệu lực trong 30 phút.
+                </p>
+                <div className="mt-6 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => setForgotOpen(false)}
+                    className={`rounded-full bg-brand-600 px-5 py-2.5 text-[13px] font-bold text-white ${EASE} hover:bg-brand-700 active:scale-[0.98]`}
+                  >
+                    Đã hiểu
+                  </button>
+                </div>
+              </>
+            ) : (
+              <form onSubmit={submitForgot}>
+                <p className="mt-2 text-[13px] leading-relaxed text-ink-500">
+                  Nhập email tài khoản của bạn, chúng tôi sẽ gửi liên kết đặt lại mật khẩu.
+                </p>
+                <input
+                  type="email"
+                  required
+                  autoComplete="email"
+                  className={`${inputCls} mt-4`}
+                  placeholder="ten@hotel.com"
+                  value={forgotEmail}
+                  onChange={(e) => setForgotEmail(e.target.value)}
+                />
+                {forgotError && <p className={`mt-3 ${errorCls}`}>{forgotError}</p>}
+                <div className="mt-6 flex flex-wrap justify-end gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => setForgotOpen(false)}
+                    className={`rounded-full px-5 py-2.5 text-[13px] font-semibold text-ink-700 ring-1 ring-black/10 ${EASE} hover:bg-white`}
+                  >
+                    Đóng
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={forgotLoading}
+                    className={`rounded-full bg-brand-600 px-5 py-2.5 text-[13px] font-bold text-white ${EASE} hover:bg-brand-700 active:scale-[0.98] disabled:opacity-50`}
+                  >
+                    {forgotLoading ? 'Đang gửi…' : 'Gửi liên kết đặt lại'}
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       )}

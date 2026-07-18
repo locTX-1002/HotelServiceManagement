@@ -3,6 +3,7 @@ import { ToastProvider } from './components/ToastHost'
 import MainLayout from './layouts/MainLayout'
 import HomePage from './pages/HomePage'
 import LoginPage from './pages/LoginPage'
+import ResetPasswordPage from './pages/ResetPasswordPage'
 import RoomMapPage from './pages/RoomMapPage'
 import CreateReservationPage from './pages/CreateReservationPage'
 import CheckInOutPage from './pages/CheckInOutPage'
@@ -34,6 +35,7 @@ export default function App() {
         <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
         {/* Cổng thông tin khách - tách hoàn toàn khỏi khu nhân viên bên dưới, session/API riêng */}
         <Route path="/guest/dang-nhap" element={<GuestLoginPage />} />
         <Route path="/guest/dang-ky" element={<GuestRegisterPage />} />
