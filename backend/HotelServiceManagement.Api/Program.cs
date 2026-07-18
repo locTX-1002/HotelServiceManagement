@@ -45,6 +45,7 @@ builder.Services.AddScoped<IRoomTypeService, RoomTypeService>();
 builder.Services.AddScoped<IRoomService, RoomService>();
 builder.Services.AddScoped<IGuestService, GuestService>();
 builder.Services.AddScoped<IReservationService, ReservationService>();
+builder.Services.AddScoped<IGuestReservationService, GuestReservationService>();
 builder.Services.AddScoped<IServiceCategoryService, ServiceCategoryService>();
 builder.Services.AddScoped<IServiceItemService, ServiceItemService>();
 builder.Services.AddScoped<IServiceOrderService, ServiceOrderService>();

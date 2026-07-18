@@ -57,7 +57,7 @@ namespace HotelServiceManagement.Infrastructure.Services
         /// </summary>
         public async Task<AuthServiceResult<ReservationResponse>> CreateAsync(
             CreateReservationRequest request,
-            int createdByUserId)
+            int? createdByUserId)
         {
             if (request == null)
             {
@@ -65,7 +65,7 @@ namespace HotelServiceManagement.Infrastructure.Services
                     "Request body is required.");
             }
 
-            if (createdByUserId <= 0)
+            if (createdByUserId is <= 0)
             {
                 return AuthServiceResult<ReservationResponse>.Failure(
                     "Authenticated user id is invalid.", 401);
