@@ -117,7 +117,12 @@ export default function NotificationBell() {
           ) : (
             <div className="mb-2 space-y-1.5">
               {pendingBookings.slice(0, 4).map((r) => (
-                <div key={r.id} className="rounded-xl bg-white p-3 ring-1 ring-black/[0.05]">
+                <Link
+                  key={r.id}
+                  to="/reservations"
+                  onClick={() => setOpen(false)}
+                  className={`block rounded-xl bg-white p-3 ring-1 ring-black/[0.05] ${EASE} hover:ring-brand-600/40`}
+                >
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-[13px] font-bold">Phòng {r.roomNumber}</span>
                     <span className="rounded-full bg-rose-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-rose-700 ring-1 ring-rose-600/15">
@@ -125,7 +130,7 @@ export default function NotificationBell() {
                     </span>
                   </div>
                   <p className="mt-0.5 text-[12px] text-ink-500">{r.guestName} · {r.bookingCode}</p>
-                </div>
+                </Link>
               ))}
               <Link
                 to="/reservations"
@@ -145,7 +150,12 @@ export default function NotificationBell() {
               {checkoutSoon.map((s) => {
                 const overdue = new Date(s.plannedCheckOut).getTime() < Date.now()
                 return (
-                  <div key={s.stayId} className="rounded-xl bg-white p-3 ring-1 ring-black/[0.05]">
+                  <Link
+                    key={s.stayId}
+                    to="/checkin-checkout"
+                    onClick={() => setOpen(false)}
+                    className={`block rounded-xl bg-white p-3 ring-1 ring-black/[0.05] ${EASE} hover:ring-brand-600/40`}
+                  >
                     <div className="flex items-center justify-between gap-2">
                       <span className="text-[13px] font-bold">Phòng {s.roomNumber}</span>
                       <span
@@ -159,7 +169,7 @@ export default function NotificationBell() {
                       </span>
                     </div>
                     <p className="mt-0.5 text-[12px] text-ink-500">{s.guestName} · {s.bookingCode}</p>
-                  </div>
+                  </Link>
                 )
               })}
             </div>
