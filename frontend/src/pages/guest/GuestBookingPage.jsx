@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import guestClient, { apiError } from '../../api/guestClient'
 import { formatVnd } from '../../utils/roomStatus'
@@ -46,7 +46,103 @@ function Steps({ current, onBack }) {
 // roomImage()/roomMeta() (tra theo ten loai phong, khong can du lieu anh tu backend). Khac
 // RoomResultCard o cho day la THE LOAI PHONG (khong phai 1 phong cu the) nen khong co so
 // phong/tang, thay bang badge "Còn X phòng".
-function RoomTypeCard({ rt, idx, selected, onSelect }) {
+// Modal chi tiet loai phong - anh lon + mo ta (tu backend) + tien nghi, theo dung pattern modal
+// cua RoomTypeSelect ben HomePage (backdrop toi, Escape dong, panel cream cuon doc).
+function RoomTypeDetailModal({ rt, selected, onSelect, onClose }) {
+  const meta = roomMeta(rt.roomTypeName)
+  const [imgIdx, setImgIdx] = useState(0)
+  const active = selected?.roomTypeId === rt.roomTypeId
+
+  useEffect(() => {
+    const onKey = (e) => e.key === 'Escape' && onClose()
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onClose])
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center px-4 pb-4 sm:items-center">
+      <div onClick={onClose} className="absolute inset-0 bg-ink-900/40" />
+      <div className="card-rise relative max-h-[85vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-cream-50 shadow-lift">
+        <div className="group relative">
+          <img src={roomImage(rt.roomTypeName, imgIdx)} alt={rt.roomTypeName} className="h-52 w-full object-cover sm:h-60" />
+          <button
+            type="button"
+            onClick={() => setImgIdx((imgIdx + 3) % 4)}
+            className="absolute left-3 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-sm font-bold text-ink-700 backdrop-blur-sm"
+            aria-label="Ảnh trước"
+          >
+            ‹
+          </button>
+          <button
+            type="button"
+            onClick={() => setImgIdx((imgIdx + 1) % 4)}
+            className="absolute right-3 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-sm font-bold text-ink-700 backdrop-blur-sm"
+            aria-label="Ảnh sau"
+          >
+            ›
+          </button>
+          <div className="absolute bottom-2.5 left-1/2 flex -translate-x-1/2 gap-1.5">
+            {[0, 1, 2, 3].map((i) => (
+              <span key={i} className={`h-1.5 w-1.5 rounded-full ${i === imgIdx ? 'bg-white' : 'bg-white/45'}`} />
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-white/85 text-sm font-bold text-ink-700 backdrop-blur-sm"
+            aria-label="Đóng"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div className="p-6">
+          <div className="flex items-start justify-between gap-3">
+            <p className="font-display text-2xl font-semibold">{rt.roomTypeName}</p>
+            <span className="shrink-0 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700 ring-1 ring-emerald-600/15">
+              Còn {rt.availableCount} phòng
+            </span>
+          </div>
+          <p className="mt-1.5 text-[11px] uppercase tracking-[0.16em] text-ink-500">
+            {meta.capacity} khách &nbsp;·&nbsp; {meta.area} m² &nbsp;·&nbsp; {meta.bed}
+          </p>
+
+          {rt.description && <p className="mt-3.5 text-sm leading-relaxed text-ink-700">{rt.description}</p>}
+
+          <p className="mt-4 text-[11px] font-bold uppercase tracking-[0.18em] text-ink-500">Tiện nghi</p>
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {meta.amenities.map((a) => (
+              <span key={a} className="rounded-full bg-cream-100 px-2.5 py-1 text-[11px] font-medium text-ink-700">
+                {a}
+              </span>
+            ))}
+          </div>
+
+          <div className="mt-5 flex items-end justify-between border-t border-black/[0.06] pt-4">
+            <p className="font-display text-xl font-semibold tabular-nums">
+              {formatVnd(rt.basePrice)}
+              <span className="font-sans text-[11px] font-normal text-ink-500"> / đêm</span>
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                onSelect(active ? null : rt)
+                onClose()
+              }}
+              className={`rounded-full px-5 py-2 text-[13px] font-bold ${EASE} active:scale-[0.98] ${
+                active ? 'bg-emerald-500 text-white' : 'bg-ink-900 text-cream-50 hover:bg-ink-700'
+              }`}
+            >
+              {active ? '✓ Đã chọn' : 'Chọn loại phòng này'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function RoomTypeCard({ rt, idx, selected, onSelect, onDetail }) {
   const meta = roomMeta(rt.roomTypeName)
   const [imgIdx, setImgIdx] = useState(idx)
   const active = selected?.roomTypeId === rt.roomTypeId
@@ -102,15 +198,24 @@ function RoomTypeCard({ rt, idx, selected, onSelect }) {
               {formatVnd(rt.basePrice)}
               <span className="font-sans text-[11px] font-normal text-ink-500"> / đêm</span>
             </p>
-            <button
-              type="button"
-              onClick={() => onSelect(active ? null : rt)}
-              className={`rounded-full px-5 py-2 text-[13px] font-bold ${EASE} active:scale-[0.98] ${
-                active ? 'bg-emerald-500 text-white' : 'bg-ink-900 text-cream-50 hover:bg-ink-700'
-              }`}
-            >
-              {active ? '✓ Đã chọn' : 'Chọn loại phòng này'}
-            </button>
+            <div className="flex items-center gap-4">
+              <button
+                type="button"
+                onClick={() => onDetail(rt)}
+                className="text-[12px] font-semibold text-brand-600 underline-offset-4 hover:underline"
+              >
+                Xem chi tiết
+              </button>
+              <button
+                type="button"
+                onClick={() => onSelect(active ? null : rt)}
+                className={`rounded-full px-5 py-2 text-[13px] font-bold ${EASE} active:scale-[0.98] ${
+                  active ? 'bg-emerald-500 text-white' : 'bg-ink-900 text-cream-50 hover:bg-ink-700'
+                }`}
+              >
+                {active ? '✓ Đã chọn' : 'Chọn loại phòng này'}
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -128,6 +233,7 @@ export default function GuestBookingPage() {
   const [roomTypes, setRoomTypes] = useState([])
 
   const [bookingType, setBookingType] = useState(null)
+  const [detailType, setDetailType] = useState(null)
   const [specialRequests, setSpecialRequests] = useState('')
   const [booking, setBooking] = useState(false)
   const [bookingError, setBookingError] = useState('')
@@ -337,7 +443,14 @@ export default function GuestBookingPage() {
           {!searching && !searchError && (
             <div className="mt-4 space-y-4">
               {roomTypes.map((rt, idx) => (
-                <RoomTypeCard key={rt.roomTypeId} rt={rt} idx={idx} selected={bookingType} onSelect={setBookingType} />
+                <RoomTypeCard
+                  key={rt.roomTypeId}
+                  rt={rt}
+                  idx={idx}
+                  selected={bookingType}
+                  onSelect={setBookingType}
+                  onDetail={setDetailType}
+                />
               ))}
               {roomTypes.length === 0 && (
                 <div className="rounded-2xl border border-dashed border-black/10 bg-white/60 p-10 text-center">
@@ -434,6 +547,15 @@ export default function GuestBookingPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {detailType && (
+        <RoomTypeDetailModal
+          rt={detailType}
+          selected={bookingType}
+          onSelect={setBookingType}
+          onClose={() => setDetailType(null)}
+        />
       )}
 
       {/* Sticky bar khi da chon loai phong o buoc 2 - kieu BOOK NOW cua trang le tan */}
