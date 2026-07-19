@@ -32,23 +32,34 @@ export default function BarChart({ data, color = 'var(--color-brand-600)', forma
 
   // HTML/CSS thuần thay vì SVG - SVG với viewBox 0-100 + preserveAspectRatio="none" kéo giãn text
   // không đều theo trục X khi container thực rộng hơn nhiều so với 100 đơn vị viewBox, làm nhãn ngày
-  // chồng chéo lên nhau khi có nhiều cột (VD 7-30 ngày). flexbox item tự nhiên xuống dòng khi chật,
-  // không bao giờ chồng chữ.
+  // chồng chéo lên nhau khi có nhiều cột (VD 7-30 ngày).
+  //
+  // Cột phải cao theo % nên MỌI cấp trên nó bắt buộc có chiều cao xác định, nếu không % không có gì để
+  // quy chiếu -> trình duyệt tính ra auto -> div rỗng cao 0px và biểu đồ mất hình (đúng lỗi đã gặp).
+  // Vì vậy: cột con dùng h-full, rồi bọc thanh trong 1 rãnh flex-1 relative và đặt thanh absolute
+  // bottom-0 - lúc này % ăn theo chiều cao thật của rãnh, không phụ thuộc nhãn dài ngắn.
+  //
+  // Bọc overflow-x-auto: flex item KHÔNG tự xuống dòng khi chật (muốn vậy phải có flex-wrap), 30 ngày
+  // trở lên là tràn ngang cả trang. Cho cuộn ngang trong khung, giống bảng công suất theo tầng bên dưới.
   return (
-    <div className="flex items-end gap-2 sm:gap-3" style={{ height }}>
-      {data.map((d) => (
-        <div key={d.label} className="group flex flex-1 flex-col items-center gap-1.5">
-          <p className={`text-[10px] tabular-nums text-ink-500 opacity-0 transition-opacity duration-200 group-hover:opacity-100`}>
-            {formatValue(d.value)}
-          </p>
-          <div
-            className="w-full max-w-12 rounded-t-md transition-all duration-300"
-            style={{ height: `${Math.max(ratio(d.value) * 100, 6)}%`, backgroundColor: color }}
-            title={`${d.label}: ${formatValue(d.value)}`}
-          />
-          <p className="text-center text-[10px] leading-tight text-ink-500">{d.label}</p>
-        </div>
-      ))}
+    <div className="overflow-x-auto">
+      <div className="flex min-w-full items-end gap-2 sm:gap-3" style={{ height }}>
+        {data.map((d) => (
+          <div key={d.label} className="group flex h-full min-w-9 flex-1 flex-col items-center gap-1.5">
+            <p className="whitespace-nowrap text-[10px] tabular-nums text-ink-500 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+              {formatValue(d.value)}
+            </p>
+            <div className="relative w-full flex-1">
+              <div
+                className="absolute inset-x-0 bottom-0 mx-auto w-full max-w-12 rounded-t-md transition-all duration-300"
+                style={{ height: `${Math.max(ratio(d.value) * 100, 6)}%`, backgroundColor: color }}
+                title={`${d.label}: ${formatValue(d.value)}`}
+              />
+            </div>
+            <p className="whitespace-nowrap text-center text-[10px] leading-tight text-ink-500">{d.label}</p>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
