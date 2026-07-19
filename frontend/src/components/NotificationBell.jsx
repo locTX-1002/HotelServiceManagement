@@ -3,6 +3,8 @@ import client, { apiError } from '../api/client'
 import { Link } from 'react-router-dom'
 import { normalizeHousekeepingStatus, normalizeHousekeepingRequestType, normalizeReservationStatus } from '../utils/apiShape'
 import { onDataChanged } from '../utils/refreshBus'
+import { getUser } from '../utils/session'
+import { canAccess } from '../utils/roles'
 
 const REQUEST_TYPE_LABEL = {
   Cleaning: 'Dọn phòng',
@@ -28,26 +30,53 @@ export default function NotificationBell() {
   const [pendingBookings, setPendingBookings] = useState([])
   const [open, setOpen] = useState(false)
   const [error, setError] = useState('')
+  // Muc nao bi 403 thi AN han di thay vi bao loi: moi vai tro duoc xem mot phan khac nhau
+  // (vd Manager khong co quyen doc /api/stays/active). Mac dinh hien de khong nhay khi dang tai.
+  const [allowed, setAllowed] = useState({ hk: true, stays: true, resv: true })
   const busyRef = useRef({})
   const containerRef = useRef(null)
 
+  // Hai muc nay chi la LOI TAT sang trang khac - vai tro khong vao duoc trang dich thi dung hien,
+  // khong thi Manager bam "Mo trang Dat phong de xac nhan" lai roi vao man "Khu vuc nay khong
+  // thuoc vai tro cua ban". Nhac thay viec ma khong cho lam thi to hon la khong nhac.
+  const role = getUser()?.role
+  const shown = {
+    hk: allowed.hk,
+    stays: allowed.stays && canAccess(role, '/checkin-checkout'),
+    resv: allowed.resv && canAccess(role, '/reservations'),
+  }
+
+  // Dung allSettled chu KHONG dung Promise.all: 1 API tra 403 la Promise.all hong ca cum
+  // -> chuong trang tron. Voi allSettled thi muc nao lay duoc van hien binh thuong.
   const fetchAll = () => {
-    Promise.all([
+    Promise.allSettled([
       client.get('/api/housekeeping-requests'),
       client.get('/api/stays/active'),
       client.get('/api/reservations'),
-    ])
-      .then(([hkRes, staysRes, resvRes]) => {
-        setRequests(hkRes.data ?? [])
-        const now = Date.now()
-        const soon = (staysRes.data ?? []).filter(
-          (s) => new Date(s.plannedCheckOut).getTime() - now <= CHECKOUT_SOON_MS,
+    ]).then(([hkRes, staysRes, resvRes]) => {
+      const now = Date.now()
+
+      if (hkRes.status === 'fulfilled') setRequests(hkRes.value.data ?? [])
+      if (staysRes.status === 'fulfilled') {
+        setCheckoutSoon(
+          (staysRes.value.data ?? []).filter(
+            (s) => new Date(s.plannedCheckOut).getTime() - now <= CHECKOUT_SOON_MS,
+          ),
         )
-        setCheckoutSoon(soon)
-        setPendingBookings((resvRes.data ?? []).filter((r) => normalizeReservationStatus(r.status) === 'Pending'))
-        setError('')
-      })
-      .catch((err) => setError(apiError(err)))
+      }
+      if (resvRes.status === 'fulfilled') {
+        setPendingBookings(
+          (resvRes.value.data ?? []).filter((r) => normalizeReservationStatus(r.status) === 'Pending'),
+        )
+      }
+
+      const denied = (res) => res.status === 'rejected' && res.reason?.response?.status === 403
+      setAllowed({ hk: !denied(hkRes), stays: !denied(staysRes), resv: !denied(resvRes) })
+
+      // Chi bao loi khi that su hong (mat mang, 500...) - 403 la thieu quyen, an muc do la du.
+      const broken = [hkRes, staysRes, resvRes].find((res) => res.status === 'rejected' && !denied(res))
+      setError(broken ? apiError(broken.reason) : '')
+    })
   }
 
   useEffect(() => {
@@ -87,7 +116,11 @@ export default function NotificationBell() {
 
   const formatTime = (d) => new Date(d).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
   const pendingCount = requests.filter((r) => normalizeHousekeepingStatus(r.status) === 'Pending').length
-  const badgeCount = pendingCount + checkoutSoon.length + pendingBookings.length
+  // Chi dem nhung muc dang thuc su hien - khong thi so tren chuong lech voi noi dung ben trong
+  const badgeCount =
+    (shown.hk ? pendingCount : 0) +
+    (shown.stays ? checkoutSoon.length : 0) +
+    (shown.resv ? pendingBookings.length : 0)
 
   return (
     <div className="relative" ref={containerRef}>
@@ -119,6 +152,7 @@ export default function NotificationBell() {
         <div className="card-rise fixed inset-x-4 top-16 z-30 rounded-2xl bg-cream-50 p-3 shadow-lift ring-1 ring-black/[0.06] sm:absolute sm:inset-x-auto sm:right-0 sm:top-11 sm:w-80">
           {error && <p className="px-2 py-1 text-[12px] text-amber-800">{error}</p>}
 
+          {shown.resv && (<>
           <p className="px-2 py-1 text-[11px] font-bold uppercase tracking-wider text-ink-500">Chờ xác nhận đặt phòng</p>
           {pendingBookings.length === 0 ? (
             <p className="px-2 pb-2 text-[12px] text-ink-500">Không có đặt phòng nào chờ duyệt.</p>
@@ -149,7 +183,9 @@ export default function NotificationBell() {
               </Link>
             </div>
           )}
+          </>)}
 
+          {shown.stays && (<>
           <p className="px-2 py-1 text-[11px] font-bold uppercase tracking-wider text-ink-500">Sắp trả phòng</p>
           {checkoutSoon.length === 0 ? (
             <p className="px-2 pb-2 text-[12px] text-ink-500">Chưa có phòng nào sắp tới giờ trả.</p>
@@ -184,7 +220,9 @@ export default function NotificationBell() {
               })}
             </div>
           )}
+          </>)}
 
+          {shown.hk && (<>
           <p className="px-2 py-1 text-[11px] font-bold uppercase tracking-wider text-ink-500">Yêu cầu dọn phòng</p>
           {requests.length === 0 && (
             <p className="px-2 py-3 text-[12px] text-ink-500">Không có yêu cầu nào đang chờ.</p>
@@ -232,6 +270,7 @@ export default function NotificationBell() {
               )
             })}
           </div>
+          </>)}
         </div>
       )}
     </div>
