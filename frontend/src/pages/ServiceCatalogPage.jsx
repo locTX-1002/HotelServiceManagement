@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { EASE, errorCls, inputCls, labelCls } from '../utils/ui'
+import PageHero from '../components/PageHero'
 import client, { isBackendMissing, apiError } from '../api/client'
 import ErrorState from '../components/ErrorState'
 import SlideOver from '../components/SlideOver'
@@ -140,20 +141,19 @@ export default function ServiceCatalogPage() {
 
   return (
     <div>
-      {/* Header */}
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p className="font-display text-[15px] italic capitalize text-brand-600">dịch vụ · bảng giá</p>
-          <h1 className="mt-1 font-display text-4xl font-semibold tracking-tight">Bảng giá dịch vụ</h1>
-          <p className="mt-1 text-sm text-ink-500">Món và đơn giá theo danh mục — nguồn dữ liệu cho màn hình gọi dịch vụ.</p>
-        </div>
+      <PageHero
+        image="/img/v3.jpg"
+        kicker="dịch vụ · bảng giá"
+        title="Bảng giá dịch vụ"
+        subtitle="Món và đơn giá theo danh mục — nguồn dữ liệu cho màn hình gọi dịch vụ."
+      >
         <button
           onClick={openCreate}
-          className={`rounded-full bg-ink-900 px-5 py-2.5 text-[13px] font-bold text-cream-50 ${EASE} hover:bg-ink-700 active:scale-[0.98]`}
+          className={`rounded-full bg-brand-500 px-5 py-2.5 text-[13px] font-bold text-white ${EASE} hover:bg-brand-600 active:scale-[0.98]`}
         >
           + Thêm dịch vụ
         </button>
-      </div>
+      </PageHero>
 
       {/* Chips lọc theo danh mục */}
       <div className="mt-5 flex flex-wrap items-center gap-3">

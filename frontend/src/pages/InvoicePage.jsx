@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import EmptyState from '../components/EmptyState'
 import { EASE } from '../utils/ui'
+import PageHero from '../components/PageHero'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import client, { isBackendMissing, apiError } from '../api/client'
 import ErrorState from '../components/ErrorState'
@@ -113,7 +114,12 @@ export default function InvoicePage() {
   if (!stayId) {
     return (
       <div>
-        <h1 className="font-display text-4xl font-semibold tracking-tight">Hoá đơn &amp; thanh toán</h1>
+        <PageHero
+          image="/img/login-hero.jpg"
+          kicker="lễ tân · thu tiền khách"
+          title="Hoá đơn & thanh toán"
+          subtitle="Tính tiền phòng, dịch vụ và ghi nhận thanh toán sau check-out."
+        />
         <EmptyState text="Chưa chọn hoá đơn nào. Vào từ nút &quot;Ghi nhận thanh toán&quot; ngay sau khi check-out." />
         <div className="mt-4 flex justify-center">
           <button onClick={() => navigate('/checkin-checkout')} className={`text-[12px] font-bold uppercase tracking-wider text-brand-600 ${EASE} hover:underline`}>
@@ -129,18 +135,18 @@ export default function InvoicePage() {
 
   return (
     <div className="mx-auto max-w-lg">
-      <div>
-        <p className="font-display text-[15px] italic capitalize text-brand-600">lễ tân · thu tiền khách</p>
-        <h1 className="mt-1 font-display text-4xl font-semibold tracking-tight">Hoá đơn &amp; thanh toán</h1>
-        {(roomNumber || guestName) && (
-          <p className="mt-1 text-sm text-ink-500">Phòng {roomNumber} · {guestName}</p>
-        )}
+      <PageHero
+        image="/img/login-hero.jpg"
+        kicker="lễ tân · thu tiền khách"
+        title="Hoá đơn & thanh toán"
+        subtitle={(roomNumber || guestName) ? `Phòng ${roomNumber} · ${guestName}` : undefined}
+      >
         {usingMock && (
-          <span className="mt-2 inline-block rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-800 ring-1 ring-amber-600/20">
+          <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-800 ring-1 ring-amber-600/20">
             Dữ liệu mẫu
           </span>
         )}
-      </div>
+      </PageHero>
 
       {loadError && <div className="mt-6"><ErrorState onRetry={load} /></div>}
 

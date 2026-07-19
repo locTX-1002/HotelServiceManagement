@@ -40,7 +40,6 @@ namespace HotelServiceManagement.Infrastructure.Migrations
                         .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("IdentityNumber")
-                        .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
@@ -63,9 +62,168 @@ namespace HotelServiceManagement.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("IdentityNumber")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("[IdentityNumber] IS NOT NULL");
 
                     b.ToTable("Guests");
+                });
+
+            modelBuilder.Entity("HotelServiceManagement.Domain.Entities.GuestAccount", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("GoogleSubjectId")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("GuestId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("LastLoginAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("PasswordHash")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GoogleSubjectId")
+                        .IsUnique()
+                        .HasFilter("[GoogleSubjectId] IS NOT NULL");
+
+                    b.HasIndex("GuestId")
+                        .IsUnique();
+
+                    b.ToTable("GuestAccounts");
+                });
+
+            modelBuilder.Entity("HotelServiceManagement.Domain.Entities.GuestPasswordResetToken", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("GuestAccountId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime?>("UsedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GuestAccountId");
+
+                    b.HasIndex("Token")
+                        .IsUnique();
+
+                    b.ToTable("GuestPasswordResetTokens");
+                });
+
+            modelBuilder.Entity("HotelServiceManagement.Domain.Entities.GuestRefreshToken", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("GuestAccountId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ReplacedByToken")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime?>("RevokedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GuestAccountId");
+
+                    b.HasIndex("Token")
+                        .IsUnique();
+
+                    b.ToTable("GuestRefreshTokens");
+                });
+
+            modelBuilder.Entity("HotelServiceManagement.Domain.Entities.HousekeepingRequest", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("HandledAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("HandledByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<string>("RequestType")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasDefaultValue("Other");
+
+                    b.Property<DateTime>("RequestedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<int>("StayId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("HandledByUserId");
+
+                    b.HasIndex("StayId");
+
+                    b.HasIndex("Status", "RequestedAt");
+
+                    b.ToTable("HousekeepingRequests");
                 });
 
             modelBuilder.Entity("HotelServiceManagement.Domain.Entities.Invoice", b =>
@@ -122,6 +280,41 @@ namespace HotelServiceManagement.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("Invoices");
+                });
+
+            modelBuilder.Entity("HotelServiceManagement.Domain.Entities.PasswordResetToken", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime?>("UsedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Token")
+                        .IsUnique();
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("PasswordResetTokens");
                 });
 
             modelBuilder.Entity("HotelServiceManagement.Domain.Entities.Payment", b =>
@@ -992,6 +1185,57 @@ namespace HotelServiceManagement.Infrastructure.Migrations
                         });
                 });
 
+            modelBuilder.Entity("HotelServiceManagement.Domain.Entities.GuestAccount", b =>
+                {
+                    b.HasOne("HotelServiceManagement.Domain.Entities.Guest", "Guest")
+                        .WithOne()
+                        .HasForeignKey("HotelServiceManagement.Domain.Entities.GuestAccount", "GuestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Guest");
+                });
+
+            modelBuilder.Entity("HotelServiceManagement.Domain.Entities.GuestPasswordResetToken", b =>
+                {
+                    b.HasOne("HotelServiceManagement.Domain.Entities.GuestAccount", "GuestAccount")
+                        .WithMany()
+                        .HasForeignKey("GuestAccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("GuestAccount");
+                });
+
+            modelBuilder.Entity("HotelServiceManagement.Domain.Entities.GuestRefreshToken", b =>
+                {
+                    b.HasOne("HotelServiceManagement.Domain.Entities.GuestAccount", "GuestAccount")
+                        .WithMany()
+                        .HasForeignKey("GuestAccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("GuestAccount");
+                });
+
+            modelBuilder.Entity("HotelServiceManagement.Domain.Entities.HousekeepingRequest", b =>
+                {
+                    b.HasOne("HotelServiceManagement.Domain.Entities.User", "HandledByUser")
+                        .WithMany()
+                        .HasForeignKey("HandledByUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("HotelServiceManagement.Domain.Entities.Stay", "Stay")
+                        .WithMany()
+                        .HasForeignKey("StayId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("HandledByUser");
+
+                    b.Navigation("Stay");
+                });
+
             modelBuilder.Entity("HotelServiceManagement.Domain.Entities.Invoice", b =>
                 {
                     b.HasOne("HotelServiceManagement.Domain.Entities.User", "CreatedByUser")
@@ -1008,6 +1252,17 @@ namespace HotelServiceManagement.Infrastructure.Migrations
                     b.Navigation("CreatedByUser");
 
                     b.Navigation("Stay");
+                });
+
+            modelBuilder.Entity("HotelServiceManagement.Domain.Entities.PasswordResetToken", b =>
+                {
+                    b.HasOne("HotelServiceManagement.Domain.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("HotelServiceManagement.Domain.Entities.Payment", b =>

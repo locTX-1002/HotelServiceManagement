@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { EASE, errorCls, inputCls, labelCls, openDatePicker } from '../utils/ui'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import client, { isBackendMissing, apiError } from '../api/client'
+import { notifyDataChanged } from '../utils/refreshBus'
 import ConfirmDialog from '../components/ConfirmDialog'
 import ErrorState from '../components/ErrorState'
 import SlideOver from '../components/SlideOver'
@@ -10,6 +11,8 @@ import { MOCK_RESERVATIONS } from '../mock/hotelMock'
 import { denormalizeReservationStatus, normalizeReservation } from '../utils/apiShape'
 import { fmtShort, localToday } from '../utils/dates'
 import { formatVnd } from '../utils/roomStatus'
+import { roomImage } from '../utils/roomImages'
+import PageHero from '../components/PageHero'
 
 // Nhãn + màu cho các trạng thái đặt phòng (khớp enum backend)
 const RES_STATUS = {
@@ -50,6 +53,11 @@ export default function ReservationsPage() {
   // Khoá đồng bộ chống spam-click - state cancelling/noShowBusy cập nhật bất đồng bộ nên vẫn lọt request khi bấm liên tiếp nhanh
   const cancellingRef = useRef(false)
   const noShowRef = useRef(false)
+  // Xác nhận chạy thẳng trên từng dòng (không qua dialog) nên khoá theo id, không khoá cả bảng
+  const confirmingRef = useRef({})
+  // Chuông trỏ tới đơn cụ thể qua ?focus=RES-... - tô sáng dòng đó cho lễ tân thấy ngay
+  const [searchParams] = useSearchParams()
+  const focusCode = searchParams.get('focus')
 
   const load = () => {
     setLoadError(false)
@@ -88,6 +96,7 @@ export default function ReservationsPage() {
         toast.success(`Đã hủy đặt phòng ${toCancel.bookingCode}`)
         setToCancel(null)
         load()
+        notifyDataChanged()
       })
       .catch((err) => setCancelError(apiError(err)))
       .finally(() => { cancellingRef.current = false; setCancelling(false) })
@@ -104,9 +113,36 @@ export default function ReservationsPage() {
         toast.success(`Đã đánh dấu Không đến cho ${toNoShow.bookingCode}`)
         setToNoShow(null)
         load()
+        notifyDataChanged()
       })
       .catch((err) => setNoShowError(apiError(err)))
       .finally(() => { noShowRef.current = false; setNoShowBusy(false) })
+  }
+
+  // Duyet don "Chờ xác nhận" bang 1 cham - PUT giu nguyen toan bo du lieu, chi doi trang thai sang
+  // Confirmed. Khong can dialog nhu Huy/Khong den vi xac nhan khong pha huy (sau do van huy duoc).
+  const confirmBooking = (r) => {
+    if (confirmingRef.current[r.reservationId]) return
+    confirmingRef.current[r.reservationId] = true
+    client
+      .put(`/api/reservations/${r.reservationId}`, {
+        guestId: r.guestId,
+        roomId: r.roomId,
+        numberOfGuests: r.numberOfGuests,
+        checkInDate: dkey(r.checkInDate),
+        checkOutDate: dkey(r.checkOutDate),
+        status: denormalizeReservationStatus('Confirmed'),
+        specialRequests: r.specialRequests ?? undefined,
+      })
+      .then(() => {
+        toast.success(`Đã xác nhận đặt phòng ${r.bookingCode}`)
+        load()
+        notifyDataChanged()
+      })
+      .catch((err) => toast.error(apiError(err)))
+      .finally(() => {
+        confirmingRef.current[r.reservationId] = false
+      })
   }
 
   const openEdit = (r) => {
@@ -143,6 +179,7 @@ export default function ReservationsPage() {
         toast.success(`Đã cập nhật đặt phòng ${toEdit.bookingCode}`)
         setToEdit(null)
         load()
+        notifyDataChanged()
       })
       .catch((err) => setEditError(apiError(err)))
       .finally(() => setSavingEdit(false))
@@ -150,20 +187,19 @@ export default function ReservationsPage() {
 
   return (
     <div>
-      {/* Header */}
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p className="font-display text-[15px] italic capitalize text-brand-600">lễ tân · đặt phòng</p>
-          <h1 className="mt-1 font-display text-4xl font-semibold tracking-tight">Danh sách đặt phòng</h1>
-          <p className="mt-1 text-sm text-ink-500">Theo dõi và hủy các lượt đặt phòng theo trạng thái.</p>
-        </div>
+      <PageHero
+        image="/img/v2.jpg"
+        kicker="lễ tân · đặt phòng"
+        title="Danh sách đặt phòng"
+        subtitle="Duyệt đơn chờ xác nhận, theo dõi và hủy các lượt đặt phòng theo trạng thái."
+      >
         <button
           onClick={() => navigate('/reservations/new')}
-          className={`rounded-full bg-ink-900 px-5 py-2.5 text-[13px] font-bold text-cream-50 ${EASE} hover:bg-ink-700 active:scale-[0.98]`}
+          className={`rounded-full bg-brand-500 px-5 py-2.5 text-[13px] font-bold text-white ${EASE} hover:bg-brand-600 active:scale-[0.98]`}
         >
           + Tạo đặt phòng
         </button>
-      </div>
+      </PageHero>
 
       {/* Bộ lọc: chips trạng thái + tìm */}
       <div className="mt-5 flex flex-wrap items-center gap-3">
@@ -229,8 +265,9 @@ export default function ReservationsPage() {
                 <tbody className="divide-y divide-black/[0.05]">
                   {visible.map((r) => {
                     const s = RES_STATUS[r.status] ?? RES_STATUS.Pending
+                    const focused = focusCode === r.bookingCode
                     return (
-                      <tr key={r.reservationId} className={`${EASE} hover:bg-cream-50/60`}>
+                      <tr key={r.reservationId} className={`${EASE} hover:bg-cream-50/60 ${focused ? 'bg-brand-50/60 ring-2 ring-inset ring-brand-500/40' : ''}`}>
                         <td className="px-5 py-3.5">
                           <span className="font-display text-base font-semibold tabular-nums">{r.bookingCode}</span>
                         </td>
@@ -244,8 +281,13 @@ export default function ReservationsPage() {
                           {r.guestPhoneNumber && <p className="text-[11px] tabular-nums text-ink-500">{r.guestPhoneNumber}</p>}
                         </td>
                         <td className="px-5 py-3.5">
-                          <p className="text-sm font-semibold tabular-nums">{r.roomNumber}</p>
-                          <p className="text-[11px] text-ink-500">{r.typeName}</p>
+                          <div className="flex items-center gap-3">
+                            <img src={roomImage(r.typeName, 0)} alt={r.typeName} className="h-11 w-14 rounded-lg object-cover ring-1 ring-black/10" />
+                            <div>
+                              <p className="text-sm font-semibold tabular-nums">{r.roomNumber}</p>
+                              <p className="text-[11px] text-ink-500">{r.typeName}</p>
+                            </div>
+                          </div>
                         </td>
                         <td className="px-5 py-3.5 text-sm tabular-nums text-ink-700">
                           {fmtShort(dkey(r.checkInDate))} → {fmtShort(dkey(r.checkOutDate))}
@@ -257,6 +299,14 @@ export default function ReservationsPage() {
                           )}
                         </td>
                         <td className="px-5 py-3.5 text-right">
+                          {r.status === 'Pending' && (
+                            <button
+                              onClick={() => confirmBooking(r)}
+                              className={`mr-2 rounded-full bg-emerald-600 px-3.5 py-1.5 text-[12px] font-bold text-white ${EASE} hover:bg-emerald-700 active:scale-[0.98]`}
+                            >
+                              Xác nhận
+                            </button>
+                          )}
                           {canEdit(r) && (
                             <button
                               onClick={() => openEdit(r)}

@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import client, { isBackendMissing } from '../api/client'
 import ErrorState from '../components/ErrorState'
 import { formatVnd } from '../utils/roomStatus'
+import { roomImage } from '../utils/roomImages'
 import { MOCK_DASHBOARD } from '../mock/hotelMock'
 
 const todayLabel = new Intl.DateTimeFormat('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit' }).format(new Date())
@@ -106,31 +107,34 @@ export default function DashboardPage() {
 
   return (
     <div>
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p className="font-display text-[15px] italic capitalize text-brand-600">ca làm việc hôm nay</p>
+      {/* Hero anh + overlay theo mau template - dong bo voi trang dau cua cong khach */}
+      <div className="relative h-44 overflow-hidden rounded-2xl sm:h-52">
+        <img src="/img/v3.jpg" alt="" className="h-full w-full object-cover" />
+        <div className="absolute inset-0 bg-gradient-to-r from-ink-900/80 to-ink-900/25" />
+        <div className="absolute left-7 top-[44%] -translate-y-1/2 text-white">
+          <p className="font-display text-[15px] italic capitalize text-white/80">ca làm việc hôm nay</p>
           <h1 className="mt-1 font-display text-4xl font-semibold tracking-tight">Tổng quan</h1>
-          <p className="mt-1 text-sm capitalize text-ink-500">{todayLabel}</p>
+          <p className="mt-1 text-sm capitalize text-white/70">{todayLabel}</p>
         </div>
-        <div className="flex items-center gap-2.5">
+        <div className="absolute right-5 top-5 flex items-center gap-2.5">
           {usingMock && (
             <span className="mr-1 rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-800 ring-1 ring-amber-600/20">
               Dữ liệu mẫu
             </span>
           )}
           <button onClick={() => navigate('/reservations/new')}
-            className={`rounded-full bg-ink-900 px-5 py-2.5 text-[13px] font-bold text-cream-50 ${EASE} hover:bg-ink-700 active:scale-[0.98]`}>
+            className={`rounded-full bg-brand-500 px-5 py-2.5 text-[13px] font-bold text-white ${EASE} hover:bg-brand-600 active:scale-[0.98]`}>
             Tạo đặt phòng
           </button>
           <button onClick={() => navigate('/rooms/map')}
-            className={`rounded-full px-5 py-2.5 text-[13px] font-semibold text-ink-700 ring-1 ring-black/10 ${EASE} hover:bg-white active:scale-[0.98]`}>
+            className={`rounded-full px-5 py-2.5 text-[13px] font-semibold text-white ring-1 ring-white/40 ${EASE} hover:bg-white hover:text-ink-900 active:scale-[0.98]`}>
             Sơ đồ phòng
           </button>
         </div>
       </div>
 
-      {/* KPI: 4 ô thường + ô doanh thu được tô nổi (phân cấp) - double-bezel cho chiều sâu */}
-      <div className="mt-7 bezel-shell">
+      {/* KPI noi de len hero (kieu booking bar cua template) - double-bezel cho chieu sau */}
+      <div className="relative z-10 mx-4 -mt-9 bezel-shell">
         <div className="bezel-core grid grid-cols-2 overflow-hidden sm:grid-cols-5 sm:divide-x sm:divide-black/[0.06]">
           {stats.map((st) => (
             <div key={st.label} className="px-5 py-4">
@@ -183,7 +187,14 @@ export default function DashboardPage() {
           <div className="divide-y divide-black/[0.05]">
             {data.arrivals.map((a) => (
               <div key={a.bookingCode} className="flex items-center gap-3.5 py-3">
-                <ArchAvatar name={a.guestName} tint="bg-sky-50 text-sky-700 ring-1 ring-sky-600/15" />
+                {/* Thumbnail loai phong thay avatar chu cai - nhieu anh hon theo mau template */}
+                {a.typeName ? (
+                  <span className="h-11 w-14 shrink-0 overflow-hidden rounded-lg">
+                    <img src={roomImage(a.typeName, 0)} alt={a.typeName} className="h-full w-full object-cover" loading="lazy" />
+                  </span>
+                ) : (
+                  <ArchAvatar name={a.guestName} tint="bg-sky-50 text-sky-700 ring-1 ring-sky-600/15" />
+                )}
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-semibold">{a.guestName}</p>
                   <p className="mt-0.5 text-[11px] uppercase tracking-[0.14em] text-ink-500">
@@ -241,7 +252,9 @@ export default function DashboardPage() {
                   </p>
                   <div
                     className={`w-full max-w-12 rounded-t-md ${EASE} ${last ? 'bg-brand-600' : 'bg-cream-200 group-hover:bg-ink-900/20'}`}
-                    style={{ height: `${maxRevenue > 0 ? Math.max((d.amount / maxRevenue) * 100, 6) : 6}%` }}
+                    // px thay vi %: cot cha (flex-col trong items-end) khong co chieu cao xac dinh
+                    // nen height % quy ve 0 - cot co doanh thu van tang hinh, chi thay moi nhan so
+                    style={{ height: `${maxRevenue > 0 ? Math.max(Math.round((d.amount / maxRevenue) * 88), 6) : 6}px` }}
                   />
                   <p className={`text-[11px] ${last ? 'font-bold text-ink-900' : 'font-medium text-ink-500'}`}>{d.day}</p>
                 </div>

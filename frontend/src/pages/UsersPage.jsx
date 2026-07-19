@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { EASE, errorCls, inputCls, labelCls } from '../utils/ui'
+import PageHero from '../components/PageHero'
 import client, { isBackendMissing, apiError } from '../api/client'
 import ConfirmDialog from '../components/ConfirmDialog'
 import ErrorState from '../components/ErrorState'
@@ -141,27 +142,24 @@ export default function UsersPage() {
 
   return (
     <div>
-      {/* Header */}
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p className="font-display text-[15px] italic capitalize text-brand-600">quản trị · tài khoản</p>
-          <h1 className="mt-1 font-display text-4xl font-semibold tracking-tight">Người dùng</h1>
-          <p className="mt-1 text-sm text-ink-500">Tài khoản nhân viên và vai trò truy cập — khóa thay vì xóa để giữ lịch sử thao tác.</p>
-        </div>
-        <div className="flex items-center gap-2.5">
-          {usingMock && (
-            <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-800 ring-1 ring-amber-600/20">
-              Dữ liệu mẫu
-            </span>
-          )}
-          <button
-            onClick={openCreate}
-            className={`rounded-full bg-ink-900 px-5 py-2.5 text-[13px] font-bold text-cream-50 ${EASE} hover:bg-ink-700 active:scale-[0.98]`}
-          >
-            + Thêm tài khoản
-          </button>
-        </div>
-      </div>
+      <PageHero
+        image="/img/v2.jpg"
+        kicker="quản trị · tài khoản"
+        title="Người dùng"
+        subtitle="Tài khoản nhân viên và vai trò truy cập — khóa thay vì xóa để giữ lịch sử thao tác."
+      >
+        {usingMock && (
+          <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-800 ring-1 ring-amber-600/20">
+            Dữ liệu mẫu
+          </span>
+        )}
+        <button
+          onClick={openCreate}
+          className={`rounded-full bg-brand-500 px-5 py-2.5 text-[13px] font-bold text-white ${EASE} hover:bg-brand-600 active:scale-[0.98]`}
+        >
+          + Thêm tài khoản
+        </button>
+      </PageHero>
 
       {/* Bảng tài khoản */}
       {users === null && !loadError && (

@@ -8,10 +8,11 @@ namespace HotelServiceManagement.Application.Interfaces
         Task<AuthServiceResult<IReadOnlyList<ServiceOrderResponse>>> GetAllAsync();
         Task<AuthServiceResult<ServiceOrderResponse>> GetByIdAsync(int id);
 
-        // createdByUserId is read from the authenticated JWT by the API controller.
+        // createdByUserId is read from the authenticated JWT by the API controller. Null means the
+        // order was self-placed by a guest (no staff user involved).
         Task<AuthServiceResult<ServiceOrderResponse>> CreateAsync(
             CreateServiceOrderRequest request,
-            int createdByUserId);
+            int? createdByUserId);
 
         Task<AuthServiceResult<ServiceOrderResponse>> UpdateStatusAsync(
             int id,

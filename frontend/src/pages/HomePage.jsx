@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { EASE, openDatePicker } from '../utils/ui'
 import { useNavigate } from 'react-router-dom'
 import { MOCK_ROOM_TYPES, MOCK_ROOM_TYPES_FULL } from '../mock/hotelMock'
@@ -54,6 +54,10 @@ function RoomTile({ type, featured, wide, onBook }) {
         <p className="mt-1 text-[12px] text-white/70">
           {meta.capacity} khách · {meta.area} m² · {formatVnd(priceOf(type))}/đêm
         </p>
+        {/* Mo ta so hien ra khi re chuot vao the - khach hinh dung duoc phong truoc khi bam dat */}
+        <p className={`max-h-0 overflow-hidden text-[12px] leading-relaxed text-white/80 opacity-0 ${EASE} group-hover:mt-2 group-hover:max-h-20 group-hover:opacity-100`}>
+          {meta.desc}
+        </p>
         <button
           onClick={() => onBook(type)}
           className={`mt-3 text-[11px] font-bold uppercase tracking-[0.16em] text-white underline-offset-4 ${EASE} hover:underline`}
@@ -72,6 +76,70 @@ const EXPERIENCES = [
   { title: 'Dịch vụ phòng 24/7', desc: 'Gọi món, yêu cầu thêm khăn hay gối vào bất kỳ giờ nào.', img: '/img/suite.jpg' },
 ]
 
+// Modal chon loai phong thay cho <select> nguyen sinh - trinh duyet KHONG cho CSS tuy bien phan
+// danh sach mo ra cua select (OS tu ve, xanh mac dinh nhu trong ticket) nen phai thay bang component
+// rieng. Nhan tien them mo ta ngan (suc chua/dien tich/gia) moi lua chon de khach hinh dung duoc,
+// thay vi chi thay 1 cai ten tran nhu truoc.
+function RoomTypeSelect({ value, onChange }) {
+  const [open, setOpen] = useState(false)
+
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e) => e.key === 'Escape' && setOpen(false)
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [open])
+
+  const pick = (v) => {
+    onChange(v)
+    setOpen(false)
+  }
+
+  return (
+    <>
+      <button type="button" onClick={() => setOpen(true)} className={`${cellInput} flex items-center justify-between gap-1 text-left`}>
+        <span className="truncate">{value === 'all' ? 'Tất cả' : value}</span>
+        <svg width="10" height="10" viewBox="0 0 12 12" fill="none" aria-hidden className="shrink-0 text-ink-500">
+          <path d="M2.5 4.5L6 8l3.5-3.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
+
+      {open && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center px-4 pb-4 sm:items-center sm:pb-4">
+          <div onClick={() => setOpen(false)} className="absolute inset-0 bg-ink-900/40" />
+          <div className="card-rise relative max-h-[80vh] w-full max-w-md overflow-y-auto rounded-2xl bg-cream-50 p-3 shadow-lift">
+            <p className="px-3 py-2 text-[11px] font-bold uppercase tracking-wider text-ink-500">Chọn loại phòng</p>
+            <button
+              type="button"
+              onClick={() => pick('all')}
+              className={`flex w-full items-center rounded-xl px-3 py-3 text-left text-sm font-semibold ${EASE} hover:bg-white ${value === 'all' ? 'bg-white ring-1 ring-brand-600/30' : ''}`}
+            >
+              Tất cả loại phòng
+            </button>
+            {MOCK_ROOM_TYPES.map((t) => {
+              const meta = roomMeta(t)
+              return (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => pick(t)}
+                  className={`flex w-full items-center justify-between gap-3 rounded-xl px-3 py-3 text-left ${EASE} hover:bg-white ${value === t ? 'bg-white ring-1 ring-brand-600/30' : ''}`}
+                >
+                  <span>
+                    <span className="block text-sm font-semibold">{t}</span>
+                    <span className="mt-0.5 block text-[12px] text-ink-500">{meta.capacity} khách · {meta.area} m² · {meta.bed}</span>
+                  </span>
+                  <span className="shrink-0 text-[13px] font-bold text-brand-700">{formatVnd(priceOf(t))}</span>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
+    </>
+  )
+}
+
 export default function HomePage() {
   const navigate = useNavigate()
   const [checkIn, setCheckIn] = useState(today())
@@ -79,12 +147,16 @@ export default function HomePage() {
   const [guests, setGuests] = useState(2)
   const [roomType, setRoomType] = useState('all')
 
+  // Dat phong tu trang chu la luong CUA KHACH -> sang trang dat phong cong khach (chua dang nhap
+  // thi GuestProtectedRoute tu day ve dang nhap KHACH kem duong quay lai). Truoc day tro nham vao
+  // /reservations/new cua nhan vien nen moi thao tac deu bi da ve login nhan vien.
   const book = (type = roomType) => {
     const q = new URLSearchParams({ checkIn, checkOut, guests: String(guests), roomType: type })
-    navigate(`/reservations/new?${q}`)
+    navigate(`/guest/dat-phong-moi?${q}`)
   }
 
   const goStaff = () => navigate('/login')
+  const goGuestPortal = () => navigate('/guest/dang-nhap')
 
   return (
     <div className="bg-cream-50">
@@ -98,15 +170,22 @@ export default function HomePage() {
         <header className="relative z-10 flex items-center justify-between px-6 py-3.5 sm:px-12">
           <p className="font-display text-2xl font-semibold tracking-tight text-white">HSMS</p>
           <nav className="hidden items-center gap-8 text-[11px] font-semibold uppercase tracking-[0.2em] text-white/80 lg:flex">
+            <a href="#about" className={`${EASE} hover:text-white`}>Về chúng tôi</a>
             <a href="#rooms" className={`${EASE} hover:text-white`}>Phòng nghỉ</a>
             <a href="#services" className={`${EASE} hover:text-white`}>Dịch vụ</a>
             <a href="#footer" className={`${EASE} hover:text-white`}>Liên hệ</a>
           </nav>
-          <div className="flex items-center gap-5">
+          <div className="flex items-center gap-1.5 sm:gap-3">
             <span className="hidden text-[12px] font-medium tracking-wide text-white/80 sm:block">1900 636 999</span>
             <button
+              onClick={goGuestPortal}
+              className={`whitespace-nowrap rounded-full px-2.5 py-1.5 text-[9px] font-bold uppercase tracking-[0.08em] text-white ring-1 ring-white/40 ${EASE} hover:bg-white hover:text-ink-900 sm:px-5 sm:py-2 sm:text-[11px] sm:tracking-[0.15em]`}
+            >
+              Khách lưu trú
+            </button>
+            <button
               onClick={goStaff}
-              className={`rounded-full px-5 py-2 text-[11px] font-bold uppercase tracking-[0.15em] text-white ring-1 ring-white/40 ${EASE} hover:bg-white hover:text-ink-900`}
+              className={`whitespace-nowrap rounded-full px-2.5 py-1.5 text-[9px] font-bold uppercase tracking-[0.08em] text-white ring-1 ring-white/40 ${EASE} hover:bg-white hover:text-ink-900 sm:px-5 sm:py-2 sm:text-[11px] sm:tracking-[0.15em]`}
             >
               Nhân viên
             </button>
@@ -144,10 +223,7 @@ export default function HomePage() {
               </div>
               <div className="px-5 py-4">
                 <p className={cellLabel}>Loại phòng</p>
-                <select className={`${cellInput} cursor-pointer`} value={roomType} onChange={(e) => setRoomType(e.target.value)}>
-                  <option value="all">Tất cả</option>
-                  {MOCK_ROOM_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
-                </select>
+                <RoomTypeSelect value={roomType} onChange={setRoomType} />
               </div>
               <button
                 onClick={() => book()}
@@ -171,6 +247,46 @@ export default function HomePage() {
           </p>
           <div className="mx-auto mt-10 h-px w-16 bg-brand-600/40" />
         </Reveal>
+      </section>
+
+      {/* ===== VỀ CHÚNG TÔI: 2 ảnh so le + khối chữ, kiểu "Luxury & Comfort" của template ===== */}
+      <section id="about" className="mx-auto max-w-6xl px-6 pb-24 sm:px-12">
+        <div className="grid items-center gap-12 lg:grid-cols-2">
+          <Reveal>
+            <div className="relative pb-12 pr-12">
+              <div className="overflow-hidden rounded-2xl">
+                <img src="/img/v1.jpg" alt="Không gian phòng nghỉ HSMS" loading="lazy" className="aspect-[4/3] w-full object-cover" />
+              </div>
+              <div className="absolute bottom-0 right-0 w-1/2 overflow-hidden rounded-2xl shadow-lift ring-4 ring-cream-50">
+                <img src="/img/suite.jpg" alt="Phòng Suite" loading="lazy" className="aspect-square w-full object-cover" />
+              </div>
+            </div>
+          </Reveal>
+          <Reveal>
+            <p className="font-display text-[15px] italic text-brand-600">về chúng tôi</p>
+            <h2 className="mt-2 font-display text-4xl font-medium leading-tight [text-wrap:balance]">
+              Nghỉ dưỡng &amp; tiện nghi giữa lòng thành phố
+            </h2>
+            <p className="mt-5 max-w-lg text-[14px] leading-relaxed text-ink-500">
+              HSMS là khách sạn quy mô nhỏ với chín phòng nghỉ chia bốn hạng, vận hành bởi một đội ngũ
+              lễ tân và phục vụ làm việc suốt ngày đêm. Chúng tôi không có sảnh lớn hay hồ bơi vô cực —
+              đổi lại, mỗi yêu cầu của bạn đều được một người cụ thể tiếp nhận và xử lý trong vài phút,
+              từ bữa sáng tại phòng cho tới chiếc áo cần ủi gấp trước giờ họp.
+            </p>
+            <div className="mt-8 grid grid-cols-3 gap-6 border-t border-black/[0.07] pt-6">
+              {[
+                { n: '09', label: 'Phòng nghỉ' },
+                { n: '04', label: 'Hạng phòng' },
+                { n: '24/7', label: 'Phục vụ tận phòng' },
+              ].map((s) => (
+                <div key={s.label}>
+                  <p className="font-display text-3xl font-semibold text-brand-600 tabular-nums">{s.n}</p>
+                  <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.14em] text-ink-500">{s.label}</p>
+                </div>
+              ))}
+            </div>
+          </Reveal>
+        </div>
       </section>
 
       {/* ===== PHÒNG NGHỈ: lưới bento bất đối xứng, Suite làm tâm điểm ===== */}

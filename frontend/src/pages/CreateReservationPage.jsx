@@ -11,6 +11,7 @@ import { PAYMENT_METHODS } from '../utils/paymentMethods'
 
 import { localToday as today, addDays, fmtShort } from '../utils/dates'
 import ErrorState from '../components/ErrorState'
+import RoomTypeDetailModal from '../components/RoomTypeDetailModal'
 
 /* Chỉ báo 3 bước - bước đã xong bấm được để quay lại, đường nối fill theo tiến độ */
 function Steps({ current, onBack }) {
@@ -45,7 +46,7 @@ function Steps({ current, onBack }) {
 }
 
 /* Card phòng ngang kiểu booking engine, có carousel ảnh mini */
-function RoomResultCard({ room, idx, selected, onSelect }) {
+function RoomResultCard({ room, idx, selected, onSelect, onDetail }) {
   const meta = roomMeta(room.typeName)
   const [imgIdx, setImgIdx] = useState(idx)
   const active = selected?.roomId === room.roomId
@@ -91,14 +92,22 @@ function RoomResultCard({ room, idx, selected, onSelect }) {
               {formatVnd(room.basePrice)}
               <span className="font-sans text-[11px] font-normal text-ink-500"> / đêm</span>
             </p>
-            <button
-              onClick={() => onSelect(active ? null : room)}
-              className={`rounded-full px-5 py-2 text-[13px] font-bold ${EASE} active:scale-[0.98] ${
-                active ? 'bg-emerald-500 text-white' : 'bg-ink-900 text-cream-50 hover:bg-ink-700'
-              }`}
-            >
-              {active ? '✓ Đã chọn' : 'Chọn phòng này'}
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={onDetail}
+                className={`rounded-full px-4 py-2 text-[13px] font-semibold text-ink-700 ring-1 ring-black/10 ${EASE} hover:bg-cream-100`}
+              >
+                Xem chi tiết
+              </button>
+              <button
+                onClick={() => onSelect(active ? null : room)}
+                className={`rounded-full px-5 py-2 text-[13px] font-bold ${EASE} active:scale-[0.98] ${
+                  active ? 'bg-emerald-500 text-white' : 'bg-ink-900 text-cream-50 hover:bg-ink-700'
+                }`}
+              >
+                {active ? '✓ Đã chọn' : 'Chọn phòng này'}
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -117,6 +126,7 @@ export default function CreateReservationPage() {
   const [usingMock, setUsingMock] = useState(false)
   const [sortAsc, setSortAsc] = useState(true)
   const [selected, setSelected] = useState(null)
+  const [detailRoom, setDetailRoom] = useState(null) // phòng đang mở modal xem chi tiết
   const [guest, setGuest] = useState({ fullName: '', phoneNumber: '', email: '', identityNumber: '' })
   const [specialRequests, setSpecialRequests] = useState('')
   // Khách trùng CCCD tra được lúc rời khỏi ô CMND/CCCD - dùng để cảnh báo VIP/blacklist trước khi xác nhận
@@ -422,7 +432,7 @@ export default function CreateReservationPage() {
           <div className="mt-4 space-y-4">
             {searchError && <ErrorState onRetry={() => search()} />}
             {!searchError && sorted.map((room, idx) => (
-              <RoomResultCard key={room.roomId} room={room} idx={idx} selected={selected} onSelect={setSelected} />
+              <RoomResultCard key={room.roomId} room={room} idx={idx} selected={selected} onSelect={setSelected} onDetail={() => setDetailRoom(room)} />
             ))}
             {!searchError && sorted.length === 0 && (
               <div className="rounded-2xl border border-dashed border-black/10 bg-white/60 p-10 text-center">
@@ -564,6 +574,16 @@ export default function CreateReservationPage() {
           </button>
         </div>
       </div>
+
+      {/* Modal chi tiết loại phòng - dùng chung component với cổng khách, kèm nút chọn nhanh */}
+      {detailRoom && (
+        <RoomTypeDetailModal
+          rt={{ roomTypeName: detailRoom.typeName, basePrice: detailRoom.basePrice, description: detailRoom.description }}
+          selectLabel={`Chọn phòng ${detailRoom.roomNumber}`}
+          onSelect={() => setSelected(detailRoom)}
+          onClose={() => setDetailRoom(null)}
+        />
+      )}
     </div>
   )
 }

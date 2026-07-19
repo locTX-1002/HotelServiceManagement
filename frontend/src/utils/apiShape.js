@@ -84,3 +84,15 @@ export const denormalizeGuestTag = (t) => {
 
 // GET /api/guests: tag là số -> chuẩn hoá về chuỗi, giữ nguyên shape còn lại
 export const normalizeGuest = (g) => ({ ...g, tag: normalizeGuestTag(g.tag) })
+
+// Thứ tự PHẢI khớp enum HousekeepingRequestStatus của backend: Pending=0, Acknowledged=1, Completed=2
+const HOUSEKEEPING_STATUS_ORDER = ['Pending', 'Acknowledged', 'Completed']
+
+export const normalizeHousekeepingStatus = (s) =>
+  typeof s === 'number' ? HOUSEKEEPING_STATUS_ORDER[s] ?? 'Pending' : s
+
+// Thứ tự PHẢI khớp enum HousekeepingRequestType của backend: Other=0, Cleaning=1, ExtraTowels=2, ExtraWater=3
+const HOUSEKEEPING_REQUEST_TYPE_ORDER = ['Other', 'Cleaning', 'ExtraTowels', 'ExtraWater']
+
+export const normalizeHousekeepingRequestType = (t) =>
+  typeof t === 'number' ? HOUSEKEEPING_REQUEST_TYPE_ORDER[t] ?? 'Other' : t

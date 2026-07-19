@@ -9,4 +9,5 @@ public class AvailableRoomResponse
     public string RoomTypeName { get; set; } = string.Empty;
     public int Capacity { get; set; }
     public decimal BasePrice { get; set; }
+    public string? Description { get; set; }
 }

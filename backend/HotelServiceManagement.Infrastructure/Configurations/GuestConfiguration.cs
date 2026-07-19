@@ -12,7 +12,7 @@ namespace HotelServiceManagement.Infrastructure.Configurations
             builder.Property(g => g.FullName).IsRequired().HasMaxLength(100);
             builder.Property(g => g.Email).HasMaxLength(150);
             builder.Property(g => g.PhoneNumber).IsRequired().HasMaxLength(20);
-            builder.Property(g => g.IdentityNumber).IsRequired().HasMaxLength(50);
+            builder.Property(g => g.IdentityNumber).HasMaxLength(50);
             builder.Property(g => g.Tag)
                    .HasConversion<string>()
                    .HasMaxLength(20)

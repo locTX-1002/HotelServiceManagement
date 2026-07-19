@@ -3,6 +3,7 @@ import { ToastProvider } from './components/ToastHost'
 import MainLayout from './layouts/MainLayout'
 import HomePage from './pages/HomePage'
 import LoginPage from './pages/LoginPage'
+import ResetPasswordPage from './pages/ResetPasswordPage'
 import RoomMapPage from './pages/RoomMapPage'
 import CreateReservationPage from './pages/CreateReservationPage'
 import CheckInOutPage from './pages/CheckInOutPage'
@@ -20,6 +21,15 @@ import InvoicePage from './pages/InvoicePage'
 import UsersPage from './pages/UsersPage'
 import ProtectedRoute from './routes/ProtectedRoute'
 import RequireRole from './routes/RequireRole'
+import GuestProtectedRoute from './routes/GuestProtectedRoute'
+import GuestLayout from './layouts/GuestLayout'
+import GuestLoginPage from './pages/guest/GuestLoginPage'
+import GuestRegisterPage from './pages/guest/GuestRegisterPage'
+import GuestResetPasswordPage from './pages/guest/GuestResetPasswordPage'
+import GuestResetPasswordWithTokenPage from './pages/guest/GuestResetPasswordWithTokenPage'
+import GuestDashboardPage from './pages/guest/GuestDashboardPage'
+import GuestProfilePage from './pages/guest/GuestProfilePage'
+import GuestBookingPage from './pages/guest/GuestBookingPage'
 
 export default function App() {
   return (
@@ -28,6 +38,19 @@ export default function App() {
         <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
+        {/* Cổng thông tin khách - tách hoàn toàn khỏi khu nhân viên bên dưới, session/API riêng */}
+        <Route path="/guest/dang-nhap" element={<GuestLoginPage />} />
+        <Route path="/guest/dang-ky" element={<GuestRegisterPage />} />
+        <Route path="/guest/quen-mat-khau" element={<GuestResetPasswordPage />} />
+        <Route path="/guest/dat-lai-mat-khau" element={<GuestResetPasswordWithTokenPage />} />
+        <Route element={<GuestProtectedRoute />}>
+          <Route element={<GuestLayout />}>
+            <Route path="/guest/dashboard" element={<GuestDashboardPage />} />
+            <Route path="/guest/dat-phong-moi" element={<GuestBookingPage />} />
+            <Route path="/guest/ho-so" element={<GuestProfilePage />} />
+          </Route>
+        </Route>
         {/* Khu nghiệp vụ: bắt buộc có phiên đăng nhập + đúng quyền vai trò */}
         <Route element={<ProtectedRoute />}>
           <Route element={<MainLayout />}>

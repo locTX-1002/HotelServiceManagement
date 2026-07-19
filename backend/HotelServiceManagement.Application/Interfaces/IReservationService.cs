@@ -8,10 +8,12 @@ namespace HotelServiceManagement.Application.Interfaces
         Task<AuthServiceResult<IReadOnlyList<ReservationResponse>>> GetAllAsync();
         Task<AuthServiceResult<ReservationResponse>> GetByIdAsync(int id);
 
-        // createdByUserId is read from the authenticated JWT by the API controller.
+        // createdByUserId is read from the authenticated JWT by the API controller. Null means the
+        // reservation was self-created by a guest (no staff user involved) - CreatedByUserId is a
+        // nullable FK precisely to support this.
         Task<AuthServiceResult<ReservationResponse>> CreateAsync(
             CreateReservationRequest request,
-            int createdByUserId);
+            int? createdByUserId);
 
         Task<AuthServiceResult<ReservationResponse>> UpdateAsync(
             int id,

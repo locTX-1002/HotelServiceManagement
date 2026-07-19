@@ -57,7 +57,7 @@ namespace HotelServiceManagement.Infrastructure.Services
         /// </summary>
         public async Task<AuthServiceResult<ReservationResponse>> CreateAsync(
             CreateReservationRequest request,
-            int createdByUserId)
+            int? createdByUserId)
         {
             if (request == null)
             {
@@ -65,7 +65,7 @@ namespace HotelServiceManagement.Infrastructure.Services
                     "Request body is required.");
             }
 
-            if (createdByUserId <= 0)
+            if (createdByUserId is <= 0)
             {
                 return AuthServiceResult<ReservationResponse>.Failure(
                     "Authenticated user id is invalid.", 401);
@@ -460,12 +460,27 @@ namespace HotelServiceManagement.Infrastructure.Services
                 query = query.Where(r => r.RoomType.Capacity >= capacity.Value);
             }
 
+            // Active stays can physically occupy a room outside their reservation dates (guest has not
+            // checked out by the planned date). Reservation-date overlap alone would then offer a room
+            // that is still occupied, and check-in for the new booking fails later at the desk.
+            // While a stay is active the room is blocked from ActualCheckIn until at least tomorrow
+            // (or the planned check-out date if that is later) - the block disappears the moment the
+            // guest actually checks out because the stay stops being Active.
+            var occupancyFloor = DateTime.Today.AddDays(1);
+
             var availableRooms = await query
                 .Where(room => !_context.Reservations.Any(reservation =>
                     reservation.RoomId == room.Id
                     && BlockingStatuses.Contains(reservation.Status)
                     && reservation.CheckInDate < checkOutDate
                     && reservation.CheckOutDate > checkInDate))
+                .Where(room => !_context.Stays.Any(stay =>
+                    stay.Reservation.RoomId == room.Id
+                    && stay.Status == StayStatus.Active
+                    && stay.ActualCheckIn < checkOutDate
+                    && checkInDate < (stay.Reservation.CheckOutDate > occupancyFloor
+                        ? stay.Reservation.CheckOutDate
+                        : occupancyFloor)))
                 .OrderBy(r => r.Floor)
                 .ThenBy(r => r.RoomNumber)
                 .Select(r => new AvailableRoomResponse
@@ -476,7 +491,8 @@ namespace HotelServiceManagement.Infrastructure.Services
                     RoomTypeId = r.RoomTypeId,
                     RoomTypeName = r.RoomType.TypeName,
                     Capacity = r.RoomType.Capacity,
-                    BasePrice = r.RoomType.BasePrice
+                    BasePrice = r.RoomType.BasePrice,
+                    Description = r.RoomType.Description
                 })
                 .ToListAsync();
 
@@ -502,19 +518,38 @@ namespace HotelServiceManagement.Infrastructure.Services
                     && r.RoomType.IsActive);
         }
 
-        private Task<bool> HasOverlappingReservationAsync(
+        private async Task<bool> HasOverlappingReservationAsync(
             int roomId,
             DateTime checkInDate,
             DateTime checkOutDate,
             int? excludeReservationId)
         {
-            return _context.Reservations.AnyAsync(reservation =>
+            var hasReservationOverlap = await _context.Reservations.AnyAsync(reservation =>
                 reservation.RoomId == roomId
                 && (!excludeReservationId.HasValue
                     || reservation.Id != excludeReservationId.Value)
                 && BlockingStatuses.Contains(reservation.Status)
                 && reservation.CheckInDate < checkOutDate
                 && reservation.CheckOutDate > checkInDate);
+
+            if (hasReservationOverlap)
+            {
+                return true;
+            }
+
+            // Same active-stay occupancy rule as GetAvailableRoomsAsync - without this, a direct
+            // create/update request could still book a room that a guest physically occupies past
+            // (or before) their reservation dates.
+            var occupancyFloor = DateTime.Today.AddDays(1);
+            return await _context.Stays.AnyAsync(stay =>
+                stay.Reservation.RoomId == roomId
+                && (!excludeReservationId.HasValue
+                    || stay.ReservationId != excludeReservationId.Value)
+                && stay.Status == StayStatus.Active
+                && stay.ActualCheckIn < checkOutDate
+                && checkInDate < (stay.Reservation.CheckOutDate > occupancyFloor
+                    ? stay.Reservation.CheckOutDate
+                    : occupancyFloor));
         }
 
         /// <summary>
