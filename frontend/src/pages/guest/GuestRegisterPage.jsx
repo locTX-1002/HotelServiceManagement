@@ -126,6 +126,13 @@ export default function GuestRegisterPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 />
+                {/* Giong modal dang ky o GuestLoginPage: quen mat khau gui link QUA EMAIL,
+                    bo trong o nay la mat luon duong tu lay lai mat khau. */}
+                {!email.trim() && (
+                  <p className="mt-1.5 text-[11px] leading-relaxed text-amber-800">
+                    Không có email sẽ không tự đặt lại được mật khẩu khi quên — lúc đó phải nhờ lễ tân.
+                  </p>
+                )}
               </div>
               <div>
                 <label className={labelCls}>Mật khẩu</label>

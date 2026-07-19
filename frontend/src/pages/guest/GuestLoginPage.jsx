@@ -414,6 +414,13 @@ export default function GuestLoginPage() {
               <div>
                 <label className={labelCls}>Email (không bắt buộc)</label>
                 <input type="email" className={inputCls} placeholder="Dùng để đặt lại mật khẩu sau này" value={regEmail} onChange={(e) => setRegEmail(e.target.value)} />
+                {/* Quen mat khau gui link QUA EMAIL - bo trong o nay la mat luon duong tu lay lai mat khau.
+                    Canh bao ngay luc dang ky, dung de khach phat hien khi da quen mat khau roi. */}
+                {!regEmail.trim() && (
+                  <p className="mt-1.5 text-[11px] leading-relaxed text-amber-800">
+                    Không có email sẽ không tự đặt lại được mật khẩu khi quên — lúc đó phải nhờ lễ tân.
+                  </p>
+                )}
               </div>
               <div>
                 <label className={labelCls}>Mật khẩu</label>

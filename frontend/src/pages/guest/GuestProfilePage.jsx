@@ -131,6 +131,13 @@ export default function GuestProfilePage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
+              {/* Nhac dua tren email DA LUU (profile.email), khong phai o dang go: vua xoa chu trong o
+                  ma da doi mau canh bao thi roi mat. Nhac cho toi khi bam Luu that su. */}
+              {!profile.email && (
+                <p className="mt-1.5 rounded-lg bg-amber-50 px-3 py-2 text-[11px] leading-relaxed text-amber-800 ring-1 ring-amber-600/15">
+                  Tài khoản của bạn chưa có email. Bổ sung để tự đặt lại mật khẩu khi quên, không phải nhờ lễ tân.
+                </p>
+              )}
             </div>
 
             {profileError && <p className={errorCls}>{profileError}</p>}
