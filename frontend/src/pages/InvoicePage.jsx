@@ -93,6 +93,18 @@ export default function InvoicePage() {
       .finally(() => { promoRef.current = false; setApplyingPromo(false) })
   }
 
+  // Gửi chuỗi RỖNG (khác với không gửi trường) - backend hiểu là gỡ mã, trả hoá đơn về giá gốc
+  const removePromo = () => {
+    if (promoRef.current) return
+    promoRef.current = true
+    setApplyingPromo(true)
+    client
+      .post(`/api/invoices/stay/${stayId}`, { promotionCode: '' })
+      .then(() => { toast.success('Đã gỡ mã khuyến mãi'); setPromoCode(''); load() })
+      .catch((err) => toast.error(apiError(err)))
+      .finally(() => { promoRef.current = false; setApplyingPromo(false) })
+  }
+
   const submitPayment = () => {
     if (payingRef.current) return
     setPayError('')
@@ -245,6 +257,16 @@ export default function InvoicePage() {
                 >
                   {applyingPromo ? 'Đang áp dụng…' : 'Áp dụng'}
                 </button>
+                {/* Đường lùi khi lỡ áp nhầm mã giảm mạnh - gửi chuỗi rỗng để backend gỡ mã khỏi hoá đơn */}
+                {invoice.promotionCode && (
+                  <button
+                    onClick={removePromo}
+                    disabled={applyingPromo}
+                    className={`rounded-lg px-4 py-2.5 text-[12px] font-bold text-rose-700 ring-1 ring-rose-600/20 ${EASE} hover:bg-rose-50 disabled:opacity-40`}
+                  >
+                    Gỡ mã
+                  </button>
+                )}
               </div>
             )}
 
