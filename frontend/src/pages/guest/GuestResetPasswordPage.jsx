@@ -7,10 +7,10 @@ const inputCls =
   'w-full rounded-lg border border-black/15 bg-white px-3.5 py-3 text-sm outline-none placeholder:text-ink-500/40 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20'
 const labelCls = 'mb-1.5 block text-[11px] font-bold uppercase tracking-[0.18em] text-ink-700'
 
-// Buoc 1 cua quen mat khau: nhap SDT, he thong gui link dat lai qua email (neu tai khoan co email).
-// Buoc 2 (nhap mat khau moi tu link) o GuestResetPasswordWithTokenPage.jsx.
+// Buoc 1 cua quen mat khau: nhap EMAIL (khong phai SDT) - link dat lai gui thang toi chinh email do
+// nen hoi email de khach biet ro thu se toi dau. Buoc 2 o GuestResetPasswordWithTokenPage.jsx.
 export default function GuestResetPasswordPage() {
-  const [phoneNumber, setPhoneNumber] = useState('')
+  const [email, setEmail] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [done, setDone] = useState(false)
@@ -21,7 +21,7 @@ export default function GuestResetPasswordPage() {
     setError('')
     setLoading(true)
     guestClient
-      .post('/api/guest/auth/forgot-password', { phoneNumber: phoneNumber.trim() })
+      .post('/api/guest/auth/forgot-password', { email: email.trim() })
       .then(() => setDone(true))
       .catch((err) => {
         if (isBackendMissing(err)) setError('Không kết nối được máy chủ. Vui lòng thử lại sau.')
@@ -56,30 +56,31 @@ export default function GuestResetPasswordPage() {
               <>
                 <h1 className="mt-10 font-display text-3xl font-medium tracking-tight">Đã gửi yêu cầu</h1>
                 <p className="mt-2 text-sm leading-relaxed text-ink-500">
-                  Nếu số điện thoại này có tài khoản và có email, một liên kết đặt lại mật khẩu đã được gửi tới email đó —
-                  kiểm tra hộp thư đến (và mục Spam). Liên kết có hiệu lực trong 30 phút.
+                  Nếu email này có tài khoản, liên kết đặt lại mật khẩu đã được gửi tới đó — kiểm tra hộp thư đến
+                  và cả mục Spam. Liên kết có hiệu lực trong 30 phút.
                 </p>
                 <p className="mt-3 text-[12px] leading-relaxed text-ink-500">
-                  Chưa có email trên tài khoản? Liên hệ lễ tân để được hỗ trợ.
+                  Tài khoản đăng ký không kèm email? Liên hệ lễ tân để được hỗ trợ.
                 </p>
               </>
             ) : (
               <>
                 <h1 className="mt-10 font-display text-4xl font-medium tracking-tight">Quên mật khẩu</h1>
                 <p className="mt-2 text-sm leading-relaxed text-ink-500">
-                  Nhập số điện thoại đăng ký, chúng tôi sẽ gửi liên kết đặt lại mật khẩu tới email trên tài khoản.
+                  Nhập email đã đăng ký, chúng tôi sẽ gửi liên kết đặt lại mật khẩu tới chính email đó.
                 </p>
 
                 <form onSubmit={onSubmit} className="mt-8 space-y-5">
                   <div>
-                    <label className={labelCls}>Số điện thoại</label>
+                    <label className={labelCls}>Email</label>
                     <input
-                      type="tel"
+                      type="email"
                       required
+                      autoComplete="email"
                       className={inputCls}
-                      placeholder="09xxxxxxxx"
-                      value={phoneNumber}
-                      onChange={(e) => setPhoneNumber(e.target.value)}
+                      placeholder="ban@gmail.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
                     />
                   </div>
 

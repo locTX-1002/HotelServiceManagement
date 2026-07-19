@@ -299,23 +299,28 @@ namespace HotelServiceManagement.Infrastructure.Services
             await _context.SaveChangesAsync();
         }
 
-        public async Task<AuthServiceResult<AuthMessageResponse>> ForgotPasswordAsync(string phoneNumber)
+        public async Task<AuthServiceResult<AuthMessageResponse>> ForgotPasswordAsync(string email)
         {
-            const string genericMessage = "If that phone number has an account with an email on file, a reset link has been sent.";
+            const string genericMessage = "If that email has an account, a reset link has been sent.";
 
-            var normalizedPhone = phoneNumber?.Trim() ?? string.Empty;
-            if (normalizedPhone.Length == 0)
+            var normalizedEmail = email?.Trim().ToLowerInvariant() ?? string.Empty;
+            if (normalizedEmail.Length == 0)
             {
-                return AuthServiceResult<AuthMessageResponse>.Failure("Phone number is required.");
+                return AuthServiceResult<AuthMessageResponse>.Failure("Email is required.");
             }
 
+            // Email khong unique tren bang Guests (1 gia dinh co the dung chung 1 email) - uu tien tai
+            // khoan da dat mat khau, sau do la tai khoan tao gan nhat.
             var account = await _context.GuestAccounts
                 .Include(a => a.Guest)
-                .FirstOrDefaultAsync(a => a.Guest.PhoneNumber == normalizedPhone);
+                .Where(a => a.Guest.Email != null && a.Guest.Email.ToLower() == normalizedEmail)
+                .OrderByDescending(a => a.PasswordHash != null)
+                .ThenByDescending(a => a.CreatedAt)
+                .FirstOrDefaultAsync();
 
-            // Tra ve cung 1 thong bao chung du tai khoan co ton tai/co email hay khong - tranh lo cho
-            // ke tan cong do so dien thoai nao da dang ky trong he thong.
-            if (account == null || string.IsNullOrWhiteSpace(account.Guest.Email))
+            // Tra ve cung 1 thong bao chung du tai khoan co ton tai hay khong - tranh lo cho ke tan
+            // cong biet email nao da dang ky trong he thong.
+            if (account == null)
             {
                 return AuthServiceResult<AuthMessageResponse>.Success(new AuthMessageResponse { Message = genericMessage });
             }
