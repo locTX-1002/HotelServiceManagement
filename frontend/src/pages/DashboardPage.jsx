@@ -6,6 +6,8 @@ import ErrorState from '../components/ErrorState'
 import { formatVnd } from '../utils/roomStatus'
 import { roomImage } from '../utils/roomImages'
 import { MOCK_DASHBOARD } from '../mock/hotelMock'
+import { getUser } from '../utils/session'
+import { canAccess } from '../utils/roles'
 
 const todayLabel = new Intl.DateTimeFormat('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit' }).format(new Date())
 
@@ -43,6 +45,17 @@ function EmptyState({ text }) {
 
 /* Badge hành động: nghỉ hiện trạng thái, hover đổi thành lời gọi hành động */
 function ActionBadge({ idle, hover, tint, onClick }) {
+  // Không có onClick (vai trò không được vào trang đích) thì hiện dạng nhãn tĩnh: vẫn cho biết
+  // tình trạng lượt khách, nhưng bỏ mũi tên + hiệu ứng hover để không mời bấm vào chỗ bấm không được.
+  if (!onClick) {
+    // Bỏ luôn các class hover: của tint, không thì nhãn tĩnh vẫn đổi màu khi rê chuột -> lại tưởng bấm được
+    const staticTint = tint.split(' ').filter((c) => !c.startsWith('hover:')).join(' ')
+    return (
+      <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1 ${staticTint}`}>
+        {idle}
+      </span>
+    )
+  }
   return (
     <button
       onClick={onClick}
@@ -56,6 +69,9 @@ function ActionBadge({ idle, hover, tint, onClick }) {
 
 export default function DashboardPage() {
   const navigate = useNavigate()
+  const role = getUser()?.role
+  const canCreateReservation = canAccess(role, '/reservations/new')
+  const canCheckInOut = canAccess(role, '/checkin-checkout')
   const [data, setData] = useState(null)
   const [usingMock, setUsingMock] = useState(false)
   const [loadError, setLoadError] = useState(false)
@@ -122,10 +138,14 @@ export default function DashboardPage() {
               Dữ liệu mẫu
             </span>
           )}
-          <button onClick={() => navigate('/reservations/new')}
-            className={`rounded-full bg-brand-500 px-5 py-2.5 text-[13px] font-bold text-white ${EASE} hover:bg-brand-600 active:scale-[0.98]`}>
-            Tạo đặt phòng
-          </button>
+          {/* Tổng quan là trang của Admin+Manager, nhưng Đặt phòng/Check-in lại là của Admin+Lễ tân.
+              Không lọc thì Manager bấm vào là rơi vào màn "Khu vực này không thuộc vai trò của bạn". */}
+          {canCreateReservation && (
+            <button onClick={() => navigate('/reservations/new')}
+              className={`rounded-full bg-brand-500 px-5 py-2.5 text-[13px] font-bold text-white ${EASE} hover:bg-brand-600 active:scale-[0.98]`}>
+              Tạo đặt phòng
+            </button>
+          )}
           <button onClick={() => navigate('/rooms/map')}
             className={`rounded-full px-5 py-2.5 text-[13px] font-semibold text-white ring-1 ring-white/40 ${EASE} hover:bg-white hover:text-ink-900 active:scale-[0.98]`}>
             Sơ đồ phòng
@@ -204,7 +224,7 @@ export default function DashboardPage() {
                 <ActionBadge
                   idle="Chờ check-in" hover="Check-in ngay"
                   tint="bg-sky-50 text-sky-700 ring-sky-600/15 hover:bg-sky-600 hover:text-white hover:ring-sky-600"
-                  onClick={() => navigate('/checkin-checkout')}
+                  onClick={canCheckInOut ? () => navigate('/checkin-checkout') : undefined}
                 />
               </div>
             ))}
@@ -227,7 +247,7 @@ export default function DashboardPage() {
                 <ActionBadge
                   idle="Chờ check-out" hover="Check-out"
                   tint="bg-rose-50 text-rose-700 ring-rose-600/15 hover:bg-rose-600 hover:text-white hover:ring-rose-600"
-                  onClick={() => navigate('/checkin-checkout')}
+                  onClick={canCheckInOut ? () => navigate('/checkin-checkout') : undefined}
                 />
               </div>
             ))}

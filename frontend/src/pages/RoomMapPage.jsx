@@ -104,23 +104,32 @@ function RoomDrawer({ room, onClose }) {
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose])
 
+  // Sơ đồ phòng mở cho MỌI vai trò, nhưng các trang đích thì không: Đặt phòng/Check-in chỉ Admin+Lễ tân,
+  // Gọi dịch vụ không có Manager. Không lọc thì Manager/NV dịch vụ bấm nút xong rơi vào màn "Khu vực này
+  // không thuộc vai trò của bạn". Lọc luôn tại đây, cùng cách file này đã làm với canManageRooms bên dưới.
+  const role = getUser()?.role
+  const linkIfAllowed = (path) => (canAccess(role, path) ? () => navigate(path) : null)
+
   const actions = room
-    ? {
+    ? ({
         Available: [
-          { label: 'Đặt phòng này', primary: true, onClick: () => navigate('/reservations/new') },
+          { label: 'Đặt phòng này', primary: true, onClick: linkIfAllowed('/reservations/new') },
           { label: 'Chuyển sang bảo trì', note: 'chờ API PATCH status' },
         ],
         Reserved: [
-          { label: 'Check-in khách', primary: true, onClick: () => navigate('/checkin-checkout') },
+          { label: 'Check-in khách', primary: true, onClick: linkIfAllowed('/checkin-checkout') },
           { label: 'Hủy đặt phòng', note: 'sơ đồ chưa có mã đặt phòng - hủy ở trang Đặt phòng' },
         ],
         Occupied: [
-          { label: 'Check-out', primary: true, onClick: () => navigate('/checkin-checkout') },
-          { label: 'Thêm dịch vụ', onClick: () => navigate('/service-orders') },
+          { label: 'Check-out', primary: true, onClick: linkIfAllowed('/checkin-checkout') },
+          { label: 'Thêm dịch vụ', onClick: linkIfAllowed('/service-orders') },
         ],
         Cleaning: [{ label: 'Đánh dấu đã sạch', primary: true, note: 'chờ API PATCH status' }],
         Maintenance: [{ label: 'Mở lại phòng', primary: true, note: 'chờ API PATCH status' }],
       }[room.status] ?? []
+      // Nút điều hướng mà vai trò này không được vào thì bỏ hẳn khỏi danh sách; nút chờ API (có note)
+      // vẫn giữ vì nó vốn hiện dạng mờ để báo "sắp có", không phải ngõ cụt.
+    ).filter((a) => a.onClick !== null)
     : []
 
   return (
