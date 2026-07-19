@@ -84,7 +84,11 @@ export default function ReportsPage() {
   const roomRevenue = revenue?.roomRevenue ?? 0
   const serviceRevenue = revenue?.serviceRevenue ?? 0
   const totalRevenue = revenue?.totalRevenue ?? roomRevenue + serviceRevenue
-  const revBase = Math.max(roomRevenue + serviceRevenue, 1)
+  // BE tra totalRevenue = Sum(Invoice.TotalAmount) - da CONG phu thu va TRU giam gia - nhung chi tach
+  // rieng duoc RoomCharge/ServiceCharge. Phan chenh chinh la phu thu tru khuyen mai; khong hien no ra
+  // thi bang bi le: 500k + 0 ma Tong lai 594k, con Tien phong thi ghi 100%.
+  const otherRevenue = totalRevenue - roomRevenue - serviceRevenue
+  const revBase = Math.max(roomRevenue + serviceRevenue + otherRevenue, 1)
 
   // Công suất hiện tại + theo tầng
   const floors = useMemo(
@@ -234,6 +238,9 @@ export default function ReportsPage() {
               <div className="flex h-3.5 w-full overflow-hidden rounded-full bg-cream-200">
                 <div className={`bg-brand-600 ${EASE}`} style={{ width: `${(roomRevenue / revBase) * 100}%` }} />
                 <div className={`bg-brand-500/40 ${EASE}`} style={{ width: `${(serviceRevenue / revBase) * 100}%` }} />
+                {otherRevenue > 0 && (
+                  <div className={`bg-amber-500/50 ${EASE}`} style={{ width: `${(otherRevenue / revBase) * 100}%` }} />
+                )}
               </div>
               <div className="mt-4 space-y-2.5">
                 <div className="flex items-center justify-between text-sm">
@@ -244,6 +251,13 @@ export default function ReportsPage() {
                   <span className="flex items-center gap-2 text-ink-700"><span className="h-2.5 w-2.5 rounded-sm bg-brand-500/40" /> Dịch vụ</span>
                   <span className="font-semibold tabular-nums">{formatVnd(serviceRevenue)} <span className="text-[11px] font-normal text-ink-500">· {Math.round((serviceRevenue / revBase) * 100)}%</span></span>
                 </div>
+                {/* Chi hien khi that su co chenh - ky khong phu thu/khuyen mai thi bang van gon nhu cu */}
+                {otherRevenue !== 0 && (
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="flex items-center gap-2 text-ink-700"><span className="h-2.5 w-2.5 rounded-sm bg-amber-500/50" /> Phụ thu, giảm giá</span>
+                    <span className="font-semibold tabular-nums">{formatVnd(otherRevenue)} <span className="text-[11px] font-normal text-ink-500">· {Math.round((otherRevenue / revBase) * 100)}%</span></span>
+                  </div>
+                )}
                 <div className="flex items-center justify-between border-t border-black/[0.06] pt-2.5 text-sm">
                   <span className="font-semibold text-ink-900">Tổng</span>
                   <span className={`${statNumCls} text-lg text-brand-700`}>{formatVnd(totalRevenue)}</span>
