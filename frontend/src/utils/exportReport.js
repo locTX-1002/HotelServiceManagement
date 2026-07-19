@@ -1,7 +1,6 @@
 import ExcelJS from 'exceljs'
 import { jsPDF } from 'jspdf'
 import autoTable from 'jspdf-autotable'
-import { formatVnd } from './roomStatus'
 
 // Tải file xuống máy - dùng chung cho cả Excel lẫn PDF
 const downloadBlob = (blob, filename) => {
@@ -17,6 +16,12 @@ const downloadBlob = (blob, filename) => {
 
 // jsPDF font mặc định không có dấu tiếng Việt -> bỏ dấu riêng cho bản PDF (Excel là UTF-8 gốc, không cần)
 const stripDiacritics = (s) => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D')
+
+// Tiền cho bản PDF phải viết bằng ASCII thuần. formatVnd dùng Intl currency nên trả về "1.650.000 ₫":
+// ký tự ₫ (U+20AB) và dấu cách không ngắt (U+00A0) đều nằm ngoài bảng mã WinAnsi của font Helvetica mặc
+// định -> jsPDF đẩy CẢ chuỗi sang mã 2 byte và mọi số tiền in ra thành ký tự rác. stripDiacritics không
+// cứu được vì ₫ không phải dấu tổ hợp để tách. Nên ở đây tự ghép số rồi thêm "VND".
+const formatVndAscii = (n) => `${new Intl.NumberFormat('vi-VN').format(Number(n ?? 0))} VND`
 
 export async function exportReportToExcel({ from, to, revenue, occupancy }) {
   const wb = new ExcelJS.Workbook()
@@ -58,18 +63,18 @@ export function exportReportToPdf({ from, to, revenue, occupancy }) {
   doc.setFontSize(14)
   doc.text(stripDiacritics(`Bao cao doanh thu ${from} - ${to}`), 14, 16)
   doc.setFontSize(10)
-  doc.text(stripDiacritics(`Tien phong: ${formatVnd(revenue?.roomRevenue ?? 0)}`), 14, 24)
-  doc.text(stripDiacritics(`Tien dich vu: ${formatVnd(revenue?.serviceRevenue ?? 0)}`), 14, 30)
-  doc.text(stripDiacritics(`Tong doanh thu: ${formatVnd(revenue?.totalRevenue ?? 0)}`), 14, 36)
+  doc.text(stripDiacritics(`Tien phong: ${formatVndAscii(revenue?.roomRevenue)}`), 14, 24)
+  doc.text(stripDiacritics(`Tien dich vu: ${formatVndAscii(revenue?.serviceRevenue)}`), 14, 30)
+  doc.text(stripDiacritics(`Tong doanh thu: ${formatVndAscii(revenue?.totalRevenue)}`), 14, 36)
 
   autoTable(doc, {
     startY: 44,
     head: [['Ngay', 'Tien phong', 'Tien dich vu', 'Tong'].map(stripDiacritics)],
     body: (revenue?.byDay ?? []).map((d) => [
       String(d.date).slice(0, 10),
-      formatVnd(d.roomRevenue),
-      formatVnd(d.serviceRevenue),
-      formatVnd(d.totalRevenue),
+      formatVndAscii(d.roomRevenue),
+      formatVndAscii(d.serviceRevenue),
+      formatVndAscii(d.totalRevenue),
     ]),
   })
 
