@@ -60,7 +60,7 @@ namespace HotelServiceManagement.Api.Controllers
         [HttpPost("auth/forgot-password")]
         public async Task<IActionResult> ForgotPassword([FromBody] GuestForgotPasswordRequest request)
         {
-            return ToActionResult(await _guestAuthService.ForgotPasswordAsync(request?.PhoneNumber ?? string.Empty));
+            return ToActionResult(await _guestAuthService.ForgotPasswordAsync(request?.Email ?? string.Empty));
         }
 
         [HttpPost("auth/reset-password")]

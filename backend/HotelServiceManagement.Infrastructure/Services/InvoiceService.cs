@@ -78,17 +78,32 @@ namespace HotelServiceManagement.Infrastructure.Services
 
             var trimmedCode = promotionCode?.Trim();
 
-            // Hoá đơn đã thu đủ tiền thì không cho đổi khuyến mãi nữa - áp mã lúc này sẽ hạ TotalAmount
-            // xuống dưới số tiền đã thu thật, tạo ra khoản dư thừa không ai theo dõi/hoàn lại.
-            if (!isNewInvoice && invoice!.Status == InvoiceStatus.Paid && !string.IsNullOrEmpty(trimmedCode))
+            // Chốt khuyến mãi khi đã THU ĐƯỢC TIỀN THẬT và hoá đơn đã đủ: áp mã lúc này sẽ hạ TotalAmount
+            // xuống dưới số đã thu (dư ra không ai theo dõi/hoàn lại), gỡ mã lại đội tiền lên tạo khoản nợ
+            // mới trên hoá đơn đã đóng. Phải soi số tiền thu thật chứ không chỉ nhìn Status: hoá đơn được
+            // giảm sạch còn 0đ cũng mang trạng thái Paid dù chưa thu đồng nào - nếu chặn theo Status thì
+            // chính cái mã giảm sạch đó khoá luôn đường gỡ, hoá đơn kẹt 0đ vĩnh viễn.
+            var paidSoFar = isNewInvoice
+                ? 0
+                : invoice!.Payments.Where(p => p.Status == PaymentStatus.Completed).Sum(p => p.Amount);
+
+            if (!isNewInvoice && invoice!.Status == InvoiceStatus.Paid && paidSoFar > 0 && trimmedCode != null)
             {
                 return AuthServiceResult<InvoiceResponse>.Failure(
-                    "Invoice is already fully paid. Cannot apply a promotion code after payment is complete.", 409);
+                    "Invoice is already fully paid. Cannot change the promotion code after payment is complete.", 409);
             }
 
             var discountAmount = invoice?.DiscountAmount ?? 0;
             var appliedPromotionCode = invoice?.PromotionCode;
-            if (!string.IsNullOrEmpty(trimmedCode))
+
+            // Chuỗi rỗng = GỠ mã đang áp (lễ tân bấm nhầm mã giảm mạnh thì phải có đường lùi lại),
+            // khác hẳn với không gửi trường này (null = giữ nguyên mã cũ khi chỉ tính lại hoá đơn).
+            if (trimmedCode != null && trimmedCode.Length == 0)
+            {
+                discountAmount = 0;
+                appliedPromotionCode = null;
+            }
+            else if (!string.IsNullOrEmpty(trimmedCode))
             {
                 var normalizedCode = trimmedCode.ToUpperInvariant();
                 var promotion = await _context.Promotions.FirstOrDefaultAsync(p => p.Code == normalizedCode);
@@ -191,6 +206,13 @@ namespace HotelServiceManagement.Infrastructure.Services
             var paidAmount = invoice.Payments
                 .Where(p => p.Status == PaymentStatus.Completed)
                 .Sum(p => p.Amount);
+
+            // Khuyến mãi giảm hết sạch thì không còn gì để thu - phải là Paid ngay. Nếu vẫn để Unpaid,
+            // lễ tân nhìn danh sách tưởng khách còn nợ trong khi PaymentService đã chặn thu thêm.
+            if (invoice.TotalAmount <= 0)
+            {
+                return InvoiceStatus.Paid;
+            }
 
             if (paidAmount <= 0)
             {
