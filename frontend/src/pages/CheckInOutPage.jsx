@@ -81,7 +81,7 @@ function ReceiptDialog({ receipt, onClose, onPay }) {
 
 // Dialog check-out: xác nhận trả phòng + tick phụ thu đồ dùng/hư hỏng (cộng vào hoá đơn).
 // Gửi surcharges: [{ surchargeItemId, quantity }] trong body check-out; qty 0 thì bỏ qua.
-function CheckoutDialog({ stay, items, busy, error, onConfirm, onCancel }) {
+function CheckoutDialog({ stay, items, itemsError, busy, error, onConfirm, onCancel }) {
   const [qty, setQty] = useState({})
   useEffect(() => { if (stay) setQty({}) }, [stay]) // mở lượt khác thì xoá số lượng cũ
   if (!stay) return null
@@ -100,6 +100,14 @@ function CheckoutDialog({ stay, items, busy, error, onConfirm, onCancel }) {
           <p className="mt-1 text-[13px] text-ink-500">
             {stay.guestName ?? 'Khách'} — hệ thống tính tiền phòng + dịch vụ và tạo hoá đơn. Không hoàn tác được.
           </p>
+
+          {/* Không tải được bảng giá thì PHẢI nói ra - im lặng là lễ tân tạo hoá đơn thiếu tiền đền bù */}
+          {itemsError && (
+            <div className="mt-4 rounded-xl bg-amber-50 px-3.5 py-2.5 text-[12px] font-medium text-amber-800 ring-1 ring-amber-600/15">
+              Không tải được bảng giá phụ thu. Vẫn check-out được, nhưng nếu khách có làm hư / thất lạc đồ
+              thì phải thu bù thủ công. Thử tải lại trang trước khi tạo hoá đơn.
+            </div>
+          )}
 
           {active.length > 0 && (
             <div className="mt-4 flex min-h-0 flex-col">
@@ -189,6 +197,7 @@ export default function CheckInOutPage() {
 
   const [receipt, setReceipt] = useState(null)
   const [surchargeItems, setSurchargeItems] = useState([]) // danh mục phụ thu cho dialog check-out
+  const [surchargeError, setSurchargeError] = useState(false)
 
   const loadReservations = () => {
     setResError(false)
@@ -212,12 +221,18 @@ export default function CheckInOutPage() {
       })
   }
 
-  // Danh mục phụ thu - chỉ dùng mock khi backend chưa có endpoint
+  // Danh mục phụ thu - chỉ dùng mock khi backend chưa có endpoint.
+  // Lỗi thật (500/400) KHÔNG được nuốt: nuốt xong danh sách rỗng thì mục phụ thu tự biến mất khỏi
+  // dialog check-out, lễ tân tưởng khách không làm hư gì và tạo hoá đơn thiếu tiền đền bù mà không ai biết.
   const loadSurchargeItems = () => {
+    setSurchargeError(false)
     client
       .get('/api/surcharge-items')
-      .then((res) => setSurchargeItems(res.data))
-      .catch((err) => { if (isBackendMissing(err)) setSurchargeItems(MOCK_SURCHARGE_ITEMS) })
+      .then((res) => { setSurchargeItems(res.data); setSurchargeError(false) })
+      .catch((err) => {
+        if (isBackendMissing(err)) setSurchargeItems(MOCK_SURCHARGE_ITEMS)
+        else setSurchargeError(true)
+      })
   }
 
   useEffect(() => { loadReservations(); loadStays(); loadSurchargeItems() }, [])
@@ -498,6 +513,7 @@ export default function CheckInOutPage() {
       <CheckoutDialog
         stay={toCheckOut}
         items={surchargeItems}
+        itemsError={surchargeError}
         busy={checkingOut}
         error={checkOutError}
         onConfirm={confirmCheckOut}
