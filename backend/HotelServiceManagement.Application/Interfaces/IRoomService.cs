@@ -10,6 +10,10 @@ namespace HotelServiceManagement.Application.Interfaces
         Task<AuthServiceResult<RoomResponse>> GetByIdAsync(int id);
         Task<AuthServiceResult<RoomResponse>> CreateAsync(CreateRoomRequest request);
         Task<AuthServiceResult<RoomResponse>> UpdateAsync(int id, UpdateRoomRequest request);
+        Task<AuthServiceResult<RoomResponse>> UpdateStatusAsync(
+            int id,
+            UpdateRoomStatusRequest request,
+            bool canManageMaintenance);
         Task<AuthServiceResult<AuthMessageResponse>> DeleteAsync(int id);
     }
 }
