@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { EASE } from '../utils/ui'
 import { useNavigate } from 'react-router-dom'
-import client, { isBackendMissing } from '../api/client'
+import client, { isBackendMissing, apiError } from '../api/client'
 import { ROOM_STATUS, formatVnd } from '../utils/roomStatus'
 import { MOCK_ROOM_MAP } from '../mock/hotelMock'
-import { normalizeRoom } from '../utils/apiShape'
+import { normalizeRoom, denormalizeStatus } from '../utils/apiShape'
 import { roomImage } from '../utils/roomImages'
 import ErrorState from '../components/ErrorState'
 import { canAccess } from '../utils/roles'
@@ -96,25 +96,48 @@ function GhostTile({ onClick }) {
 }
 
 /* Drawer chi tiết - hành động theo ngữ cảnh trạng thái */
-function RoomDrawer({ room, onClose }) {
+function RoomDrawer({ room, onClose, onChanged }) {
   const navigate = useNavigate()
+  const [busy, setBusy] = useState(false)
+  const [statusError, setStatusError] = useState('')
   useEffect(() => {
     const onKey = (e) => e.key === 'Escape' && onClose()
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose])
 
+  // Doi phong khac thi xoa loi cu
+  useEffect(() => { setStatusError('') }, [room?.roomId])
+
+  // BE-1 da co: PATCH /api/rooms/{id}/status. Backend nhan enum dang SO nen dung denormalizeStatus.
+  // Thanh cong thi goi onChanged (parent load lai) - load() tu cap nhat ca so do lan drawer dang mo.
+  const changeStatus = (targetName) => {
+    if (busy || !room) return
+    setBusy(true)
+    setStatusError('')
+    client
+      .patch(`/api/rooms/${room.roomId}/status`, { status: denormalizeStatus(targetName) })
+      .then(() => onChanged?.())
+      .catch((err) => setStatusError(apiError(err)))
+      .finally(() => setBusy(false))
+  }
+
   // Sơ đồ phòng mở cho MỌI vai trò, nhưng các trang đích thì không: Đặt phòng/Check-in chỉ Admin+Lễ tân,
   // Gọi dịch vụ không có Manager. Không lọc thì Manager/NV dịch vụ bấm nút xong rơi vào màn "Khu vực này
   // không thuộc vai trò của bạn". Lọc luôn tại đây, cùng cách file này đã làm với canManageRooms bên dưới.
   const role = getUser()?.role
   const linkIfAllowed = (path) => (canAccess(role, path) ? () => navigate(path) : null)
+  // Chuyen sang / ra khoi bao tri la thao tac quan ly - BE chi cho Admin,Manager (canManageMaintenance).
+  // Vai tro khac thi tra ve null de nut bi loc bo, khong hien nut bam vao se 403.
+  const canManageRooms = canAccess(role, '/rooms')
+  const maintenanceAction = (targetName, label, primary) =>
+    canManageRooms ? { label, primary, onClick: () => changeStatus(targetName) } : null
 
   const actions = room
     ? ({
         Available: [
           { label: 'Đặt phòng này', primary: true, onClick: linkIfAllowed('/reservations/new') },
-          { label: 'Chuyển sang bảo trì', note: 'chờ API PATCH status' },
+          maintenanceAction('Maintenance', 'Chuyển sang bảo trì', false),
         ],
         Reserved: [
           { label: 'Check-in khách', primary: true, onClick: linkIfAllowed('/checkin-checkout') },
@@ -124,12 +147,13 @@ function RoomDrawer({ room, onClose }) {
           { label: 'Check-out', primary: true, onClick: linkIfAllowed('/checkin-checkout') },
           { label: 'Thêm dịch vụ', onClick: linkIfAllowed('/service-orders') },
         ],
-        Cleaning: [{ label: 'Đánh dấu đã sạch', primary: true, note: 'chờ API PATCH status' }],
-        Maintenance: [{ label: 'Mở lại phòng', primary: true, note: 'chờ API PATCH status' }],
-      }[room.status] ?? []
-      // Nút điều hướng mà vai trò này không được vào thì bỏ hẳn khỏi danh sách; nút chờ API (có note)
-      // vẫn giữ vì nó vốn hiện dạng mờ để báo "sắp có", không phải ngõ cụt.
-    ).filter((a) => a.onClick !== null)
+        // BE-1 xong: nut nay goi PATCH status ve Available. Cho MOI vai tro van hanh (ca le tan, NV dich vu).
+        Cleaning: [{ label: 'Đã dọn xong', primary: true, onClick: () => changeStatus('Available') }],
+        Maintenance: [maintenanceAction('Available', 'Mở lại phòng', true)],
+      }[room.status] ?? [])
+      // Bo phan tu null (nut bao tri vai tro nay khong duoc phep) truoc, roi bo nut dieu huong bi chan.
+      .filter(Boolean)
+      .filter((a) => a.onClick !== null)
     : []
 
   return (
@@ -186,7 +210,7 @@ function RoomDrawer({ room, onClose }) {
                     <button
                       key={a.label}
                       onClick={a.onClick}
-                      disabled={!a.onClick}
+                      disabled={!a.onClick || busy}
                       title={a.note}
                       className={`w-full rounded-full py-2.5 text-[13px] font-bold ${EASE} ${
                         a.primary
@@ -197,6 +221,11 @@ function RoomDrawer({ room, onClose }) {
                       {a.label}{!a.onClick && a.note ? ' · ' + a.note : ''}
                     </button>
                   ))}
+                  {statusError && (
+                    <p className="rounded-lg bg-amber-50 px-3 py-2 text-[12px] font-medium text-amber-800 ring-1 ring-amber-600/15">
+                      {statusError}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -364,7 +393,7 @@ export default function RoomMapPage() {
         </div>
       )}
 
-      <RoomDrawer room={openRoom} onClose={() => setOpenRoom(null)} />
+      <RoomDrawer room={openRoom} onClose={() => setOpenRoom(null)} onChanged={load} />
     </div>
   )
 }
