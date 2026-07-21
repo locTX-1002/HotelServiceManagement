@@ -28,25 +28,51 @@ namespace HotelServiceManagement.Api.Controllers
             [FromQuery] int? numberOfGuests)
         {
             return ToActionResult(
-                await _guestReservationService.GetAvailableRoomTypesAsync(checkInDate, checkOutDate, numberOfGuests));
+                await _guestReservationService.GetAvailableRoomTypesAsync(
+                    checkInDate,
+                    checkOutDate,
+                    numberOfGuests));
         }
 
         [HttpPost("reservations")]
-        public async Task<IActionResult> CreateReservation([FromBody] GuestCreateReservationRequest request)
+        public async Task<IActionResult> CreateReservation(
+            [FromBody] GuestCreateReservationRequest request)
         {
             var guestId = GetCurrentGuestId();
             if (guestId == null)
             {
-                return Unauthorized(new AuthMessageResponse { Message = "Invalid guest identity in token." });
+                return Unauthorized(new AuthMessageResponse
+                {
+                    Message = "Invalid guest identity in token."
+                });
             }
 
-            return ToActionResult(await _guestReservationService.CreateAsync(guestId.Value, request));
+            return ToActionResult(
+                await _guestReservationService.CreateAsync(guestId.Value, request));
+        }
+
+        [HttpPatch("me/reservations/{id:int}/cancel")]
+        public async Task<IActionResult> CancelMyReservation(int id)
+        {
+            var guestId = GetCurrentGuestId();
+            if (guestId == null)
+            {
+                return Unauthorized(new AuthMessageResponse
+                {
+                    Message = "Invalid guest identity in token."
+                });
+            }
+
+            return ToActionResult(
+                await _guestReservationService.CancelAsync(guestId.Value, id));
         }
 
         private int? GetCurrentGuestId()
         {
             var guestIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            return int.TryParse(guestIdClaim, out var guestId) ? guestId : null;
+            return int.TryParse(guestIdClaim, out var guestId) && guestId > 0
+                ? guestId
+                : null;
         }
 
         private IActionResult ToActionResult<T>(AuthServiceResult<T> result)

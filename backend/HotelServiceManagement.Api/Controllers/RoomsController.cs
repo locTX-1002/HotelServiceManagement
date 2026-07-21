@@ -53,6 +53,21 @@ namespace HotelServiceManagement.Api.Controllers
             return ToActionResult(await _roomService.UpdateAsync(id, request));
         }
 
+        [HttpPatch("{id:int}/status")]
+        [Authorize(Roles = "Admin,Manager,Receptionist,ServiceStaff")]
+        public async Task<IActionResult> UpdateStatus(
+            int id,
+            [FromBody] UpdateRoomStatusRequest request)
+        {
+            var canManageMaintenance = User.IsInRole("Admin") || User.IsInRole("Manager");
+
+            return ToActionResult(
+                await _roomService.UpdateStatusAsync(
+                    id,
+                    request,
+                    canManageMaintenance));
+        }
+
         [HttpDelete("{id:int}")]
         [Authorize(Roles = "Admin,Manager")]
         public async Task<IActionResult> Delete(int id)
@@ -71,6 +86,7 @@ namespace HotelServiceManagement.Api.Controllers
             return result.StatusCode switch
             {
                 401 => Unauthorized(body),
+                403 => StatusCode(StatusCodes.Status403Forbidden, body),
                 404 => NotFound(body),
                 409 => Conflict(body),
                 _ => BadRequest(body)

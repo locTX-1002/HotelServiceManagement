@@ -156,7 +156,11 @@ namespace HotelServiceManagement.Infrastructure.Services
             };
 
             _context.Reservations.Add(reservation);
-            UpdateRoomStatusFromReservation(room, reservation.Status);
+            await _context.SaveChangesAsync();
+
+            // Recalculate instead of blindly setting Reserved. A future reservation must not
+            // overwrite an active Occupied, Cleaning or Maintenance operational status.
+            await RefreshRoomStatusAsync(room.Id);
             await _context.SaveChangesAsync();
 
             reservation.Guest = guest;
@@ -553,15 +557,18 @@ namespace HotelServiceManagement.Infrastructure.Services
         }
 
         /// <summary>
-        /// Recalculates business-driven room status without overwriting Maintenance.
-        /// Occupied has priority over Reserved; otherwise room becomes Available.
+        /// Recalculates business-driven room status without overwriting operational states.
+        /// Occupied has priority over Reserved. Cleaning and Maintenance remain unchanged until
+        /// their dedicated room-status workflow explicitly releases them.
         /// </summary>
         private async Task RefreshRoomStatusAsync(int roomId)
         {
             var room = await _context.Rooms
                 .FirstOrDefaultAsync(r => r.Id == roomId);
 
-            if (room == null || room.Status == RoomStatus.Maintenance)
+            if (room == null
+                || room.Status == RoomStatus.Maintenance
+                || room.Status == RoomStatus.Cleaning)
             {
                 return;
             }
@@ -590,16 +597,6 @@ namespace HotelServiceManagement.Infrastructure.Services
                 : RoomStatus.Available;
         }
 
-        private static void UpdateRoomStatusFromReservation(
-            Room room,
-            ReservationStatus status)
-        {
-            if (status == ReservationStatus.Pending
-                || status == ReservationStatus.Confirmed)
-            {
-                room.Status = RoomStatus.Reserved;
-            }
-        }
 
         private static ReservationResponse ToResponse(Reservation reservation)
         {
