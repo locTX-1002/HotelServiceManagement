@@ -6,6 +6,7 @@ import { normalizeReservationStatus } from '../../utils/apiShape'
 import { EASE } from '../../utils/ui'
 import { roomImage } from '../../utils/roomImages'
 import RoomTypeDetailModal from '../../components/RoomTypeDetailModal'
+import ConfirmDialog from '../../components/ConfirmDialog'
 
 // Nhãn + màu trạng thái - khớp dict RES_STATUS của trang nhân viên để cùng 1 trạng thái luôn hiện
 // cùng tên/màu dù xem từ phía khách hay phía lễ tân.
@@ -28,14 +29,32 @@ export default function GuestReservationsPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [detailRoom, setDetailRoom] = useState(null)
+  // Huy dat phong: mo ConfirmDialog vi day la thao tac pha huy, khong hoan tac
+  const [toCancel, setToCancel] = useState(null)
+  const [cancelling, setCancelling] = useState(false)
+  const [cancelError, setCancelError] = useState('')
 
-  useEffect(() => {
+  const load = () => {
     guestClient
       .get('/api/guest/me/reservations')
       .then((res) => setReservations(res.data ?? []))
       .catch((err) => setError(apiError(err)))
       .finally(() => setLoading(false))
-  }, [])
+  }
+
+  useEffect(() => { load() }, [])
+
+  const confirmCancel = () => {
+    if (cancelling || !toCancel) return
+    setCancelling(true)
+    setCancelError('')
+    // BE-4: chi huy duoc don thuoc chinh tai khoan nay va dang Pending/Confirmed - backend chan lai neu khong.
+    guestClient
+      .patch(`/api/guest/me/reservations/${toCancel.id}/cancel`)
+      .then(() => { setToCancel(null); load() })
+      .catch((err) => setCancelError(apiError(err)))
+      .finally(() => setCancelling(false))
+  }
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -128,6 +147,16 @@ export default function GuestReservationsPage() {
                         Dịch vụ phòng →
                       </Link>
                     )}
+                    {/* Chỉ huỷ được khi chưa nhận phòng (Chờ xác nhận / Đã xác nhận) - cùng hàng, giữ chiều cao thẻ */}
+                    {['Pending', 'Confirmed'].includes(normalizeReservationStatus(r.status)) && (
+                      <button
+                        type="button"
+                        onClick={() => { setCancelError(''); setToCancel(r) }}
+                        className={`rounded-full px-4 py-1.5 text-[12px] font-semibold text-rose-700 ring-1 ring-rose-600/20 ${EASE} hover:bg-rose-50`}
+                      >
+                        Huỷ đặt phòng
+                      </button>
+                    )}
                   </div>
 
                   {/* Thông tin phụ gộp 1 dòng, cắt bớt nếu dài - giữ chiều cao thẻ ổn định */}
@@ -148,6 +177,18 @@ export default function GuestReservationsPage() {
       </div>
 
       {detailRoom && <RoomTypeDetailModal rt={{ roomTypeName: detailRoom }} onClose={() => setDetailRoom(null)} />}
+
+      <ConfirmDialog
+        open={toCancel !== null}
+        title={`Huỷ đặt phòng ${toCancel?.bookingCode ?? ''}?`}
+        message={`Lượt đặt phòng ${toCancel?.roomNumber ?? ''} (${formatDate(toCancel?.checkInDate ?? new Date())}) sẽ chuyển sang Đã huỷ. Hành động không hoàn tác được.`}
+        confirmLabel="Huỷ đặt phòng"
+        busyLabel="Đang huỷ…"
+        busy={cancelling}
+        error={cancelError}
+        onConfirm={confirmCancel}
+        onCancel={() => { if (!cancelling) setToCancel(null) }}
+      />
     </div>
   )
 }
