@@ -43,9 +43,15 @@ Cấm chế thêm giá trị mới. Trộn "nút vuông cạnh card tròn" = fai
 
 ## 6. Bảng & danh sách — thở được
 
-- DataGrid: RowHeight ≥ 44, không kẻ ô (`GridLinesVisibility="None"`), header chữ Caption.
+- **PHƯƠNG ÁN B (đã chốt): danh sách chính dạng card-row có ảnh** — đối tượng có hình
+  (phòng, loại phòng, khách, món dịch vụ…) hiển thị bằng card-row: thumbnail 64×46 bo 8
+  bên trái, tên đậm + dòng phụ caption, badge, giá trị chính căn phải, nút Ghost nhỏ;
+  card nền `CardBrush`, viền hairline, bo 12, cách nhau 8px; double-click mở chi tiết.
+- DataGrid CHỈ dùng cho bảng thuần số liệu (báo cáo): RowHeight ≥ 44, không kẻ ô,
+  header chữ Caption — style app-wide đã lo sẵn.
 - Không nhồi 10 cột — tối đa ~7, phần chi tiết để dialog/panel.
 - Danh sách rỗng phải có empty-state (1 câu hướng dẫn), đang tải phải có LoadingCircle.
+- Toolbar có dòng đếm tổng ("6 phòng · 6 đang dùng") — không để toolbar trống hoác.
 
 ## 7. Chuyển động — vi mô, vật lý, không màu mè
 

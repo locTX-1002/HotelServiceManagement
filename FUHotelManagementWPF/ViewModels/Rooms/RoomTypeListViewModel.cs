@@ -9,12 +9,21 @@ using Services;
 
 namespace FUHotelManagementWPF.ViewModels.Rooms
 {
-    /// <summary>Dong hien thi loai phong.</summary>
+    /// <summary>Dong hien thi loai phong tren card-row.</summary>
     public class RoomTypeRow
     {
         public RoomType RoomType { get; }
         public int RoomCount => RoomType.Rooms?.Count ?? 0;
         public string ActiveText => RoomType.IsActive ? "Đang dùng" : "Ngừng dùng";
+        public bool IsActive => RoomType.IsActive;
+
+        public string Thumbnail => RoomImages.Thumbnail(RoomType.TypeName);
+        public string SubText => string.IsNullOrWhiteSpace(RoomType.Description)
+            ? $"{RoomType.Capacity} khách"
+            : RoomType.Description!;
+        public string CapacityText => $"{RoomType.Capacity} khách";
+        public string PriceText => $"{RoomType.BasePrice:N0} đ/đêm";
+        public string RoomCountText => $"{RoomCount} phòng";
 
         public RoomTypeRow(RoomType roomType) => RoomType = roomType;
     }
@@ -31,8 +40,16 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
         public bool IsLoading
         {
             get => _isLoading;
-            set => SetProperty(ref _isLoading, value);
+            set
+            {
+                if (SetProperty(ref _isLoading, value))
+                {
+                    OnPropertyChanged(nameof(IsEmpty));
+                }
+            }
         }
+
+        public bool IsEmpty => !IsLoading && Rows.Count == 0;
 
         public RelayCommand AddCommand { get; }
         public RelayCommand EditCommand { get; }
@@ -60,6 +77,7 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
                     Rows.Add(new RoomTypeRow(roomType));
                 }
                 OnPropertyChanged(nameof(TotalText));
+                OnPropertyChanged(nameof(IsEmpty));
             }
             catch (Exception)
             {

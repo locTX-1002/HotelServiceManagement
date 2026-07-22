@@ -1,0 +1,268 @@
+# Frontend WPF cho FU Hotel Management
+
+## 1. Phạm vi
+
+Frontend là ứng dụng desktop trong project `FUHotelManagementWPF`.
+Giao diện được xây dựng bằng XAML và MVVM.
+
+```text
+View (XAML) ↔ ViewModel → Service
+```
+
+ViewModel gọi service trực tiếp trong cùng tiến trình ứng dụng.
+
+## 2. Cấu trúc project
+
+```text
+FUHotelManagementWPF/
+├── Assets/             Hình ảnh và tài nguyên nhúng
+├── MvvmCore/           Base ViewModel, command, navigation, notification
+├── Themes/             Màu, typography và style control
+├── ViewModels/         Trạng thái và hành vi giao diện
+├── Views/              UserControl và dialog XAML
+├── App.xaml            ResourceDictionary dùng toàn ứng dụng
+├── LoginWindow.xaml    Cửa sổ đăng nhập
+├── MainWindow.xaml     Khung chính và sidebar
+└── SplashWindow.xaml   Trạng thái chuẩn bị database
+```
+
+## 3. Thành phần giao diện WPF
+
+| Nhu cầu | Thành phần WPF |
+|---|---|
+| Màn hình module | `UserControl` XAML |
+| Trạng thái màn hình | Property trong ViewModel |
+| Hành động người dùng | `ICommand`/`AsyncRelayCommand` |
+| Điều hướng | `NavigationService` + `ContentControl` |
+| Gọi nghiệp vụ | Service trong cùng solution |
+| Dữ liệu hiển thị | Row model, form model hoặc service result |
+| Phiên đăng nhập | `AppSession` |
+| Hộp thoại | WPF/HandyControl dialog |
+| Thông báo | `Notify.Success/Error/Warning/Info` |
+| Danh sách chính | Card-row có thumbnail (phương án B đã chốt) |
+| Bảng dữ liệu thuần số | `DataGrid` |
+| Trạng thái tải | HandyControl `LoadingCircle` |
+| Validation | `INotifyDataErrorInfo` |
+| Cấu hình | `appsettings.json` và `appsettings.Local.json` |
+
+## 4. Quy tắc MVVM
+
+### View
+
+- View chỉ mô tả bố cục, binding và hành vi giao diện.
+- Không truy cập database hoặc repository.
+- Không chứa business rule.
+- Hạn chế code-behind; chỉ dùng cho hành vi thuần UI không thể biểu diễn hợp lý bằng binding.
+- Không tự tạo View trong ViewModel.
+
+### ViewModel
+
+- Kế thừa `ViewModelBase`.
+- Form kế thừa `ValidatableViewModelBase`.
+- Property cập nhật UI qua `SetProperty`/`INotifyPropertyChanged`.
+- Thao tác I/O dùng `AsyncRelayCommand`.
+- Không dùng `.Result`, `.Wait()` hoặc truy vấn đồng bộ làm khóa UI thread.
+- Không hiển thị `MessageBox` cho feedback CRUD thông thường.
+- Không tham chiếu `HotelDbContext`, DAO hoặc repository implementation.
+
+### Code-behind
+
+Được phép:
+
+- `InitializeComponent()`.
+- Đóng/mở cửa sổ theo lifecycle.
+- Focus, drag window hoặc hành vi visual đặc thù.
+
+Không được phép:
+
+- Gọi database.
+- Tính hóa đơn.
+- Kiểm tra trùng reservation.
+- Phân quyền nghiệp vụ.
+- Viết toàn bộ CRUD trong click handler.
+
+## 5. Navigation
+
+Khung chính hiển thị ViewModel hiện tại bằng `ContentControl`. View được ánh xạ qua:
+
+```text
+Views/ViewMappings.xaml
+```
+
+Khi thêm module:
+
+1. Tạo ViewModel.
+2. Tạo `UserControl` tương ứng.
+3. Thêm `DataTemplate` vào `ViewMappings.xaml`.
+4. Đổi factory trong `MainViewModel` từ `PlaceholderViewModel` sang ViewModel thật.
+5. Dùng `NavigationService.NavigateTo("Tên module")` khi chuyển màn từ module khác.
+
+Không dùng `Frame`, URI route hoặc tự `new UserControl` để điều hướng.
+
+## 6. Command và trạng thái bất đồng bộ
+
+- Lệnh chỉ thay đổi UI tức thời có thể dùng `RelayCommand`.
+- Lệnh gọi service/database phải dùng `AsyncRelayCommand`.
+- Disable hành động khi command đang chạy.
+- Không cho bấm gửi lặp nhiều lần.
+- Hiển thị loading cho tác vụ có thời gian chờ nhận biết được.
+- Bắt exception tại ranh giới phù hợp và chuyển thành thông báo thân thiện.
+
+Mỗi màn dữ liệu phải có ba trạng thái:
+
+- Loading.
+- Empty.
+- Error.
+
+## 7. Validation
+
+Form dùng `ValidatableViewModelBase` và `INotifyDataErrorInfo`.
+
+```csharp
+AddError(nameof(Email), "Email không hợp lệ");
+```
+
+Binding cần bật validation:
+
+```xml
+Text="{Binding Email, UpdateSourceTrigger=PropertyChanged,
+       ValidatesOnNotifyDataErrors=True}"
+```
+
+- Validation định dạng đơn giản có thể nằm ở ViewModel.
+- Business rule cần database phải nằm ở service.
+- Không dùng nhiều cơ chế báo lỗi khác nhau cho từng module.
+
+## 8. Thông báo và xác nhận
+
+Dùng:
+
+```csharp
+Notify.Success("Lưu thành công");
+Notify.Error("Không thể lưu dữ liệu");
+Notify.Warning("Dữ liệu chưa đầy đủ");
+Notify.Info("Đang xử lý");
+```
+
+`MessageBox` chỉ dành cho:
+
+- Lỗi nghiêm trọng khi khởi động.
+- Xác nhận hành động phá hủy như xóa/hủy.
+
+Thông báo không được lộ exception kỹ thuật, SQL hoặc connection string cho người dùng.
+
+## 9. Theme và style
+
+Tài nguyên dùng chung nằm tại:
+
+- `Themes/Colors.xaml`.
+- `Themes/Typography.xaml`.
+- `Themes/Controls.xaml`.
+
+Quy tắc:
+
+- Không hardcode mã màu trong module.
+- Không hardcode `FontSize` nếu đã có typography token.
+- Không tự tạo corner radius ngoài hệ thống đã thống nhất.
+- Accent duy nhất là `BrandBrush`.
+- Màu trạng thái chỉ dùng đúng ý nghĩa success/warning/danger/info.
+- Control phức tạp ưu tiên HandyControl.
+- Mỗi màn chỉ có một primary action.
+
+Đọc thêm [Quy ước giao diện](QUY_UOC_GIAO_DIEN.md).
+
+## 10. Danh sách và bảng
+
+**Phương án B (đã chốt) — danh sách chính dạng card-row có ảnh:**
+
+- Đối tượng có hình ảnh/đại diện (phòng, loại phòng, khách, món dịch vụ…) hiển thị bằng
+  card-row: thumbnail 64×46 bo góc 8 bên trái, tên đậm + dòng phụ caption, badge trạng thái,
+  giá trị chính (giá tiền…) căn phải, nút hành động Ghost nhỏ ngoài cùng.
+- Card-row: nền `CardBrush`, viền `LineBrush`, bo 12, cách nhau 8px.
+- Double-click card mở chi tiết (nếu có màn chi tiết).
+- `DataGrid` chỉ dùng cho dữ liệu thuần số/bảng báo cáo — style đã có sẵn app-wide.
+- Trạng thái dùng badge; danh sách rỗng có hướng dẫn ngắn; đang tải có loading indicator.
+- Có tìm kiếm/lọc ở ViewModel; toolbar có dòng đếm tổng ("6 phòng · 6 đang dùng").
+
+## 11. Dialog
+
+- Dialog tạo/sửa dùng ViewModel riêng khi form phức tạp.
+- Header màu phân biệt: XANH (`BrandSoft`) khi thêm mới, VÀNG (`WarningSoft`) khi đang sửa,
+  kèm icon tròn + phụ đề.
+- Có khối ảnh xem trước khi đối tượng có ảnh; bấm vào ảnh để chọn file từ máy
+  (`RoomImages.SetCustomImage`).
+- Validate trước khi đóng.
+- Disable nút lưu khi đang xử lý.
+- Xóa/hủy cần xác nhận.
+- Không đóng dialog nếu service trả lỗi.
+- Sau khi thành công, tải lại hoặc cập nhật collection theo một chiến lược nhất quán.
+
+## 12. Phân quyền giao diện
+
+Vai trò hiện có:
+
+- Admin.
+- Manager.
+- Receptionist.
+- ServiceStaff.
+
+Frontend có thể ẩn hoặc disable chức năng không được phép, nhưng service vẫn phải kiểm tra
+quyền. Không coi việc ẩn nút là cơ chế bảo mật duy nhất.
+
+## 13. Các module cần triển khai
+
+Khung hiện đã có đăng nhập, navigation và module Phòng. Các module còn lại cần thay
+`PlaceholderViewModel` bằng ViewModel thật:
+
+- Đặt phòng.
+- Check-in/Check-out.
+- Khách hàng.
+- Dịch vụ.
+- Hóa đơn.
+- Báo cáo.
+- Người dùng.
+
+Cấu trúc gợi ý cho một module:
+
+```text
+ViewModels/Xxx/
+├── XxxListViewModel.cs
+├── XxxEditDialogViewModel.cs
+└── XxxRow.cs
+
+Views/Xxx/
+├── XxxListView.xaml
+└── XxxListView.xaml.cs
+
+Views/Dialogs/
+├── XxxEditDialog.xaml
+└── XxxEditDialog.xaml.cs
+```
+
+## 14. Accessibility và khả năng sử dụng
+
+- Bảo đảm tab order hợp lý.
+- Nút icon phải có tooltip hoặc accessible name.
+- Không truyền đạt trạng thái chỉ bằng màu.
+- Nội dung phải đọc được ở kích thước cửa sổ tối thiểu 1100×680.
+- Không để text bị cắt khi nội dung dài.
+- Focus phải quay về vị trí hợp lý sau khi đóng dialog.
+- Kiểm tra thao tác chính bằng bàn phím.
+
+## 15. Checklist trước khi mở PR
+
+- [ ] Module chỉ sử dụng XAML, ViewModel và các service của solution.
+- [ ] View chỉ bind; không chứa business rule.
+- [ ] ViewModel chỉ gọi service.
+- [ ] I/O dùng `AsyncRelayCommand`.
+- [ ] Không dùng `.Result` hoặc `.Wait()`.
+- [ ] Form dùng cơ chế validation chung.
+- [ ] Có loading, empty và error state.
+- [ ] Dùng theme token; không hardcode màu và cỡ chữ.
+- [ ] Danh sách chính theo card-row phương án B; DataGrid chỉ cho bảng số liệu.
+- [ ] Navigation dùng `NavigationService`.
+- [ ] Đã thêm DataTemplate vào `ViewMappings.xaml`.
+- [ ] Đã kiểm tra quyền hiển thị.
+- [ ] Đã kiểm tra cửa sổ 1100×680 và keyboard navigation.
+- [ ] Không có binding error trong Output window.
+- [ ] `dotnet build FUHotelManagement.slnx` thành công.

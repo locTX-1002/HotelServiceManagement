@@ -17,6 +17,10 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
         public decimal BasePrice => Room.RoomType?.BasePrice ?? 0;
         public string ActiveText => Room.IsActive ? "Đang dùng" : "Ngừng dùng";
 
+        /// <summary>Dong phu tren card-row: "Standard · Tầng 1 · 2 khách".</summary>
+        public string SubText => $"{TypeName} · Tầng {Room.Floor} · {Capacity} khách";
+        public string PriceText => $"{BasePrice:N0} đ/đêm";
+
         /// <summary>Thumbnail theo LOAI phong - xem RoomImages de biet cach map/thay anh.</summary>
         public string ThumbnailSource => RoomImages.Thumbnail(TypeName);
 

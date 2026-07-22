@@ -48,14 +48,22 @@
                 </StackPanel>
             </Border>
 
-            <!-- Anh dai dien doi theo ten loai dang go (suite/deluxe/family/standard) -->
-            <Border Height="128" Margin="20,16,20,0" CornerRadius="10">
+            <!-- Anh dai dien doi theo ten loai dang go; BAM vao de chon anh tu may -->
+            <Border Height="128" Margin="20,16,20,0" CornerRadius="10" Cursor="Hand"
+                    ToolTip="Bấm để chọn ảnh khác từ máy của bạn">
                 <Border.Background>
                     <ImageBrush ImageSource="{Binding PreviewImage}" Stretch="UniformToFill" />
                 </Border.Background>
+                <Border.InputBindings>
+                    <MouseBinding Gesture="LeftClick" Command="{Binding ChooseImageCommand}" />
+                </Border.InputBindings>
                 <Border CornerRadius="999" Background="#A6000000" Padding="10,4"
                         HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="10,0,0,10">
-                    <TextBlock Text="Ảnh đại diện theo tên loại" Foreground="White" FontSize="10.5" />
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE722;" Style="{StaticResource IconText}" FontSize="11"
+                                   Foreground="White" Margin="0,0,6,0" />
+                        <TextBlock Text="Bấm để đổi ảnh" Foreground="White" FontSize="10.5" />
+                    </StackPanel>
                 </Border>
             </Border>
 

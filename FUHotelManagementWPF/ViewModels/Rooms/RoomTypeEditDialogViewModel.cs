@@ -81,6 +81,7 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
         }
 
         public AsyncRelayCommand SaveCommand { get; }
+        public RelayCommand ChooseImageCommand { get; }
 
         public RoomTypeEditDialogViewModel(RoomType? existing)
         {
@@ -95,6 +96,38 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
             }
 
             SaveCommand = new AsyncRelayCommand(SaveAsync, _ => !IsBusy);
+            ChooseImageCommand = new RelayCommand(_ => ChooseImage());
+        }
+
+        /// <summary>Bam vao anh -> chon file tu may cho loai phong nay.</summary>
+        private void ChooseImage()
+        {
+            if (string.IsNullOrWhiteSpace(TypeName))
+            {
+                Notify.Warning("Nhập tên loại phòng trước rồi mới đổi ảnh.");
+                return;
+            }
+
+            var dialog = new Microsoft.Win32.OpenFileDialog
+            {
+                Title = $"Chọn ảnh cho loại phòng {TypeName}",
+                Filter = "Ảnh|*.jpg;*.jpeg;*.png",
+            };
+            if (dialog.ShowDialog() != true)
+            {
+                return;
+            }
+
+            try
+            {
+                RoomImages.SetCustomImage(TypeName, dialog.FileName);
+                OnPropertyChanged(nameof(PreviewImage));
+                Notify.Success($"Đã đổi ảnh loại phòng {TypeName}.");
+            }
+            catch (Exception)
+            {
+                Notify.Error("Không sao chép được ảnh. Kiểm tra file rồi thử lại.");
+            }
         }
 
         private async Task SaveAsync(object? _)

@@ -27,8 +27,16 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
         public bool IsLoading
         {
             get => _isLoading;
-            set => SetProperty(ref _isLoading, value);
+            set
+            {
+                if (SetProperty(ref _isLoading, value))
+                {
+                    OnPropertyChanged(nameof(IsEmpty));
+                }
+            }
         }
+
+        public bool IsEmpty => !IsLoading && Rows.Count == 0;
 
         private string _searchText = string.Empty;
         public string SearchText
@@ -87,6 +95,7 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
                     Rows.Add(new RoomRow(room));
                 }
                 OnPropertyChanged(nameof(TotalText));
+                OnPropertyChanged(nameof(IsEmpty));
             }
             catch (Exception)
             {

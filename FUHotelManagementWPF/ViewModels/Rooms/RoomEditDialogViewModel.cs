@@ -38,11 +38,12 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
             set => SetProperty(ref _roomNumber, value);
         }
 
-        private string _floorText = "1";
-        public string FloorText
+        // Tang chon bang NumericUpDown (khong nhap tay) - HC dung double
+        private double _floorValue = 1;
+        public double FloorValue
         {
-            get => _floorText;
-            set => SetProperty(ref _floorText, value);
+            get => _floorValue;
+            set => SetProperty(ref _floorValue, value);
         }
 
         private List<RoomType> _roomTypes = [];
@@ -96,6 +97,7 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
         }
 
         public AsyncRelayCommand SaveCommand { get; }
+        public RelayCommand ChooseImageCommand { get; }
 
         public RoomEditDialogViewModel(Room? existing)
         {
@@ -118,7 +120,7 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
             if (existing != null)
             {
                 _roomNumber = existing.RoomNumber;
-                _floorText = existing.Floor.ToString();
+                _floorValue = existing.Floor;
                 _isActive = existing.IsActive;
                 _selectedStatus = StatusOptions.First(o => o.Status == existing.Status);
             }
@@ -128,7 +130,39 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
             }
 
             SaveCommand = new AsyncRelayCommand(SaveAsync, _ => !IsBusy);
+            ChooseImageCommand = new RelayCommand(_ => ChooseImage());
             _ = LoadRoomTypesAsync();
+        }
+
+        /// <summary>Bam vao anh -> chon file tu may, ap cho LOAI phong dang chon.</summary>
+        private void ChooseImage()
+        {
+            if (SelectedRoomType == null)
+            {
+                Notify.Warning("Chọn loại phòng trước rồi mới đổi ảnh.");
+                return;
+            }
+
+            var dialog = new Microsoft.Win32.OpenFileDialog
+            {
+                Title = $"Chọn ảnh cho loại phòng {SelectedRoomType.TypeName}",
+                Filter = "Ảnh|*.jpg;*.jpeg;*.png",
+            };
+            if (dialog.ShowDialog() != true)
+            {
+                return;
+            }
+
+            try
+            {
+                RoomImages.SetCustomImage(SelectedRoomType.TypeName, dialog.FileName);
+                OnPropertyChanged(nameof(PreviewImage));
+                Notify.Success($"Đã đổi ảnh loại phòng {SelectedRoomType.TypeName}.");
+            }
+            catch (Exception)
+            {
+                Notify.Error("Không sao chép được ảnh. Kiểm tra file rồi thử lại.");
+            }
         }
 
         private async Task LoadRoomTypesAsync()
@@ -161,9 +195,10 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
                 AddError(nameof(RoomNumber), "Số phòng tối đa 20 ký tự.");
             }
 
-            if (!int.TryParse(FloorText, out var floor) || floor <= 0)
+            var floor = (int)Math.Round(FloorValue);
+            if (floor <= 0)
             {
-                AddError(nameof(FloorText), "Tầng phải là số nguyên lớn hơn 0.");
+                ErrorMessage = "Tầng phải lớn hơn 0.";
             }
 
             if (SelectedRoomType == null)

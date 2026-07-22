@@ -65,6 +65,9 @@ UserDAO (Singleton) → UserRepository → AuthService → LoginViewModel → Lo
   ```xml
   <Border Style="{StaticResource BadgeSuccess}"><TextBlock Text="Trống" /></Border>
   ```
+- **Đọc kỹ 2 tài liệu trước khi code màn hình mới:** [docs/FRONTEND_WPF.md](docs/FRONTEND_WPF.md)
+  (chuẩn code FE + cách cắm module) và [docs/QUY_UOC_GIAO_DIEN.md](docs/QUY_UOC_GIAO_DIEN.md)
+  (chuẩn thị giác — format card-row phương án B đã chốt).
 
 ## Phân chia 5 module gợi ý
 
