@@ -1,9 +1,10 @@
+using System.ComponentModel.DataAnnotations;
 using HotelServiceManagement.Domain.Enums;
 
-namespace HotelServiceManagement.Application.DTOs.Rooms
+namespace HotelServiceManagement.Application.DTOs.Rooms;
+
+public class UpdateRoomStatusRequest
 {
-    public class UpdateRoomStatusRequest
-    {
-        public RoomStatus Status { get; set; }
-    }
+    [EnumDataType(typeof(RoomStatus), ErrorMessage = "Room status is invalid.")]
+    public RoomStatus Status { get; set; }
 }

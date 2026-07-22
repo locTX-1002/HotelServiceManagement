@@ -306,48 +306,147 @@ namespace HotelServiceManagement.Infrastructure.Services
                 "Room updated successfully.");
         }
 
+        /// <summary>
+        /// Changes only the operational room status. Reserved and Occupied remain controlled by
+        /// reservation/check-in flows. Receptionist and ServiceStaff may handle cleaning; only
+        /// Admin/Manager may enter or leave Maintenance.
+        /// </summary>
         public async Task<AuthServiceResult<RoomResponse>> UpdateStatusAsync(
-            int id, RoomStatus status, bool canManageMaintenance)
+            int id,
+            UpdateRoomStatusRequest request,
+            bool canManageMaintenance)
         {
             if (id <= 0)
             {
-                return AuthServiceResult<RoomResponse>.Failure("Room id must be greater than 0.");
+                return AuthServiceResult<RoomResponse>.Failure(
+                    "Room id must be greater than 0.");
             }
 
-            if (!Enum.IsDefined(typeof(RoomStatus), status))
+            if (request == null)
             {
-                return AuthServiceResult<RoomResponse>.Failure("Room status is invalid.");
+                return AuthServiceResult<RoomResponse>.Failure(
+                    "Request body is required.");
+            }
+
+            if (!Enum.IsDefined(typeof(RoomStatus), request.Status))
+            {
+                return AuthServiceResult<RoomResponse>.Failure(
+                    "Room status is invalid.");
+            }
+
+            if (request.Status == RoomStatus.Reserved
+                || request.Status == RoomStatus.Occupied)
+            {
+                return AuthServiceResult<RoomResponse>.Failure(
+                    "Reserved and Occupied statuses can only be set by Reservation/Stay flows.",
+                    409);
             }
 
             var room = await QueryRooms().FirstOrDefaultAsync(r => r.Id == id);
             if (room == null)
             {
-                return AuthServiceResult<RoomResponse>.Failure("Room not found.", 404);
+                return AuthServiceResult<RoomResponse>.Failure(
+                    "Room not found.", 404);
             }
 
-            if (room.Status == status)
-            {
-                return AuthServiceResult<RoomResponse>.Success(ToResponse(room), "Room status is unchanged.");
-            }
-
-            var allowed = (room.Status, status) switch
-            {
-                (RoomStatus.Cleaning, RoomStatus.Available) => true,
-                (RoomStatus.Available, RoomStatus.Cleaning) => true,
-                (RoomStatus.Available, RoomStatus.Maintenance) => canManageMaintenance,
-                (RoomStatus.Maintenance, RoomStatus.Available) => canManageMaintenance,
-                _ => false
-            };
-
-            if (!allowed)
+            if (!room.IsActive)
             {
                 return AuthServiceResult<RoomResponse>.Failure(
-                    $"Invalid room status transition from {room.Status} to {status}.", 409);
+                    "Inactive room status cannot be changed through the operational endpoint.",
+                    409);
             }
 
-            room.Status = status;
+            if (room.Status == request.Status)
+            {
+                return AuthServiceResult<RoomResponse>.Success(
+                    ToResponse(room),
+                    "Room status is unchanged.");
+            }
+
+            var hasActiveStay = await _context.Stays.AnyAsync(s =>
+                s.Reservation.RoomId == id
+                && s.Status == StayStatus.Active);
+
+            var hasCheckedInReservation = await _context.Reservations.AnyAsync(r =>
+                r.RoomId == id
+                && r.Status == ReservationStatus.CheckedIn);
+
+            if (hasActiveStay || hasCheckedInReservation)
+            {
+                return AuthServiceResult<RoomResponse>.Failure(
+                    "Room with an active stay must remain Occupied.",
+                    409);
+            }
+
+            var hasPendingOrConfirmedReservation =
+                await _context.Reservations.AnyAsync(r =>
+                    r.RoomId == id
+                    && (r.Status == ReservationStatus.Pending
+                        || r.Status == ReservationStatus.Confirmed));
+
+            switch (room.Status)
+            {
+                case RoomStatus.Available when request.Status == RoomStatus.Cleaning:
+                    if (hasPendingOrConfirmedReservation)
+                    {
+                        return AuthServiceResult<RoomResponse>.Failure(
+                            "Room with a Pending or Confirmed reservation cannot be marked Cleaning.",
+                            409);
+                    }
+
+                    room.Status = RoomStatus.Cleaning;
+                    break;
+
+                case RoomStatus.Cleaning when request.Status == RoomStatus.Available:
+                    // Cleaning is finished. If a booking is already waiting, return to Reserved
+                    // instead of exposing the room as Available.
+                    room.Status = hasPendingOrConfirmedReservation
+                        ? RoomStatus.Reserved
+                        : RoomStatus.Available;
+                    break;
+
+                case RoomStatus.Available when request.Status == RoomStatus.Maintenance:
+                    if (!canManageMaintenance)
+                    {
+                        return AuthServiceResult<RoomResponse>.Failure(
+                            "Only Admin or Manager can place a room under maintenance.",
+                            403);
+                    }
+
+                    if (hasPendingOrConfirmedReservation)
+                    {
+                        return AuthServiceResult<RoomResponse>.Failure(
+                            "Room with a Pending or Confirmed reservation cannot enter Maintenance.",
+                            409);
+                    }
+
+                    room.Status = RoomStatus.Maintenance;
+                    break;
+
+                case RoomStatus.Maintenance when request.Status == RoomStatus.Available:
+                    if (!canManageMaintenance)
+                    {
+                        return AuthServiceResult<RoomResponse>.Failure(
+                            "Only Admin or Manager can release a room from maintenance.",
+                            403);
+                    }
+
+                    room.Status = hasPendingOrConfirmedReservation
+                        ? RoomStatus.Reserved
+                        : RoomStatus.Available;
+                    break;
+
+                default:
+                    return AuthServiceResult<RoomResponse>.Failure(
+                        $"Invalid room status transition from {room.Status} to {request.Status}.",
+                        409);
+            }
+
             await _context.SaveChangesAsync();
-            return AuthServiceResult<RoomResponse>.Success(ToResponse(room), "Room status updated successfully.");
+
+            return AuthServiceResult<RoomResponse>.Success(
+                ToResponse(room),
+                "Room status updated successfully.");
         }
 
         /// <summary>

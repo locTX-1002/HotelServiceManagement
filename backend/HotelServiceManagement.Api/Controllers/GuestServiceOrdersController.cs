@@ -16,7 +16,8 @@ namespace HotelServiceManagement.Api.Controllers
     {
         private readonly IGuestServiceOrderService _guestServiceOrderService;
 
-        public GuestServiceOrdersController(IGuestServiceOrderService guestServiceOrderService)
+        public GuestServiceOrdersController(
+            IGuestServiceOrderService guestServiceOrderService)
         {
             _guestServiceOrderService = guestServiceOrderService;
         }
@@ -27,34 +28,47 @@ namespace HotelServiceManagement.Api.Controllers
             return ToActionResult(await _guestServiceOrderService.GetCatalogAsync());
         }
 
-        [HttpPost("me/service-orders")]
-        public async Task<IActionResult> CreateOrder([FromBody] GuestCreateServiceOrderRequest request)
-        {
-            var guestId = GetCurrentGuestId();
-            if (guestId == null)
-            {
-                return Unauthorized(new AuthMessageResponse { Message = "Invalid guest identity in token." });
-            }
-
-            return ToActionResult(await _guestServiceOrderService.CreateOrderAsync(guestId.Value, request));
-        }
-
         [HttpGet("me/service-orders")]
         public async Task<IActionResult> GetMyOrders()
         {
             var guestId = GetCurrentGuestId();
             if (guestId == null)
             {
-                return Unauthorized(new AuthMessageResponse { Message = "Invalid guest identity in token." });
+                return Unauthorized(new AuthMessageResponse
+                {
+                    Message = "Invalid guest identity in token."
+                });
             }
 
-            return ToActionResult(await _guestServiceOrderService.GetOrdersAsync(guestId.Value));
+            return ToActionResult(
+                await _guestServiceOrderService.GetMyOrdersAsync(guestId.Value));
+        }
+
+        [HttpPost("me/service-orders")]
+        public async Task<IActionResult> CreateOrder(
+            [FromBody] GuestCreateServiceOrderRequest request)
+        {
+            var guestId = GetCurrentGuestId();
+            if (guestId == null)
+            {
+                return Unauthorized(new AuthMessageResponse
+                {
+                    Message = "Invalid guest identity in token."
+                });
+            }
+
+            return ToActionResult(
+                await _guestServiceOrderService.CreateOrderAsync(
+                    guestId.Value,
+                    request));
         }
 
         private int? GetCurrentGuestId()
         {
             var guestIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            return int.TryParse(guestIdClaim, out var guestId) ? guestId : null;
+            return int.TryParse(guestIdClaim, out var guestId) && guestId > 0
+                ? guestId
+                : null;
         }
 
         private IActionResult ToActionResult<T>(AuthServiceResult<T> result)

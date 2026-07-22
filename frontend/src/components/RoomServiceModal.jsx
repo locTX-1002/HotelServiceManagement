@@ -2,6 +2,15 @@ import { useEffect, useRef, useState } from 'react'
 import guestClient, { apiError } from '../api/guestClient'
 import { EASE } from '../utils/ui'
 import { formatVnd } from '../utils/roomStatus'
+import { normalizeServiceOrderStatus } from '../utils/apiShape'
+
+// Nhan trang thai don dich vu cho khach xem - khop enum ServiceOrderStatus (Pending/Processing/Completed/Cancelled)
+const ORDER_STATUS_LABEL = {
+  Pending: { label: 'Chờ xử lý', cls: 'bg-amber-50 text-amber-800 ring-amber-600/15' },
+  Processing: { label: 'Đang làm', cls: 'bg-sky-50 text-sky-700 ring-sky-600/15' },
+  Completed: { label: 'Đã xong', cls: 'bg-emerald-50 text-emerald-700 ring-emerald-600/15' },
+  Cancelled: { label: 'Đã huỷ', cls: 'bg-rose-50 text-rose-700 ring-rose-600/15' },
+}
 
 const HK_TYPES = [
   { value: 'Cleaning', label: 'Dọn phòng', desc: 'Nhân viên lên dọn phòng' },
@@ -31,15 +40,29 @@ export default function RoomServiceModal({ stay, onClose }) {
   const [orderError, setOrderError] = useState('')
   const orderBusyRef = useRef(false)
 
+  // --- Cac don da goi trong ky luu tru (FE-1) - de khach xem lai da goi gi, tam tinh bao nhieu ---
+  const [myOrders, setMyOrders] = useState([])
+
   useEffect(() => {
     const onKey = (e) => e.key === 'Escape' && onClose()
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose])
 
-  // Chi tai danh muc khi khach thuc su mo tab "Do & dich vu" - khong tai san luc mo bang
+  // Tai lai danh sach don da goi - goi khi mo tab va sau moi lan gui don thanh cong.
+  // Loi thi im lang (khong che khu goi mon moi) - danh sach chi la thong tin xem lai.
+  const loadMyOrders = () => {
+    guestClient
+      .get('/api/guest/me/service-orders')
+      .then((res) => setMyOrders((res.data ?? []).map((o) => ({ ...o, status: normalizeServiceOrderStatus(o.status) }))))
+      .catch(() => {})
+  }
+
+  // Chi tai danh muc + don da goi khi khach thuc su mo tab "Do & dich vu" - khong tai san luc mo bang
   useEffect(() => {
-    if (tab !== 'service' || catalog.length > 0 || catalogLoading) return
+    if (tab !== 'service') return
+    loadMyOrders()
+    if (catalog.length > 0 || catalogLoading) return
     setCatalogLoading(true)
     guestClient
       .get('/api/guest/service-items')
@@ -75,7 +98,7 @@ export default function RoomServiceModal({ stay, onClose }) {
       .post('/api/guest/me/service-orders', {
         items: lines.map((l) => ({ serviceItemId: l.id, quantity: l.quantity })),
       })
-      .then((res) => { setOrderSent(formatVnd(res.data.totalAmount)); setQty({}) })
+      .then((res) => { setOrderSent(formatVnd(res.data.totalAmount)); setQty({}); loadMyOrders() })
       .catch((err) => setOrderError(apiError(err)))
       .finally(() => { orderBusyRef.current = false })
   }
@@ -176,6 +199,36 @@ export default function RoomServiceModal({ stay, onClose }) {
                     Đã gửi đơn — tổng {orderSent}
                   </p>
                   <p className="mt-0.5 text-[12px] text-emerald-700">Tiền dịch vụ sẽ cộng vào hoá đơn khi trả phòng.</p>
+                </div>
+              )}
+              {/* Cac don da goi trong ky nay - khach xem lai da goi gi, tam tinh se tra bao nhieu luc check-out */}
+              {myOrders.length > 0 && (
+                <div className="mb-4 rounded-xl bg-white p-3.5 ring-1 ring-black/[0.06]">
+                  <div className="flex items-center justify-between">
+                    <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-ink-500">Đã gọi trong kỳ này</p>
+                    <p className="text-[13px] font-bold tabular-nums text-brand-700">
+                      {formatVnd(myOrders.filter((o) => o.status !== 'Cancelled').reduce((s, o) => s + o.totalAmount, 0))}
+                    </p>
+                  </div>
+                  <div className="mt-2.5 space-y-2">
+                    {myOrders.map((o) => {
+                      const st = ORDER_STATUS_LABEL[o.status] ?? ORDER_STATUS_LABEL.Pending
+                      return (
+                        <div key={o.id} className="rounded-lg bg-cream-50 px-3 py-2 ring-1 ring-black/[0.05]">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ring-1 ${st.cls}`}>
+                              {st.label}
+                            </span>
+                            <span className="text-[12px] font-bold tabular-nums text-ink-700">{formatVnd(o.totalAmount)}</span>
+                          </div>
+                          <p className="mt-1 truncate text-[12px] text-ink-500">
+                            {(o.details ?? []).map((d) => `${d.serviceName} ×${d.quantity}`).join(', ')}
+                          </p>
+                        </div>
+                      )
+                    })}
+                  </div>
+                  <p className="mt-2 text-[11px] text-ink-500">Tiền dịch vụ sẽ cộng vào hoá đơn khi trả phòng.</p>
                 </div>
               )}
               {!catalogLoading && !catalogError && catalog.length === 0 && (

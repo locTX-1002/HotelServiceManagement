@@ -7,7 +7,9 @@ namespace HotelServiceManagement.Application.Interfaces
     public interface IGuestServiceOrderService
     {
         Task<AuthServiceResult<IReadOnlyList<ServiceItemResponse>>> GetCatalogAsync();
-        Task<AuthServiceResult<ServiceOrderResponse>> CreateOrderAsync(int guestId, GuestCreateServiceOrderRequest request);
-        Task<AuthServiceResult<IReadOnlyList<ServiceOrderResponse>>> GetOrdersAsync(int guestId);
+        Task<AuthServiceResult<IReadOnlyList<ServiceOrderResponse>>> GetMyOrdersAsync(int guestId);
+        Task<AuthServiceResult<ServiceOrderResponse>> CreateOrderAsync(
+            int guestId,
+            GuestCreateServiceOrderRequest request);
     }
 }

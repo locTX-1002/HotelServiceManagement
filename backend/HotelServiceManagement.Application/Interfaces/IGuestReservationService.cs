@@ -10,7 +10,12 @@ namespace HotelServiceManagement.Application.Interfaces
             DateTime checkOutDate,
             int? numberOfGuests);
 
-        Task<AuthServiceResult<ReservationResponse>> CreateAsync(int guestId, GuestCreateReservationRequest request);
-        Task<AuthServiceResult<AuthMessageResponse>> CancelAsync(int guestId, int reservationId);
+        Task<AuthServiceResult<ReservationResponse>> CreateAsync(
+            int guestId,
+            GuestCreateReservationRequest request);
+
+        Task<AuthServiceResult<AuthMessageResponse>> CancelAsync(
+            int guestId,
+            int reservationId);
     }
 }
