@@ -195,9 +195,21 @@
     </Style>
 
     <!-- DataGrid: hang chon nen NHAT chu van den (khong duoc xanh dam nuot chu),
-         cell can giua doc, bo vien focus mac dinh -->
+         cell can giua doc, bo vien focus mac dinh. Bang boc trong Card, header
+         chu nho dam mo, hang ngan cach bang hairline -->
+    <Style TargetType="DataGridColumnHeader">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{StaticResource InkSoftBrush}" />
+        <Setter Property="FontSize" Value="11" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="Padding" Value="8,10" />
+        <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
+        <Setter Property="BorderThickness" Value="0,0,0,1" />
+    </Style>
     <Style TargetType="DataGridRow">
         <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
+        <Setter Property="BorderThickness" Value="0,0,0,1" />
         <Style.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
                 <Setter Property="Background" Value="#0A000000" />

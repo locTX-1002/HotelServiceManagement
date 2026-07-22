@@ -19,12 +19,12 @@
                             Stretch="UniformToFill" />
             </Border.Background>
             <Grid ClipToBounds="True">
-                <!-- Lop phu toi de chu luon doc duoc tren anh -->
+                <!-- Lop phu toi vua du de chu doc duoc ma van thay ro anh -->
                 <Border>
                     <Border.Background>
                         <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                            <GradientStop Color="#8027492D" Offset="0" />
-                            <GradientStop Color="#B31E3826" Offset="1" />
+                            <GradientStop Color="#4D27492D" Offset="0" />
+                            <GradientStop Color="#8C1E3826" Offset="1" />
                         </LinearGradientBrush>
                     </Border.Background>
                 </Border>

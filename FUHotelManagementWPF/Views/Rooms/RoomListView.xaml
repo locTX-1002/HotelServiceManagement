@@ -21,7 +21,8 @@
             </StackPanel>
         </DockPanel>
 
-        <DataGrid x:Name="RoomsGrid" Grid.Row="1" ItemsSource="{Binding RowsView}"
+        <Border Grid.Row="1" Style="{StaticResource Card}" Padding="10,4">
+        <DataGrid x:Name="RoomsGrid" ItemsSource="{Binding RowsView}"
                   AutoGenerateColumns="False" IsReadOnly="True"
                   CanUserAddRows="False" HeadersVisibility="Column"
                   SelectionMode="Single" SelectionUnit="FullRow"
@@ -74,5 +75,6 @@
                 </DataGridTemplateColumn>
             </DataGrid.Columns>
         </DataGrid>
+        </Border>
     </Grid>
 </UserControl>

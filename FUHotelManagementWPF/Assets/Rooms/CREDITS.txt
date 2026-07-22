@@ -12,3 +12,10 @@ family-1.jpg  <-  File:Day 3- Good night Danbo (8407710635).jpg
 family-2.jpg  <-  File:Forest Of Hope Guest House.jpg
 family-3.jpg  <-  File:Hotel Pera Palace - Istanbul.jpg
 login-side-1.jpg  <-  File:Atrium of Granada Luxury Belek Hotel.jpg
+# Tai lai deluxe/family:
+deluxe-1.jpg  <-  File:2020-09-24 21 06 58 A room with a single king-size bed at the Ramada by Wyndham Rochelle Park in Rochelle Park Township, Bergen County, New Jersey.jpg
+deluxe-2.jpg  <-  File:2020-09-24 21 07 09 A room with a single king-size bed at the Ramada by Wyndham Rochelle Park in Rochelle Park Township, Bergen County, New Jersey.jpg
+deluxe-3.jpg  <-  File:2020-09-24 21 07 24 A room with a single king-size bed at the Ramada by Wyndham Rochelle Park in Rochelle Park Township, Bergen County, New Jersey.jpg
+family-1.jpg  <-  File:Deluxe Room - Twin beds.jpg
+family-2.jpg  <-  File:Hotel Kasererbräu, Salzburg - Zimmer 323 (05).jpg
+family-3.jpg  <-  File:N1 Hotel Bulawayo Twin.jpg
