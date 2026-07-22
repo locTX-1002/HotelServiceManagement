@@ -48,7 +48,7 @@
                     <Button Style="{StaticResource GalleryArrow}" Content="&#xE76C;"
                             HorizontalAlignment="Right" Margin="0,0,12,0"
                             Command="{Binding NextCommand}" />
-                    <Border CornerRadius="999" Background="#99000000" Padding="10,4"
+                    <Border CornerRadius="12" Background="#99000000" Padding="10,4"
                             HorizontalAlignment="Right" VerticalAlignment="Bottom"
                             Margin="0,0,12,10">
                         <TextBlock Text="{Binding Counter}" Foreground="White" FontSize="11.5" />

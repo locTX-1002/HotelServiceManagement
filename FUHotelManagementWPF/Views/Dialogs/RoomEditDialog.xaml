@@ -58,7 +58,7 @@
                 <Border.InputBindings>
                     <MouseBinding Gesture="LeftClick" Command="{Binding ChooseImageCommand}" />
                 </Border.InputBindings>
-                <Border CornerRadius="999" Background="#A6000000" Padding="10,4"
+                <Border CornerRadius="12" Background="#A6000000" Padding="10,4"
                         HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="10,0,0,10">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="&#xE722;" Style="{StaticResource IconText}" FontSize="11"
