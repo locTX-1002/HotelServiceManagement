@@ -25,7 +25,7 @@
                  Visibility="{Binding HasOptions, Converter={StaticResource BoolToVis}}" />
 
         <!-- Khong co buoc chuyen nao -->
-        <Border CornerRadius="8" Padding="12,10" Background="{StaticResource InfoSoftBrush}">
+        <Border CornerRadius="4" Padding="12,10" Background="{StaticResource InfoSoftBrush}">
             <Border.Style>
                 <Style TargetType="Border">
                     <Setter Property="Visibility" Value="Collapsed" />
@@ -40,7 +40,7 @@
                        TextWrapping="Wrap" MaxWidth="330" />
         </Border>
 
-        <Border Margin="0,12,0,0" CornerRadius="8" Padding="10,8"
+        <Border Margin="0,12,0,0" CornerRadius="4" Padding="10,8"
                 Background="{StaticResource DangerSoftBrush}">
             <Border.Style>
                 <Style TargetType="Border">

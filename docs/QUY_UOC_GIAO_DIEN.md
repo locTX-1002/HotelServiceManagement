@@ -3,17 +3,23 @@
 Áp cho MỌI màn hình WPF trong app. Mục tiêu: nhìn như sản phẩm được thiết kế có chủ đích,
 không phải template AI sinh hàng loạt. Đọc trước khi làm module, soi lại trước khi mở PR.
 
-## 1. Hệ bo góc — MỘT hệ duy nhất, có lý do
+## 1. Hệ bo góc — MỘT mức duy nhất: 4px
+
+**Mọi khối chữ nhật bo 4px.** Không pill, không 8/10/12 — đồng bộ tuyệt đối, tránh cảm giác
+"bong bóng AI".
 
 | Thành phần | Bo góc |
 |---|---|
-| Nút (Primary/Ghost) | pill (999) |
-| Ô nhập (TextBox/PasswordBox/ComboBox) | 8 |
-| Card, dialog, panel nội dung | 12 |
-| Item điều hướng, khối phụ | 10 |
-| Badge | pill (999) |
+| Nút (Primary/Ghost) | 4 |
+| Ô nhập (TextBox/PasswordBox/ComboBox) | 4 |
+| Card, dialog, panel nội dung | 4 |
+| Item điều hướng, khối phụ, badge | 4 |
 
-Cấm chế thêm giá trị mới. Trộn "nút vuông cạnh card tròn" = fail review.
+**Ngoại lệ — hình tròn hoàn hảo (width = height):** logo FU, avatar chữ cái, chấm trạng thái,
+nút icon tròn (mũi tên gallery) dùng `CornerRadius=999` để thành hình tròn. Đây là "huy hiệu
+tròn" nhận diện, KHÔNG phải bo góc — được phép.
+
+Cấm chế thêm giá trị bo góc khác (6, 8, 10, 12…). Khối nào cần bo thì đúng 4.
 
 ## 2. Chiều sâu — double-bezel, không đổ bóng gắt
 

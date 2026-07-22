@@ -38,6 +38,22 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
 
         public bool IsEmpty => !IsLoading && Rows.Count == 0;
 
+        // D3 master-detail: chon dong ben trai -> panel chi tiet ben phai
+        private RoomRow? _selectedRow;
+        public RoomRow? SelectedRow
+        {
+            get => _selectedRow;
+            set
+            {
+                if (SetProperty(ref _selectedRow, value))
+                {
+                    OnPropertyChanged(nameof(HasSelection));
+                }
+            }
+        }
+
+        public bool HasSelection => _selectedRow != null;
+
         private string _searchText = string.Empty;
         public string SearchText
         {
@@ -52,8 +68,8 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
         }
 
         public RelayCommand AddCommand { get; }
-        public RelayCommand DetailCommand { get; }
         public RelayCommand EditCommand { get; }
+        public RelayCommand ChangeStatusCommand { get; }
         public AsyncRelayCommand DeleteCommand { get; }
 
         public RoomListViewModel(Func<Task> refreshAll)
@@ -61,22 +77,25 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
             _refreshAll = refreshAll;
             RowsView = new ListCollectionView(Rows) { Filter = FilterRow };
             AddCommand = new RelayCommand(_ => OpenEditDialog(null));
-            DetailCommand = new RelayCommand(OpenDetailDialog);
             EditCommand = new RelayCommand(p => OpenEditDialog(p as RoomRow));
+            ChangeStatusCommand = new RelayCommand(_ => OpenStatusDialog());
             DeleteCommand = new AsyncRelayCommand(DeleteAsync);
         }
 
-        private void OpenDetailDialog(object? parameter)
+        private async void OpenStatusDialog()
         {
-            if (parameter is not RoomRow row)
+            if (SelectedRow == null)
             {
                 return;
             }
-
-            new RoomDetailDialog(new RoomDetailDialogViewModel(row.Room))
+            var dialog = new RoomStatusDialog(new RoomStatusDialogViewModel(SelectedRow.Room))
             {
                 Owner = RoomMapViewModel.ActiveWindow(),
-            }.ShowDialog();
+            };
+            if (dialog.ShowDialog() == true)
+            {
+                await _refreshAll();
+            }
         }
 
         /// <summary>Dong tom tat canh o tim kiem, lap khoang trong toolbar.</summary>

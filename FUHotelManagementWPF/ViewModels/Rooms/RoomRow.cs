@@ -21,6 +21,12 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
         public string SubText => $"{TypeName} · Tầng {Room.Floor} · {Capacity} khách";
         public string PriceText => $"{BasePrice:N0} đ/đêm";
 
+        // Cho panel chi tiet (D3 master-detail)
+        public string FloorText => $"Tầng {Room.Floor}";
+        public string CapacityText => $"{Capacity} khách";
+        public string? DescriptionText => Room.RoomType?.Description;
+        public bool HasDescription => !string.IsNullOrWhiteSpace(DescriptionText);
+
         /// <summary>Thumbnail theo LOAI phong - xem RoomImages de biet cach map/thay anh.</summary>
         public string ThumbnailSource => RoomImages.Thumbnail(TypeName);
 

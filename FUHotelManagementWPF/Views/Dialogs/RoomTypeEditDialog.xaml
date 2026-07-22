@@ -11,7 +11,7 @@
         <StackPanel>
 
             <!-- Header: XANH = them moi, VANG = dang sua -->
-            <Border CornerRadius="11,11,0,0" Padding="20,15">
+            <Border CornerRadius="4,4,0,0" Padding="20,15">
                 <Border.Style>
                     <Style TargetType="Border">
                         <Setter Property="Background" Value="{StaticResource BrandSoftBrush}" />
@@ -49,7 +49,7 @@
             </Border>
 
             <!-- Anh dai dien doi theo ten loai dang go; BAM vao de chon anh tu may -->
-            <Border Height="128" Margin="20,16,20,0" CornerRadius="10" Cursor="Hand"
+            <Border Height="128" Margin="20,16,20,0" CornerRadius="4" Cursor="Hand"
                     ToolTip="Bấm để chọn ảnh khác từ máy của bạn">
                 <Border.Background>
                     <ImageBrush ImageSource="{Binding PreviewImage}" Stretch="UniformToFill" />
@@ -57,7 +57,7 @@
                 <Border.InputBindings>
                     <MouseBinding Gesture="LeftClick" Command="{Binding ChooseImageCommand}" />
                 </Border.InputBindings>
-                <Border CornerRadius="12" Background="#A6000000" Padding="10,4"
+                <Border CornerRadius="4" Background="#A6000000" Padding="10,4"
                         HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="10,0,0,10">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="&#xE722;" Style="{StaticResource IconText}" FontSize="11"
@@ -95,7 +95,7 @@
 
                 <CheckBox Content="Đang sử dụng" IsChecked="{Binding IsActive}" Margin="0,14,0,0" />
 
-                <Border Margin="0,13,0,0" CornerRadius="8" Padding="10,8"
+                <Border Margin="0,13,0,0" CornerRadius="4" Padding="10,8"
                         Background="{StaticResource DangerSoftBrush}">
                     <Border.Style>
                         <Style TargetType="Border">

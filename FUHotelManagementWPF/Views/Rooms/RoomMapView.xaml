@@ -109,7 +109,7 @@
                         <!-- Card: anh loai phong (16:9) + so phong + cham trang thai -->
                         <Border Background="{StaticResource CardBrush}"
                                 BorderBrush="{StaticResource LineBrush}" BorderThickness="1"
-                                CornerRadius="12" Margin="0,0,10,10"
+                                CornerRadius="4" Margin="0,0,10,10"
                                 Cursor="Hand" ToolTip="Bấm để đổi trạng thái vận hành">
                             <Border.InputBindings>
                                 <MouseBinding Gesture="LeftClick"
@@ -123,7 +123,7 @@
                                     <RowDefinition Height="Auto" />
                                 </Grid.RowDefinitions>
                                 <!-- Thumbnail theo loai phong - bo goc tren khop card -->
-                                <Border Grid.Row="0" CornerRadius="11,11,0,0">
+                                <Border Grid.Row="0" CornerRadius="4,4,0,0">
                                     <Border.Background>
                                         <ImageBrush ImageSource="{Binding ThumbnailSource}"
                                                     Stretch="UniformToFill" />

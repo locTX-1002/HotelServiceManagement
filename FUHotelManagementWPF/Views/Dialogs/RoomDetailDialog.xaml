@@ -37,7 +37,7 @@
             Margin="16" Padding="0">
         <StackPanel>
             <!-- Gallery: anh lon + mui ten chuyen + bo dem -->
-            <Border Height="300" CornerRadius="11,11,0,0">
+            <Border Height="300" CornerRadius="4,4,0,0">
                 <Border.Background>
                     <ImageBrush ImageSource="{Binding CurrentImage}" Stretch="UniformToFill" />
                 </Border.Background>
@@ -48,7 +48,7 @@
                     <Button Style="{StaticResource GalleryArrow}" Content="&#xE76C;"
                             HorizontalAlignment="Right" Margin="0,0,12,0"
                             Command="{Binding NextCommand}" />
-                    <Border CornerRadius="12" Background="#99000000" Padding="10,4"
+                    <Border CornerRadius="4" Background="#99000000" Padding="10,4"
                             HorizontalAlignment="Right" VerticalAlignment="Bottom"
                             Margin="0,0,12,10">
                         <TextBlock Text="{Binding Counter}" Foreground="White" FontSize="11.5" />

@@ -33,7 +33,7 @@
 
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                     <!-- User chip -->
-                    <Border CornerRadius="18" Background="{StaticResource SurfaceBrush}"
+                    <Border CornerRadius="4" Background="{StaticResource SurfaceBrush}"
                             BorderBrush="{StaticResource LineBrush}" BorderThickness="1"
                             Padding="5,4" Margin="0,0,10,0">
                         <StackPanel Orientation="Horizontal">

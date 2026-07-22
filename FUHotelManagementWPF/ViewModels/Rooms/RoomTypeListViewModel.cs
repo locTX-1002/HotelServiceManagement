@@ -24,6 +24,8 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
         public string CapacityText => $"{RoomType.Capacity} khách";
         public string PriceText => $"{RoomType.BasePrice:N0} đ/đêm";
         public string RoomCountText => $"{RoomCount} phòng";
+        public string? DescriptionText => RoomType.Description;
+        public bool HasDescription => !string.IsNullOrWhiteSpace(RoomType.Description);
 
         public RoomTypeRow(RoomType roomType) => RoomType = roomType;
     }
@@ -50,6 +52,22 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
         }
 
         public bool IsEmpty => !IsLoading && Rows.Count == 0;
+
+        // D3 master-detail
+        private RoomTypeRow? _selectedRow;
+        public RoomTypeRow? SelectedRow
+        {
+            get => _selectedRow;
+            set
+            {
+                if (SetProperty(ref _selectedRow, value))
+                {
+                    OnPropertyChanged(nameof(HasSelection));
+                }
+            }
+        }
+
+        public bool HasSelection => _selectedRow != null;
 
         public RelayCommand AddCommand { get; }
         public RelayCommand EditCommand { get; }
