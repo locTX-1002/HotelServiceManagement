@@ -12,16 +12,22 @@
             <ColumnDefinition Width="6*" />
         </Grid.ColumnDefinitions>
 
-        <!-- Panel thuong hieu ben trai -->
+        <!-- Panel thuong hieu ben trai: anh nen (thay Assets/Brand/login-side.png bang anh that khi co) -->
         <Border Grid.Column="0">
             <Border.Background>
-                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                    <GradientStop Color="#27492D" Offset="0" />
-                    <GradientStop Color="#34613C" Offset="0.65" />
-                    <GradientStop Color="#3E6E46" Offset="1" />
-                </LinearGradientBrush>
+                <ImageBrush ImageSource="pack://application:,,,/Assets/Brand/login-side.png"
+                            Stretch="UniformToFill" />
             </Border.Background>
             <Grid ClipToBounds="True">
+                <!-- Lop phu toi de chu luon doc duoc tren anh -->
+                <Border>
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                            <GradientStop Color="#8027492D" Offset="0" />
+                            <GradientStop Color="#B31E3826" Offset="1" />
+                        </LinearGradientBrush>
+                    </Border.Background>
+                </Border>
                 <!-- Monogram typographic co chu dich (thay cho blob/hoa tiet ngau nhien) -->
                 <TextBlock Text="FU" FontSize="300" FontWeight="Bold"
                            Foreground="#0DFFFFFF"
