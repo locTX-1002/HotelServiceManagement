@@ -53,6 +53,14 @@ namespace HotelServiceManagement.Api.Controllers
             return ToActionResult(await _roomService.UpdateAsync(id, request));
         }
 
+        [HttpPatch("{id:int}/status")]
+        [Authorize(Roles = "Admin,Manager,Receptionist,ServiceStaff")]
+        public async Task<IActionResult> UpdateStatus(int id, [FromBody] UpdateRoomStatusRequest request)
+        {
+            var canManageMaintenance = User.IsInRole("Admin") || User.IsInRole("Manager");
+            return ToActionResult(await _roomService.UpdateStatusAsync(id, request.Status, canManageMaintenance));
+        }
+
         [HttpDelete("{id:int}")]
         [Authorize(Roles = "Admin,Manager")]
         public async Task<IActionResult> Delete(int id)

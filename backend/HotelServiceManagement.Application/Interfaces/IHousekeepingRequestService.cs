@@ -6,8 +6,10 @@ namespace HotelServiceManagement.Application.Interfaces
     public interface IHousekeepingRequestService
     {
         Task<AuthServiceResult<HousekeepingRequestResponse>> CreateForGuestAsync(int guestId, string? requestType, string? note);
-        Task<AuthServiceResult<IReadOnlyList<HousekeepingRequestResponse>>> GetActiveAsync();
+        Task<AuthServiceResult<IReadOnlyList<HousekeepingRequestResponse>>> GetAsync(bool includeCompleted);
+        Task<AuthServiceResult<IReadOnlyList<HousekeepingRequestResponse>>> GetForGuestAsync(int guestId);
         Task<AuthServiceResult<HousekeepingRequestResponse>> AcknowledgeAsync(int id, int staffUserId);
         Task<AuthServiceResult<HousekeepingRequestResponse>> CompleteAsync(int id, int staffUserId);
+        Task<AuthServiceResult<HousekeepingRequestResponse>> CancelAsync(int id, int staffUserId);
     }
 }

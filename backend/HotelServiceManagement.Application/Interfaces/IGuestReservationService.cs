@@ -11,5 +11,6 @@ namespace HotelServiceManagement.Application.Interfaces
             int? numberOfGuests);
 
         Task<AuthServiceResult<ReservationResponse>> CreateAsync(int guestId, GuestCreateReservationRequest request);
+        Task<AuthServiceResult<AuthMessageResponse>> CancelAsync(int guestId, int reservationId);
     }
 }

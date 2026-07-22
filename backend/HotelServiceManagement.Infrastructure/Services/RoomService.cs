@@ -306,6 +306,50 @@ namespace HotelServiceManagement.Infrastructure.Services
                 "Room updated successfully.");
         }
 
+        public async Task<AuthServiceResult<RoomResponse>> UpdateStatusAsync(
+            int id, RoomStatus status, bool canManageMaintenance)
+        {
+            if (id <= 0)
+            {
+                return AuthServiceResult<RoomResponse>.Failure("Room id must be greater than 0.");
+            }
+
+            if (!Enum.IsDefined(typeof(RoomStatus), status))
+            {
+                return AuthServiceResult<RoomResponse>.Failure("Room status is invalid.");
+            }
+
+            var room = await QueryRooms().FirstOrDefaultAsync(r => r.Id == id);
+            if (room == null)
+            {
+                return AuthServiceResult<RoomResponse>.Failure("Room not found.", 404);
+            }
+
+            if (room.Status == status)
+            {
+                return AuthServiceResult<RoomResponse>.Success(ToResponse(room), "Room status is unchanged.");
+            }
+
+            var allowed = (room.Status, status) switch
+            {
+                (RoomStatus.Cleaning, RoomStatus.Available) => true,
+                (RoomStatus.Available, RoomStatus.Cleaning) => true,
+                (RoomStatus.Available, RoomStatus.Maintenance) => canManageMaintenance,
+                (RoomStatus.Maintenance, RoomStatus.Available) => canManageMaintenance,
+                _ => false
+            };
+
+            if (!allowed)
+            {
+                return AuthServiceResult<RoomResponse>.Failure(
+                    $"Invalid room status transition from {room.Status} to {status}.", 409);
+            }
+
+            room.Status = status;
+            await _context.SaveChangesAsync();
+            return AuthServiceResult<RoomResponse>.Success(ToResponse(room), "Room status updated successfully.");
+        }
+
         /// <summary>
         /// Rooms with active business data cannot be removed. Rooms with historical
         /// reservations are deactivated; only never-used rooms are physically deleted.

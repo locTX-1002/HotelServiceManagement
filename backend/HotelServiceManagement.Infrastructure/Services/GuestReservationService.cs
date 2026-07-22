@@ -2,6 +2,8 @@ using HotelServiceManagement.Application.DTOs.Auth;
 using HotelServiceManagement.Application.DTOs.Reservations;
 using HotelServiceManagement.Application.Interfaces;
 using HotelServiceManagement.Domain.Enums;
+using HotelServiceManagement.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace HotelServiceManagement.Infrastructure.Services
 {
@@ -12,10 +14,26 @@ namespace HotelServiceManagement.Infrastructure.Services
     public class GuestReservationService : IGuestReservationService
     {
         private readonly IReservationService _reservationService;
+        private readonly HotelDbContext _context;
 
-        public GuestReservationService(IReservationService reservationService)
+        public GuestReservationService(IReservationService reservationService, HotelDbContext context)
         {
             _reservationService = reservationService;
+            _context = context;
+        }
+
+        public async Task<AuthServiceResult<AuthMessageResponse>> CancelAsync(int guestId, int reservationId)
+        {
+            var belongsToGuest = await _context.Reservations
+                .AsNoTracking()
+                .AnyAsync(r => r.Id == reservationId && r.GuestId == guestId);
+
+            if (!belongsToGuest)
+            {
+                return AuthServiceResult<AuthMessageResponse>.Failure("Reservation not found.", 404);
+            }
+
+            return await _reservationService.CancelAsync(reservationId);
         }
 
         public async Task<AuthServiceResult<IReadOnlyList<AvailableRoomTypeResponse>>> GetAvailableRoomTypesAsync(

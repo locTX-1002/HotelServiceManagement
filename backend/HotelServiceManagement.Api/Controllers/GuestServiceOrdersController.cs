@@ -39,6 +39,18 @@ namespace HotelServiceManagement.Api.Controllers
             return ToActionResult(await _guestServiceOrderService.CreateOrderAsync(guestId.Value, request));
         }
 
+        [HttpGet("me/service-orders")]
+        public async Task<IActionResult> GetMyOrders()
+        {
+            var guestId = GetCurrentGuestId();
+            if (guestId == null)
+            {
+                return Unauthorized(new AuthMessageResponse { Message = "Invalid guest identity in token." });
+            }
+
+            return ToActionResult(await _guestServiceOrderService.GetOrdersAsync(guestId.Value));
+        }
+
         private int? GetCurrentGuestId()
         {
             var guestIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;

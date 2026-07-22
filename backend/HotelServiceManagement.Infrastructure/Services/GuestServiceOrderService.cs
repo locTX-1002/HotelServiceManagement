@@ -68,5 +68,35 @@ namespace HotelServiceManagement.Infrastructure.Services
 
             return await _serviceOrderService.CreateAsync(createRequest, createdByUserId: null);
         }
+
+        public async Task<AuthServiceResult<IReadOnlyList<ServiceOrderResponse>>> GetOrdersAsync(int guestId)
+        {
+            var orders = await _context.ServiceOrders
+                .AsNoTracking()
+                .Include(o => o.OrderDetails).ThenInclude(d => d.ServiceItem)
+                .Where(o => o.Stay.Status == StayStatus.Active
+                    && o.Stay.Reservation.GuestId == guestId)
+                .OrderByDescending(o => o.OrderDate)
+                .Select(o => new ServiceOrderResponse
+                {
+                    Id = o.Id,
+                    StayId = o.StayId,
+                    OrderDate = o.OrderDate,
+                    Status = o.Status,
+                    TotalAmount = o.TotalAmount,
+                    Details = o.OrderDetails.OrderBy(d => d.Id).Select(d => new ServiceOrderDetailResponse
+                    {
+                        Id = d.Id,
+                        ServiceItemId = d.ServiceItemId,
+                        ServiceName = d.ServiceItem.ServiceName,
+                        Quantity = d.Quantity,
+                        UnitPrice = d.UnitPrice,
+                        Subtotal = d.Subtotal
+                    }).ToList()
+                })
+                .ToListAsync();
+
+            return AuthServiceResult<IReadOnlyList<ServiceOrderResponse>>.Success(orders);
+        }
     }
 }

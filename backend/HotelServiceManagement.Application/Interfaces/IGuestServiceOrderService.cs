@@ -8,5 +8,6 @@ namespace HotelServiceManagement.Application.Interfaces
     {
         Task<AuthServiceResult<IReadOnlyList<ServiceItemResponse>>> GetCatalogAsync();
         Task<AuthServiceResult<ServiceOrderResponse>> CreateOrderAsync(int guestId, GuestCreateServiceOrderRequest request);
+        Task<AuthServiceResult<IReadOnlyList<ServiceOrderResponse>>> GetOrdersAsync(int guestId);
     }
 }

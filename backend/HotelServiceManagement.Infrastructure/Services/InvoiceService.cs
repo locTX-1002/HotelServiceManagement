@@ -34,6 +34,40 @@ namespace HotelServiceManagement.Infrastructure.Services
             return invoice == null ? null : ToResponse(invoice);
         }
 
+        public async Task<AuthServiceResult<InvoiceResponse>> CancelAsync(int id)
+        {
+            if (id <= 0)
+            {
+                return AuthServiceResult<InvoiceResponse>.Failure("Invoice id must be greater than 0.");
+            }
+
+            var invoice = await _context.Invoices
+                .Include(i => i.Payments)
+                .Include(i => i.Stay).ThenInclude(s => s.Reservation)
+                .Include(i => i.Stay).ThenInclude(s => s.Surcharges).ThenInclude(s => s.SurchargeItem)
+                .FirstOrDefaultAsync(i => i.Id == id);
+
+            if (invoice == null)
+            {
+                return AuthServiceResult<InvoiceResponse>.Failure("Invoice not found.", 404);
+            }
+
+            if (invoice.Status == InvoiceStatus.Cancelled)
+            {
+                return AuthServiceResult<InvoiceResponse>.Success(ToResponse(invoice), "Invoice is already cancelled.");
+            }
+
+            if (invoice.Payments.Any(p => p.Status == PaymentStatus.Completed))
+            {
+                return AuthServiceResult<InvoiceResponse>.Failure(
+                    "An invoice with completed payments cannot be cancelled.", 409);
+            }
+
+            invoice.Status = InvoiceStatus.Cancelled;
+            await _context.SaveChangesAsync();
+            return AuthServiceResult<InvoiceResponse>.Success(ToResponse(invoice), "Invoice cancelled successfully.");
+        }
+
         /// <summary>
         /// Check-out already auto-generates the invoice (see StayService.CheckOutAsync), so most calls
         /// here hit an EXISTING invoice - used to (re)apply a promotion code before payment, or as a

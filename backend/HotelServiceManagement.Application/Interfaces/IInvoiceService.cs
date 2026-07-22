@@ -13,5 +13,6 @@ namespace HotelServiceManagement.Application.Interfaces
             int stayId,
             int createdByUserId,
             string? promotionCode = null);
+        Task<AuthServiceResult<InvoiceResponse>> CancelAsync(int id);
     }
 }

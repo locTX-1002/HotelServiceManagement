@@ -51,15 +51,31 @@ namespace HotelServiceManagement.Infrastructure.Services
                 ToResponse(request, stay), "Housekeeping request sent.");
         }
 
-        public async Task<AuthServiceResult<IReadOnlyList<HousekeepingRequestResponse>>> GetActiveAsync()
+        public async Task<AuthServiceResult<IReadOnlyList<HousekeepingRequestResponse>>> GetAsync(bool includeCompleted)
         {
             var requests = await _context.HousekeepingRequests
                 .AsNoTracking()
                 .Include(r => r.Stay).ThenInclude(s => s.Reservation).ThenInclude(res => res.Guest)
                 .Include(r => r.Stay).ThenInclude(s => s.Reservation).ThenInclude(res => res.Room)
                 .Include(r => r.HandledByUser)
-                .Where(r => r.Status != HousekeepingRequestStatus.Completed)
+                .Where(r => includeCompleted || (r.Status != HousekeepingRequestStatus.Completed
+                    && r.Status != HousekeepingRequestStatus.Cancelled))
                 .OrderBy(r => r.RequestedAt)
+                .ToListAsync();
+
+            return AuthServiceResult<IReadOnlyList<HousekeepingRequestResponse>>.Success(
+                requests.Select(r => ToResponse(r, r.Stay)).ToList());
+        }
+
+        public async Task<AuthServiceResult<IReadOnlyList<HousekeepingRequestResponse>>> GetForGuestAsync(int guestId)
+        {
+            var requests = await _context.HousekeepingRequests
+                .AsNoTracking()
+                .Include(r => r.Stay).ThenInclude(s => s.Reservation).ThenInclude(res => res.Guest)
+                .Include(r => r.Stay).ThenInclude(s => s.Reservation).ThenInclude(res => res.Room)
+                .Include(r => r.HandledByUser)
+                .Where(r => r.Stay.Status == StayStatus.Active && r.Stay.Reservation.GuestId == guestId)
+                .OrderByDescending(r => r.RequestedAt)
                 .ToListAsync();
 
             return AuthServiceResult<IReadOnlyList<HousekeepingRequestResponse>>.Success(
@@ -87,6 +103,28 @@ namespace HotelServiceManagement.Infrastructure.Services
             return AuthServiceResult<HousekeepingRequestResponse>.Success(ToResponse(request, request.Stay));
         }
 
+        public async Task<AuthServiceResult<HousekeepingRequestResponse>> CancelAsync(int id, int staffUserId)
+        {
+            var request = await LoadForUpdateAsync(id);
+            if (request == null)
+            {
+                return AuthServiceResult<HousekeepingRequestResponse>.Failure("Housekeeping request not found.", 404);
+            }
+
+            if (request.Status == HousekeepingRequestStatus.Completed
+                || request.Status == HousekeepingRequestStatus.Cancelled)
+            {
+                return AuthServiceResult<HousekeepingRequestResponse>.Failure(
+                    "Completed or cancelled requests cannot be cancelled.", 409);
+            }
+
+            request.Status = HousekeepingRequestStatus.Cancelled;
+            request.HandledAt = DateTime.UtcNow;
+            request.HandledByUserId = staffUserId;
+            await _context.SaveChangesAsync();
+            return AuthServiceResult<HousekeepingRequestResponse>.Success(ToResponse(request, request.Stay));
+        }
+
         public async Task<AuthServiceResult<HousekeepingRequestResponse>> CompleteAsync(int id, int staffUserId)
         {
             var request = await LoadForUpdateAsync(id);
@@ -95,14 +133,21 @@ namespace HotelServiceManagement.Infrastructure.Services
                 return AuthServiceResult<HousekeepingRequestResponse>.Failure("Housekeeping request not found.", 404);
             }
 
-            if (request.Status == HousekeepingRequestStatus.Completed)
+            if (request.Status != HousekeepingRequestStatus.Pending
+                && request.Status != HousekeepingRequestStatus.Acknowledged)
             {
-                return AuthServiceResult<HousekeepingRequestResponse>.Failure("Request is already completed.", 409);
+                return AuthServiceResult<HousekeepingRequestResponse>.Failure(
+                    "Only a pending or acknowledged request can be completed.", 409);
             }
 
             request.Status = HousekeepingRequestStatus.Completed;
             request.HandledAt = DateTime.UtcNow;
             request.HandledByUserId = staffUserId;
+            if (request.RequestType == HousekeepingRequestType.Cleaning
+                && request.Stay.Reservation.Room.Status == RoomStatus.Cleaning)
+            {
+                request.Stay.Reservation.Room.Status = RoomStatus.Available;
+            }
             await _context.SaveChangesAsync();
 
             return AuthServiceResult<HousekeepingRequestResponse>.Success(ToResponse(request, request.Stay));

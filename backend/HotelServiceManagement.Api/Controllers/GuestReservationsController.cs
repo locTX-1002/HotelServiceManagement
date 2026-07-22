@@ -43,6 +43,18 @@ namespace HotelServiceManagement.Api.Controllers
             return ToActionResult(await _guestReservationService.CreateAsync(guestId.Value, request));
         }
 
+        [HttpPatch("me/reservations/{id:int}/cancel")]
+        public async Task<IActionResult> CancelReservation(int id)
+        {
+            var guestId = GetCurrentGuestId();
+            if (guestId == null)
+            {
+                return Unauthorized(new AuthMessageResponse { Message = "Invalid guest identity in token." });
+            }
+
+            return ToActionResult(await _guestReservationService.CancelAsync(guestId.Value, id));
+        }
+
         private int? GetCurrentGuestId()
         {
             var guestIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
