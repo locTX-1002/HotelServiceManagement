@@ -55,7 +55,7 @@ UserDAO (Singleton) → UserRepository → AuthService → LoginViewModel → Lo
 ## Quy ước UI — bắt buộc, để 5 module ra cùng một kiểu
 
 - Design tokens nằm ở `FUHotelManagementWPF/Themes/`:
-  - `Colors.xaml` — brush thương hiệu (kem/ink/terracotta) + trạng thái (`SuccessBrush`, `WarningBrush`, `DangerBrush` kèm bản `...Soft` làm nền badge)
+  - `Colors.xaml` — brush thương hiệu (nền đá `SurfaceBrush`/`SurfaceAltBrush`, chữ ink, nhấn xanh rêu `BrandBrush`) + trạng thái (`SuccessBrush`, `WarningBrush`, `DangerBrush` kèm bản `...Soft` làm nền badge)
   - `Typography.xaml` — 4 cấp chữ: `PageTitleText`, `SectionTitleText`, `BodyText`, `CaptionText` (+ `FieldLabel`, `IconText`)
   - `Controls.xaml` — `PrimaryButton`, `GhostButton`, `Card`, `BadgeSuccess/Warning/Danger/Info/Neutral`, `NavItem`; **TextBox/PasswordBox đã được style ngầm toàn app**, cứ dùng thẳng
 - **KHÔNG hardcode mã màu hay FontSize trong module.** Thiếu màu/kiểu → thêm token trước rồi mới dùng.

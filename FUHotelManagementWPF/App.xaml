@@ -21,7 +21,7 @@
             <Style x:Key="BaseWindow" TargetType="Window">
                 <Setter Property="FontFamily" Value="Segoe UI" />
                 <Setter Property="FontSize" Value="13" />
-                <Setter Property="Background" Value="{StaticResource CreamBrush}" />
+                <Setter Property="Background" Value="{StaticResource SurfaceBrush}" />
                 <Setter Property="Foreground" Value="{StaticResource InkBrush}" />
             </Style>
         </ResourceDictionary>
