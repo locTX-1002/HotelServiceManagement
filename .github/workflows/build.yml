@@ -1,0 +1,22 @@
+name: build
+
+# Chan code vo build: moi push main/develop + moi PR deu phai build xanh.
+# PR do thi khong merge.
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cai .NET 10 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Build solution
+        run: dotnet build FUHotelManagement.slnx --configuration Release

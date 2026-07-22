@@ -1,0 +1,51 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- ============================================================
+         DESIGN TOKENS: MAU SAC - nguon chan ly duy nhat cho ca app.
+         Ke thua ngon ngu thiet ke ban web: nen kem, chu ink, nhan terracotta.
+         QUY UOC CHO CA NHOM: chi dung brush theo ten o day,
+         KHONG hardcode ma mau hex trong XAML cua module.
+         ============================================================ -->
+
+    <!-- Thuong hieu -->
+    <SolidColorBrush x:Key="BrandBrush" Color="#A9481F" />
+    <SolidColorBrush x:Key="BrandDarkBrush" Color="#8F3B18" />
+    <SolidColorBrush x:Key="BrandLightBrush" Color="#C4693F" />
+    <!-- Nen nhat cho item dang chon / hover khu vuc brand -->
+    <SolidColorBrush x:Key="BrandSoftBrush" Color="#F2E3D9" />
+
+    <!-- Trung tinh -->
+    <SolidColorBrush x:Key="CreamBrush" Color="#F6F1E8" />
+    <SolidColorBrush x:Key="CreamDarkBrush" Color="#EFE7D8" />
+    <SolidColorBrush x:Key="CardBrush" Color="#FDFBF7" />
+    <SolidColorBrush x:Key="InkBrush" Color="#211D18" />
+    <SolidColorBrush x:Key="InkSoftBrush" Color="#6B6459" />
+    <SolidColorBrush x:Key="LineBrush" Color="#22000000" />
+
+    <!-- Trang thai: dung cho badge, canh bao, thong bao.
+         Ban dam = chu/icon, ban Soft = nen pill -->
+    <SolidColorBrush x:Key="SuccessBrush" Color="#2E7D32" />
+    <SolidColorBrush x:Key="SuccessSoftBrush" Color="#E3F1E4" />
+    <SolidColorBrush x:Key="WarningBrush" Color="#B45309" />
+    <SolidColorBrush x:Key="WarningSoftBrush" Color="#FBEED9" />
+    <SolidColorBrush x:Key="DangerBrush" Color="#B3261E" />
+    <SolidColorBrush x:Key="DangerSoftBrush" Color="#F9E3E1" />
+    <SolidColorBrush x:Key="InfoBrush" Color="#31708E" />
+    <SolidColorBrush x:Key="InfoSoftBrush" Color="#E3EEF3" />
+
+    <!-- ============================================================
+         GHI DE THEME HANDYCONTROL: cac control cua HandyControl
+         (DataGrid, ComboBox, DatePicker, Growl...) tu doi sang mau
+         thuong hieu nho cac key duoi day (HC tra cuu bang DynamicResource).
+         ============================================================ -->
+    <SolidColorBrush x:Key="PrimaryBrush" Color="#A9481F" />
+    <SolidColorBrush x:Key="DarkPrimaryBrush" Color="#8F3B18" />
+    <SolidColorBrush x:Key="LightPrimaryBrush" Color="#C4693F" />
+    <SolidColorBrush x:Key="TitleBrush" Color="#211D18" />
+    <SolidColorBrush x:Key="PrimaryTextBrush" Color="#211D18" />
+    <SolidColorBrush x:Key="SecondaryTextBrush" Color="#6B6459" />
+    <SolidColorBrush x:Key="RegionBrush" Color="#FDFBF7" />
+    <SolidColorBrush x:Key="SecondaryRegionBrush" Color="#F6F1E8" />
+
+</ResourceDictionary>

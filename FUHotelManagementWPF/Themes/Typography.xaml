@@ -1,0 +1,52 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- ============================================================
+         DESIGN TOKENS: CAP CHU - 4 cap co dinh cho ca app.
+         QUY UOC CHO CA NHOM: moi TextBlock trong module PHAI dung
+         1 trong cac style nay (hoac khong style = Body mac dinh cua cua so),
+         KHONG tu dat FontSize le trong XAML.
+         ============================================================ -->
+
+    <!-- H1: tieu de man hinh, moi man dung dung 1 lan -->
+    <Style x:Key="PageTitleText" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="24" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="Foreground" Value="{StaticResource InkBrush}" />
+    </Style>
+
+    <!-- H2: tieu de section / card -->
+    <Style x:Key="SectionTitleText" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{StaticResource InkBrush}" />
+    </Style>
+
+    <!-- Body: chu noi dung binh thuong -->
+    <Style x:Key="BodyText" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="Foreground" Value="{StaticResource InkBrush}" />
+    </Style>
+
+    <!-- Caption: chu phu, mo ta, ghi chu mo -->
+    <Style x:Key="CaptionText" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="11.5" />
+        <Setter Property="Foreground" Value="{StaticResource InkSoftBrush}" />
+    </Style>
+
+    <!-- Nhan nho in dam phia tren o nhap lieu -->
+    <Style x:Key="FieldLabel" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="10.5" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="Foreground" Value="{StaticResource InkSoftBrush}" />
+        <Setter Property="Margin" Value="0,0,0,5" />
+    </Style>
+
+    <!-- Icon Segoe MDL2 (co san trong Windows, khong can cai gi) -->
+    <Style x:Key="IconText" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="Segoe MDL2 Assets" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+</ResourceDictionary>

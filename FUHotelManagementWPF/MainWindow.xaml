@@ -1,0 +1,84 @@
+<Window x:Class="FUHotelManagementWPF.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:hc="https://handyorg.github.io/handycontrol"
+        xmlns:vm="clr-namespace:FUHotelManagementWPF.ViewModels"
+        Title="FU Hotel Management"
+        Height="760" Width="1200"
+        WindowStartupLocation="CenterScreen"
+        Style="{StaticResource BaseWindow}">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- Thanh tren: logo + breadcrumb + chao nguoi dung + dang xuat -->
+        <Border Grid.Row="0" Background="{StaticResource CardBrush}"
+                BorderBrush="{StaticResource LineBrush}" BorderThickness="0,0,0,1"
+                Padding="22,12">
+            <DockPanel>
+                <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
+                    <Border Width="34" Height="34" CornerRadius="999"
+                            Background="{StaticResource BrandBrush}">
+                        <TextBlock Text="FU" Foreground="White" FontWeight="Bold" FontSize="13"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <TextBlock Text="FU Hotel Management" FontSize="16" FontWeight="Bold"
+                               VerticalAlignment="Center" Margin="10,0,0,0" />
+                    <!-- Breadcrumb dinh vi -->
+                    <Border Width="1" Background="{StaticResource LineBrush}" Margin="16,4" />
+                    <TextBlock Text="{Binding Breadcrumb}" Style="{StaticResource CaptionText}"
+                               FontSize="12.5" VerticalAlignment="Center" />
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <TextBlock VerticalAlignment="Center" Margin="0,0,16,0">
+                        <Run Text="{Binding GreetingName, Mode=OneWay}" FontWeight="SemiBold" />
+                        <Run Text=" · " Foreground="{StaticResource InkSoftBrush}" />
+                        <Run Text="{Binding RoleDisplay, Mode=OneWay}"
+                             Foreground="{StaticResource InkSoftBrush}" />
+                    </TextBlock>
+                    <Button Content="Đăng xuất" Style="{StaticResource GhostButton}"
+                            Command="{Binding LogoutCommand}" />
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <!-- Than: nav trai + vung noi dung -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="236" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0" Background="{StaticResource CreamDarkBrush}"
+                    BorderBrush="{StaticResource LineBrush}" BorderThickness="0,0,1,0">
+                <ListBox ItemsSource="{Binding Modules}"
+                         SelectedItem="{Binding SelectedModule}"
+                         ItemContainerStyle="{StaticResource NavItem}"
+                         Background="Transparent" BorderThickness="0"
+                         Margin="10,16">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate DataType="{x:Type vm:ModuleItem}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{Binding Icon}" Style="{StaticResource IconText}" />
+                                <TextBlock Text="{Binding Title}" Margin="11,0,0,0"
+                                           VerticalAlignment="Center" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Border>
+
+            <!-- Vung noi dung ViewModel-first: WPF tu chon View theo ViewMappings.xaml -->
+            <ContentControl Grid.Column="1" Content="{Binding CurrentViewModel}"
+                            Focusable="False" />
+        </Grid>
+
+        <!-- Panel nhan thong bao Notify.* (Growl) - goc phai tren, khong che nut -->
+        <StackPanel Grid.Row="1" hc:Growl.GrowlParent="True"
+                    VerticalAlignment="Top" HorizontalAlignment="Right"
+                    Margin="0,10,10,0" Panel.ZIndex="999" />
+    </Grid>
+</Window>
