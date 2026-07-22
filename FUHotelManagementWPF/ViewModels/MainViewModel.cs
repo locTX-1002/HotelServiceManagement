@@ -1,13 +1,15 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
+using System.Windows.Data;
 using FUHotelManagementWPF.MvvmCore;
 using Services;
 
 namespace FUHotelManagementWPF.ViewModels
 {
-    /// <summary>Mot muc dieu huong: icon Segoe MDL2 + ten module + ham tao ViewModel cua module do.</summary>
-    public record ModuleItem(string Icon, string Title, Func<ViewModelBase> CreateViewModel);
+    /// <summary>Mot muc dieu huong: icon Segoe MDL2 + ten module + nhom sidebar + ham tao ViewModel.</summary>
+    public record ModuleItem(string Icon, string Title, string Group, Func<ViewModelBase> CreateViewModel);
 
     public class MainViewModel : ViewModelBase
     {
@@ -15,6 +17,9 @@ namespace FUHotelManagementWPF.ViewModels
         public event Action? LoggedOut;
 
         public string GreetingName => AppSession.CurrentUser?.FullName ?? string.Empty;
+
+        public string AvatarInitial
+            => string.IsNullOrWhiteSpace(GreetingName) ? "?" : GreetingName.Trim()[..1].ToUpper();
 
         public string RoleDisplay => AppSession.RoleName switch
         {
@@ -26,9 +31,11 @@ namespace FUHotelManagementWPF.ViewModels
         };
 
         // Danh sach module: thanh vien lam xong module nao thi doi factory cua module do
-        // sang ViewModel that (vd: new("", "Sơ đồ phòng", () => new RoomMapViewModel()))
-        // va them 1 dong DataTemplate vao Views/ViewMappings.xaml. Chi vay la xong.
-        public IReadOnlyList<ModuleItem> Modules { get; }
+        // sang ViewModel that va them 1 dong DataTemplate vao Views/ViewMappings.xaml.
+        public List<ModuleItem> Modules { get; }
+
+        /// <summary>Ban da nhom theo Group de sidebar hien label tung cum.</summary>
+        public ICollectionView ModulesView { get; }
 
         private ModuleItem _selectedModule;
         public ModuleItem SelectedModule
@@ -59,17 +66,25 @@ namespace FUHotelManagementWPF.ViewModels
 
         public MainViewModel()
         {
+            const string opGroup = "VẬN HÀNH";
+            const string peopleGroup = "ĐỐI TƯỢNG";
+            const string moneyGroup = "TÀI CHÍNH";
+            const string systemGroup = "HỆ THỐNG";
+
             Modules =
             [
-                new("", "Sơ đồ phòng", () => new PlaceholderViewModel("Sơ đồ phòng")),
-                new("", "Đặt phòng", () => new PlaceholderViewModel("Đặt phòng")),
-                new("", "Check-in / Check-out", () => new PlaceholderViewModel("Check-in / Check-out")),
-                new("", "Khách hàng", () => new PlaceholderViewModel("Khách hàng")),
-                new("", "Dịch vụ", () => new PlaceholderViewModel("Dịch vụ")),
-                new("", "Hoá đơn", () => new PlaceholderViewModel("Hoá đơn")),
-                new("", "Báo cáo", () => new PlaceholderViewModel("Báo cáo")),
-                new("", "Người dùng", () => new PlaceholderViewModel("Người dùng")),
+                new("", "Sơ đồ phòng", opGroup, () => new PlaceholderViewModel("Sơ đồ phòng")),
+                new("", "Đặt phòng", opGroup, () => new PlaceholderViewModel("Đặt phòng")),
+                new("", "Check-in / Check-out", opGroup, () => new PlaceholderViewModel("Check-in / Check-out")),
+                new("", "Khách hàng", peopleGroup, () => new PlaceholderViewModel("Khách hàng")),
+                new("", "Dịch vụ", peopleGroup, () => new PlaceholderViewModel("Dịch vụ")),
+                new("", "Hoá đơn", moneyGroup, () => new PlaceholderViewModel("Hoá đơn")),
+                new("", "Báo cáo", moneyGroup, () => new PlaceholderViewModel("Báo cáo")),
+                new("", "Người dùng", systemGroup, () => new PlaceholderViewModel("Người dùng")),
             ];
+
+            ModulesView = new ListCollectionView(Modules);
+            ModulesView.GroupDescriptions.Add(new PropertyGroupDescription(nameof(ModuleItem.Group)));
 
             _selectedModule = Modules[0];
             _currentViewModel = _selectedModule.CreateViewModel();
