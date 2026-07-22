@@ -14,6 +14,15 @@ namespace DataAccessObjects.Configurations
             builder.Property(p => p.Status).HasConversion<string>().HasMaxLength(50);
             builder.Property(p => p.TransactionId).HasMaxLength(100);
 
+            // Cho phep nhieu payment tien mat co TransactionId NULL, nhung ma giao dich
+            // chuyen khoan phai duy nhat de tranh ghi nhan cung mot giao dich hai lan.
+            builder.HasIndex(p => p.TransactionId)
+                   .IsUnique()
+                   .HasFilter("[TransactionId] IS NOT NULL");
+
+            builder.ToTable(t => t.HasCheckConstraint(
+                "CK_Payment_Amount_Positive", "[Amount] > 0"));
+
             // One invoice can have many payments.
             builder.HasOne(p => p.Invoice)
                    .WithMany(i => i.Payments)

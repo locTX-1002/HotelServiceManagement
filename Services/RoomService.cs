@@ -6,7 +6,7 @@ using Repositories;
 namespace Services
 {
     /// <summary>
-    /// Nghiep vu Phong - port nguyen rule tu ban web (da test ky):
+    /// Nghiep vu Phong cua ung dung desktop:
     /// - Reserved/Occupied do luong Dat phong/Check-in dieu khien, khong set tay
     /// - Phong dang co khach/dat phong hoat dong: khong doi trang thai tuy tien,
     ///   khong ngung dung, khong doi sang loai phong nho hon so khach da dat

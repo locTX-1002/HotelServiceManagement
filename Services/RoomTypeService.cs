@@ -4,7 +4,7 @@ using Repositories;
 namespace Services
 {
     /// <summary>
-    /// Nghiep vu Loai phong - port nguyen rule tu ban web (da test ky):
+    /// Nghiep vu Loai phong cua ung dung desktop:
     /// ten unique, khong giam suc chua duoi so khach cua dat phong dang hoat dong,
     /// xoa mem khi da co phong dung.
     /// </summary>
