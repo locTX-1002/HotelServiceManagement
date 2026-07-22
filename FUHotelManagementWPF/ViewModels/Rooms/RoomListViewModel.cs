@@ -44,6 +44,7 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
         }
 
         public RelayCommand AddCommand { get; }
+        public RelayCommand DetailCommand { get; }
         public RelayCommand EditCommand { get; }
         public AsyncRelayCommand DeleteCommand { get; }
 
@@ -52,8 +53,22 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
             _refreshAll = refreshAll;
             RowsView = new ListCollectionView(Rows) { Filter = FilterRow };
             AddCommand = new RelayCommand(_ => OpenEditDialog(null));
+            DetailCommand = new RelayCommand(OpenDetailDialog);
             EditCommand = new RelayCommand(p => OpenEditDialog(p as RoomRow));
             DeleteCommand = new AsyncRelayCommand(DeleteAsync);
+        }
+
+        private void OpenDetailDialog(object? parameter)
+        {
+            if (parameter is not RoomRow row)
+            {
+                return;
+            }
+
+            new RoomDetailDialog(new RoomDetailDialogViewModel(row.Room))
+            {
+                Owner = RoomMapViewModel.ActiveWindow(),
+            }.ShowDialog();
         }
 
         public async Task LoadAsync()

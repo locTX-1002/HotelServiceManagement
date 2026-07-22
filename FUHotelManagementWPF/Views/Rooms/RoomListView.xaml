@@ -21,12 +21,18 @@
             </StackPanel>
         </DockPanel>
 
-        <DataGrid Grid.Row="1" ItemsSource="{Binding RowsView}"
+        <DataGrid x:Name="RoomsGrid" Grid.Row="1" ItemsSource="{Binding RowsView}"
                   AutoGenerateColumns="False" IsReadOnly="True"
                   CanUserAddRows="False" HeadersVisibility="Column"
                   SelectionMode="Single" SelectionUnit="FullRow"
                   RowHeight="46" GridLinesVisibility="None"
                   Background="Transparent" BorderThickness="0">
+            <DataGrid.InputBindings>
+                <!-- Double-click 1 dong = mo chi tiet -->
+                <MouseBinding Gesture="LeftDoubleClick"
+                              Command="{Binding DetailCommand}"
+                              CommandParameter="{Binding SelectedItem, ElementName=RoomsGrid}" />
+            </DataGrid.InputBindings>
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Số phòng" Binding="{Binding Room.RoomNumber}" Width="110" />
                 <DataGridTextColumn Header="Tầng" Binding="{Binding Room.Floor}" Width="70" />
@@ -44,11 +50,16 @@
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
                 <DataGridTextColumn Header="Hoạt động" Binding="{Binding ActiveText}" Width="105" />
-                <DataGridTemplateColumn Header="" Width="150">
+                <DataGridTemplateColumn Header="" Width="222">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal">
+                                <Button Content="Chi tiết" Style="{StaticResource GhostButton}" Padding="12,5"
+                                        Command="{Binding DataContext.DetailCommand,
+                                                  RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                        CommandParameter="{Binding}" />
                                 <Button Content="Sửa" Style="{StaticResource GhostButton}" Padding="12,5"
+                                        Margin="6,0,0,0"
                                         Command="{Binding DataContext.EditCommand,
                                                   RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                         CommandParameter="{Binding}" />

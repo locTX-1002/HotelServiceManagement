@@ -194,6 +194,42 @@
         <Setter Property="TextElement.Foreground" Value="{StaticResource InkSoftBrush}" />
     </Style>
 
+    <!-- DataGrid: hang chon nen NHAT chu van den (khong duoc xanh dam nuot chu),
+         cell can giua doc, bo vien focus mac dinh -->
+    <Style TargetType="DataGridRow">
+        <Setter Property="Background" Value="Transparent" />
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="#0A000000" />
+            </Trigger>
+            <Trigger Property="IsSelected" Value="True">
+                <Setter Property="Background" Value="{StaticResource BrandSoftBrush}" />
+                <Setter Property="Foreground" Value="{StaticResource InkBrush}" />
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+    <Style TargetType="DataGridCell">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Padding" Value="8,0" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="DataGridCell">
+                    <Border Background="{TemplateBinding Background}"
+                            Padding="{TemplateBinding Padding}">
+                        <ContentPresenter VerticalAlignment="Center" />
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="IsSelected" Value="True">
+                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="Foreground" Value="{StaticResource InkBrush}" />
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
     <!-- Badge trang thai PHONG: dung cho row co property Room (RoomRow).
          Mau theo nghiep vu: Trong=xanh, Da dat=info, Dang o=am, Dang don=trung tinh, Bao tri=do -->
     <Style x:Key="RoomStatusBadge" TargetType="Border" BasedOn="{StaticResource BadgeBase}">

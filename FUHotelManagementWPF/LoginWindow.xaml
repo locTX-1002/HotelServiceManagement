@@ -15,7 +15,7 @@
         <!-- Panel thuong hieu ben trai: anh nen (thay Assets/Brand/login-side.png bang anh that khi co) -->
         <Border Grid.Column="0">
             <Border.Background>
-                <ImageBrush ImageSource="pack://application:,,,/Assets/Brand/login-side.png"
+                <ImageBrush ImageSource="pack://application:,,,/Assets/Brand/login-side-1.jpg"
                             Stretch="UniformToFill" />
             </Border.Background>
             <Grid ClipToBounds="True">

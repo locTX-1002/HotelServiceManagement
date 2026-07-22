@@ -17,26 +17,8 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
         public decimal BasePrice => Room.RoomType?.BasePrice ?? 0;
         public string ActiveText => Room.IsActive ? "Đang dùng" : "Ngừng dùng";
 
-        /// <summary>
-        /// Thumbnail theo LOAI phong (khong can anh rieng tung phong): map ten loai -> anh nhung.
-        /// Thay anh that: bo file vao Assets/Rooms/ cung ten la xong, khong dung code.
-        /// </summary>
-        public string ThumbnailSource
-        {
-            get
-            {
-                var name = TypeName.ToLowerInvariant();
-                if (name.Contains("suite"))
-                {
-                    return "pack://application:,,,/Assets/Rooms/suite.png";
-                }
-                if (name.Contains("deluxe"))
-                {
-                    return "pack://application:,,,/Assets/Rooms/deluxe.png";
-                }
-                return "pack://application:,,,/Assets/Rooms/standard.png";
-            }
-        }
+        /// <summary>Thumbnail theo LOAI phong - xem RoomImages de biet cach map/thay anh.</summary>
+        public string ThumbnailSource => RoomImages.Thumbnail(TypeName);
 
         public RoomRow(Room room)
         {
