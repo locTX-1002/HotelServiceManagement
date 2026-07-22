@@ -1,7 +1,9 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:vm="clr-namespace:FUHotelManagementWPF.ViewModels"
-                    xmlns:views="clr-namespace:FUHotelManagementWPF.Views">
+                    xmlns:vmRooms="clr-namespace:FUHotelManagementWPF.ViewModels.Rooms"
+                    xmlns:views="clr-namespace:FUHotelManagementWPF.Views"
+                    xmlns:viewsRooms="clr-namespace:FUHotelManagementWPF.Views.Rooms">
 
     <!-- ============================================================
          DANG KY VIEW CHO VIEWMODEL (dieu huong ViewModel-first).
@@ -15,6 +17,10 @@
 
     <DataTemplate DataType="{x:Type vm:PlaceholderViewModel}">
         <views:PlaceholderView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vmRooms:RoomsViewModel}">
+        <viewsRooms:RoomsView />
     </DataTemplate>
 
 </ResourceDictionary>

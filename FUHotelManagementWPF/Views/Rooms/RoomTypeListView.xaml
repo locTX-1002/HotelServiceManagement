@@ -1,0 +1,51 @@
+<UserControl x:Class="FUHotelManagementWPF.Views.Rooms.RoomTypeListView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid Margin="0,14,0,0">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <DockPanel Grid.Row="0" Margin="0,0,0,12">
+            <Button DockPanel.Dock="Right" Content="+ Thêm loại phòng"
+                    Style="{StaticResource PrimaryButton}" Padding="16,8"
+                    Command="{Binding AddCommand}" />
+            <TextBlock Text="Xoá loại đang được phòng sử dụng sẽ chuyển sang ngừng dùng (giữ lịch sử)."
+                       Style="{StaticResource CaptionText}" VerticalAlignment="Center" Margin="2,0,0,0" />
+        </DockPanel>
+
+        <DataGrid Grid.Row="1" ItemsSource="{Binding Rows}"
+                  AutoGenerateColumns="False" IsReadOnly="True"
+                  CanUserAddRows="False" HeadersVisibility="Column"
+                  SelectionMode="Single" SelectionUnit="FullRow"
+                  Background="Transparent" BorderThickness="0">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Tên loại" Binding="{Binding RoomType.TypeName}" Width="170" />
+                <DataGridTextColumn Header="Sức chứa" Binding="{Binding RoomType.Capacity}" Width="90" />
+                <DataGridTextColumn Header="Giá cơ bản/đêm"
+                                    Binding="{Binding RoomType.BasePrice, StringFormat={}{0:N0} đ}" Width="140" />
+                <DataGridTextColumn Header="Mô tả" Binding="{Binding RoomType.Description}" Width="*" />
+                <DataGridTextColumn Header="Số phòng" Binding="{Binding RoomCount}" Width="90" />
+                <DataGridTextColumn Header="Hoạt động" Binding="{Binding ActiveText}" Width="105" />
+                <DataGridTemplateColumn Header="" Width="150">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <Button Content="Sửa" Style="{StaticResource GhostButton}" Padding="12,5"
+                                        Command="{Binding DataContext.EditCommand,
+                                                  RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                        CommandParameter="{Binding}" />
+                                <Button Content="Xoá" Style="{StaticResource GhostButton}" Padding="12,5"
+                                        Margin="6,0,0,0" Foreground="{StaticResource DangerBrush}"
+                                        Command="{Binding DataContext.DeleteCommand,
+                                                  RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                        CommandParameter="{Binding}" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
+</UserControl>

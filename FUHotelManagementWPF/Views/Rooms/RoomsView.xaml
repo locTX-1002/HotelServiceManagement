@@ -1,0 +1,27 @@
+<UserControl x:Class="FUHotelManagementWPF.Views.Rooms.RoomsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:rooms="clr-namespace:FUHotelManagementWPF.Views.Rooms">
+    <!-- PageHeader chuan: tieu de + (nut hanh dong nam trong tung tab) -->
+    <Grid Margin="24,18,24,24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Text="Sơ đồ phòng" Style="{StaticResource PageTitleText}"
+                   Margin="0,0,0,12" />
+
+        <TabControl Grid.Row="1" Background="Transparent" BorderThickness="0">
+            <TabItem Header="Sơ đồ">
+                <rooms:RoomMapView DataContext="{Binding Map}" />
+            </TabItem>
+            <TabItem Header="Danh sách phòng">
+                <rooms:RoomListView DataContext="{Binding RoomList}" />
+            </TabItem>
+            <TabItem Header="Loại phòng">
+                <rooms:RoomTypeListView DataContext="{Binding RoomTypeList}" />
+            </TabItem>
+        </TabControl>
+    </Grid>
+</UserControl>

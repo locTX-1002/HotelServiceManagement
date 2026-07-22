@@ -1,0 +1,66 @@
+<UserControl x:Class="FUHotelManagementWPF.Views.Rooms.RoomListView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid Margin="0,14,0,0">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- Toolbar: tim kiem + nut them -->
+        <DockPanel Grid.Row="0" Margin="0,0,0,12">
+            <Button DockPanel.Dock="Right" Content="+ Thêm phòng"
+                    Style="{StaticResource PrimaryButton}" Padding="16,8"
+                    Command="{Binding AddCommand}" />
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="Tìm:" Style="{StaticResource CaptionText}" FontSize="12.5"
+                           VerticalAlignment="Center" Margin="2,0,8,0" />
+                <TextBox Width="260"
+                         Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                         ToolTip="Tìm theo số phòng hoặc tên loại phòng" />
+            </StackPanel>
+        </DockPanel>
+
+        <DataGrid Grid.Row="1" ItemsSource="{Binding RowsView}"
+                  AutoGenerateColumns="False" IsReadOnly="True"
+                  CanUserAddRows="False" HeadersVisibility="Column"
+                  SelectionMode="Single" SelectionUnit="FullRow"
+                  Background="Transparent" BorderThickness="0">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Số phòng" Binding="{Binding Room.RoomNumber}" Width="110" />
+                <DataGridTextColumn Header="Tầng" Binding="{Binding Room.Floor}" Width="70" />
+                <DataGridTextColumn Header="Loại phòng" Binding="{Binding TypeName}" Width="*" />
+                <DataGridTextColumn Header="Sức chứa" Binding="{Binding Capacity}" Width="90" />
+                <DataGridTextColumn Header="Giá/đêm"
+                                    Binding="{Binding BasePrice, StringFormat={}{0:N0} đ}" Width="120" />
+                <DataGridTemplateColumn Header="Trạng thái" Width="125">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Border Style="{StaticResource RoomStatusBadge}" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding StatusText}" />
+                            </Border>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTextColumn Header="Hoạt động" Binding="{Binding ActiveText}" Width="105" />
+                <DataGridTemplateColumn Header="" Width="150">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <Button Content="Sửa" Style="{StaticResource GhostButton}" Padding="12,5"
+                                        Command="{Binding DataContext.EditCommand,
+                                                  RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                        CommandParameter="{Binding}" />
+                                <Button Content="Xoá" Style="{StaticResource GhostButton}" Padding="12,5"
+                                        Margin="6,0,0,0" Foreground="{StaticResource DangerBrush}"
+                                        Command="{Binding DataContext.DeleteCommand,
+                                                  RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                        CommandParameter="{Binding}" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
+</UserControl>
