@@ -26,7 +26,7 @@ namespace DataAccessObjects.Configurations
             // Unique Typename
             builder.HasIndex(rt => rt.TypeName).IsUnique();
 
-            // Seed RoomTypes - giá thực tế VND (khớp TYPE_PRICES ở frontend/src/pages/HomePage.jsx),
+            // Seed RoomTypes - gia tham khao theo VND,
             // trước đây dùng số nhỏ (100/180/300/250) chỉ để test cho gọn, không phải giá thật.
             builder.HasData(
                 new RoomType { Id = 1, TypeName = "Standard", Capacity = 2, BasePrice = 500000.00m, Description = "Standard Room with basic amenities", IsActive = true },

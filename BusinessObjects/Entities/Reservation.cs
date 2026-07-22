@@ -12,8 +12,7 @@ namespace BusinessObjects.Entities
         public int RoomId { get; set; }
         public virtual Room Room { get; set; } = null!;
 
-        // Default 1 only protects existing/new database rows.
-        // Request DTOs intentionally do not default this value so FE must send it explicitly.
+        // Gia tri mac dinh bao ve ban ghi moi; service van bat buoc kiem tra suc chua.
         public int NumberOfGuests { get; set; } = 1;
 
         public DateTime CheckInDate { get; set; }

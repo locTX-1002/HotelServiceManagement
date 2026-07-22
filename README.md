@@ -3,6 +3,15 @@
 Ứng dụng desktop quản lý khách sạn — bài nhóm **PRN212**, nhóm 2 SE1919.
 Stack: **C# .NET 10 · WPF (MVVM) · EF Core · SQL Server**, kiến trúc 3 lớp + Repository + Singleton đúng yêu cầu đề.
 
+> Dự án là ứng dụng desktop WPF thuần; giao diện gọi trực tiếp các tầng service,
+> repository và DAO trong cùng solution.
+
+## Tài liệu kỹ thuật
+
+- [Backend WPF](docs/BACKEND_WPF.md) — entity, EF Core, DAO, repository, service, migration và quy tắc nghiệp vụ.
+- [Frontend WPF](docs/FRONTEND_WPF.md) — XAML, MVVM, navigation, validation, theme và quy trình tạo màn hình.
+- [Quy ước giao diện](docs/QUY_UOC_GIAO_DIEN.md) — design token và checklist review UI.
+
 ## Yêu cầu máy
 
 - Windows 10/11
@@ -45,6 +54,15 @@ Repositories          interface + implementation bọc DAO
 Services              nghiệp vụ (AuthService, AppSession, DatabaseService)
 FUHotelManagementWPF  WPF MVVM — chỉ tham chiếu Services + BusinessObjects
 ```
+
+Luồng xử lý chuẩn của ứng dụng desktop:
+
+```text
+View (XAML) → ViewModel → Service → Repository → DAO → EF Core → SQL Server
+```
+
+Không tạo HTTP endpoint và không gọi API nội bộ. ViewModel không được gọi trực tiếp
+DAO hoặc `HotelDbContext`.
 
 Luồng mẫu có sẵn để soi theo khi làm module mới: **Đăng nhập**
 

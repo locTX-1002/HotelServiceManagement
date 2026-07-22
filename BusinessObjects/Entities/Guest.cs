@@ -10,9 +10,7 @@ namespace BusinessObjects.Entities
         public string? Email { get; set; }
         public string PhoneNumber { get; set; } = string.Empty;
 
-        // Null khi Guest duoc tao tu tu dang ky guest portal (khong con bat buoc CCCD/CMND luc dang
-        // ky vi ly do rieng tu - xac minh danh tinh that van dien ra o quay le tan luc check-in). Van
-        // bat buoc khi le tan tao Guest thu cong (GuestService.Validate).
+        // Co the de trong khi tao ho so tam; phai duoc xac minh truoc khi check-in.
         public string? IdentityNumber { get; set; }
         public GuestTag Tag { get; set; } = GuestTag.None;
         public string? TagNote { get; set; }

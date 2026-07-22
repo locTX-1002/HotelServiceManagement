@@ -5,7 +5,7 @@ namespace DataAccessObjects
 {
     // Chi dung cho lenh `dotnet ef migrations ...` luc DEV (design-time) - runtime that doc
     // connection string tu appsettings.json cua project WPF. Server SQLEXPRESS + Trusted_Connection
-    // la quy uoc chung ca nhom dang dung o ban web, may ai khac instance thi sua tai cho khi can
+    // la quy uoc chung cua nhom; may dung instance khac thi truyen cau hinh phu hop
     // tao migration (viec hiem, thuong chi 1 nguoi giu vai tro DB lam).
     public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<HotelDbContext>
     {

@@ -25,7 +25,6 @@ namespace DataAccessObjects
         public DbSet<Promotion> Promotions { get; set; }
         public DbSet<SurchargeItem> SurchargeItems { get; set; }
         public DbSet<Surcharge> Surcharges { get; set; }
-        // App desktop dang nhap giu phien trong process - khong can refresh/reset token nhu ban web
         public DbSet<GuestAccount> GuestAccounts { get; set; }
         public DbSet<HousekeepingRequest> HousekeepingRequests { get; set; }
 

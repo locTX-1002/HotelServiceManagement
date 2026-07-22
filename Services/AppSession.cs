@@ -3,8 +3,8 @@ using BusinessObjects.Entities;
 namespace Services
 {
     /// <summary>
-    /// Phien dang nhap cua app desktop - thay the JWT cua ban web. Song trong process,
-    /// dong app la het phien; moi man hinh doc CurrentUser de biet ai dang thao tac va role gi.
+    /// Phien dang nhap cua ung dung desktop. Phien chi ton tai trong process;
+    /// moi man hinh doc CurrentUser de biet nguoi dang thao tac va vai tro hien tai.
     /// </summary>
     public static class AppSession
     {
