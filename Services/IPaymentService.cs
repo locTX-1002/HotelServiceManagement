@@ -14,4 +14,5 @@ public interface IPaymentService
     Task<ServiceResult<InvoicePaymentSummary>> GetSummaryAsync(int invoiceId);
     Task<ServiceResult<Payment>> RecordAsync(int invoiceId, decimal amount,
         PaymentMethod method, string? transactionId);
+    Task<ServiceResult<Payment>> VoidAsync(int paymentId);
 }

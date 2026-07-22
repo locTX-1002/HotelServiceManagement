@@ -84,4 +84,26 @@ public sealed class PaymentDAO
         await transaction.CommitAsync();
         return payment;
     }
+
+    public async Task<Payment?> VoidAsync(int paymentId)
+    {
+        await using var context = HotelDbContextFactory.Create();
+        await using var transaction = await context.Database.BeginTransactionAsync(IsolationLevel.Serializable);
+        var payment = await context.Payments.Include(p => p.Invoice).ThenInclude(i => i.Payments)
+            .FirstOrDefaultAsync(p => p.Id == paymentId);
+        if (payment == null || payment.Status != PaymentStatus.Completed) return null;
+
+        payment.Status = PaymentStatus.Cancelled;
+        var remainingPaid = payment.Invoice.Payments
+            .Where(p => p.Id != paymentId && p.Status == PaymentStatus.Completed)
+            .Sum(p => p.Amount);
+        payment.Invoice.Status = remainingPaid <= 0
+            ? InvoiceStatus.Unpaid
+            : remainingPaid >= payment.Invoice.TotalAmount
+                ? InvoiceStatus.Paid
+                : InvoiceStatus.PartiallyPaid;
+        await context.SaveChangesAsync();
+        await transaction.CommitAsync();
+        return payment;
+    }
 }

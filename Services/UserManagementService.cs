@@ -1,0 +1,18 @@
+using System.Net.Mail;
+using BusinessObjects.Entities;
+using Microsoft.EntityFrameworkCore;
+using Repositories;
+namespace Services;
+
+public sealed class UserManagementService : IUserManagementService
+{
+    private readonly IUserRepository _r; public UserManagementService() : this(new UserRepository()) { }
+    public UserManagementService(IUserRepository r) => _r = r;
+    private static bool IsAdmin => AppSession.RoleName == "Admin"; public async Task<ServiceResult<List<User>>> GetAllAsync() => !IsAdmin ? ServiceResult<List<User>>.Failure("Chi Admin duoc quan ly nhan vien.") : ServiceResult<List<User>>.Success(await _r.GetAllAsync());
+    public async Task<ServiceResult<User>> CreateAsync(string name, string email, string password, int roleId) { if (!IsAdmin) return ServiceResult<User>.Failure("Chi Admin duoc tao tai khoan."); var error = Validate(name, email, password); if (error != null) return ServiceResult<User>.Failure(error); var n = email.Trim().ToLowerInvariant(); if (await _r.EmailExistsAsync(n)) return ServiceResult<User>.Failure("Email da ton tai."); var role = await _r.GetRoleAsync(roleId); if (role == null) return ServiceResult<User>.Failure("Vai tro khong ton tai."); var x = new User { FullName = name.Trim(), Email = n, PasswordHash = BCrypt.Net.BCrypt.HashPassword(password), RoleId = roleId, IsActive = true }; await _r.SaveAsync(x, true); x.Role = role; return ServiceResult<User>.Success(x, "Da tao tai khoan."); }
+    public async Task<ServiceResult<User>> UpdateAsync(int id, string name, string email, int roleId) { if (!IsAdmin) return ServiceResult<User>.Failure("Chi Admin duoc sua tai khoan."); var error = Validate(name, email, null); if (error != null) return ServiceResult<User>.Failure(error); var x = await _r.GetByIdAsync(id); if (x == null) return ServiceResult<User>.Failure("Khong tim thay tai khoan."); var n = email.Trim().ToLowerInvariant(); if (await _r.EmailExistsAsync(n, id)) return ServiceResult<User>.Failure("Email da ton tai."); var role = await _r.GetRoleAsync(roleId); if (role == null) return ServiceResult<User>.Failure("Vai tro khong ton tai."); x.FullName = name.Trim(); x.Email = n; x.RoleId = roleId; await _r.SaveAsync(x, false); x.Role = role; return ServiceResult<User>.Success(x, "Da cap nhat tai khoan."); }
+    public async Task<ServiceResult<User>> SetActiveAsync(int id, bool active) { if (!IsAdmin) return ServiceResult<User>.Failure("Chi Admin duoc khoa tai khoan."); if (AppSession.CurrentUser?.Id == id && !active) return ServiceResult<User>.Failure("Khong the tu khoa tai khoan dang dang nhap."); var x = await _r.GetByIdAsync(id); if (x == null) return ServiceResult<User>.Failure("Khong tim thay tai khoan."); x.IsActive = active; await _r.SaveAsync(x, false); return ServiceResult<User>.Success(x, "Da cap nhat trang thai tai khoan."); }
+    public async Task<ServiceResult> ResetPasswordAsync(int id, string password) { if (!IsAdmin) return ServiceResult.Failure("Chi Admin duoc dat lai mat khau."); if (ValidatePassword(password) != null) return ServiceResult.Failure(ValidatePassword(password)!); var x = await _r.GetByIdAsync(id); if (x == null) return ServiceResult.Failure("Khong tim thay tai khoan."); x.PasswordHash = BCrypt.Net.BCrypt.HashPassword(password); await _r.SaveAsync(x, false); return ServiceResult.Success("Da dat lai mat khau."); }
+    private static string? Validate(string n, string e, string? p) { if (string.IsNullOrWhiteSpace(n) || n.Trim().Length > 100) return "Ho ten khong hop le."; try { _ = new MailAddress(e.Trim()); } catch { return "Email khong hop le."; } return p == null ? null : ValidatePassword(p); }
+    private static string? ValidatePassword(string p) => PasswordPolicy.Validate(p);
+}

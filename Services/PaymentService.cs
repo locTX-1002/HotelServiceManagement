@@ -61,4 +61,14 @@ public sealed class PaymentService : IPaymentService
             throw;
         }
     }
+
+    public async Task<ServiceResult<Payment>> VoidAsync(int paymentId)
+    {
+        if (AppSession.RoleName is not ("Admin" or "Manager"))
+            return ServiceResult<Payment>.Failure("Ban khong co quyen huy giao dich.");
+        var payment = await _repository.VoidAsync(paymentId);
+        return payment == null
+            ? ServiceResult<Payment>.Failure("Khong tim thay giao dich hoan tat de huy.")
+            : ServiceResult<Payment>.Success(payment, "Da huy giao dich va cap nhat lai hoa don.");
+    }
 }

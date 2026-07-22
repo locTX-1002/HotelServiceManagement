@@ -37,6 +37,8 @@ public sealed class StayService : IStayService
         var stay = await _stays.GetByIdAsync(stayId);
         if (stay == null || stay.Status != StayStatus.Active)
             return ServiceResult<Stay>.Failure("Khong tim thay ky luu tru dang hoat dong.");
+        if (stay.ServiceOrders.Any(o => o.Status is ServiceOrderStatus.Pending or ServiceOrderStatus.Processing))
+            return ServiceResult<Stay>.Failure("Phai hoan tat hoac huy tat ca don dich vu truoc khi check-out.");
         if (stay.Invoice == null || stay.Invoice.Status != InvoiceStatus.Paid)
             return ServiceResult<Stay>.Failure("Hoa don phai duoc thanh toan day du truoc khi check-out.");
         var result = await _stays.CheckOutAsync(stayId, AppSession.CurrentUser?.Id,
