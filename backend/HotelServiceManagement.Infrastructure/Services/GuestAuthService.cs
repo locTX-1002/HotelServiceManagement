@@ -51,6 +51,17 @@ namespace HotelServiceManagement.Infrastructure.Services
                 return AuthServiceResult<GuestAuthResponse>.Failure("Full name is required.");
             }
 
+            var email = request.Email?.Trim() ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                return AuthServiceResult<GuestAuthResponse>.Failure("Email is required.");
+            }
+
+            if (!new System.ComponentModel.DataAnnotations.EmailAddressAttribute().IsValid(email))
+            {
+                return AuthServiceResult<GuestAuthResponse>.Failure("Email is invalid.");
+            }
+
             var phoneNumber = request.PhoneNumber?.Trim() ?? string.Empty;
             if (string.IsNullOrWhiteSpace(phoneNumber))
             {
@@ -73,13 +84,15 @@ namespace HotelServiceManagement.Infrastructure.Services
                     return AuthServiceResult<GuestAuthResponse>.Failure(
                         "This phone number already has an account. Please login instead.", 409);
                 }
+
+                guest.Email = email;
             }
             else
             {
                 guest = new Guest
                 {
                     FullName = request.FullName.Trim(),
-                    Email = string.IsNullOrWhiteSpace(request.Email) ? null : request.Email.Trim(),
+                    Email = email,
                     PhoneNumber = phoneNumber
                 };
                 _context.Guests.Add(guest);
@@ -337,7 +350,7 @@ namespace HotelServiceManagement.Infrastructure.Services
 
             var frontendOrigin = _configuration["Cors:FrontendOrigin"] ?? "http://localhost:5173";
             var resetLink = $"{frontendOrigin}/guest/dat-lai-mat-khau?token={Uri.EscapeDataString(token.Token)}";
-            await _emailService.SendPasswordResetEmailAsync(account.Guest.Email, account.Guest.FullName, resetLink);
+            await _emailService.SendPasswordResetEmailAsync(account.Guest.Email!, account.Guest.FullName, resetLink);
 
             return AuthServiceResult<AuthMessageResponse>.Success(new AuthMessageResponse { Message = genericMessage });
         }

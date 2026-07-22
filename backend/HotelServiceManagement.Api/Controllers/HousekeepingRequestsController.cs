@@ -11,7 +11,7 @@ namespace HotelServiceManagement.Api.Controllers
     // khac voi dich vu nha hang/giat ui ho phu trach.
     [ApiController]
     [Route("api/housekeeping-requests")]
-    [Authorize(Roles = "Admin,Manager,Receptionist")]
+    [Authorize(Roles = "Admin,Manager,Receptionist,ServiceStaff")]
     public class HousekeepingRequestsController : ControllerBase
     {
         private readonly IHousekeepingRequestService _housekeepingRequestService;
@@ -24,9 +24,9 @@ namespace HotelServiceManagement.Api.Controllers
         // Tra ve moi yeu cau CHUA hoan tat (Pending + Acknowledged) - du de chuong hien danh sach day
         // du, FE tu tinh badge tu rieng so Pending.
         [HttpGet]
-        public async Task<IActionResult> GetActive()
+        public async Task<IActionResult> GetActive([FromQuery] bool includeCompleted = false)
         {
-            return ToActionResult(await _housekeepingRequestService.GetActiveAsync());
+            return ToActionResult(await _housekeepingRequestService.GetAsync(includeCompleted));
         }
 
         [HttpPatch("{id:int}/acknowledge")]
@@ -51,6 +51,18 @@ namespace HotelServiceManagement.Api.Controllers
             }
 
             return ToActionResult(await _housekeepingRequestService.CompleteAsync(id, userId.Value));
+        }
+
+        [HttpPatch("{id:int}/cancel")]
+        public async Task<IActionResult> Cancel(int id)
+        {
+            var userId = GetCurrentUserId();
+            if (userId == null)
+            {
+                return Unauthorized(new AuthMessageResponse { Message = "Invalid user identity in token." });
+            }
+
+            return ToActionResult(await _housekeepingRequestService.CancelAsync(id, userId.Value));
         }
 
         private int? GetCurrentUserId()

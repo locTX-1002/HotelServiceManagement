@@ -4,6 +4,7 @@ namespace HotelServiceManagement.Domain.Enums
     {
         Pending,
         Acknowledged,
-        Completed
+        Completed,
+        Cancelled
     }
 }

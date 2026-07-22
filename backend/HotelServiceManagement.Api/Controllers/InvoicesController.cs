@@ -53,6 +53,13 @@ namespace HotelServiceManagement.Api.Controllers
                 await _invoiceService.CreateInvoiceAsync(stayId, GetCurrentUserId(), request?.PromotionCode));
         }
 
+        [HttpPatch("{id:int}/cancel")]
+        [Authorize(Roles = "Admin,Manager")]
+        public async Task<IActionResult> Cancel(int id)
+        {
+            return ToActionResult(await _invoiceService.CancelAsync(id));
+        }
+
         private int GetCurrentUserId()
         {
             var userIdValue = User.FindFirst(ClaimTypes.NameIdentifier)?.Value

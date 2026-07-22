@@ -135,6 +135,19 @@ namespace HotelServiceManagement.Api.Controllers
             return ToActionResult(await _housekeepingRequestService.CreateForGuestAsync(guestId.Value, request?.RequestType, request?.Note));
         }
 
+        [Authorize(Policy = "GuestOnly")]
+        [HttpGet("me/housekeeping-requests")]
+        public async Task<IActionResult> GetMyHousekeepingRequests()
+        {
+            var guestId = GetCurrentGuestId();
+            if (guestId == null)
+            {
+                return Unauthorized(new AuthMessageResponse { Message = "Invalid guest identity in token." });
+            }
+
+            return ToActionResult(await _housekeepingRequestService.GetForGuestAsync(guestId.Value));
+        }
+
         private int? GetCurrentGuestId()
         {
             var guestIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
