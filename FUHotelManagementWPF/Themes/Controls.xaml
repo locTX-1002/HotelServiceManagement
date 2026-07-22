@@ -197,7 +197,7 @@
     <!-- DataGrid: hang chon nen NHAT chu van den (khong duoc xanh dam nuot chu),
          cell can giua doc, bo vien focus mac dinh. Bang boc trong Card, header
          chu nho dam mo, hang ngan cach bang hairline -->
-    <Style TargetType="DataGridColumnHeader">
+    <Style x:Key="AppColumnHeaderStyle" TargetType="DataGridColumnHeader">
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="Foreground" Value="{StaticResource InkSoftBrush}" />
         <Setter Property="FontSize" Value="11" />
@@ -206,7 +206,7 @@
         <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
         <Setter Property="BorderThickness" Value="0,0,0,1" />
     </Style>
-    <Style TargetType="DataGridRow">
+    <Style x:Key="AppRowStyle" TargetType="DataGridRow">
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
         <Setter Property="BorderThickness" Value="0,0,0,1" />
@@ -235,7 +235,7 @@
             </Trigger>
         </Style.Triggers>
     </Style>
-    <Style TargetType="DataGridCell">
+    <Style x:Key="AppCellStyle" TargetType="DataGridCell">
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="BorderThickness" Value="0" />
         <Setter Property="Padding" Value="8,0" />
@@ -255,6 +255,28 @@
                 <Setter Property="Foreground" Value="{StaticResource InkBrush}" />
             </Trigger>
         </Style.Triggers>
+    </Style>
+
+    <!-- Style ngam DataGrid CUA TA thay the han style cua HandyControl:
+         HC gan RowStyle tuong minh trong style DataGrid cua no nen moi style ngam
+         DataGridRow deu bi bo qua -> phai chiem quyen o cap DataGrid va tu gan
+         Row/Cell/Header style cua minh. Module chi can dat <DataGrid> la dep san. -->
+    <Style TargetType="DataGrid">
+        <Setter Property="ColumnHeaderStyle" Value="{StaticResource AppColumnHeaderStyle}" />
+        <Setter Property="RowStyle" Value="{StaticResource AppRowStyle}" />
+        <Setter Property="CellStyle" Value="{StaticResource AppCellStyle}" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="RowHeight" Value="46" />
+        <Setter Property="GridLinesVisibility" Value="None" />
+        <Setter Property="RowHeaderWidth" Value="0" />
+        <Setter Property="RowBackground" Value="Transparent" />
+        <Setter Property="AlternatingRowBackground" Value="Transparent" />
+        <Setter Property="AutoGenerateColumns" Value="False" />
+        <Setter Property="CanUserAddRows" Value="False" />
+        <Setter Property="HeadersVisibility" Value="Column" />
+        <Setter Property="SelectionMode" Value="Single" />
+        <Setter Property="SelectionUnit" Value="FullRow" />
     </Style>
 
     <!-- Badge trang thai PHONG: dung cho row co property Room (RoomRow).
