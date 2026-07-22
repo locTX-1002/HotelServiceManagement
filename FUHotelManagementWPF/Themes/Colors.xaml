@@ -3,25 +3,26 @@
 
     <!-- ============================================================
          DESIGN TOKENS: MAU SAC - nguon chan ly duy nhat cho ca app.
-         Ke thua ngon ngu thiet ke ban web: nen kem, chu ink, nhan terracotta.
+         Bang mau "Xanh reu & xuong da": nen da sang hoi lanh, chu ink reu,
+         nhan xanh reu dam - hospitality cao cap, diu mat khi dung lau.
          QUY UOC CHO CA NHOM: chi dung brush theo ten o day,
          KHONG hardcode ma mau hex trong XAML cua module.
          ============================================================ -->
 
     <!-- Thuong hieu -->
-    <SolidColorBrush x:Key="BrandBrush" Color="#A9481F" />
-    <SolidColorBrush x:Key="BrandDarkBrush" Color="#8F3B18" />
-    <SolidColorBrush x:Key="BrandLightBrush" Color="#C4693F" />
+    <SolidColorBrush x:Key="BrandBrush" Color="#34613C" />
+    <SolidColorBrush x:Key="BrandDarkBrush" Color="#27492D" />
+    <SolidColorBrush x:Key="BrandLightBrush" Color="#4E7D55" />
     <!-- Nen nhat cho item dang chon / hover khu vuc brand -->
-    <SolidColorBrush x:Key="BrandSoftBrush" Color="#F2E3D9" />
+    <SolidColorBrush x:Key="BrandSoftBrush" Color="#E2EAE0" />
 
     <!-- Trung tinh -->
-    <SolidColorBrush x:Key="CreamBrush" Color="#F6F1E8" />
-    <SolidColorBrush x:Key="CreamDarkBrush" Color="#EFE7D8" />
-    <SolidColorBrush x:Key="CardBrush" Color="#FDFBF7" />
-    <SolidColorBrush x:Key="InkBrush" Color="#211D18" />
-    <SolidColorBrush x:Key="InkSoftBrush" Color="#6B6459" />
-    <SolidColorBrush x:Key="LineBrush" Color="#22000000" />
+    <SolidColorBrush x:Key="SurfaceBrush" Color="#F3F4F0" />
+    <SolidColorBrush x:Key="SurfaceAltBrush" Color="#E9EBE4" />
+    <SolidColorBrush x:Key="CardBrush" Color="#FCFCFA" />
+    <SolidColorBrush x:Key="InkBrush" Color="#1D231D" />
+    <SolidColorBrush x:Key="InkSoftBrush" Color="#646B5E" />
+    <SolidColorBrush x:Key="LineBrush" Color="#1F000000" />
 
     <!-- Trang thai: dung cho badge, canh bao, thong bao.
          Ban dam = chu/icon, ban Soft = nen pill -->
@@ -39,13 +40,13 @@
          (DataGrid, ComboBox, DatePicker, Growl...) tu doi sang mau
          thuong hieu nho cac key duoi day (HC tra cuu bang DynamicResource).
          ============================================================ -->
-    <SolidColorBrush x:Key="PrimaryBrush" Color="#A9481F" />
-    <SolidColorBrush x:Key="DarkPrimaryBrush" Color="#8F3B18" />
-    <SolidColorBrush x:Key="LightPrimaryBrush" Color="#C4693F" />
-    <SolidColorBrush x:Key="TitleBrush" Color="#211D18" />
-    <SolidColorBrush x:Key="PrimaryTextBrush" Color="#211D18" />
-    <SolidColorBrush x:Key="SecondaryTextBrush" Color="#6B6459" />
-    <SolidColorBrush x:Key="RegionBrush" Color="#FDFBF7" />
-    <SolidColorBrush x:Key="SecondaryRegionBrush" Color="#F6F1E8" />
+    <SolidColorBrush x:Key="PrimaryBrush" Color="#34613C" />
+    <SolidColorBrush x:Key="DarkPrimaryBrush" Color="#27492D" />
+    <SolidColorBrush x:Key="LightPrimaryBrush" Color="#4E7D55" />
+    <SolidColorBrush x:Key="TitleBrush" Color="#1D231D" />
+    <SolidColorBrush x:Key="PrimaryTextBrush" Color="#1D231D" />
+    <SolidColorBrush x:Key="SecondaryTextBrush" Color="#646B5E" />
+    <SolidColorBrush x:Key="RegionBrush" Color="#FCFCFA" />
+    <SolidColorBrush x:Key="SecondaryRegionBrush" Color="#F3F4F0" />
 
 </ResourceDictionary>

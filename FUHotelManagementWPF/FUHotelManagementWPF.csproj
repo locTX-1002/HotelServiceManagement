@@ -22,6 +22,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Anh nhung vao assembly, load qua pack://application:,,,/Assets/... -->
+    <Resource Include="Assets\**\*.png" />
+    <Resource Include="Assets\**\*.jpg" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\BusinessObjects\BusinessObjects.csproj" />
     <ProjectReference Include="..\Services\Services.csproj" />
   </ItemGroup>

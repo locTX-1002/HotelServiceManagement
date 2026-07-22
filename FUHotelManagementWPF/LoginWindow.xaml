@@ -2,30 +2,66 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="FU Hotel — Đăng nhập"
-        Height="600" Width="460"
+        Height="560" Width="920"
         WindowStartupLocation="CenterScreen"
-        ResizeMode="NoResize"
+        ResizeMode="CanMinimize"
         Style="{StaticResource BaseWindow}">
     <Grid>
-        <Border Background="{StaticResource CardBrush}"
-                BorderBrush="{StaticResource LineBrush}" BorderThickness="1"
-                CornerRadius="18" Margin="40" Padding="34,38"
-                VerticalAlignment="Center">
-            <StackPanel>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="5*" />
+            <ColumnDefinition Width="6*" />
+        </Grid.ColumnDefinitions>
 
-                <!-- Logo + ten he thong -->
-                <Border Width="58" Height="58" CornerRadius="999"
-                        Background="{StaticResource BrandBrush}" HorizontalAlignment="Center">
-                    <TextBlock Text="FU" Foreground="White" FontWeight="Bold" FontSize="20"
-                               HorizontalAlignment="Center" VerticalAlignment="Center" />
+        <!-- Panel thuong hieu ben trai: anh nen (thay Assets/Brand/login-side.png bang anh that khi co) -->
+        <Border Grid.Column="0">
+            <Border.Background>
+                <ImageBrush ImageSource="pack://application:,,,/Assets/Brand/login-side-1.jpg"
+                            Stretch="UniformToFill" />
+            </Border.Background>
+            <Grid ClipToBounds="True">
+                <!-- Lop phu toi de chu luon doc duoc tren anh -->
+                <Border>
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                            <GradientStop Color="#8027492D" Offset="0" />
+                            <GradientStop Color="#B31E3826" Offset="1" />
+                        </LinearGradientBrush>
+                    </Border.Background>
                 </Border>
-                <TextBlock Text="FU Hotel Management" FontSize="22" FontWeight="Bold"
-                           HorizontalAlignment="Center" Margin="0,14,0,3" />
-                <TextBlock Text="Hệ thống quản lý khách sạn"
-                           Foreground="{StaticResource InkSoftBrush}"
-                           HorizontalAlignment="Center" Margin="0,0,0,26" />
+                <!-- Monogram typographic co chu dich (thay cho blob/hoa tiet ngau nhien) -->
+                <TextBlock Text="FU" FontSize="300" FontWeight="Bold"
+                           Foreground="#0DFFFFFF"
+                           HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                           Margin="0,0,-34,-96" />
 
-                <!-- Form -->
+                <StackPanel VerticalAlignment="Center" Margin="46,0,40,0">
+                    <Border Width="54" Height="54" CornerRadius="999" Background="White"
+                            HorizontalAlignment="Left">
+                        <TextBlock Text="FU" Foreground="{StaticResource BrandDarkBrush}"
+                                   FontWeight="Bold" FontSize="18"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <TextBlock Text="FU Hotel Management" Foreground="White"
+                               FontSize="27" FontWeight="Bold" Margin="0,20,0,8" />
+                    <TextBlock Foreground="#CCFFFFFF" FontSize="13" TextWrapping="Wrap" LineHeight="20"
+                               Text="Hệ thống quản lý khách sạn cho đội ngũ vận hành — đặt phòng, check-in/out, dịch vụ và hoá đơn trong một nơi." />
+                </StackPanel>
+
+                <TextBlock Text="Đồ án PRN212 · Nhóm 2 · SE1919"
+                           Foreground="#8CFFFFFF" FontSize="11.5"
+                           VerticalAlignment="Bottom" HorizontalAlignment="Left"
+                           Margin="46,0,0,26" />
+            </Grid>
+        </Border>
+
+        <!-- Form dang nhap ben phai -->
+        <Grid Grid.Column="1" Background="{StaticResource CardBrush}">
+            <StackPanel Width="330" VerticalAlignment="Center">
+                <TextBlock Text="Đăng nhập" Style="{StaticResource PageTitleText}" />
+                <TextBlock Text="Dùng tài khoản nhân viên được cấp để vào hệ thống."
+                           Style="{StaticResource CaptionText}" FontSize="12.5"
+                           Margin="0,7,0,28" />
+
                 <TextBlock Text="EMAIL" Style="{StaticResource FieldLabel}" />
                 <!-- ValidatesOnNotifyDataErrors: o tu vien do khi ViewModel AddError("Email", ...) -->
                 <TextBox Style="{StaticResource InputBox}"
@@ -55,22 +91,21 @@
                                    Foreground="{StaticResource DangerBrush}"
                                    VerticalAlignment="Top" Margin="0,2,8,0" />
                         <TextBlock Text="{Binding ErrorMessage}" Foreground="{StaticResource DangerBrush}"
-                                   TextWrapping="Wrap" MaxWidth="290" />
+                                   TextWrapping="Wrap" MaxWidth="280" />
                     </StackPanel>
                 </Border>
 
                 <Button Content="Đăng nhập" Style="{StaticResource PrimaryButton}"
-                        Margin="0,22,0,0" IsDefault="True"
+                        Margin="0,24,0,0" IsDefault="True"
+                        HorizontalContentAlignment="Center"
                         Command="{Binding LoginCommand}"
                         CommandParameter="{Binding ElementName=PasswordInput}" />
 
                 <!-- Goi y tai khoan seed cho team chay lan dau -->
-                <TextBlock HorizontalAlignment="Center" Margin="0,18,0,0" FontSize="11.5"
-                           Foreground="{StaticResource InkSoftBrush}">
-                    Tài khoản mẫu: admin@hotel.com / Admin123!
-                </TextBlock>
-
+                <TextBlock HorizontalAlignment="Center" Margin="0,18,0,0"
+                           Style="{StaticResource CaptionText}" FontSize="11.5"
+                           Text="Tài khoản mẫu: admin@hotel.com / Admin123!" />
             </StackPanel>
-        </Border>
+        </Grid>
     </Grid>
 </Window>

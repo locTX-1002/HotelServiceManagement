@@ -1,0 +1,14 @@
+Anh tu Wikimedia Commons (giay phep tu do). Nguon goc:
+standard-1.jpg  <-  File:6.13.08ABQMarriotPyramidRoomByLuigiNovi8.jpg
+standard-2.jpg  <-  File:Bed at Hotel Esplanade in Stockholm in the evening.jpg
+standard-3.jpg  <-  File:Bed at Omenahotelli Tampere.jpg
+deluxe-1.jpg  <-  File:Corinthia Hotel Budapest. Foyer at Hársfa Conference Room.JPG
+deluxe-2.jpg  <-  File:Corinthia Hotel Budapest. Hársfa Conference Room. Wrought iron gate.JPG
+deluxe-3.jpg  <-  File:Gold Room, Arizona Biltmore Hotel, Missouri Ave, Biltmore Area, Phoenix, AZ.jpg
+suite-1.jpg  <-  File:Bathroom of Khan Pool Suite in Amantaka luxury Resort & Hotel in Luang Prabang Laos.jpg
+suite-2.jpg  <-  File:Bathtub of Khan Pool Suite in Amantaka luxury Resort & Hotel in Luang Prabang Laos.jpg
+suite-3.jpg  <-  File:Canopy bed of Amantaka Suite in Amantaka luxury Resort & Hotel in Luang Prabang Laos.jpg
+family-1.jpg  <-  File:Day 3- Good night Danbo (8407710635).jpg
+family-2.jpg  <-  File:Forest Of Hope Guest House.jpg
+family-3.jpg  <-  File:Hotel Pera Palace - Istanbul.jpg
+login-side-1.jpg  <-  File:Atrium of Granada Luxury Belek Hotel.jpg
