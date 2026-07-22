@@ -61,13 +61,17 @@
     </Style>
 
     <!-- O nhap chu: ap TOAN APP (style ngam) de moi module dong nhat,
-         khong ai phai tu style TextBox nua -->
+         khong ai phai tu style TextBox nua.
+         Validate: ViewModel ke thua ValidatableViewModelBase + AddError("TenProperty", "...")
+         => o binding vao property do TU DONG vien do + tooltip loi (trigger Validation.HasError). -->
     <Style TargetType="TextBox">
         <Setter Property="Padding" Value="10,8" />
         <Setter Property="Background" Value="White" />
         <Setter Property="Foreground" Value="{StaticResource InkBrush}" />
         <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
         <Setter Property="FontSize" Value="13" />
+        <!-- Tat adorner do mac dinh cua WPF (ve de len ngoai khung) - da co vien do + tooltip -->
+        <Setter Property="Validation.ErrorTemplate" Value="{x:Null}" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="TextBox">
@@ -78,6 +82,12 @@
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsKeyboardFocused" Value="True">
                             <Setter Property="BorderBrush" Value="{StaticResource BrandBrush}" />
+                        </Trigger>
+                        <!-- Dat SAU IsKeyboardFocused de loi thang mau focus khi ca hai cung xay ra -->
+                        <Trigger Property="Validation.HasError" Value="True">
+                            <Setter Property="BorderBrush" Value="{StaticResource DangerBrush}" />
+                            <Setter Property="ToolTip"
+                                    Value="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors)[0].ErrorContent}" />
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter Property="Opacity" Value="0.55" />

@@ -7,7 +7,7 @@ namespace Repositories
     // ben trong uy quyen cho DAO Singleton - de mock/de thay the khi test.
     public class UserRepository : IUserRepository
     {
-        public User? GetActiveByEmail(string email)
-            => UserDAO.Instance.GetActiveByEmail(email);
+        public Task<User?> GetActiveByEmailAsync(string email)
+            => UserDAO.Instance.GetActiveByEmailAsync(email);
     }
 }

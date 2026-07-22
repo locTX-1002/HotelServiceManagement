@@ -4,6 +4,6 @@ namespace Repositories
 {
     public interface IUserRepository
     {
-        User? GetActiveByEmail(string email);
+        Task<User?> GetActiveByEmailAsync(string email);
     }
 }

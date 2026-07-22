@@ -27,8 +27,9 @@
 
                 <!-- Form -->
                 <TextBlock Text="EMAIL" Style="{StaticResource FieldLabel}" />
+                <!-- ValidatesOnNotifyDataErrors: o tu vien do khi ViewModel AddError("Email", ...) -->
                 <TextBox Style="{StaticResource InputBox}"
-                         Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}" />
+                         Text="{Binding Email, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}" />
 
                 <TextBlock Text="MẬT KHẨU" Style="{StaticResource FieldLabel}" Margin="0,16,0,5" />
                 <PasswordBox x:Name="PasswordInput" Style="{StaticResource InputPasswordBox}" />

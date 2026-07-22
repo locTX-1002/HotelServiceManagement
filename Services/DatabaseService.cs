@@ -8,6 +8,6 @@ namespace Services
     /// </summary>
     public static class DatabaseService
     {
-        public static void EnsureMigrated() => HotelDbContextFactory.EnsureMigrated();
+        public static Task EnsureMigratedAsync() => HotelDbContextFactory.EnsureMigratedAsync();
     }
 }

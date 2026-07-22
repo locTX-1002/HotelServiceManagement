@@ -24,6 +24,9 @@ namespace DataAccessObjects
                     var config = new ConfigurationBuilder()
                         .SetBasePath(AppContext.BaseDirectory)
                         .AddJsonFile("appsettings.json", optional: true)
+                        // File override rieng tung may (da gitignore) - ai dung instance khac
+                        // SQLEXPRESS thi tao appsettings.Local.json de khoi dung cham file chung.
+                        .AddJsonFile("appsettings.Local.json", optional: true)
                         .Build();
                     // Thieu appsettings van chay duoc bang mac dinh SQLEXPRESS - do la quy uoc chung
                     // ca nhom dang dung; may nao instance khac thi chi can sua appsettings.json.
@@ -45,10 +48,10 @@ namespace DataAccessObjects
         /// Ap moi migration con thieu vao database (tu tao DB neu chua co) - goi 1 lan luc app
         /// khoi dong, giong co che cua ban web: thanh vien moi chi can F5 la DB tu dung.
         /// </summary>
-        public static void EnsureMigrated()
+        public static async Task EnsureMigratedAsync()
         {
-            using var context = Create();
-            context.Database.Migrate();
+            await using var context = Create();
+            await context.Database.MigrateAsync();
         }
     }
 }

@@ -1,11 +1,17 @@
 using System;
+using System.Threading.Tasks;
 using System.Windows.Controls;
 using FUHotelManagementWPF.MvvmCore;
 using Services;
 
 namespace FUHotelManagementWPF.ViewModels
 {
-    public class LoginViewModel : ViewModelBase
+    /// <summary>
+    /// MAU CHUAN cho moi form cua nhom: ke thua ValidatableViewModelBase (loi theo tung o),
+    /// dung AsyncRelayCommand (khong block UI, tu chong bam doi), loi nghiep vu chung
+    /// hien qua ErrorMessage (banner do), loi tung field qua AddError (o tu vien do).
+    /// </summary>
+    public class LoginViewModel : ValidatableViewModelBase
     {
         private readonly IAuthService _authService = new AuthService();
 
@@ -34,30 +40,45 @@ namespace FUHotelManagementWPF.ViewModels
             set => SetProperty(ref _isBusy, value);
         }
 
-        public RelayCommand LoginCommand { get; }
+        public AsyncRelayCommand LoginCommand { get; }
 
         public LoginViewModel()
         {
-            LoginCommand = new RelayCommand(DoLogin, _ => !IsBusy);
+            LoginCommand = new AsyncRelayCommand(DoLoginAsync, _ => !IsBusy);
         }
 
-        private void DoLogin(object? parameter)
+        private async Task DoLoginAsync(object? parameter)
         {
             // PasswordBox khong cho binding truc tiep (ly do bao mat cua WPF)
             // nen View truyen ca control qua CommandParameter.
             var password = (parameter as PasswordBox)?.Password ?? string.Empty;
 
-            if (string.IsNullOrWhiteSpace(Email) || string.IsNullOrEmpty(password))
+            ClearAllErrors();
+            ErrorMessage = null;
+
+            var email = Email.Trim();
+            if (string.IsNullOrEmpty(email))
             {
-                ErrorMessage = "Vui lòng nhập đầy đủ email và mật khẩu.";
+                AddError(nameof(Email), "Chưa nhập email.");
+            }
+            else if (!email.Contains('@'))
+            {
+                AddError(nameof(Email), "Email không đúng định dạng.");
+            }
+            if (string.IsNullOrEmpty(password))
+            {
+                // PasswordBox khong binding duoc nen loi mat khau di qua banner
+                ErrorMessage = "Vui lòng nhập mật khẩu.";
+            }
+            if (HasErrors || ErrorMessage != null)
+            {
                 return;
             }
 
             IsBusy = true;
-            ErrorMessage = null;
             try
             {
-                var user = _authService.Login(Email.Trim(), password);
+                var user = await _authService.LoginAsync(email, password);
                 if (user == null)
                 {
                     ErrorMessage = "Email hoặc mật khẩu không đúng.";
