@@ -90,7 +90,9 @@ export default function RoomTypeDetailModal({ rt, selected, onSelect, onClose, s
             <p className="mt-2 text-[12px] text-ink-700">
               🛏 {meta.bed} &nbsp;&nbsp; ⛶ {meta.area} m² &nbsp;&nbsp; 👤 {meta.capacity} khách
             </p>
-            <p className="mt-3.5 text-sm leading-relaxed text-ink-700">{rt.description || meta.desc}</p>
+            {/* whitespace-pre-line: admin nhập mỗi tiện nghi/vật dụng một dòng thì hiện đúng xuống dòng,
+                không bị dồn thành 1 đoạn. Rỗng thì rơi về mô tả mẫu theo hạng phòng. */}
+            <p className="mt-3.5 whitespace-pre-line text-sm leading-relaxed text-ink-700">{rt.description || meta.desc}</p>
           </div>
         </div>
 

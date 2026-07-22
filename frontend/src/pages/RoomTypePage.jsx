@@ -185,7 +185,15 @@ export default function RoomTypePage() {
                         loading="lazy"
                         className="h-12 w-9 shrink-0 rounded-t-full rounded-b-md object-cover"
                       />
-                      <p className="font-display text-lg font-semibold tracking-tight">{t.typeName}</p>
+                      <div className="min-w-0">
+                        <p className="font-display text-lg font-semibold tracking-tight">{t.typeName}</p>
+                        {/* Mô tả/tiện nghi rút gọn để admin xem nhanh; hover xem đầy đủ, bấm Sửa để chỉnh */}
+                        {t.description && (
+                          <p className="max-w-[16rem] truncate text-[12px] text-ink-500" title={t.description}>
+                            {t.description.replace(/\s*\n\s*/g, ' · ')}
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </td>
                   <td className="px-5 py-3.5 text-sm tabular-nums text-ink-700">{t.capacity} khách</td>
@@ -285,15 +293,16 @@ export default function RoomTypePage() {
             {pricePreview && <p className="mt-1.5 text-[12px] tabular-nums text-ink-500">= {pricePreview} /đêm</p>}
           </div>
           <div>
-            <label htmlFor="rt-desc" className={labelCls}>Mô tả</label>
+            <label htmlFor="rt-desc" className={labelCls}>Mô tả & tiện nghi phòng</label>
             <textarea
               id="rt-desc"
-              rows={3}
+              rows={5}
               className={inputCls}
-              placeholder="Mô tả ngắn về hạng phòng…"
+              placeholder={'Phòng có gì: Wifi, điều hòa, minibar, TV, bồn tắm, view biển…\nHạng cao cấp ghi rõ khác gì phòng thường.\nMỗi ý một dòng để hiển thị gọn.'}
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
             />
+            <p className="mt-1.5 text-[12px] text-ink-500">Nội dung này hiện ở mục "Thông tin phòng" khi khách xem chi tiết loại phòng.</p>
           </div>
           {editing && (
             <label className="flex items-center gap-2.5 text-[13px] font-medium text-ink-700">
