@@ -27,7 +27,7 @@
                 <DataGridTextColumn Header="Sức chứa" Binding="{Binding RoomType.Capacity}" Width="90" />
                 <DataGridTextColumn Header="Giá cơ bản/đêm"
                                     Binding="{Binding RoomType.BasePrice, StringFormat={}{0:N0} đ}" Width="140" />
-                <DataGridTextColumn Header="Mô tả" Binding="{Binding RoomType.Description}" Width="*" />
+                <DataGridTextColumn Header="Mô tả" Binding="{Binding RoomType.Description}" Width="*" MinWidth="180" />
                 <DataGridTextColumn Header="Số phòng" Binding="{Binding RoomCount}" Width="90" />
                 <DataGridTextColumn Header="Hoạt động" Binding="{Binding ActiveText}" Width="105" />
                 <DataGridTemplateColumn Header="" Width="150">

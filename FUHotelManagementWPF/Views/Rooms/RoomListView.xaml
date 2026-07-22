@@ -35,10 +35,10 @@
                               CommandParameter="{Binding SelectedItem, ElementName=RoomsGrid}" />
             </DataGrid.InputBindings>
             <DataGrid.Columns>
-                <DataGridTextColumn Header="Số phòng" Binding="{Binding Room.RoomNumber}" Width="110" />
-                <DataGridTextColumn Header="Tầng" Binding="{Binding Room.Floor}" Width="70" />
-                <DataGridTextColumn Header="Loại phòng" Binding="{Binding TypeName}" Width="*" />
-                <DataGridTextColumn Header="Sức chứa" Binding="{Binding Capacity}" Width="90" />
+                <DataGridTextColumn Header="Số phòng" Binding="{Binding Room.RoomNumber}" Width="100" />
+                <DataGridTextColumn Header="Tầng" Binding="{Binding Room.Floor}" Width="65" />
+                <DataGridTextColumn Header="Loại phòng" Binding="{Binding TypeName}" Width="*" MinWidth="140" />
+                <DataGridTextColumn Header="Sức chứa" Binding="{Binding Capacity}" Width="85" />
                 <DataGridTextColumn Header="Giá/đêm"
                                     Binding="{Binding BasePrice, StringFormat={}{0:N0} đ}" Width="120" />
                 <DataGridTemplateColumn Header="Trạng thái" Width="125">
