@@ -88,8 +88,17 @@ function CheckoutDialog({ stay, items, itemsError, busy, error, onConfirm, onCan
 
   const active = (items ?? []).filter((i) => i.isActive !== false)
   const bump = (id, d) => setQty((cur) => ({ ...cur, [id]: Math.max(0, (cur[id] ?? 0) + d) }))
+  const setQtyExact = (id, n) => setQty((cur) => ({ ...cur, [id]: Math.max(0, n) }))
   const lines = active.map((i) => ({ ...i, quantity: qty[i.id] ?? 0 })).filter((l) => l.quantity > 0)
   const surchargeTotal = lines.reduce((s, l) => s + l.unitPrice * l.quantity, 0)
+
+  // Phạt quá giờ (thuần FE, đi qua phụ thu): số giờ trễ = làm tròn lên của (bây giờ − giờ trả dự kiến).
+  // Phí phạt là 1 mục phụ thu tính theo GIỜ - nhận diện bằng tên chứa "trễ"/"quá giờ" (admin tạo ở trang
+  // Giá phụ thu, tự đặt đơn giá). Bấm nút là điền số giờ trễ vào món đó -> đi theo luồng surcharges có sẵn.
+  const msLate = Date.now() - new Date(stay.plannedCheckOut).getTime()
+  const hoursLate = msLate > 0 ? Math.ceil(msLate / 3_600_000) : 0
+  const lateItem = active.find((i) => /trễ|quá giờ/i.test(i.name))
+  const lateApplied = !!lateItem && hoursLate > 0 && (qty[lateItem.id] ?? 0) === hoursLate
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-6 py-8">
@@ -106,6 +115,31 @@ function CheckoutDialog({ stay, items, itemsError, busy, error, onConfirm, onCan
             <div className="mt-4 rounded-xl bg-amber-50 px-3.5 py-2.5 text-[12px] font-medium text-amber-800 ring-1 ring-amber-600/15">
               Không tải được bảng giá phụ thu. Vẫn check-out được, nhưng nếu khách có làm hư / thất lạc đồ
               thì phải thu bù thủ công. Thử tải lại trang trước khi tạo hoá đơn.
+            </div>
+          )}
+
+          {/* Phạt quá giờ: chỉ hiện khi khách trả trễ so với giờ dự kiến */}
+          {hoursLate > 0 && (
+            <div className="mt-4 rounded-xl bg-rose-50 px-3.5 py-3 ring-1 ring-rose-600/15">
+              <p className="text-[13px] font-bold text-rose-800">Trả phòng trễ {hoursLate} giờ</p>
+              <p className="mt-0.5 text-[12px] text-rose-700">Giờ trả dự kiến: {fmtDateTime(stay.plannedCheckOut)}.</p>
+              {lateItem ? (
+                <button
+                  type="button"
+                  onClick={() => setQtyExact(lateItem.id, lateApplied ? 0 : hoursLate)}
+                  className={`mt-2 rounded-full px-3.5 py-1.5 text-[12px] font-bold ${EASE} ${
+                    lateApplied ? 'bg-white text-rose-700 ring-1 ring-rose-600/30 hover:bg-rose-50' : 'bg-rose-600 text-white hover:bg-rose-700'
+                  }`}
+                >
+                  {lateApplied
+                    ? 'Đã áp phí phạt · bấm để bỏ'
+                    : `Áp phí phạt: ${hoursLate} giờ × ${formatVnd(lateItem.unitPrice)} = ${formatVnd(hoursLate * lateItem.unitPrice)}`}
+                </button>
+              ) : (
+                <p className="mt-1.5 text-[12px] text-rose-700/90">
+                  Tạo mục phụ thu tính theo giờ (ví dụ "Phạt trả phòng trễ giờ") ở trang <span className="font-semibold">Giá phụ thu</span> để bật tính phí quá giờ tự động.
+                </p>
+              )}
             </div>
           )}
 
@@ -163,6 +197,87 @@ function CheckoutDialog({ stay, items, itemsError, busy, error, onConfirm, onCan
   )
 }
 
+// Các mức gia hạn lưu trú (ở thêm). GIÁ ở đây là TẠM TÍNH phía FE để khách xem trước; giá thật do
+// backend tính theo loại phòng khi endpoint PATCH /api/stays/{id}/extend được bổ sung (xem docs).
+const EXTEND_OPTIONS = [
+  { key: 'hour', extendType: 'Hour', amount: 1, hours: 1, label: 'Thêm 1 giờ', price: 50000 },
+  { key: 'half', extendType: 'HalfDay', amount: 1, hours: 6, label: 'Nửa ngày (≈6 giờ)', price: 150000 },
+  { key: 'day', extendType: 'Day', amount: 1, hours: 24, label: 'Cả ngày (1 đêm)', price: 300000 },
+]
+
+// Dialog gia hạn: khách ở tiếp, GIỮ phòng, dời giờ trả - KHÁC check-out (không tạo hoá đơn, không trả phòng).
+// Cần endpoint backend riêng; tới khi có thì nút báo lỗi thật chứ không giả vờ thành công.
+function ExtendStayDialog({ stay, busy, error, onConfirm, onCancel }) {
+  const [pick, setPick] = useState(null)
+  useEffect(() => { setPick(null) }, [stay])
+  if (!stay) return null
+  const opt = EXTEND_OPTIONS.find((o) => o.key === pick)
+  const newCheckout = opt ? new Date(new Date(stay.plannedCheckOut).getTime() + opt.hours * 3_600_000) : null
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-6 py-8">
+      <div onClick={busy ? undefined : onCancel} className="absolute inset-0 bg-ink-900/30" />
+      <div className="bezel-shell relative w-full max-w-md">
+        <div className="bezel-core px-6 py-6">
+          <p className="font-display text-xl font-semibold tracking-tight">Gia hạn phòng {stay.roomNumber}</p>
+          <p className="mt-1 text-[13px] text-ink-500">
+            {stay.guestName ?? 'Khách'} — giữ phòng và dời giờ trả. Giờ trả hiện tại: {fmtDateTime(stay.plannedCheckOut)}.
+          </p>
+
+          <div className="mt-4 space-y-2">
+            {EXTEND_OPTIONS.map((o) => (
+              <button
+                key={o.key}
+                type="button"
+                onClick={() => setPick(o.key)}
+                className={`flex w-full items-center justify-between rounded-xl px-3.5 py-3 text-left ring-1 ${EASE} ${
+                  pick === o.key ? 'bg-brand-50 ring-2 ring-brand-600/50' : 'bg-white ring-black/[0.07] hover:ring-black/20'
+                }`}
+              >
+                <span className="text-[13px] font-semibold">{o.label}</span>
+                <span className="text-[13px] font-bold tabular-nums text-brand-700">{formatVnd(o.price)}</span>
+              </button>
+            ))}
+          </div>
+
+          {opt && (
+            <div className="mt-3 rounded-xl bg-white p-3.5 text-[13px] ring-1 ring-black/5">
+              <div className="flex items-center justify-between">
+                <span className="text-ink-500">Giờ trả mới</span>
+                <span className="font-semibold tabular-nums">{fmtDateTime(newCheckout)}</span>
+              </div>
+              <div className="mt-1 flex items-center justify-between">
+                <span className="text-ink-500">Phí tạm tính</span>
+                <span className="font-semibold tabular-nums text-brand-700">{formatVnd(opt.price)}</span>
+              </div>
+              <p className="mt-1.5 text-[11px] text-ink-500">Giá thật do máy chủ tính theo loại phòng khi ghi nhận.</p>
+            </div>
+          )}
+
+          {error && <p className={`mt-4 ${errorCls}`}>{error}</p>}
+
+          <div className="mt-5 flex gap-2.5">
+            <button
+              onClick={onCancel}
+              disabled={busy}
+              className={`flex-1 rounded-full py-2.5 text-[13px] font-semibold text-ink-700 ring-1 ring-black/10 ${EASE} hover:bg-white disabled:opacity-50`}
+            >
+              Hủy
+            </button>
+            <button
+              onClick={() => opt && onConfirm(opt)}
+              disabled={busy || !opt}
+              className={`flex-1 rounded-full bg-brand-600 py-2.5 text-[13px] font-bold text-white ${EASE} hover:bg-brand-700 active:scale-[0.98] disabled:opacity-40`}
+            >
+              {busy ? 'Đang gia hạn…' : 'Gia hạn'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function CheckInOutPage() {
   const navigate = useNavigate()
   const toast = useToast()
@@ -194,6 +309,10 @@ export default function CheckInOutPage() {
   const [toCheckOut, setToCheckOut] = useState(null)
   const [checkingOut, setCheckingOut] = useState(false)
   const [checkOutError, setCheckOutError] = useState('')
+
+  const [toExtend, setToExtend] = useState(null)
+  const [extending, setExtending] = useState(false)
+  const [extendError, setExtendError] = useState('')
 
   const [receipt, setReceipt] = useState(null)
   const [surchargeItems, setSurchargeItems] = useState([]) // danh mục phụ thu cho dialog check-out
@@ -284,6 +403,27 @@ export default function CheckInOutPage() {
       })
       .catch((err) => setCheckOutError(apiError(err)))
       .finally(() => setCheckingOut(false))
+  }
+
+  // Gia hạn lưu trú - gọi endpoint riêng (chưa có ở BE). Đây là thao tác GHI nên khi endpoint chưa tồn
+  // tại phải báo lỗi thật, KHÔNG fallback mock giả vờ thành công (khác các GET danh mục dùng mock).
+  const confirmExtend = (opt) => {
+    setExtendError('')
+    setExtending(true)
+    client
+      .patch(`/api/stays/${toExtend.stayId}/extend`, { extendType: opt.extendType, amount: opt.amount })
+      .then(() => {
+        toast.success(`Đã gia hạn phòng ${toExtend.roomNumber}`)
+        setToExtend(null)
+        loadStays()
+        notifyDataChanged()
+      })
+      .catch((err) => {
+        if (isBackendMissing(err)) {
+          setExtendError('Máy chủ chưa hỗ trợ gia hạn lưu trú — cần bổ sung endpoint PATCH /api/stays/{id}/extend (xem docs/API_GIA_HAN_LUU_TRU.md).')
+        } else setExtendError(apiError(err))
+      })
+      .finally(() => setExtending(false))
   }
 
   const usingMock = tab === 'checkin' ? resUsingMock : staysUsingMock
@@ -479,12 +619,20 @@ export default function CheckInOutPage() {
                             )}
                           </td>
                           <td className="px-5 py-3.5 text-right">
-                            <button
-                              onClick={() => { setCheckOutError(''); setToCheckOut(s) }}
-                              className={`rounded-full bg-rose-600 px-4 py-1.5 text-[12px] font-bold text-white ${EASE} hover:bg-rose-700 active:scale-[0.97]`}
-                            >
-                              Check-out
-                            </button>
+                            <div className="flex items-center justify-end gap-2">
+                              <button
+                                onClick={() => { setExtendError(''); setToExtend(s) }}
+                                className={`rounded-full px-4 py-1.5 text-[12px] font-semibold text-ink-700 ring-1 ring-black/10 ${EASE} hover:bg-white active:scale-[0.97]`}
+                              >
+                                Gia hạn
+                              </button>
+                              <button
+                                onClick={() => { setCheckOutError(''); setToCheckOut(s) }}
+                                className={`rounded-full bg-rose-600 px-4 py-1.5 text-[12px] font-bold text-white ${EASE} hover:bg-rose-700 active:scale-[0.97]`}
+                              >
+                                Check-out
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       )
@@ -518,6 +666,14 @@ export default function CheckInOutPage() {
         error={checkOutError}
         onConfirm={confirmCheckOut}
         onCancel={() => setToCheckOut(null)}
+      />
+
+      <ExtendStayDialog
+        stay={toExtend}
+        busy={extending}
+        error={extendError}
+        onConfirm={confirmExtend}
+        onCancel={() => setToExtend(null)}
       />
 
       <ReceiptDialog

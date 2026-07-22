@@ -160,6 +160,9 @@ export const MOCK_SURCHARGE_ITEMS = [
   { id: 6, name: 'Ấm siêu tốc', unitPrice: 250000, unit: 'cái', isActive: true },
   { id: 7, name: 'Ly / cốc thủy tinh', unitPrice: 30000, unit: 'cái', isActive: true },
   { id: 8, name: 'Chăn / ga (ố bẩn nặng)', unitPrice: 150000, unit: 'bộ', isActive: true },
+  // Phạt trả trễ: 1 mục phụ thu tính theo GIỜ. Màn check-out tự điền số giờ trễ vào đây.
+  // Admin đổi đơn giá ở trang Giá phụ thu; đây chỉ là giá mẫu khi chạy mock.
+  { id: 9, name: 'Phạt trả phòng trễ giờ', unitPrice: 50000, unit: 'giờ', isActive: true },
 ]
 
 // GET /api/service-orders -> [{ id, stayId, orderDate, status, totalAmount, details: [...] }]
