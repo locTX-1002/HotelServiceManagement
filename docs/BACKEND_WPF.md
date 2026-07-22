@@ -25,9 +25,12 @@ Không tạo thêm tầng giao tiếp mạng nội bộ giữa giao diện và n
 | Đặt phòng | Hoàn thành | Hoàn thành | Hoàn thành |
 | Check-in/check-out | Hoàn thành | Hoàn thành | Hoàn thành |
 | Danh mục và gọi dịch vụ | Hoàn thành | Hoàn thành | Hoàn thành |
-| Hóa đơn/thanh toán | Thanh toán hoàn thành | Thanh toán hoàn thành | Thanh toán hoàn thành |
-| Báo cáo | Chưa triển khai | Chưa triển khai | Chưa triển khai |
-| Quản lý tài khoản nhân viên | Một phần | Một phần | Chưa triển khai |
+| Hóa đơn/thanh toán | Hoàn thành | Hoàn thành | Hoàn thành |
+| Phụ thu và khuyến mãi | Hoàn thành | Hoàn thành | Hoàn thành |
+| Báo cáo | Hoàn thành | Hoàn thành | Hoàn thành |
+| Quản lý tài khoản nhân viên | Hoàn thành | Hoàn thành | Hoàn thành |
+| Tài khoản khách hàng | Hoàn thành | Hoàn thành | Hoàn thành |
+| Yêu cầu buồng phòng | Hoàn thành | Hoàn thành | Hoàn thành |
 
 Bảng này phản ánh mã nguồn hiện tại, không phải danh sách chức năng đã hoàn thành ở giao diện.
 
@@ -106,7 +109,7 @@ Các service cần có theo module:
 - `InvoiceService`, `PaymentService`.
 - `ReportService`.
 - `UserManagementService`.
-- Service cho promotion, surcharge và housekeeping nếu các chức năng được triển khai.
+- `PromotionService`, `SurchargeService`, `HousekeepingRequestService`, `GuestAccountService`.
 
 ## 3. Luồng gọi chuẩn
 
@@ -169,6 +172,8 @@ Phương thức thanh toán của ứng dụng desktop:
 - Tổng các payment `Completed` không được vượt `Invoice.TotalAmount`.
 - Mã giao dịch chuyển khoản có unique index để không ghi nhận một giao dịch hai lần.
 - Sau mỗi payment, trạng thái hóa đơn được cập nhật thành `PartiallyPaid` hoặc `Paid`.
+- Admin hoặc Manager có thể hủy payment `Completed`; hóa đơn được tính lại thành `Unpaid`, `PartiallyPaid` hoặc `Paid` trong cùng transaction.
+- Phụ thu chỉ được sửa hoặc xóa khi stay còn `Active` và chưa có payment `Completed`.
 - Chỉ cho phép check-out khi hóa đơn ở trạng thái `Paid`.
 
 ### Báo cáo
@@ -177,10 +182,12 @@ Phương thức thanh toán của ứng dụng desktop:
 - Kết quả theo yêu cầu đề phải sắp xếp giảm dần.
 - Quy ước rõ ràng đầu ngày, cuối ngày và timezone.
 - Tổng hợp ở database/repository hoặc service; không tính trong XAML.
+- Service có thể xuất nội dung CSV; ViewModel chịu trách nhiệm chọn vị trí và lưu file.
 
 ## 5. Đăng nhập và bảo mật
 
 - Mật khẩu được hash bằng BCrypt.
+- Mật khẩu mới có ít nhất 8 ký tự, gồm chữ hoa, chữ thường, chữ số và ký tự đặc biệt.
 - Không lưu mật khẩu plaintext hoặc đưa hash lên ViewModel.
 - `AppSession` chỉ giữ thông tin người dùng cần thiết trong phiên chạy ứng dụng.
 - Logout phải xóa session.
@@ -216,6 +223,10 @@ Ví dụ:
 
 Không đưa mật khẩu hoặc connection string cá nhân lên Git.
 
+File `appsettings.Local.json` bắt buộc cấu hình `BootstrapAdmin` gồm `Email`, `FullName`
+và `Password`. Mật khẩu phải đạt chính sách mật khẩu mạnh, chỉ được dùng để bootstrap và
+được hash BCrypt trước khi lưu database. Các tài khoản demo mặc định bị khóa khi ứng dụng khởi động.
+
 ## 7. Migration
 
 Chỉ một thành viên được phân công tạo migration để tránh xung đột model snapshot.
@@ -245,6 +256,22 @@ Cần kiểm thử tối thiểu:
 - Lập hóa đơn và thanh toán transaction.
 - Báo cáo theo khoảng ngày và thứ tự giảm dần.
 - Migration trên database trống và seed idempotent.
+
+Project kiểm thử nằm tại `Tests/HotelManagement.Tests.csproj`. Chạy bằng:
+
+```powershell
+dotnet test Tests/HotelManagement.Tests.csproj --configuration Release
+```
+
+CI bắt buộc build solution và chạy backend tests trên mỗi pull request.
+
+Trạng thái bàn giao hiện tại:
+
+- Build Release: không có warning/error.
+- 19 unit/integration test chạy ổn định; test đã tắt chạy song song vì `AppSession` là phiên toàn cục của ứng dụng desktop.
+- EF Core xác nhận không có model change chưa được migration.
+- Tạo được migration script idempotent để dựng/cập nhật database.
+- Các transaction quan trọng tự kiểm tra lại điều kiện tại DAO, không chỉ tin dữ liệu đã đọc ở ViewModel/Service.
 
 ## 9. Checklist khi thêm module
 

@@ -56,8 +56,13 @@ public sealed class StayDAO
         await using var context = HotelDbContextFactory.Create();
         await using var transaction = await context.Database.BeginTransactionAsync(IsolationLevel.Serializable);
         var stay = await context.Stays.Include(s => s.Reservation).ThenInclude(r => r.Room)
+            .Include(s => s.Invoice)
+            .Include(s => s.ServiceOrders)
             .FirstOrDefaultAsync(s => s.Id == stayId);
         if (stay == null || stay.Status != StayStatus.Active || actualCheckOut < stay.ActualCheckIn)
+            return null;
+        if (stay.Invoice?.Status != InvoiceStatus.Paid
+            || stay.ServiceOrders.Any(o => o.Status is ServiceOrderStatus.Pending or ServiceOrderStatus.Processing))
             return null;
 
         stay.ActualCheckOut = actualCheckOut;

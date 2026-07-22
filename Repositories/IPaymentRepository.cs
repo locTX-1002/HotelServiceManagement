@@ -10,4 +10,5 @@ public interface IPaymentRepository
     Task<bool> TransactionIdExistsAsync(string transactionId);
     Task<Payment?> RecordAsync(int invoiceId, decimal amount, PaymentMethod method,
         string? transactionId, int? receivedByUserId, DateTime paymentDate);
+    Task<Payment?> VoidAsync(int paymentId);
 }

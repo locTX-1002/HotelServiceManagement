@@ -20,3 +20,6 @@ jobs:
 
       - name: Build solution
         run: dotnet build FUHotelManagement.slnx --configuration Release
+
+      - name: Run backend tests
+        run: dotnet test Tests/HotelManagement.Tests.csproj --configuration Release --no-build

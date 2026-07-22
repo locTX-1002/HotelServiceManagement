@@ -12,4 +12,5 @@ public sealed class PaymentRepository : IPaymentRepository
     public Task<Payment?> RecordAsync(int invoiceId, decimal amount, PaymentMethod method,
         string? transactionId, int? userId, DateTime date)
         => PaymentDAO.Instance.RecordAsync(invoiceId, amount, method, transactionId, userId, date);
+    public Task<Payment?> VoidAsync(int paymentId) => PaymentDAO.Instance.VoidAsync(paymentId);
 }

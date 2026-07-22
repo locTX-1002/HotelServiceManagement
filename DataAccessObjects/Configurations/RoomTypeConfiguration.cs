@@ -9,7 +9,7 @@ namespace DataAccessObjects.Configurations
         public void Configure(EntityTypeBuilder<RoomType> builder)
         {
             builder.HasKey(rt => rt.Id);
-            
+
             builder.Property(rt => rt.TypeName)
                    .IsRequired()
                    .HasMaxLength(50);
