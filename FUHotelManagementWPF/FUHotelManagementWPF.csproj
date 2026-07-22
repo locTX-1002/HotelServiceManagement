@@ -14,8 +14,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- appsettings phai nam canh exe de HotelDbContextFactory doc duoc luc runtime -->
-    <None Update="appsettings.json">
+    <!-- appsettings (ke ca appsettings.Local.json override rieng tung may, da gitignore)
+         phai nam canh exe de HotelDbContextFactory doc duoc luc runtime -->
+    <None Update="appsettings*.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
