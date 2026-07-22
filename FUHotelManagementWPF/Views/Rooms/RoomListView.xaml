@@ -15,9 +15,11 @@
             <StackPanel Orientation="Horizontal">
                 <TextBlock Text="Tìm:" Style="{StaticResource CaptionText}" FontSize="12.5"
                            VerticalAlignment="Center" Margin="2,0,8,0" />
-                <TextBox Width="260"
+                <TextBox Width="240"
                          Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
                          ToolTip="Tìm theo số phòng hoặc tên loại phòng" />
+                <TextBlock Text="{Binding TotalText}" Style="{StaticResource CaptionText}"
+                           FontSize="12" VerticalAlignment="Center" Margin="14,0,0,0" />
             </StackPanel>
         </DockPanel>
 
@@ -35,13 +37,13 @@
                               CommandParameter="{Binding SelectedItem, ElementName=RoomsGrid}" />
             </DataGrid.InputBindings>
             <DataGrid.Columns>
-                <DataGridTextColumn Header="Số phòng" Binding="{Binding Room.RoomNumber}" Width="100" />
-                <DataGridTextColumn Header="Tầng" Binding="{Binding Room.Floor}" Width="65" />
-                <DataGridTextColumn Header="Loại phòng" Binding="{Binding TypeName}" Width="*" MinWidth="140" />
-                <DataGridTextColumn Header="Sức chứa" Binding="{Binding Capacity}" Width="85" />
+                <DataGridTextColumn Header="Số phòng" Binding="{Binding Room.RoomNumber}" Width="88" />
+                <DataGridTextColumn Header="Tầng" Binding="{Binding Room.Floor}" Width="56" />
+                <DataGridTextColumn Header="Loại phòng" Binding="{Binding TypeName}" Width="*" MinWidth="115" />
+                <DataGridTextColumn Header="Sức chứa" Binding="{Binding Capacity}" Width="76" />
                 <DataGridTextColumn Header="Giá/đêm"
-                                    Binding="{Binding BasePrice, StringFormat={}{0:N0} đ}" Width="120" />
-                <DataGridTemplateColumn Header="Trạng thái" Width="125">
+                                    Binding="{Binding BasePrice, StringFormat={}{0:N0} đ}" Width="105" />
+                <DataGridTemplateColumn Header="Trạng thái" Width="108">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <Border Style="{StaticResource RoomStatusBadge}" VerticalAlignment="Center">
@@ -50,22 +52,24 @@
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTextColumn Header="Hoạt động" Binding="{Binding ActiveText}" Width="105" />
-                <DataGridTemplateColumn Header="" Width="222">
+                <DataGridTextColumn Header="Hoạt động" Binding="{Binding ActiveText}" Width="92" />
+                <DataGridTemplateColumn Header="" Width="192">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal">
-                                <Button Content="Chi tiết" Style="{StaticResource GhostButton}" Padding="12,5"
+                                <Button Content="Chi tiết" Style="{StaticResource GhostButton}"
+                                        Padding="10,4" FontSize="12"
                                         Command="{Binding DataContext.DetailCommand,
                                                   RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                         CommandParameter="{Binding}" />
-                                <Button Content="Sửa" Style="{StaticResource GhostButton}" Padding="12,5"
-                                        Margin="6,0,0,0"
+                                <Button Content="Sửa" Style="{StaticResource GhostButton}"
+                                        Padding="10,4" FontSize="12" Margin="5,0,0,0"
                                         Command="{Binding DataContext.EditCommand,
                                                   RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                         CommandParameter="{Binding}" />
-                                <Button Content="Xoá" Style="{StaticResource GhostButton}" Padding="12,5"
-                                        Margin="6,0,0,0" Foreground="{StaticResource DangerBrush}"
+                                <Button Content="Xoá" Style="{StaticResource GhostButton}"
+                                        Padding="10,4" FontSize="12" Margin="5,0,0,0"
+                                        Foreground="{StaticResource DangerBrush}"
                                         Command="{Binding DataContext.DeleteCommand,
                                                   RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                         CommandParameter="{Binding}" />

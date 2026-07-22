@@ -15,13 +15,27 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
 
         public event Action<bool>? RequestClose;
 
-        public string Title => _existing == null ? "Thêm loại phòng" : $"Sửa loại phòng \"{_existing.TypeName}\"";
+        public bool IsEdit => _existing != null;
+        public string Title => IsEdit ? $"Sửa loại phòng \"{_existing!.TypeName}\"" : "Thêm loại phòng mới";
+        public string Subtitle => IsEdit
+            ? "Thay đổi áp dụng cho mọi phòng thuộc loại này."
+            : "Định nghĩa hạng phòng mới: sức chứa, giá và mô tả bán hàng.";
+        public string HeaderIcon => IsEdit ? "" : "";
+
+        /// <summary>Anh dai dien doi theo ten loai dang go (map suite/deluxe/family/standard).</summary>
+        public string PreviewImage => RoomImages.Thumbnail(TypeName);
 
         private string _typeName = string.Empty;
         public string TypeName
         {
             get => _typeName;
-            set => SetProperty(ref _typeName, value);
+            set
+            {
+                if (SetProperty(ref _typeName, value))
+                {
+                    OnPropertyChanged(nameof(PreviewImage));
+                }
+            }
         }
 
         private string _capacityText = "2";

@@ -244,6 +244,12 @@
                 <ControlTemplate TargetType="DataGridCell">
                     <Border Background="{TemplateBinding Background}"
                             Padding="{TemplateBinding Padding}">
+                        <Border.Resources>
+                            <!-- Chu dai tu cat ... thay vi tran/cat cung khi cua so nho -->
+                            <Style TargetType="TextBlock">
+                                <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+                            </Style>
+                        </Border.Resources>
                         <ContentPresenter VerticalAlignment="Center" />
                     </Border>
                 </ControlTemplate>
@@ -277,6 +283,7 @@
         <Setter Property="HeadersVisibility" Value="Column" />
         <Setter Property="SelectionMode" Value="Single" />
         <Setter Property="SelectionUnit" Value="FullRow" />
+        <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Auto" />
     </Style>
 
     <!-- Badge trang thai PHONG: dung cho row co property Room (RoomRow).

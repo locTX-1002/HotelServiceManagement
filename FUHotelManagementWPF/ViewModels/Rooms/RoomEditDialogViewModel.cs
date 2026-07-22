@@ -21,7 +21,15 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
 
         public event Action<bool>? RequestClose;
 
-        public string Title => _existing == null ? "Thêm phòng" : $"Sửa phòng {_existing.RoomNumber}";
+        public bool IsEdit => _existing != null;
+        public string Title => IsEdit ? $"Sửa phòng {_existing!.RoomNumber}" : "Thêm phòng mới";
+        public string Subtitle => IsEdit
+            ? $"Đang chỉnh sửa phòng {_existing!.RoomNumber} — thay đổi có hiệu lực ngay khi lưu."
+            : "Tạo phòng mới vào danh mục vận hành của khách sạn.";
+        public string HeaderIcon => IsEdit ? "" : "";
+
+        /// <summary>Anh xem truoc theo loai phong dang chon - doi loai la anh doi theo.</summary>
+        public string PreviewImage => RoomImages.Thumbnail(SelectedRoomType?.TypeName ?? string.Empty);
 
         private string _roomNumber = string.Empty;
         public string RoomNumber
@@ -48,7 +56,13 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
         public RoomType? SelectedRoomType
         {
             get => _selectedRoomType;
-            set => SetProperty(ref _selectedRoomType, value);
+            set
+            {
+                if (SetProperty(ref _selectedRoomType, value))
+                {
+                    OnPropertyChanged(nameof(PreviewImage));
+                }
+            }
         }
 
         public List<StatusOption> StatusOptions { get; }

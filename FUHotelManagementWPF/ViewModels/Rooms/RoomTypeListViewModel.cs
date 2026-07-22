@@ -46,6 +46,8 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
             DeleteCommand = new AsyncRelayCommand(DeleteAsync);
         }
 
+        public string TotalText => $"{Rows.Count} loại phòng";
+
         public async Task LoadAsync()
         {
             IsLoading = true;
@@ -57,6 +59,7 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
                 {
                     Rows.Add(new RoomTypeRow(roomType));
                 }
+                OnPropertyChanged(nameof(TotalText));
             }
             catch (Exception)
             {

@@ -71,6 +71,10 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
             }.ShowDialog();
         }
 
+        /// <summary>Dong tom tat canh o tim kiem, lap khoang trong toolbar.</summary>
+        public string TotalText
+            => $"{Rows.Count} phòng · {Rows.Count(r => r.Room.IsActive)} đang dùng";
+
         public async Task LoadAsync()
         {
             IsLoading = true;
@@ -82,6 +86,7 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
                 {
                     Rows.Add(new RoomRow(room));
                 }
+                OnPropertyChanged(nameof(TotalText));
             }
             catch (Exception)
             {
