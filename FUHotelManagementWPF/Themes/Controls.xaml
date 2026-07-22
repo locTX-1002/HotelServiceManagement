@@ -5,6 +5,15 @@
     <!-- Converter co san cua WPF: bool -> Visibility, dung cho IsLoading/IsEmpty... -->
     <BooleanToVisibilityConverter x:Key="BoolToVis" />
 
+    <!-- HE BO GOC (quy uoc, xem docs/QUY_UOC_GIAO_DIEN.md):
+         nut=pill(999) | o nhap=8 | card/dialog=12 | nav item=10 | badge=pill -->
+
+    <!-- Bong khuech tan mem cho card/dialog - CAM bong den gat -->
+    <DropShadowEffect x:Key="SoftShadow" BlurRadius="26" ShadowDepth="2" Direction="270"
+                      Opacity="0.10" Color="#1D231D" />
+    <DropShadowEffect x:Key="SoftShadowLarge" BlurRadius="40" ShadowDepth="4" Direction="270"
+                      Opacity="0.14" Color="#1D231D" />
+
     <!-- ============================================================
          DESIGN TOKENS: CONTROL DUNG CHUNG.
          Cac control phuc tap (DataGrid, ComboBox, DatePicker, Growl...)
@@ -12,13 +21,20 @@
          File nay chi dinh nghia cac khoi nhan dien rieng cua app.
          ============================================================ -->
 
-    <!-- Nut chinh: mau thuong hieu, bo tron kieu pill - dung cho hanh dong chinh cua man -->
+    <!-- Nut chinh: mau thuong hieu, bo tron kieu pill - dung cho hanh dong chinh cua man.
+         Co phan hoi vat ly: nhan xuong scale 0.98 (haptic press) -->
     <Style x:Key="PrimaryButton" TargetType="Button">
         <Setter Property="Background" Value="{StaticResource BrandBrush}" />
         <Setter Property="Foreground" Value="White" />
         <Setter Property="FontWeight" Value="SemiBold" />
         <Setter Property="Padding" Value="18,10" />
         <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="RenderTransformOrigin" Value="0.5,0.5" />
+        <Setter Property="RenderTransform">
+            <Setter.Value>
+                <ScaleTransform ScaleX="1" ScaleY="1" />
+            </Setter.Value>
+        </Setter>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
@@ -37,6 +53,15 @@
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
+        <Style.Triggers>
+            <Trigger Property="IsPressed" Value="True">
+                <Setter Property="RenderTransform">
+                    <Setter.Value>
+                        <ScaleTransform ScaleX="0.98" ScaleY="0.98" />
+                    </Setter.Value>
+                </Setter>
+            </Trigger>
+        </Style.Triggers>
     </Style>
 
     <!-- Nut phu: nen trong, vien mo - dung cho hanh dong thu cap -->
@@ -129,7 +154,8 @@
     </Style>
     <Style x:Key="InputPasswordBox" TargetType="PasswordBox" BasedOn="{StaticResource {x:Type PasswordBox}}" />
 
-    <!-- Card: khoi noi dung bo goc, moi panel/section trong module boc bang cai nay -->
+    <!-- Card: khoi noi dung bo goc, moi panel/section trong module boc bang cai nay.
+         Muon co chieu sau (dialog, card noi) thi them Effect="{StaticResource SoftShadow}" -->
     <Style x:Key="Card" TargetType="Border">
         <Setter Property="Background" Value="{StaticResource CardBrush}" />
         <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />

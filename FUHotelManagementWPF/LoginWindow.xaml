@@ -22,13 +22,11 @@
                 </LinearGradientBrush>
             </Border.Background>
             <Grid ClipToBounds="True">
-                <!-- Hoa tiet hinh hoc mo -->
-                <Ellipse Width="380" Height="380" Fill="#12FFFFFF"
-                         HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-140,-140,0" />
-                <Ellipse Width="240" Height="240" Fill="#0DFFFFFF"
-                         HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="-80,0,0,-80" />
-                <Ellipse Width="120" Height="120" Stroke="#22FFFFFF" StrokeThickness="1.5"
-                         HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,60,90" />
+                <!-- Monogram typographic co chu dich (thay cho blob/hoa tiet ngau nhien) -->
+                <TextBlock Text="FU" FontSize="300" FontWeight="Bold"
+                           Foreground="#0DFFFFFF"
+                           HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                           Margin="0,0,-34,-96" />
 
                 <StackPanel VerticalAlignment="Center" Margin="46,0,40,0">
                     <Border Width="54" Height="54" CornerRadius="999" Background="White"

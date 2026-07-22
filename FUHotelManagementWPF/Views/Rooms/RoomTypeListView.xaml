@@ -19,6 +19,7 @@
                   AutoGenerateColumns="False" IsReadOnly="True"
                   CanUserAddRows="False" HeadersVisibility="Column"
                   SelectionMode="Single" SelectionUnit="FullRow"
+                  RowHeight="46" GridLinesVisibility="None"
                   Background="Transparent" BorderThickness="0">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Tên loại" Binding="{Binding RoomType.TypeName}" Width="170" />

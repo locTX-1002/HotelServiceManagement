@@ -6,7 +6,10 @@
         WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
         ShowInTaskbar="False"
         Style="{StaticResource BaseWindow}">
-    <StackPanel Margin="24,20">
+    <!-- Double-bezel: card noi tren nen Surface (quy uoc giao dien) -->
+    <Border Style="{StaticResource Card}" Effect="{StaticResource SoftShadowLarge}"
+            Margin="16" Padding="26,22">
+        <StackPanel>
 
         <TextBlock Text="SỐ PHÒNG" Style="{StaticResource FieldLabel}" />
         <TextBox Text="{Binding RoomNumber, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}" />
@@ -75,5 +78,6 @@
                     MinWidth="96" IsDefault="True"
                     Command="{Binding SaveCommand}" />
         </StackPanel>
-    </StackPanel>
+        </StackPanel>
+    </Border>
 </Window>
