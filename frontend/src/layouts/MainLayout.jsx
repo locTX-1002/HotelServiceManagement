@@ -123,12 +123,13 @@ const MENU = [
   },
   {
     label: 'Quản lý',
-    match: (p) => p === '/rooms' || p.startsWith('/rooms/types') || p === '/promotions' || p === '/reports' || p === '/users',
+    match: (p) => p === '/rooms' || p.startsWith('/rooms/types') || p === '/promotions' || p === '/reports' || p === '/users' || p === '/audit-logs',
     items: [
       { to: '/rooms', label: 'Phòng', match: (p) => p === '/rooms' || p.startsWith('/rooms/types') },
       { to: '/promotions', label: 'Khuyến mãi' },
       { to: '/reports', label: 'Báo cáo' },
       { to: '/users', label: 'Người dùng' },
+      { to: '/audit-logs', label: 'Nhật ký hoạt động' },
     ],
   },
 ]

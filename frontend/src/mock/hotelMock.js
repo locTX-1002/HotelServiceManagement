@@ -235,3 +235,26 @@ export const MOCK_DASHBOARD = {
     { day: 'T2', amount: 3280000 },
   ],
 }
+
+// Nhật ký hoạt động (audit log) - dữ liệu mẫu tới khi BE có bảng AuditLogs + GET /api/audit-logs.
+// action khớp spec docs/API_AUDIT_LOG.md: Login / Create / Update / Delete / StatusChange.
+export const MOCK_AUDIT_LOGS = [
+  { id: 18, timestamp: '2026-07-21T16:45:00', userName: 'Admin User', role: 'Admin', action: 'Update', entityName: 'RoomType', entityId: 2, description: 'Sửa loại phòng Deluxe: đổi mô tả tiện nghi' },
+  { id: 17, timestamp: '2026-07-21T16:30:00', userName: 'Admin User', role: 'Admin', action: 'Create', entityName: 'SurchargeItem', entityId: 9, description: 'Thêm mục phụ thu "Phạt trả phòng trễ giờ" 50.000đ/giờ' },
+  { id: 16, timestamp: '2026-07-21T15:12:00', userName: 'Receptionist User', role: 'Receptionist', action: 'StatusChange', entityName: 'Room', entityId: 3, description: 'Phòng 103: Đang dọn → Sẵn sàng' },
+  { id: 15, timestamp: '2026-07-21T14:58:00', userName: 'Receptionist User', role: 'Receptionist', action: 'Create', entityName: 'Payment', entityId: 12, description: 'Thu 594.000đ tiền mặt cho hoá đơn #2' },
+  { id: 14, timestamp: '2026-07-21T14:55:00', userName: 'Receptionist User', role: 'Receptionist', action: 'Create', entityName: 'Invoice', entityId: 2, description: 'Tạo hoá đơn check-out phòng 101 (phụ thu 160.000đ)' },
+  { id: 13, timestamp: '2026-07-21T14:40:00', userName: 'Admin User', role: 'Admin', action: 'Update', entityName: 'User', entityId: 5, description: 'Đổi vai trò letan2@hotel.com: ServiceStaff → Receptionist' },
+  { id: 12, timestamp: '2026-07-21T11:20:00', userName: 'Manager User', role: 'Manager', action: 'Create', entityName: 'Promotion', entityId: 1, description: 'Tạo mã SUMMER10 giảm 10%' },
+  { id: 11, timestamp: '2026-07-21T10:05:00', userName: 'Admin User', role: 'Admin', action: 'Delete', entityName: 'ServiceItem', entityId: 7, description: 'Ngừng bán "Nước ngọt lon" (tắt isActive)' },
+  { id: 10, timestamp: '2026-07-21T09:30:00', userName: 'Receptionist User', role: 'Receptionist', action: 'StatusChange', entityName: 'Reservation', entityId: 4, description: 'Duyệt đơn RES-20260720114823276: Chờ xác nhận → Đã xác nhận' },
+  { id: 9, timestamp: '2026-07-21T08:02:00', userName: 'Admin User', role: 'Admin', action: 'Login', entityName: 'User', entityId: 1, description: 'Đăng nhập từ 192.168.1.10' },
+  { id: 8, timestamp: '2026-07-20T18:44:00', userName: 'Manager User', role: 'Manager', action: 'Update', entityName: 'Promotion', entityId: 1, description: 'Sửa SUMMER10: gia hạn tới 31/08' },
+  { id: 7, timestamp: '2026-07-20T17:15:00', userName: 'Admin User', role: 'Admin', action: 'Create', entityName: 'User', entityId: 6, description: 'Tạo tài khoản letan3@hotel.com (Receptionist)' },
+  { id: 6, timestamp: '2026-07-20T16:33:00', userName: 'Receptionist User', role: 'Receptionist', action: 'StatusChange', entityName: 'Stay', entityId: 2, description: 'Check-out phòng 101 (khách Khach Demo)' },
+  { id: 5, timestamp: '2026-07-20T12:08:00', userName: 'Receptionist User', role: 'Receptionist', action: 'StatusChange', entityName: 'Stay', entityId: 2, description: 'Check-in phòng 101 cho đơn RES-20260720114823276' },
+  { id: 4, timestamp: '2026-07-20T09:41:00', userName: 'Admin User', role: 'Admin', action: 'Update', entityName: 'Room', entityId: 5, description: 'Phòng 301: chuyển sang bảo trì (rò nước)' },
+  { id: 3, timestamp: '2026-07-19T20:19:00', userName: 'Manager User', role: 'Manager', action: 'Login', entityName: 'User', entityId: 2, description: 'Đăng nhập từ 192.168.1.14' },
+  { id: 2, timestamp: '2026-07-19T15:00:00', userName: 'Admin User', role: 'Admin', action: 'Update', entityName: 'SurchargeItem', entityId: 4, description: 'Đổi giá Remote TV: 180.000đ → 200.000đ' },
+  { id: 1, timestamp: '2026-07-19T08:00:00', userName: 'Admin User', role: 'Admin', action: 'Login', entityName: 'User', entityId: 1, description: 'Đăng nhập từ 192.168.1.10' },
+]

@@ -19,6 +19,7 @@ import SurchargeCatalogPage from './pages/SurchargeCatalogPage'
 import PromotionCatalogPage from './pages/PromotionCatalogPage'
 import InvoicePage from './pages/InvoicePage'
 import UsersPage from './pages/UsersPage'
+import AuditLogPage from './pages/AuditLogPage'
 import ProtectedRoute from './routes/ProtectedRoute'
 import RequireRole from './routes/RequireRole'
 import GuestProtectedRoute from './routes/GuestProtectedRoute'
@@ -72,6 +73,7 @@ export default function App() {
               <Route path="/promotions" element={<PromotionCatalogPage />} />
               <Route path="/reports" element={<ReportsPage />} />
               <Route path="/users" element={<UsersPage />} />
+              <Route path="/audit-logs" element={<AuditLogPage />} />
             </Route>
           </Route>
         </Route>

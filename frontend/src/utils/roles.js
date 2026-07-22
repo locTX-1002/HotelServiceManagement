@@ -29,6 +29,8 @@ export const ROUTE_ROLES = {
   '/reports': ['Admin', 'Manager'],
   // Khớp [Authorize(Roles = "Admin")] của UsersController
   '/users': ['Admin'],
+  // Nhật ký hoạt động: nhạy cảm (thấy toàn bộ thao tác của mọi người) - chỉ Admin
+  '/audit-logs': ['Admin'],
 }
 
 export const ROLE_LABEL = { Admin: 'Quản trị', Manager: 'Quản lý', Receptionist: 'Lễ tân', ServiceStaff: 'NV dịch vụ' }
