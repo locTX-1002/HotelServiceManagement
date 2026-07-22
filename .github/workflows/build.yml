@@ -1,10 +1,10 @@
 name: build
 
-# Chan code vo build len main: moi push main + moi PR deu phai build xanh.
+# Chan code vo build: moi push main/develop + moi PR deu phai build xanh.
 # PR do thi khong merge.
 on:
   push:
-    branches: [main]
+    branches: [main, develop]
   pull_request:
 
 jobs:
