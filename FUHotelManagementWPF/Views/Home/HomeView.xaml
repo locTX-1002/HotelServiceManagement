@@ -3,35 +3,10 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:hc="https://handyorg.github.io/handycontrol">
     <UserControl.Resources>
-        <!-- O hang phong: anh phu kin, phu mo toi tu day len de chu noi ro -->
-        <Style x:Key="TileShade" TargetType="Border">
-            <Setter Property="CornerRadius" Value="4" />
-            <Setter Property="Background">
-                <Setter.Value>
-                    <LinearGradientBrush StartPoint="0,1" EndPoint="0,0">
-                        <GradientStop Color="#D9101410" Offset="0" />
-                        <GradientStop Color="#59101410" Offset="0.45" />
-                        <GradientStop Color="#00101410" Offset="1" />
-                    </LinearGradientBrush>
-                </Setter.Value>
-            </Setter>
-        </Style>
+        <!-- TileShade / TileName / TileMeta nam trong Themes/Controls.xaml
+             de so do phong dung chung dung mot kieu the anh -->
 
-        <Style x:Key="TileName" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="White" />
-            <Setter Property="FontSize" Value="19" />
-            <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
-        </Style>
-
-        <Style x:Key="TileMeta" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="#D9FFFFFF" />
-            <Setter Property="FontSize" Value="11.5" />
-            <Setter Property="Margin" Value="0,3,0,0" />
-            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
-        </Style>
-
-        <!-- Nut dat phong tren o anh: chu trang, gach chan khi re chuot -->
+        <!-- Nut dat phong tren o anh: chu trang, nen mo dam len khi re chuot -->
         <Style x:Key="TileBook" TargetType="Button">
             <Setter Property="Foreground" Value="White" />
             <Setter Property="FontSize" Value="11.5" />
@@ -97,16 +72,19 @@
                                Margin="0,10,0,0" />
                     <TextBlock Text="{Binding TodayText}" Foreground="#A6FFFFFF" FontSize="12"
                                Margin="0,3,0,0" />
-
-                    <StackPanel Orientation="Horizontal" Margin="0,18,0,0">
-                        <Button Style="{StaticResource GalleryArrow}" Content="&#xE76B;"
-                                Command="{Binding PrevHeroCommand}" />
-                        <Button Style="{StaticResource GalleryArrow}" Content="&#xE76C;" Margin="9,0,0,0"
-                                Command="{Binding NextHeroCommand}" />
-                        <TextBlock Text="{Binding HeroCounter}" Foreground="#A6FFFFFF" FontSize="11"
-                                   VerticalAlignment="Center" Margin="12,0,0,0" />
-                    </StackPanel>
                 </StackPanel>
+
+                <!-- Mui ten sat hai mep anh, bo dem nam goc duoi phai -->
+                <Button Style="{StaticResource GalleryArrow}" Content="&#xE76B;"
+                        HorizontalAlignment="Left" VerticalAlignment="Center" Margin="16,0,0,0"
+                        Command="{Binding PrevHeroCommand}" />
+                <Button Style="{StaticResource GalleryArrow}" Content="&#xE76C;"
+                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,16,0"
+                        Command="{Binding NextHeroCommand}" />
+                <Border CornerRadius="4" Background="#59000000" Padding="9,3"
+                        HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,16,14">
+                    <TextBlock Text="{Binding HeroCounter}" Foreground="#D9FFFFFF" FontSize="11" />
+                </Border>
             </Grid>
 
             <!-- ======= THANH TRA CUU PHONG TRONG (noi len day hero) ======= -->

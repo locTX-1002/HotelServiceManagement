@@ -26,6 +26,25 @@
             </Style.Triggers>
         </Style>
 
+        <!-- Cham trang thai dat tren anh toi: dung ban mau sang hon de con nhin thay -->
+        <Style x:Key="StatusDotOnImage" TargetType="Ellipse" BasedOn="{StaticResource StatusDot}">
+            <Setter Property="Fill" Value="#C9CFC4" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Room.Status}" Value="{x:Static enums:RoomStatus.Available}">
+                    <Setter Property="Fill" Value="#7ED08A" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Room.Status}" Value="{x:Static enums:RoomStatus.Occupied}">
+                    <Setter Property="Fill" Value="#F0B15A" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Room.Status}" Value="{x:Static enums:RoomStatus.Reserved}">
+                    <Setter Property="Fill" Value="#7FBEDD" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Room.Status}" Value="{x:Static enums:RoomStatus.Maintenance}">
+                    <Setter Property="Fill" Value="#EE8A82" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
         <!-- So dem tren thanh thong ke: to mau theo trang thai (path Status, khong phai Room.Status) -->
         <Style x:Key="StatusCountNumber" TargetType="TextBlock">
             <Setter Property="FontSize" Value="17" />
@@ -106,10 +125,9 @@
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <!-- Card: anh loai phong (16:9) + so phong + cham trang thai -->
-                        <Border Background="{StaticResource CardBrush}"
-                                BorderBrush="{StaticResource LineBrush}" BorderThickness="1"
-                                CornerRadius="4" Margin="0,0,10,10"
+                        <!-- The anh giong luoi hang phong o trang chu: anh phu kin o,
+                             so phong va trang thai de len day anh -->
+                        <Border x:Name="tile" Height="112" CornerRadius="4" Margin="0,0,10,10"
                                 Cursor="Hand" ToolTip="Bấm để đổi trạng thái vận hành">
                             <Border.InputBindings>
                                 <MouseBinding Gesture="LeftClick"
@@ -118,29 +136,32 @@
                                               CommandParameter="{Binding}" />
                             </Border.InputBindings>
                             <Grid>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="82" />
-                                    <RowDefinition Height="Auto" />
-                                </Grid.RowDefinitions>
-                                <!-- Thumbnail theo loai phong - bo goc tren khop card -->
-                                <Border Grid.Row="0" CornerRadius="4,4,0,0">
+                                <Border CornerRadius="4">
                                     <Border.Background>
                                         <ImageBrush ImageSource="{Binding ThumbnailSource}"
                                                     Stretch="UniformToFill" />
                                     </Border.Background>
                                 </Border>
-                                <StackPanel Grid.Row="1" Margin="11,8,11,9">
+                                <Border Style="{StaticResource TileShade}" />
+                                <StackPanel VerticalAlignment="Bottom" Margin="11,0,11,9">
                                     <TextBlock Text="{Binding Room.RoomNumber}"
-                                               FontSize="14" FontWeight="SemiBold" />
-                                    <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
-                                        <Ellipse Style="{StaticResource StatusDot}" />
+                                               Style="{StaticResource TileName}" FontSize="17" />
+                                    <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
+                                        <Ellipse Style="{StaticResource StatusDotOnImage}" />
                                         <TextBlock Text="{Binding StatusText}"
-                                                   Style="{StaticResource CaptionText}"
-                                                   FontSize="11.5" Margin="6,0,0,0" />
+                                                   Style="{StaticResource TileMeta}"
+                                                   FontSize="11" Margin="6,0,0,0" />
                                     </StackPanel>
                                 </StackPanel>
                             </Grid>
                         </Border>
+                        <DataTemplate.Triggers>
+                            <!-- Re chuot: vien sang len de biet dang tro vao o nao -->
+                            <Trigger SourceName="tile" Property="IsMouseOver" Value="True">
+                                <Setter TargetName="tile" Property="BorderBrush" Value="{StaticResource BrandBrush}" />
+                                <Setter TargetName="tile" Property="BorderThickness" Value="2" />
+                            </Trigger>
+                        </DataTemplate.Triggers>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
