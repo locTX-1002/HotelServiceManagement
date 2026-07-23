@@ -36,6 +36,13 @@ namespace FUHotelManagementWPF.ViewModels.CheckInOut
         public string GuestName => Reservation.Guest?.FullName ?? string.Empty;
         public string ActionLabel => Kind == FlowKind.Arrival ? "Check-in" : "Check-out";
 
+        /// <summary>Dong nay la khach dang o (co nut Hoa don / Gia han).</summary>
+        public bool IsStay => Kind == FlowKind.Stay;
+
+        /// <summary>Khach chua co giay to - service se chan check-in, bao truoc de le tan bo sung som.</summary>
+        public bool MissingIdentity => Kind == FlowKind.Arrival
+            && string.IsNullOrWhiteSpace(Reservation.Guest?.IdentityNumber);
+
         /// <summary>Quá hạn: khách chưa đến dù đã qua ngày nhận, hoặc chưa trả dù đã qua ngày trả.</summary>
         public bool IsOverdue => Kind == FlowKind.Arrival
             ? Reservation.CheckInDate.Date < DateTime.Today
@@ -250,6 +257,7 @@ namespace FUHotelManagementWPF.ViewModels.CheckInOut
         public AsyncRelayCommand SurchargeCommand { get; }
         public AsyncRelayCommand NoShowCommand { get; }
         public AsyncRelayCommand CancelCommand { get; }
+        public RelayCommand GoInvoiceCommand { get; }
 
         private readonly ISurchargeService _surchargeService = new SurchargeService();
         private readonly IReservationService _reservationService = new ReservationService();
@@ -364,6 +372,8 @@ namespace FUHotelManagementWPF.ViewModels.CheckInOut
             SurchargeCommand = new AsyncRelayCommand(OpenSurchargeAsync);
             NoShowCommand = new AsyncRelayCommand(MarkNoShowAsync);
             CancelCommand = new AsyncRelayCommand(CancelReservationAsync);
+            // Sang man Hoa don cua Phat - title phai khop chinh xac voi sidebar
+            GoInvoiceCommand = new RelayCommand(_ => NavigationService.NavigateTo("Hoá đơn"));
             _ = LoadAsync();
         }
 
@@ -428,6 +438,13 @@ namespace FUHotelManagementWPF.ViewModels.CheckInOut
             ServiceResult result;
             if (item.Kind == FlowKind.Arrival)
             {
+                // Kiem giay to TRUOC khi goi service (phan cong): bao ro viec can lam thay vi de loi chung
+                if (item.MissingIdentity)
+                {
+                    Notify.Warning($"{item.GuestName} chưa có CCCD/hộ chiếu — bổ sung ở màn Khách hàng rồi mới check-in được.");
+                    return;
+                }
+
                 var checkIn = await _service.CheckInAsync(item.Reservation.Id);
                 result = checkIn.Ok
                     ? ServiceResult.Success(checkIn.Message)
