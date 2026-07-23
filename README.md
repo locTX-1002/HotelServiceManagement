@@ -71,13 +71,18 @@ UserDAO (Singleton) → UserRepository → AuthService → LoginViewModel → Lo
 
 ## Phân chia 5 module gợi ý
 
-| # | Module | Phạm vi |
-|---|---|---|
-| 1 | Phòng | CRUD Loại phòng + Phòng (popup dialog + xác nhận xoá), sơ đồ phòng |
-| 2 | Đặt phòng | Tạo/sửa/huỷ đặt phòng, check-in / check-out |
-| 3 | Khách & Người dùng | CRUD khách; quản lý tài khoản nhân viên (Admin) |
-| 4 | Dịch vụ | Danh mục dịch vụ + gọi dịch vụ cho phòng đang ở |
-| 5 | Hoá đơn & Báo cáo | Tính tiền, thanh toán; **báo cáo theo khoảng ngày, sắp xếp giảm dần** (yêu cầu cứng của đề) |
+| # | Module | Phạm vi | Trạng thái |
+|---|---|---|---|
+| 1 | Phòng | CRUD Loại phòng + Phòng (popup dialog + xác nhận xoá), sơ đồ phòng | xong |
+| 2 | Đặt phòng | Tạo/sửa/huỷ đặt phòng, check-in / check-out | xong |
+| 3 | Khách & Người dùng | CRUD khách; quản lý tài khoản nhân viên (Admin) | xong phần Khách |
+| 4 | Dịch vụ | Danh mục dịch vụ + gọi dịch vụ cho phòng đang ở | chưa làm |
+| 5 | Hoá đơn & Báo cáo | Tính tiền, thanh toán; **báo cáo theo khoảng ngày, sắp xếp giảm dần** (yêu cầu cứng của đề) | chưa làm |
+
+> **Nhận việc ở đây:** [docs/PHAN_CONG.md](docs/PHAN_CONG.md) chia phần còn lại
+> thành 4 gói độc lập (Dịch vụ · Hoá đơn & Thanh toán · Báo cáo · Người dùng &
+> phân quyền), mỗi gói ghi rõ file phải tạo, nghiệp vụ phải giữ, và checklist
+> nghiệm thu.
 
 ### Cách cắm 1 module vào khung (5 bước, soi theo luồng Login)
 
