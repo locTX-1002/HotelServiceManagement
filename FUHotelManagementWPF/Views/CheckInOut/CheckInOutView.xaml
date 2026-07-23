@@ -23,10 +23,20 @@
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="bd" Property="Background" Value="{StaticResource SurfaceAltBrush}" />
                             </Trigger>
+                            <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="{StaticResource BrandBrush}" />
+                                <Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource BrandBrush}" />
+                                <Setter Property="Foreground" Value="White" />
+                            </DataTrigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsUrgent}" Value="True">
+                    <Setter Property="Foreground" Value="{StaticResource DangerBrush}" />
+                </DataTrigger>
+            </Style.Triggers>
         </Style>
 
         <!-- Bo chrome mac dinh cua ListBoxItem, giu nguyen the card tu ve trong DataTemplate -->
@@ -65,28 +75,22 @@
         </DockPanel>
 
         <!-- Chip lọc: Tất cả / Hôm nay / Sắp đến / Đang ở / Quá hạn -->
-        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,12">
-            <Button Style="{StaticResource FilterChip}"
-                    Command="{Binding PickFilterCommand}" CommandParameter="{Binding Filters[0]}">
-                <TextBlock><Run Text="Tất cả " /><Run Text="{Binding CountAll, Mode=OneWay}" FontWeight="SemiBold" /></TextBlock>
-            </Button>
-            <Button Style="{StaticResource FilterChip}"
-                    Command="{Binding PickFilterCommand}" CommandParameter="{Binding Filters[1]}">
-                <TextBlock><Run Text="Hôm nay " /><Run Text="{Binding CountToday, Mode=OneWay}" FontWeight="SemiBold" /></TextBlock>
-            </Button>
-            <Button Style="{StaticResource FilterChip}"
-                    Command="{Binding PickFilterCommand}" CommandParameter="{Binding Filters[2]}">
-                <TextBlock><Run Text="Sắp đến " /><Run Text="{Binding CountArrival, Mode=OneWay}" FontWeight="SemiBold" /></TextBlock>
-            </Button>
-            <Button Style="{StaticResource FilterChip}"
-                    Command="{Binding PickFilterCommand}" CommandParameter="{Binding Filters[3]}">
-                <TextBlock><Run Text="Đang ở " /><Run Text="{Binding CountStay, Mode=OneWay}" FontWeight="SemiBold" /></TextBlock>
-            </Button>
-            <Button Style="{StaticResource FilterChip}" Foreground="{StaticResource DangerBrush}"
-                    Command="{Binding PickFilterCommand}" CommandParameter="{Binding Filters[4]}">
-                <TextBlock><Run Text="Quá hạn " /><Run Text="{Binding CountOverdue, Mode=OneWay}" FontWeight="SemiBold" /></TextBlock>
-            </Button>
-        </StackPanel>
+        <ItemsControl Grid.Row="1" ItemsSource="{Binding Filters}" Margin="0,0,0,12">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <Button Style="{StaticResource FilterChip}"
+                            Command="{Binding DataContext.PickFilterCommand,
+                                      RelativeSource={RelativeSource AncestorType=UserControl}}"
+                            CommandParameter="{Binding}">
+                        <TextBlock><Run Text="{Binding Label, Mode=OneWay}" /><Run Text=" " /><Run
+                            Text="{Binding Count, Mode=OneWay}" FontWeight="SemiBold" /></TextBlock>
+                    </Button>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
 
         <hc:LoadingCircle Grid.Row="2" Width="34" Height="34"
                           Foreground="{StaticResource BrandBrush}"

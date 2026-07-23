@@ -143,7 +143,35 @@ namespace FUHotelManagementWPF.ViewModels.CheckInOut
         }
     }
 
-    public record FlowFilter(string Label, Func<FlowItem, bool>? Predicate);
+    /// <summary>Chip loc. IsSelected de chip dang chon to mau, giong chip o cac man khac.</summary>
+    public class FlowFilter : ViewModelBase
+    {
+        public string Label { get; }
+        public Func<FlowItem, bool>? Predicate { get; }
+
+        private bool _isSelected;
+        public bool IsSelected
+        {
+            get => _isSelected;
+            set => SetProperty(ref _isSelected, value);
+        }
+
+        private int _count;
+        public int Count
+        {
+            get => _count;
+            set => SetProperty(ref _count, value);
+        }
+
+        /// <summary>Chip "Qua han" to chu do de bat mat ngay ca khi chua chon.</summary>
+        public bool IsUrgent { get; init; }
+
+        public FlowFilter(string label, Func<FlowItem, bool>? predicate)
+        {
+            Label = label;
+            Predicate = predicate;
+        }
+    }
 
     /// <summary>Module Check-in / Check-out: một dòng thời gian việc cần làm + chip lọc.</summary>
     public class CheckInOutViewModel : ViewModelBase
@@ -159,7 +187,18 @@ namespace FUHotelManagementWPF.ViewModels.CheckInOut
         public FlowFilter SelectedFilter
         {
             get => _selectedFilter;
-            set { if (SetProperty(ref _selectedFilter, value)) { ItemsView.Refresh(); OnPropertyChanged(nameof(IsEmpty)); } }
+            set
+            {
+                if (SetProperty(ref _selectedFilter, value))
+                {
+                    foreach (var f in Filters)
+                    {
+                        f.IsSelected = ReferenceEquals(f, value);
+                    }
+                    ItemsView.Refresh();
+                    OnPropertyChanged(nameof(IsEmpty));
+                }
+            }
         }
 
         // Bang lam viec ben phai: chon mot viec de xem du thong tin truoc khi bam
@@ -181,12 +220,6 @@ namespace FUHotelManagementWPF.ViewModels.CheckInOut
 
         public bool IsEmpty => !IsLoading && ItemsView.Cast<object>().Any() == false;
 
-        // Số đếm cho từng chip
-        public int CountAll => Items.Count;
-        public int CountToday => Items.Count(i => i.IsToday);
-        public int CountArrival => Items.Count(i => i.Kind == FlowKind.Arrival);
-        public int CountStay => Items.Count(i => i.Kind == FlowKind.Stay);
-        public int CountOverdue => Items.Count(i => i.IsOverdue);
         public string TodayText => $"Hôm nay {DateTime.Today:dd/MM/yyyy}";
 
         public AsyncRelayCommand ActionCommand { get; }
@@ -201,9 +234,10 @@ namespace FUHotelManagementWPF.ViewModels.CheckInOut
                 new("Hôm nay", i => i.IsToday),
                 new("Sắp đến", i => i.Kind == FlowKind.Arrival),
                 new("Đang ở", i => i.Kind == FlowKind.Stay),
-                new("Quá hạn", i => i.IsOverdue),
+                new("Quá hạn", i => i.IsOverdue) { IsUrgent = true },
             ];
             _selectedFilter = Filters[0];
+            _selectedFilter.IsSelected = true;
 
             ItemsView = new ListCollectionView(Items) { Filter = Filter };
             ActionCommand = new AsyncRelayCommand(RunActionAsync);
@@ -235,11 +269,12 @@ namespace FUHotelManagementWPF.ViewModels.CheckInOut
                     Items.Add(item);
                 }
 
-                OnPropertyChanged(nameof(CountAll));
-                OnPropertyChanged(nameof(CountToday));
-                OnPropertyChanged(nameof(CountArrival));
-                OnPropertyChanged(nameof(CountStay));
-                OnPropertyChanged(nameof(CountOverdue));
+                foreach (var filter in Filters)
+                {
+                    filter.Count = filter.Predicate == null
+                        ? Items.Count
+                        : Items.Count(filter.Predicate);
+                }
                 OnPropertyChanged(nameof(IsEmpty));
             }
             catch (Exception)
