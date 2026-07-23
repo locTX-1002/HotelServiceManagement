@@ -72,11 +72,13 @@ namespace FUHotelManagementWPF.ViewModels.Guests
 
         public RelayCommand AddCommand { get; }
         public RelayCommand EditCommand { get; }
+        public RelayCommand ActivateAccountCommand { get; }
 
         public GuestsViewModel()
         {
             AddCommand = new RelayCommand(_ => OpenDialog(null));
             EditCommand = new RelayCommand(_ => OpenDialog(SelectedRow?.Guest));
+            ActivateAccountCommand = new RelayCommand(_ => OpenActivateDialog());
             _ = LoadAsync();
         }
 
@@ -116,6 +118,21 @@ namespace FUHotelManagementWPF.ViewModels.Guests
             {
                 await LoadAsync();
             }
+        }
+
+        // Kich hoat tai khoan dat phong cho khach dang chon (dang nhap bang SDT).
+        // Da co tai khoan hay chua do service tu kiem tra va bao Message.
+        private void OpenActivateDialog()
+        {
+            if (SelectedRow == null)
+            {
+                return;
+            }
+
+            new ActivateAccountDialog(new ActivateAccountDialogViewModel(SelectedRow.Guest))
+            {
+                Owner = RoomMapViewModel.ActiveWindow(),
+            }.ShowDialog();
         }
     }
 }

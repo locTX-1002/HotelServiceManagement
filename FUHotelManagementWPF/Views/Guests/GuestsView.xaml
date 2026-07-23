@@ -196,10 +196,18 @@
                                    Visibility="{Binding HasTagNote, Converter={StaticResource BoolToVis}}" />
 
                         <Border Height="1" Background="{StaticResource LineBrush}" Margin="0,16,0,14" />
-                        <Button Content="Sửa thông tin" Style="{StaticResource PrimaryButton}"
-                                Padding="16,7" HorizontalAlignment="Left"
-                                Command="{Binding DataContext.EditCommand,
-                                          RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                        <StackPanel Orientation="Horizontal">
+                            <Button Content="Sửa thông tin" Style="{StaticResource PrimaryButton}"
+                                    Padding="16,7"
+                                    Command="{Binding DataContext.EditCommand,
+                                              RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                            <!-- Kich hoat tai khoan dat phong online cho khach (theo phan cong Phuc) -->
+                            <Button Content="Kích hoạt tài khoản" Style="{StaticResource GhostButton}"
+                                    Padding="16,7" Margin="10,0,0,0"
+                                    ToolTip="Tạo tài khoản để khách tự đăng nhập bằng số điện thoại"
+                                    Command="{Binding DataContext.ActivateAccountCommand,
+                                              RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                        </StackPanel>
                     </StackPanel>
                 </Grid>
             </Border>
