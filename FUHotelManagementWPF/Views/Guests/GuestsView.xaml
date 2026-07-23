@@ -207,6 +207,12 @@
                                     ToolTip="Tạo tài khoản để khách tự đăng nhập bằng số điện thoại"
                                     Command="{Binding DataContext.ActivateAccountCommand,
                                               RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                            <Button Content="Xoá" Style="{StaticResource GhostButton}"
+                                    Padding="16,7" Margin="10,0,0,0"
+                                    Foreground="{StaticResource DangerBrush}"
+                                    ToolTip="Xoá hồ sơ khách — khách đã có lịch sử đặt phòng sẽ không xoá được"
+                                    Command="{Binding DataContext.DeleteCommand,
+                                              RelativeSource={RelativeSource AncestorType=UserControl}}" />
                         </StackPanel>
                     </StackPanel>
                 </Grid>
