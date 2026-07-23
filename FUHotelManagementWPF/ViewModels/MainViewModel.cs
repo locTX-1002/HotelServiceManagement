@@ -75,7 +75,7 @@ namespace FUHotelManagementWPF.ViewModels
             [
                 new("", "Sơ đồ phòng", opGroup, () => new Rooms.RoomsViewModel()),
                 new("", "Đặt phòng", opGroup, () => new Reservations.ReservationsViewModel()),
-                new("", "Check-in / Check-out", opGroup, () => new PlaceholderViewModel("Check-in / Check-out")),
+                new("", "Check-in / Check-out", opGroup, () => new CheckInOut.CheckInOutViewModel()),
                 new("", "Khách hàng", peopleGroup, () => new PlaceholderViewModel("Khách hàng")),
                 new("", "Dịch vụ", peopleGroup, () => new PlaceholderViewModel("Dịch vụ")),
                 new("", "Hoá đơn", moneyGroup, () => new PlaceholderViewModel("Hoá đơn")),

@@ -3,6 +3,8 @@
                     xmlns:vm="clr-namespace:FUHotelManagementWPF.ViewModels"
                     xmlns:vmRooms="clr-namespace:FUHotelManagementWPF.ViewModels.Rooms"
                     xmlns:vmRes="clr-namespace:FUHotelManagementWPF.ViewModels.Reservations"
+                    xmlns:vmFlow="clr-namespace:FUHotelManagementWPF.ViewModels.CheckInOut"
+                    xmlns:viewsFlow="clr-namespace:FUHotelManagementWPF.Views.CheckInOut"
                     xmlns:views="clr-namespace:FUHotelManagementWPF.Views"
                     xmlns:viewsRooms="clr-namespace:FUHotelManagementWPF.Views.Rooms"
                     xmlns:viewsRes="clr-namespace:FUHotelManagementWPF.Views.Reservations">
@@ -27,6 +29,10 @@
 
     <DataTemplate DataType="{x:Type vmRes:ReservationsViewModel}">
         <viewsRes:ReservationsView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vmFlow:CheckInOutViewModel}">
+        <viewsFlow:CheckInOutView />
     </DataTemplate>
 
 </ResourceDictionary>
