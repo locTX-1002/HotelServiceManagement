@@ -483,6 +483,7 @@ $RECYCLE.BIN/
 
 # Override chuoi ket noi rieng tung may - khong commit
 appsettings.Local.json
+appsettings.Local.json.bak
 
 # Thu muc con sot lai tu kien truc cu, khong con thuoc solution WPF
 /backend/
