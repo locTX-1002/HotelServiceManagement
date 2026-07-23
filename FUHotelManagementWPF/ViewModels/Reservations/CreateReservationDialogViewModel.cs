@@ -132,7 +132,39 @@ namespace FUHotelManagementWPF.ViewModels.Reservations
         public ReservationStatusFilter SelectedStatus
         {
             get => _selectedStatus;
-            set => SetProperty(ref _selectedStatus, value);
+            set
+            {
+                if (SetProperty(ref _selectedStatus, value))
+                {
+                    OnPropertyChanged(nameof(IsPendingStatus));
+                    OnPropertyChanged(nameof(IsConfirmedStatus));
+                }
+            }
+        }
+
+        // Chi co dung 2 trang thai luc tao nen dung 2 nut bam thay vi dropdown -
+        // do mot cu bam, va nhin la thay ca hai lua chon.
+        public bool IsPendingStatus
+        {
+            get => _selectedStatus.Status == ReservationStatus.Pending;
+            set { if (value) { SelectedStatus = StatusOptions[0]; } }
+        }
+
+        public bool IsConfirmedStatus
+        {
+            get => _selectedStatus.Status == ReservationStatus.Confirmed;
+            set { if (value) { SelectedStatus = StatusOptions[1]; } }
+        }
+
+        /// <summary>Chon nhanh so dem: dat ngay tra = ngay nhan + n.</summary>
+        public RelayCommand PickNightsCommand { get; }
+
+        private void PickNights(object? parameter)
+        {
+            if (parameter is string text && int.TryParse(text, out var nights) && nights > 0)
+            {
+                CheckOut = CheckIn.Date.AddDays(nights);
+            }
         }
 
         public string SpecialRequests { get; set; } = string.Empty;
@@ -160,6 +192,7 @@ namespace FUHotelManagementWPF.ViewModels.Reservations
             _existing = existing;
             _selectedStatus = StatusOptions[0];
 
+            PickNightsCommand = new RelayCommand(PickNights);
             FindGuestCommand = new AsyncRelayCommand(_ => FindGuestAsync());
             FindRoomsCommand = new AsyncRelayCommand(_ => FindRoomsAsync());
             SaveCommand = new AsyncRelayCommand(SaveAsync, _ => !IsBusy);
@@ -192,12 +225,16 @@ namespace FUHotelManagementWPF.ViewModels.Reservations
             if (string.IsNullOrEmpty(key))
             {
                 MatchedGuest = null;
+                OnPropertyChanged(nameof(ShowNewGuestFields));
                 ErrorMessage = "Nhập CCCD hoặc số điện thoại để tìm khách.";
                 return;
             }
             try
             {
                 MatchedGuest = await _guestService.FindExactAsync(key);
+                // MatchedGuest tu null sang null thi setter khong ban thong bao, phai bao tay -
+                // khong co dong nay thi form khach moi khong bao gio hien ra.
+                OnPropertyChanged(nameof(ShowNewGuestFields));
                 if (MatchedGuest == null)
                 {
                     // gợi ý điền sẵn: nếu keyword toàn số coi như SĐT, ngược lại CCCD
@@ -249,19 +286,30 @@ namespace FUHotelManagementWPF.ViewModels.Reservations
             var guestId = MatchedGuest?.Id ?? 0;
             if (guestId == 0)
             {
-                if (!ShowNewGuestFields)
+                // Le tan go CCCD roi bam Luu luon ma quen bam Tim - tu tra giup thay vi bao loi
+                if (!_guestSearched && !string.IsNullOrWhiteSpace(GuestKeyword))
                 {
-                    ErrorMessage = "Bấm Tìm khách trước, hoặc điền thông tin khách mới.";
-                    return;
+                    await FindGuestAsync();
+                    guestId = MatchedGuest?.Id ?? 0;
                 }
-                var created = await _guestService.CreateAsync(NewFullName, NewPhone, GuestKeyword.Trim(), NewEmail);
-                if (!created.Ok)
+
+                if (guestId == 0)
                 {
-                    ErrorMessage = created.Message;
-                    return;
+                    if (!ShowNewGuestFields)
+                    {
+                        ErrorMessage = "Nhập CCCD hoặc số điện thoại của khách trước.";
+                        return;
+                    }
+
+                    var created = await _guestService.CreateAsync(NewFullName, NewPhone, GuestKeyword.Trim(), NewEmail);
+                    if (!created.Ok)
+                    {
+                        ErrorMessage = created.Message;
+                        return;
+                    }
+                    MatchedGuest = created.Data;
+                    guestId = created.Data!.Id;
                 }
-                MatchedGuest = created.Data;
-                guestId = created.Data!.Id;
             }
 
             if (SelectedRoom == null)
