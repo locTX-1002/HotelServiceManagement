@@ -90,9 +90,12 @@
                         Command="{Binding LoginCommand}"
                         CommandParameter="{Binding ElementName=PasswordInput}" />
 
+                <!-- Khong bay mat khau ra man dang nhap nua: mat khau admin gio lay tu
+                     appsettings.Local.json rieng tung may nen ghi cung o day la sai. -->
                 <TextBlock HorizontalAlignment="Center" Margin="0,16,0,0"
                            Style="{StaticResource CaptionText}" FontSize="11.5"
-                           Text="Tài khoản mẫu: admin@hotel.com / Admin123!" />
+                           TextWrapping="Wrap" TextAlignment="Center" MaxWidth="280"
+                           Text="Tài khoản admin lấy theo appsettings.Local.json trên máy bạn" />
             </StackPanel>
         </Border>
     </Grid>
