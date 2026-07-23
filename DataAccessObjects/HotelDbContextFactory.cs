@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 
 namespace DataAccessObjects
 {
@@ -10,37 +9,9 @@ namespace DataAccessObjects
     /// </summary>
     public static class HotelDbContextFactory
     {
-        private const string FallbackConnection =
-            "Server=.\\SQLEXPRESS;Database=FUHotelManagementDB;Trusted_Connection=True;TrustServerCertificate=True;MultipleActiveResultSets=True";
-
-        private static string? _connectionString;
-
-        private static string ConnectionString
-        {
-            get
-            {
-                if (_connectionString == null)
-                {
-                    var config = new ConfigurationBuilder()
-                        .SetBasePath(AppContext.BaseDirectory)
-                        .AddJsonFile("appsettings.json", optional: true)
-                        // File override rieng tung may (da gitignore) - ai dung instance khac
-                        // SQLEXPRESS thi tao appsettings.Local.json de khoi dung cham file chung.
-                        .AddJsonFile("appsettings.Local.json", optional: true)
-                        .Build();
-                    // Thieu appsettings van chay duoc bang mac dinh SQLEXPRESS - do la quy uoc chung
-                    // ca nhom dang dung; may nao instance khac thi chi can sua appsettings.json.
-                    _connectionString = config.GetConnectionString("FUHotelManagement") ?? FallbackConnection;
-                }
-                return _connectionString;
-            }
-        }
-
         public static HotelDbContext Create()
         {
-            var options = new DbContextOptionsBuilder<HotelDbContext>()
-                .UseSqlServer(ConnectionString)
-                .Options;
+            var options = new DbContextOptionsBuilder<HotelDbContext>().Options;
             return new HotelDbContext(options);
         }
 

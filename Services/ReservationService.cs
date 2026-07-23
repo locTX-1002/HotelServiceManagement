@@ -24,6 +24,8 @@ public sealed class ReservationService : IReservationService
         int numberOfGuests, DateTime checkInDate, DateTime checkOutDate, string? specialRequests,
         decimal? depositAmount, PaymentMethod? depositPaymentMethod)
     {
+        if (!AuthorizationPolicy.CanOperateFrontDesk)
+            return ServiceResult<Reservation>.Failure("Ban khong co quyen tao dat phong.");
         var error = Validate(numberOfGuests, checkInDate, checkOutDate, specialRequests,
             depositAmount, depositPaymentMethod);
         if (error != null) return ServiceResult<Reservation>.Failure(error);
@@ -60,6 +62,8 @@ public sealed class ReservationService : IReservationService
     public async Task<ServiceResult<Reservation>> UpdateAsync(int id, int roomId,
         int numberOfGuests, DateTime checkInDate, DateTime checkOutDate, string? specialRequests)
     {
+        if (!AuthorizationPolicy.CanOperateFrontDesk)
+            return ServiceResult<Reservation>.Failure("Ban khong co quyen sua dat phong.");
         var error = Validate(numberOfGuests, checkInDate, checkOutDate, specialRequests, null, null);
         if (error != null) return ServiceResult<Reservation>.Failure(error);
         var entity = await _reservations.GetByIdAsync(id);
@@ -85,11 +89,15 @@ public sealed class ReservationService : IReservationService
     }
 
     public Task<ServiceResult<Reservation>> ConfirmAsync(int id)
-        => ChangeStatusAsync(id, ReservationStatus.Pending, ReservationStatus.Confirmed,
+        => !AuthorizationPolicy.CanOperateFrontDesk
+            ? Task.FromResult(ServiceResult<Reservation>.Failure("Ban khong co quyen xac nhan dat phong."))
+            : ChangeStatusAsync(id, ReservationStatus.Pending, ReservationStatus.Confirmed,
             "Chi dat phong dang cho moi co the xac nhan.", "Da xac nhan dat phong.");
 
     public async Task<ServiceResult<Reservation>> CancelAsync(int id)
     {
+        if (!AuthorizationPolicy.CanOperateFrontDesk)
+            return ServiceResult<Reservation>.Failure("Ban khong co quyen huy dat phong.");
         var entity = await _reservations.GetByIdAsync(id);
         if (entity == null) return ServiceResult<Reservation>.Failure("Khong tim thay dat phong.");
         if (entity.Status is not (ReservationStatus.Pending or ReservationStatus.Confirmed))

@@ -20,6 +20,8 @@ public sealed class GuestService : IGuestService
     public async Task<ServiceResult<Guest>> CreateAsync(string fullName, string? email,
         string phoneNumber, string? identityNumber, GuestTag tag, string? tagNote)
     {
+        if (!AuthorizationPolicy.CanOperateFrontDesk)
+            return ServiceResult<Guest>.Failure("Ban khong co quyen tao ho so khach hang.");
         var error = Validate(fullName, email, phoneNumber, identityNumber, tag, tagNote);
         if (error != null) return ServiceResult<Guest>.Failure(error);
 
@@ -54,6 +56,8 @@ public sealed class GuestService : IGuestService
     public async Task<ServiceResult<Guest>> UpdateAsync(int id, string fullName, string? email,
         string phoneNumber, string? identityNumber, GuestTag tag, string? tagNote)
     {
+        if (!AuthorizationPolicy.CanOperateFrontDesk)
+            return ServiceResult<Guest>.Failure("Ban khong co quyen sua ho so khach hang.");
         var error = Validate(fullName, email, phoneNumber, identityNumber, tag, tagNote);
         if (error != null) return ServiceResult<Guest>.Failure(error);
         var guest = await _repository.GetByIdAsync(id);
@@ -75,6 +79,8 @@ public sealed class GuestService : IGuestService
 
     public async Task<ServiceResult> DeleteAsync(int id)
     {
+        if (!AuthorizationPolicy.CanOperateFrontDesk)
+            return ServiceResult.Failure("Ban khong co quyen xoa ho so khach hang.");
         var guest = await _repository.GetByIdAsync(id);
         if (guest == null) return ServiceResult.Failure("Khong tim thay khach hang.");
         if (await _repository.HasReservationsAsync(id))
