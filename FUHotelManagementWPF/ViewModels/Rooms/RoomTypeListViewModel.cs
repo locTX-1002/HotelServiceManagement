@@ -1,7 +1,10 @@
 using System;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Data;
 using BusinessObjects.Entities;
 using FUHotelManagementWPF.MvvmCore;
 using FUHotelManagementWPF.Views.Dialogs;
@@ -51,23 +54,29 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
             }
         }
 
-        public bool IsEmpty => !IsLoading && Rows.Count == 0;
+        public bool IsEmpty => !IsLoading && !RowsView.Cast<object>().Any();
 
-        // D3 master-detail
-        private RoomTypeRow? _selectedRow;
-        public RoomTypeRow? SelectedRow
+        /// <summary>Phan biet "chua co loai phong nao" voi "tim khong ra".</summary>
+        public string EmptyText => Rows.Count == 0
+            ? "Chưa có loại phòng nào — bấm + Thêm loại phòng để tạo hạng đầu tiên."
+            : "Không có loại phòng nào khớp từ khoá.";
+
+        public ICollectionView RowsView { get; }
+
+        private string _searchText = string.Empty;
+        public string SearchText
         {
-            get => _selectedRow;
+            get => _searchText;
             set
             {
-                if (SetProperty(ref _selectedRow, value))
+                if (SetProperty(ref _searchText, value))
                 {
-                    OnPropertyChanged(nameof(HasSelection));
+                    RowsView.Refresh();
+                    OnPropertyChanged(nameof(IsEmpty));
+                    OnPropertyChanged(nameof(EmptyText));
                 }
             }
         }
-
-        public bool HasSelection => _selectedRow != null;
 
         public RelayCommand AddCommand { get; }
         public RelayCommand EditCommand { get; }
@@ -76,9 +85,25 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
         public RoomTypeListViewModel(Func<Task> refreshAll)
         {
             _refreshAll = refreshAll;
+            RowsView = new ListCollectionView(Rows) { Filter = FilterRow };
             AddCommand = new RelayCommand(_ => OpenEditDialog(null));
             EditCommand = new RelayCommand(p => OpenEditDialog(p as RoomTypeRow));
             DeleteCommand = new AsyncRelayCommand(DeleteAsync);
+        }
+
+        private bool FilterRow(object item)
+        {
+            if (string.IsNullOrWhiteSpace(SearchText))
+            {
+                return true;
+            }
+            if (item is not RoomTypeRow row)
+            {
+                return false;
+            }
+            var keyword = SearchText.Trim().ToLower();
+            return row.RoomType.TypeName.ToLower().Contains(keyword)
+                   || (row.RoomType.Description ?? string.Empty).ToLower().Contains(keyword);
         }
 
         public string TotalText => $"{Rows.Count} loại phòng";
