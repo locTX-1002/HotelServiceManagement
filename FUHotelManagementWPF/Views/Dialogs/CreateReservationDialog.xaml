@@ -129,22 +129,11 @@
                     <!-- 4. Số khách. Trạng thái không hỏi nữa: đơn tạo tại quầy thì
                          chính lễ tân là người xác nhận, nên luôn vào Đã xác nhận.
                          Muốn hạ xuống Chờ xác nhận thì đổi ở màn Đặt phòng. -->
-                    <Grid Margin="0,16,0,0" Visibility="{Binding HasSearchedRooms, Converter={StaticResource BoolToVis}}">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <StackPanel Grid.Column="0" Width="130">
-                            <TextBlock Text="SỐ KHÁCH" Style="{StaticResource FieldLabel}" />
-                            <hc:NumericUpDown Minimum="1" Maximum="20" Value="{Binding NumberOfGuests}" />
-                        </StackPanel>
-                        <Border Grid.Column="1" Background="{StaticResource SurfaceAltBrush}" CornerRadius="4"
-                                Padding="11,8" Margin="12,16,0,0" VerticalAlignment="Bottom"
-                                Visibility="{Binding ShowConfirmedHint, Converter={StaticResource BoolToVis}}">
-                            <TextBlock Text="Đơn được tạo ở trạng thái Đã xác nhận — khách đến là check-in được ngay."
-                                       Style="{StaticResource CaptionText}" FontSize="11.5" TextWrapping="Wrap" />
-                        </Border>
-                    </Grid>
+                    <StackPanel Width="130" HorizontalAlignment="Left" Margin="0,16,0,0"
+                                Visibility="{Binding HasSearchedRooms, Converter={StaticResource BoolToVis}}">
+                        <TextBlock Text="SỐ KHÁCH" Style="{StaticResource FieldLabel}" />
+                        <hc:NumericUpDown Minimum="1" Maximum="20" Value="{Binding NumberOfGuests}" />
+                    </StackPanel>
 
                     <TextBlock Text="YÊU CẦU ĐẶC BIỆT (TUỲ CHỌN)" Style="{StaticResource FieldLabel}" Margin="0,14,0,5" />
                     <TextBox Text="{Binding SpecialRequests}" Height="52" TextWrapping="Wrap"

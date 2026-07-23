@@ -86,9 +86,6 @@ namespace FUHotelManagementWPF.ViewModels.Reservations
             }
         }
 
-        /// <summary>Bang thong bao trang thai chi hien luc tao moi, luc sua thi khong.</summary>
-        public bool ShowConfirmedHint => !IsEdit;
-
         public string NewFullName { get; set; } = string.Empty;
         public string NewPhone { get; set; } = string.Empty;
         public string NewEmail { get; set; } = string.Empty;
