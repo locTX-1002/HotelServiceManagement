@@ -9,6 +9,7 @@ using System.Windows.Data;
 using BusinessObjects.Entities;
 using FUHotelManagementWPF.MvvmCore;
 using FUHotelManagementWPF.ViewModels.Rooms;
+using FUHotelManagementWPF.Views.Dialogs;
 using Services;
 
 namespace FUHotelManagementWPF.ViewModels.CheckInOut
@@ -121,9 +122,20 @@ namespace FUHotelManagementWPF.ViewModels.CheckInOut
         public decimal BasePrice => Reservation.Room?.RoomType?.BasePrice ?? 0;
         public decimal RoomCharge => ChargeableNights * BasePrice;
 
+        /// <summary>Tong phu thu da ghi cho luot nay - ViewModel gan sau khi tai.</summary>
+        public decimal SurchargeTotal { get; set; }
+
+        public bool HasSurcharge => SurchargeTotal > 0;
+        public decimal TotalCharge => RoomCharge + SurchargeTotal;
+
         public string NightsText => $"{ChargeableNights} đêm × {BasePrice:N0} đ";
         public string RoomChargeText => $"{RoomCharge:N0} đ";
+        public string SurchargeText => $"{SurchargeTotal:N0} đ";
+        public string TotalChargeText => $"{TotalCharge:N0} đ";
         public string EstimateLabel => Kind == FlowKind.Arrival ? "Dự kiến cả kỳ" : "Tạm tính";
+
+        /// <summary>Chi khach dang o moi gia han va ghi phu thu duoc.</summary>
+        public bool CanExtend => Kind == FlowKind.Stay;
 
         /// <summary>Thứ tự ưu tiên: quá hạn → việc hôm nay → còn lại (theo ngày gần nhất).</summary>
         public int SortRank => IsOverdue ? 0 : IsToday ? 1 : 2;
@@ -225,6 +237,43 @@ namespace FUHotelManagementWPF.ViewModels.CheckInOut
         public AsyncRelayCommand ActionCommand { get; }
         public AsyncRelayCommand RefreshCommand { get; }
         public RelayCommand PickFilterCommand { get; }
+        public AsyncRelayCommand ExtendCommand { get; }
+        public AsyncRelayCommand SurchargeCommand { get; }
+
+        private readonly ISurchargeService _surchargeService = new SurchargeService();
+
+        /// <summary>Khach o them: doi ngay tra ngay tren don dang co.</summary>
+        private async Task ExtendAsync(object? parameter)
+        {
+            if (parameter is not FlowItem { Kind: FlowKind.Stay, Stay: not null } item)
+            {
+                return;
+            }
+            var dialog = new ExtendStayDialog(new ExtendStayDialogViewModel(item.Stay))
+            {
+                Owner = Rooms.RoomMapViewModel.ActiveWindow(),
+            };
+            if (dialog.ShowDialog() == true)
+            {
+                await LoadAsync();
+            }
+        }
+
+        /// <summary>Kiem do trong phong: ghi thu khach lam hong hoac mat truoc khi tra phong.</summary>
+        private async Task OpenSurchargeAsync(object? parameter)
+        {
+            if (parameter is not FlowItem { Kind: FlowKind.Stay, Stay: not null } item)
+            {
+                return;
+            }
+            var dialog = new SurchargeDialog(new SurchargeDialogViewModel(item.Stay))
+            {
+                Owner = Rooms.RoomMapViewModel.ActiveWindow(),
+            };
+            dialog.ShowDialog();
+            // Dialog dong bang nut Xong nen khong tra DialogResult - cu tai lai cho chac
+            await LoadAsync();
+        }
 
         public CheckInOutViewModel()
         {
@@ -243,6 +292,8 @@ namespace FUHotelManagementWPF.ViewModels.CheckInOut
             ActionCommand = new AsyncRelayCommand(RunActionAsync);
             RefreshCommand = new AsyncRelayCommand(_ => LoadAsync());
             PickFilterCommand = new RelayCommand(p => { if (p is FlowFilter f) { SelectedFilter = f; } });
+            ExtendCommand = new AsyncRelayCommand(ExtendAsync);
+            SurchargeCommand = new AsyncRelayCommand(OpenSurchargeAsync);
             _ = LoadAsync();
         }
 
@@ -262,6 +313,16 @@ namespace FUHotelManagementWPF.ViewModels.CheckInOut
                     .OrderBy(i => i.SortRank)
                     .ThenBy(i => i.SortDate)
                     .ToList();
+
+                // Lay tong phu thu cua tat ca luot dang o trong 1 truy van, khoi goi lap
+                var totals = await _surchargeService.GetTotalsAsync(stays.Select(s => s.Id));
+                foreach (var item in all)
+                {
+                    if (item.Stay != null && totals.TryGetValue(item.Stay.Id, out var total))
+                    {
+                        item.SurchargeTotal = total;
+                    }
+                }
 
                 Items.Clear();
                 foreach (var item in all)

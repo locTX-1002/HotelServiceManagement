@@ -1,0 +1,72 @@
+<Window x:Class="FUHotelManagementWPF.Views.Dialogs.ExtendStayDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Gia hạn lưu trú"
+        Width="430" SizeToContent="Height"
+        WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
+        ShowInTaskbar="False"
+        Style="{StaticResource BaseWindow}">
+    <Border Style="{StaticResource Card}" Effect="{StaticResource SoftShadowLarge}" Margin="14" Padding="0">
+        <StackPanel>
+            <Border Background="{StaticResource BrandSoftBrush}" CornerRadius="4,4,0,0" Padding="20,15">
+                <StackPanel>
+                    <TextBlock Text="Gia hạn lưu trú" Style="{StaticResource SectionTitleText}" FontSize="16.5" />
+                    <TextBlock Text="Khách ở thêm thì đổi ngày trả ngay trên đơn, không cần check-out rồi đặt lại."
+                               Style="{StaticResource CaptionText}" FontSize="11.5" TextWrapping="Wrap"
+                               Margin="0,3,0,0" />
+                </StackPanel>
+            </Border>
+
+            <StackPanel Margin="20,16,20,18">
+                <TextBlock Text="{Binding RoomText}" FontSize="14.5" FontWeight="SemiBold" />
+                <TextBlock Text="{Binding GuestText}" Margin="0,2,0,0" />
+                <TextBlock Text="{Binding CurrentText}" Style="{StaticResource CaptionText}"
+                           FontSize="11.5" Margin="0,3,0,0" />
+
+                <TextBlock Text="NGÀY TRẢ MỚI" Style="{StaticResource FieldLabel}" Margin="0,16,0,5" />
+                <DatePicker SelectedDate="{Binding NewCheckOut}" />
+
+                <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                    <TextBlock Text="Nhanh:" Style="{StaticResource CaptionText}" FontSize="11.5"
+                               VerticalAlignment="Center" Margin="0,0,7,0" />
+                    <Button Content="+1 đêm" Style="{StaticResource QuickChip}"
+                            Command="{Binding PickNightsCommand}" CommandParameter="1" />
+                    <Button Content="+2 đêm" Style="{StaticResource QuickChip}"
+                            Command="{Binding PickNightsCommand}" CommandParameter="2" />
+                    <Button Content="+3 đêm" Style="{StaticResource QuickChip}"
+                            Command="{Binding PickNightsCommand}" CommandParameter="3" />
+                    <Button Content="+1 tuần" Style="{StaticResource QuickChip}"
+                            Command="{Binding PickNightsCommand}" CommandParameter="7" />
+                </StackPanel>
+
+                <Border Background="{StaticResource SurfaceAltBrush}" CornerRadius="4"
+                        Padding="12,10" Margin="0,14,0,0">
+                    <StackPanel>
+                        <TextBlock Text="{Binding DiffText}" FontSize="12.5" FontWeight="SemiBold" />
+                        <TextBlock Text="{Binding PreviewText}" Style="{StaticResource CaptionText}"
+                                   FontSize="12" Margin="0,4,0,0" />
+                        <TextBlock Text="Rút ngắn ngày trả không hoàn tiền tự động — xử lý ở màn Hoá đơn."
+                                   Style="{StaticResource CaptionText}" FontSize="11" TextWrapping="Wrap"
+                                   Margin="0,6,0,0"
+                                   Visibility="{Binding IsShortening, Converter={StaticResource BoolToVis}}" />
+                    </StackPanel>
+                </Border>
+
+                <Border CornerRadius="4" Padding="10,8" Margin="0,12,0,0"
+                        Background="{StaticResource DangerSoftBrush}"
+                        Visibility="{Binding HasError, Converter={StaticResource BoolToVis}}">
+                    <TextBlock Text="{Binding ErrorMessage}" Foreground="{StaticResource DangerBrush}"
+                               TextWrapping="Wrap" />
+                </Border>
+
+                <Border Height="1" Background="{StaticResource LineBrush}" Margin="0,16,0,0" />
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,14,0,0">
+                    <Button Content="Huỷ" Style="{StaticResource GhostButton}" IsCancel="True" />
+                    <Button Content="Lưu ngày trả mới" Style="{StaticResource PrimaryButton}"
+                            Margin="10,0,0,0" MinWidth="140" IsDefault="True"
+                            Command="{Binding SaveCommand}" />
+                </StackPanel>
+            </StackPanel>
+        </StackPanel>
+    </Border>
+</Window>

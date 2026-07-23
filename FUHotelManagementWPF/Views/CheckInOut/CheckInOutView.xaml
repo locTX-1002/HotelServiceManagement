@@ -285,6 +285,13 @@
                                     <TextBlock Text="{Binding ExtraNightsText}" FontSize="11"
                                                Foreground="{StaticResource DangerBrush}" Margin="0,4,0,0"
                                                Visibility="{Binding HasExtraNights, Converter={StaticResource BoolToVis}}" />
+                                    <DockPanel Margin="0,6,0,0"
+                                               Visibility="{Binding HasSurcharge, Converter={StaticResource BoolToVis}}">
+                                        <TextBlock DockPanel.Dock="Right" Text="{Binding SurchargeText}"
+                                                   FontWeight="SemiBold" />
+                                        <TextBlock Text="Phụ thu (hỏng / mất đồ)" Style="{StaticResource CaptionText}"
+                                                   FontSize="11.5" />
+                                    </DockPanel>
                                     <DockPanel Margin="0,6,0,0">
                                         <TextBlock DockPanel.Dock="Right" Text="chưa có"
                                                    Style="{StaticResource CaptionText}" FontSize="11.5" />
@@ -293,7 +300,7 @@
                                     </DockPanel>
                                     <Border Height="1" Background="{StaticResource LineBrush}" Margin="0,9,0,8" />
                                     <DockPanel>
-                                        <TextBlock DockPanel.Dock="Right" Text="{Binding RoomChargeText}"
+                                        <TextBlock DockPanel.Dock="Right" Text="{Binding TotalChargeText}"
                                                    FontSize="15" FontWeight="SemiBold"
                                                    Foreground="{StaticResource BrandBrush}" />
                                         <TextBlock Text="{Binding EstimateLabel}" VerticalAlignment="Center" />
@@ -304,8 +311,23 @@
                                        Style="{StaticResource CaptionText}" FontSize="11" TextWrapping="Wrap"
                                        Margin="0,7,0,0" />
 
+                            <!-- Hai việc phải làm được TRƯỚC khi check-out -->
+                            <UniformGrid Columns="2" Margin="0,14,0,0"
+                                         Visibility="{Binding CanExtend, Converter={StaticResource BoolToVis}}">
+                                <Button Content="Gia hạn" Style="{StaticResource GhostButton}"
+                                        Padding="0,8" Margin="0,0,5,0"
+                                        Command="{Binding DataContext.ExtendCommand,
+                                                  RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                        CommandParameter="{Binding}" />
+                                <Button Content="Kiểm đồ / phụ thu" Style="{StaticResource GhostButton}"
+                                        Padding="0,8" Margin="5,0,0,0"
+                                        Command="{Binding DataContext.SurchargeCommand,
+                                                  RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                        CommandParameter="{Binding}" />
+                            </UniformGrid>
+
                             <Button Content="{Binding ActionLabel}" Style="{StaticResource PrimaryButton}"
-                                    Padding="0,10" Margin="0,14,0,0" FontSize="13.5"
+                                    Padding="0,10" Margin="0,8,0,0" FontSize="13.5"
                                     Command="{Binding DataContext.ActionCommand,
                                               RelativeSource={RelativeSource AncestorType=UserControl}}"
                                     CommandParameter="{Binding}" />
