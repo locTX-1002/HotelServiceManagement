@@ -3,26 +3,43 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:hc="https://handyorg.github.io/handycontrol">
     <UserControl.Resources>
-        <!-- Card-row dùng chung cho cả 2 cột -->
-        <Style x:Key="FlowCard" TargetType="Border">
+        <!-- Chip lọc: chip đang chọn tô màu thương hiệu -->
+        <Style x:Key="FilterChip" TargetType="Button">
             <Setter Property="Background" Value="{StaticResource CardBrush}" />
-            <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="4" />
-            <Setter Property="Padding" Value="10,8" />
-            <Setter Property="Margin" Value="0,0,0,8" />
+            <Setter Property="Foreground" Value="{StaticResource InkBrush}" />
+            <Setter Property="Padding" Value="12,5" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Margin" Value="0,0,7,0" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="4"
+                                BorderBrush="{StaticResource LineBrush}" BorderThickness="1"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="{StaticResource SurfaceAltBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
     </UserControl.Resources>
 
     <Grid Margin="24,18,24,24">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <DockPanel Grid.Row="0" Margin="0,0,0,14">
+        <DockPanel Grid.Row="0" Margin="0,0,0,12">
             <Button DockPanel.Dock="Right" Content="Tải lại" Style="{StaticResource GhostButton}"
-                    Padding="14,7" Command="{Binding RefreshCommand}" />
+                    Padding="14,7" VerticalAlignment="Top" Command="{Binding RefreshCommand}" />
             <StackPanel>
                 <TextBlock Text="Check-in / Check-out" Style="{StaticResource PageTitleText}" />
                 <TextBlock Text="{Binding TodayText}" Style="{StaticResource CaptionText}"
@@ -30,134 +47,113 @@
             </StackPanel>
         </DockPanel>
 
-        <hc:LoadingCircle Grid.Row="1" Width="34" Height="34"
+        <!-- Chip lọc: Tất cả / Hôm nay / Sắp đến / Đang ở / Quá hạn -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,12">
+            <Button Style="{StaticResource FilterChip}"
+                    Command="{Binding PickFilterCommand}" CommandParameter="{Binding Filters[0]}">
+                <TextBlock><Run Text="Tất cả " /><Run Text="{Binding CountAll, Mode=OneWay}" FontWeight="SemiBold" /></TextBlock>
+            </Button>
+            <Button Style="{StaticResource FilterChip}"
+                    Command="{Binding PickFilterCommand}" CommandParameter="{Binding Filters[1]}">
+                <TextBlock><Run Text="Hôm nay " /><Run Text="{Binding CountToday, Mode=OneWay}" FontWeight="SemiBold" /></TextBlock>
+            </Button>
+            <Button Style="{StaticResource FilterChip}"
+                    Command="{Binding PickFilterCommand}" CommandParameter="{Binding Filters[2]}">
+                <TextBlock><Run Text="Sắp đến " /><Run Text="{Binding CountArrival, Mode=OneWay}" FontWeight="SemiBold" /></TextBlock>
+            </Button>
+            <Button Style="{StaticResource FilterChip}"
+                    Command="{Binding PickFilterCommand}" CommandParameter="{Binding Filters[3]}">
+                <TextBlock><Run Text="Đang ở " /><Run Text="{Binding CountStay, Mode=OneWay}" FontWeight="SemiBold" /></TextBlock>
+            </Button>
+            <Button Style="{StaticResource FilterChip}" Foreground="{StaticResource DangerBrush}"
+                    Command="{Binding PickFilterCommand}" CommandParameter="{Binding Filters[4]}">
+                <TextBlock><Run Text="Quá hạn " /><Run Text="{Binding CountOverdue, Mode=OneWay}" FontWeight="SemiBold" /></TextBlock>
+            </Button>
+        </StackPanel>
+
+        <hc:LoadingCircle Grid.Row="2" Width="34" Height="34"
                           Foreground="{StaticResource BrandBrush}"
                           Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}" />
+        <TextBlock Grid.Row="2" Text="Không có việc nào trong mục này."
+                   Style="{StaticResource CaptionText}" FontSize="13"
+                   HorizontalAlignment="Center" VerticalAlignment="Center"
+                   Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVis}}" />
 
-        <Grid Grid.Row="1">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="18" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
+        <!-- Dòng thời gian việc cần làm: quá hạn lên đầu, có vạch đỏ -->
+        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+            <ItemsControl ItemsSource="{Binding ItemsView}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Background="{StaticResource CardBrush}" BorderThickness="1"
+                                CornerRadius="4" Padding="11,9" Margin="0,0,0,8">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
+                                    <Style.Triggers>
+                                        <!-- Quá hạn: vạch đỏ dày bên trái để nhảy vào mắt -->
+                                        <DataTrigger Binding="{Binding IsOverdue}" Value="True">
+                                            <Setter Property="BorderBrush" Value="{StaticResource DangerBrush}" />
+                                            <Setter Property="BorderThickness" Value="3,1,1,1" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
 
-            <!-- CỘT TRÁI: chờ check-in -->
-            <Grid Grid.Column="0">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="*" />
-                </Grid.RowDefinitions>
-                <TextBlock Grid.Row="0" Text="{Binding ArrivalsTitle}"
-                           Style="{StaticResource SectionTitleText}" Margin="2,0,0,10" />
-
-                <TextBlock Grid.Row="1" Text="Không có đặt phòng nào chờ check-in."
-                           Style="{StaticResource CaptionText}" FontSize="12.5"
-                           HorizontalAlignment="Center" Margin="0,40,0,0"
-                           Visibility="{Binding IsArrivalsEmpty, Converter={StaticResource BoolToVis}}" />
-
-                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-                    <ItemsControl ItemsSource="{Binding Arrivals}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Border Style="{StaticResource FlowCard}">
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto" />
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="Auto" />
-                                        </Grid.ColumnDefinitions>
-                                        <Border Grid.Column="0" Width="58" Height="42" CornerRadius="4">
-                                            <Border.Background>
-                                                <ImageBrush ImageSource="{Binding Thumbnail}" Stretch="UniformToFill" />
-                                            </Border.Background>
-                                        </Border>
-                                        <StackPanel Grid.Column="1" Margin="12,0,10,0" VerticalAlignment="Center">
-                                            <StackPanel Orientation="Horizontal">
-                                                <TextBlock Text="{Binding GuestName}" FontSize="14" FontWeight="SemiBold" />
-                                                <Border Style="{StaticResource BadgeWarning}" Margin="8,0,0,0"
-                                                        VerticalAlignment="Center"
-                                                        Visibility="{Binding IsToday, Converter={StaticResource BoolToVis}}">
-                                                    <TextBlock Text="{Binding DayLabel}" />
-                                                </Border>
-                                            </StackPanel>
-                                            <TextBlock Text="{Binding SubText}" Style="{StaticResource CaptionText}"
-                                                       FontSize="11.5" TextTrimming="CharacterEllipsis" Margin="0,2,0,0" />
-                                            <TextBlock Text="{Binding DateText}" Style="{StaticResource CaptionText}"
-                                                       FontSize="11" Margin="0,1,0,0" />
-                                        </StackPanel>
-                                        <Button Grid.Column="2" Content="Check-in" Style="{StaticResource PrimaryButton}"
-                                                Padding="14,7" VerticalAlignment="Center"
-                                                Command="{Binding DataContext.CheckInCommand,
-                                                          RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                CommandParameter="{Binding}" />
-                                    </Grid>
+                                <Border Grid.Column="0" Width="64" Height="46" CornerRadius="4">
+                                    <Border.Background>
+                                        <ImageBrush ImageSource="{Binding Thumbnail}" Stretch="UniformToFill" />
+                                    </Border.Background>
                                 </Border>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </ScrollViewer>
-            </Grid>
 
-            <!-- CỘT PHẢI: đang lưu trú -->
-            <Grid Grid.Column="2">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="*" />
-                </Grid.RowDefinitions>
-                <TextBlock Grid.Row="0" Text="{Binding StaysTitle}"
-                           Style="{StaticResource SectionTitleText}" Margin="2,0,0,10" />
+                                <StackPanel Grid.Column="1" Margin="13,0,10,0" VerticalAlignment="Center">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="{Binding RoomNumber}" FontSize="14.5" FontWeight="SemiBold" />
+                                        <TextBlock Text=" · " Foreground="{StaticResource InkSoftBrush}" VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding GuestName}" FontSize="14" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                    <TextBlock Text="{Binding SubText}" Style="{StaticResource CaptionText}"
+                                               FontSize="11.5" TextTrimming="CharacterEllipsis" Margin="0,2,0,0" />
+                                </StackPanel>
 
-                <TextBlock Grid.Row="1" Text="Chưa có khách nào đang lưu trú."
-                           Style="{StaticResource CaptionText}" FontSize="12.5"
-                           HorizontalAlignment="Center" Margin="0,40,0,0"
-                           Visibility="{Binding IsStaysEmpty, Converter={StaticResource BoolToVis}}" />
-
-                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-                    <ItemsControl ItemsSource="{Binding Stays}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Border Style="{StaticResource FlowCard}">
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto" />
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="Auto" />
-                                        </Grid.ColumnDefinitions>
-                                        <Border Grid.Column="0" Width="58" Height="42" CornerRadius="4">
-                                            <Border.Background>
-                                                <ImageBrush ImageSource="{Binding Thumbnail}" Stretch="UniformToFill" />
-                                            </Border.Background>
-                                        </Border>
-                                        <StackPanel Grid.Column="1" Margin="12,0,10,0" VerticalAlignment="Center">
-                                            <StackPanel Orientation="Horizontal">
-                                                <TextBlock Text="{Binding GuestName}" FontSize="14" FontWeight="SemiBold" />
-                                                <!-- Quá hạn trả: badge đỏ để lễ tân xử lý ngay -->
-                                                <Border Style="{StaticResource BadgeDanger}" Margin="8,0,0,0"
-                                                        VerticalAlignment="Center"
-                                                        Visibility="{Binding IsOverdue, Converter={StaticResource BoolToVis}}">
-                                                    <TextBlock Text="{Binding DayLabel}" />
-                                                </Border>
-                                            </StackPanel>
-                                            <TextBlock Text="{Binding SubText}" Style="{StaticResource CaptionText}"
-                                                       FontSize="11.5" TextTrimming="CharacterEllipsis" Margin="0,2,0,0" />
-                                            <TextBlock Style="{StaticResource CaptionText}" FontSize="11" Margin="0,1,0,0">
-                                                <Run Text="{Binding PlannedOutText, Mode=OneWay}" />
-                                                <Run Text=" · " />
-                                                <Run Text="{Binding NightsText, Mode=OneWay}" />
-                                            </TextBlock>
-                                        </StackPanel>
-                                        <Button Grid.Column="2" Content="Check-out" Style="{StaticResource GhostButton}"
-                                                Padding="14,7" VerticalAlignment="Center"
-                                                Command="{Binding DataContext.CheckOutCommand,
-                                                          RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                CommandParameter="{Binding}" />
-                                    </Grid>
+                                <!-- Trạng thái theo thời gian: quá hạn đỏ, hôm nay vàng, còn lại trung tính -->
+                                <Border Grid.Column="2" VerticalAlignment="Center" Margin="0,0,14,0">
+                                    <Border.Style>
+                                        <Style TargetType="Border" BasedOn="{StaticResource BadgeBase}">
+                                            <Setter Property="Background" Value="{StaticResource SurfaceAltBrush}" />
+                                            <Setter Property="TextElement.Foreground" Value="{StaticResource InkSoftBrush}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsToday}" Value="True">
+                                                    <Setter Property="Background" Value="{StaticResource WarningSoftBrush}" />
+                                                    <Setter Property="TextElement.Foreground" Value="{StaticResource WarningBrush}" />
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding IsOverdue}" Value="True">
+                                                    <Setter Property="Background" Value="{StaticResource DangerSoftBrush}" />
+                                                    <Setter Property="TextElement.Foreground" Value="{StaticResource DangerBrush}" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    <TextBlock Text="{Binding StatusText}" />
                                 </Border>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </ScrollViewer>
-            </Grid>
-        </Grid>
+
+                                <Button Grid.Column="3" Content="{Binding ActionLabel}"
+                                        Style="{StaticResource PrimaryButton}" Padding="14,7"
+                                        VerticalAlignment="Center"
+                                        Command="{Binding DataContext.ActionCommand,
+                                                  RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                        CommandParameter="{Binding}" />
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
     </Grid>
 </UserControl>
