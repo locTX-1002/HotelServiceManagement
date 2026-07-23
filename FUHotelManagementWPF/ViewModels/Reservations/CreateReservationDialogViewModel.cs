@@ -254,6 +254,15 @@ namespace FUHotelManagementWPF.ViewModels.Reservations
             }
         }
 
+        /// <summary>
+        /// Phong muon chon san khi mo tu lich phong. Dat truoc roi goi PrefillRoomsAsync
+        /// de dialog bat san danh sach phong trong va tro thang vao phong nay.
+        /// </summary>
+        public int? PreferredRoomId { get; set; }
+
+        /// <summary>Tim san phong trong cho khoang ngay dang co, dung khi mo tu lich phong.</summary>
+        public Task PrefillRoomsAsync() => FindRoomsAsync();
+
         private async Task FindRoomsAsync()
         {
             ErrorMessage = null;
@@ -268,7 +277,11 @@ namespace FUHotelManagementWPF.ViewModels.Reservations
                     return;
                 }
                 AvailableRooms = result.Data!;
-                SelectedRoom = AvailableRooms.FirstOrDefault();
+                // Mo tu lich phong thi tro thang vao phong da bam, khong thi lay phong dau
+                SelectedRoom = (PreferredRoomId is { } wanted
+                                   ? AvailableRooms.FirstOrDefault(r => r.Id == wanted)
+                                   : null)
+                               ?? AvailableRooms.FirstOrDefault();
                 if (AvailableRooms.Count == 0)
                 {
                     Notify.Warning("Không còn phòng trống trong khoảng ngày này.");

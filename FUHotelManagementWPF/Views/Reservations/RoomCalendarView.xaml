@@ -1,0 +1,229 @@
+<UserControl x:Class="FUHotelManagementWPF.Views.Reservations.RoomCalendarView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:hc="https://handyorg.github.io/handycontrol"
+             xmlns:enums="clr-namespace:BusinessObjects.Enums;assembly=BusinessObjects">
+    <UserControl.Resources>
+        <!-- Luoi 7 cot dung chung cho hang tieu de, o trong va thanh dat phong -->
+        <ItemsPanelTemplate x:Key="WeekGrid">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+            </Grid>
+        </ItemsPanelTemplate>
+
+        <Style x:Key="DayCellContainer" TargetType="ContentPresenter">
+            <Setter Property="Grid.Column" Value="{Binding Column}" />
+        </Style>
+
+        <!-- Thanh dat phong: Column + ColumnSpan lay tu model nen tu trai dung so ngay -->
+        <Style x:Key="BarContainer" TargetType="ContentPresenter">
+            <Setter Property="Grid.Column" Value="{Binding Column}" />
+            <Setter Property="Grid.ColumnSpan" Value="{Binding Span}" />
+        </Style>
+
+        <!-- O trong: bam vao la dat phong dung phong dung ngay -->
+        <Style x:Key="EmptyCell" TargetType="Button">
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="ToolTip" Value="Bấm để đặt phòng ngày này" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd" Background="Transparent" Margin="1"
+                                CornerRadius="4" MinHeight="34">
+                            <TextBlock x:Name="plus" Text="+" FontSize="14" Opacity="0"
+                                       Foreground="{StaticResource BrandBrush}"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="{StaticResource BrandSoftBrush}" />
+                                <Setter TargetName="plus" Property="Opacity" Value="1" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <!-- Ngay da qua thi khong moi dat nua -->
+                <DataTrigger Binding="{Binding IsPast}" Value="True">
+                    <Setter Property="IsEnabled" Value="False" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Thanh dat phong: mau theo trang thai giong badge o tab danh sach -->
+        <Style x:Key="BarButton" TargetType="Button">
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Background" Value="{StaticResource BrandBrush}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd" Background="{TemplateBinding Background}" Margin="1"
+                                CornerRadius="4" Padding="7,5" MinHeight="34">
+                            <TextBlock Text="{Binding Label}" Foreground="White" FontSize="11"
+                                       FontWeight="SemiBold" VerticalAlignment="Center"
+                                       TextTrimming="CharacterEllipsis" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Opacity" Value="0.85" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Status}" Value="{x:Static enums:ReservationStatus.Pending}">
+                    <Setter Property="Background" Value="{StaticResource WarningBrush}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="{x:Static enums:ReservationStatus.CheckedIn}">
+                    <Setter Property="Background" Value="{StaticResource InfoBrush}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Margin="0,14,0,0">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- Thanh dieu huong tuan -->
+        <DockPanel Grid.Row="0" Margin="0,0,0,10">
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                <Border Background="{StaticResource BrandBrush}" CornerRadius="4" Padding="8,4" Margin="0,0,7,0"
+                        VerticalAlignment="Center">
+                    <TextBlock Text="Đã xác nhận" Foreground="White" FontSize="10.5" />
+                </Border>
+                <Border Background="{StaticResource WarningBrush}" CornerRadius="4" Padding="8,4" Margin="0,0,7,0"
+                        VerticalAlignment="Center">
+                    <TextBlock Text="Chờ xác nhận" Foreground="White" FontSize="10.5" />
+                </Border>
+                <Border Background="{StaticResource InfoBrush}" CornerRadius="4" Padding="8,4"
+                        VerticalAlignment="Center">
+                    <TextBlock Text="Đang ở" Foreground="White" FontSize="10.5" />
+                </Border>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <Button Content="&#xE76B;" Style="{StaticResource GhostButton}" Padding="11,6"
+                        FontFamily="Segoe MDL2 Assets" FontSize="11"
+                        Command="{Binding PrevWeekCommand}" />
+                <TextBlock Text="{Binding WeekLabel}" FontSize="13.5" FontWeight="SemiBold"
+                           VerticalAlignment="Center" Margin="12,0" MinWidth="150"
+                           TextAlignment="Center" />
+                <Button Content="&#xE76C;" Style="{StaticResource GhostButton}" Padding="11,6"
+                        FontFamily="Segoe MDL2 Assets" FontSize="11"
+                        Command="{Binding NextWeekCommand}" />
+                <Button Content="Tuần này" Style="{StaticResource GhostButton}" Padding="13,6"
+                        Margin="10,0,0,0" Command="{Binding ThisWeekCommand}" />
+            </StackPanel>
+        </DockPanel>
+
+        <!-- Hang tieu de ngay -->
+        <Grid Grid.Row="1" Margin="0,0,0,4">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="96" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <ItemsControl Grid.Column="1" ItemsSource="{Binding Days}"
+                          ItemsPanel="{StaticResource WeekGrid}"
+                          ItemContainerStyle="{StaticResource DayCellContainer}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border CornerRadius="4" Padding="0,5" Margin="1">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="Background" Value="Transparent" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsToday}" Value="True">
+                                            <Setter Property="Background" Value="{StaticResource BrandSoftBrush}" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <StackPanel>
+                                <TextBlock Text="{Binding DayName}" FontSize="10.5" FontWeight="SemiBold"
+                                           Foreground="{StaticResource InkSoftBrush}"
+                                           HorizontalAlignment="Center" />
+                                <TextBlock Text="{Binding DayNumber}" FontSize="11"
+                                           HorizontalAlignment="Center" Margin="0,1,0,0" />
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </Grid>
+
+        <hc:LoadingCircle Grid.Row="2" Width="34" Height="34"
+                          Foreground="{StaticResource BrandBrush}"
+                          Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}" />
+        <TextBlock Grid.Row="2" Text="Chưa có phòng nào đang hoạt động."
+                   Style="{StaticResource CaptionText}" FontSize="13"
+                   HorizontalAlignment="Center" VerticalAlignment="Center"
+                   Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVis}}" />
+
+        <!-- Moi dong mot phong: lop o trong lam nen, lop thanh dat phong de len tren -->
+        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+            <ItemsControl ItemsSource="{Binding Rows}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Background="{StaticResource CardBrush}" CornerRadius="4" Margin="0,0,0,4"
+                                BorderBrush="{StaticResource LineBrush}" BorderThickness="1" Padding="4">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="92" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="7,0,0,0">
+                                    <TextBlock Text="{Binding RoomNumber}" FontSize="13.5" FontWeight="SemiBold" />
+                                    <TextBlock Text="{Binding TypeName}" Style="{StaticResource CaptionText}"
+                                               FontSize="10.5" TextTrimming="CharacterEllipsis" />
+                                </StackPanel>
+
+                                <Grid Grid.Column="1">
+                                    <ItemsControl ItemsSource="{Binding Cells}"
+                                                  ItemsPanel="{StaticResource WeekGrid}"
+                                                  ItemContainerStyle="{StaticResource DayCellContainer}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Button Style="{StaticResource EmptyCell}"
+                                                        Command="{Binding DataContext.BookCellCommand,
+                                                                  RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                        CommandParameter="{Binding}" />
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+
+                                    <ItemsControl ItemsSource="{Binding Bars}"
+                                                  ItemsPanel="{StaticResource WeekGrid}"
+                                                  ItemContainerStyle="{StaticResource BarContainer}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Button Style="{StaticResource BarButton}"
+                                                        ToolTip="{Binding Tooltip}"
+                                                        Command="{Binding DataContext.OpenBarCommand,
+                                                                  RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                        CommandParameter="{Binding}" />
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </Grid>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

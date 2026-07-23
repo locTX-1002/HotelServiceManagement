@@ -37,4 +37,31 @@ namespace FUHotelManagementWPF.ViewModels.Reservations
     }
 
     public record ReservationStatusFilter(string Label, ReservationStatus? Status);
+
+    /// <summary>Chip loc tren thanh cong cu, co so dem cap nhat sau moi lan tai.</summary>
+    public class ReservationChip : MvvmCore.ViewModelBase
+    {
+        public string Label { get; }
+        public ReservationStatus? Status { get; }
+
+        private int _count;
+        public int Count
+        {
+            get => _count;
+            set => SetProperty(ref _count, value);
+        }
+
+        private bool _isSelected;
+        public bool IsSelected
+        {
+            get => _isSelected;
+            set => SetProperty(ref _isSelected, value);
+        }
+
+        public ReservationChip(string label, ReservationStatus? status)
+        {
+            Label = label;
+            Status = status;
+        }
+    }
 }

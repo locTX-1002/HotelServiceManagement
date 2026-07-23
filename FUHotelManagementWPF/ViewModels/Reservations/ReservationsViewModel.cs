@@ -22,22 +22,38 @@ namespace FUHotelManagementWPF.ViewModels.Reservations
         public ObservableCollection<ReservationRow> Rows { get; } = [];
         public ICollectionView RowsView { get; }
 
-        public List<ReservationStatusFilter> StatusFilters { get; } =
-        [
-            new("Tất cả", null),
-            new("Chờ xác nhận", ReservationStatus.Pending),
-            new("Đã xác nhận", ReservationStatus.Confirmed),
-            new("Đã check-in", ReservationStatus.CheckedIn),
-            new("Hoàn tất", ReservationStatus.Completed),
-            new("Đã huỷ", ReservationStatus.Cancelled),
-            new("Không đến", ReservationStatus.NoShow),
-        ];
+        /// <summary>Tab "Lich phong" - cung du lieu, khac cach nhin.</summary>
+        public RoomCalendarViewModel Calendar { get; }
 
-        private ReservationStatusFilter _selectedFilter;
-        public ReservationStatusFilter SelectedFilter
+        // Chip loc trang thai thay cho dropdown: bay het ra kem so dem
+        public ObservableCollection<ReservationChip> Chips { get; } = [];
+        private ReservationChip _selectedChip = null!;
+
+        public RelayCommand PickChipCommand { get; }
+
+        private void PickChip(ReservationChip chip)
         {
-            get => _selectedFilter;
-            set { if (SetProperty(ref _selectedFilter, value)) { RowsView.Refresh(); } }
+            foreach (var item in Chips)
+            {
+                item.IsSelected = ReferenceEquals(item, chip);
+            }
+            _selectedChip = chip;
+            RowsView.Refresh();
+            OnPropertyChanged(nameof(IsEmpty));
+            if (SelectedRow != null && !Filter(SelectedRow))
+            {
+                SelectedRow = null;
+            }
+        }
+
+        private void RefreshChipCounts()
+        {
+            foreach (var chip in Chips)
+            {
+                chip.Count = chip.Status == null
+                    ? Rows.Count
+                    : Rows.Count(r => r.Status == chip.Status);
+            }
         }
 
         private string _searchText = string.Empty;
@@ -74,7 +90,26 @@ namespace FUHotelManagementWPF.ViewModels.Reservations
         public ReservationsViewModel()
         {
             RowsView = new ListCollectionView(Rows) { Filter = Filter };
-            _selectedFilter = StatusFilters[0];
+
+            Chips.Add(new ReservationChip("Tất cả", null));
+            Chips.Add(new ReservationChip("Chờ xác nhận", ReservationStatus.Pending));
+            Chips.Add(new ReservationChip("Đã xác nhận", ReservationStatus.Confirmed));
+            Chips.Add(new ReservationChip("Đang ở", ReservationStatus.CheckedIn));
+            Chips.Add(new ReservationChip("Hoàn tất", ReservationStatus.Completed));
+            Chips.Add(new ReservationChip("Đã huỷ", ReservationStatus.Cancelled));
+            Chips.Add(new ReservationChip("Không đến", ReservationStatus.NoShow));
+            _selectedChip = Chips[0];
+            _selectedChip.IsSelected = true;
+            PickChipCommand = new RelayCommand(p => { if (p is ReservationChip c) { PickChip(c); } });
+
+            // Lich phong tai lai ca hai tab de danh sach va lich khong lech nhau
+            Calendar = new RoomCalendarViewModel(async () =>
+            {
+                await LoadAsync();
+                await Calendar!.LoadAsync();
+            });
+            _ = Calendar.LoadAsync();
+
             AddCommand = new RelayCommand(_ => OpenCreateDialog());
             EditCommand = new RelayCommand(_ => OpenEditDialog());
             ConfirmCommand = new AsyncRelayCommand(_ => RunAction(r => _service.ConfirmAsync(r.Reservation.Id)));
@@ -96,6 +131,7 @@ namespace FUHotelManagementWPF.ViewModels.Reservations
                     Rows.Add(new ReservationRow(r));
                 }
                 SelectedRow = Rows.FirstOrDefault(r => r.Reservation.Id == keepId);
+                RefreshChipCounts();
                 OnPropertyChanged(nameof(TotalText));
                 OnPropertyChanged(nameof(IsEmpty));
             }
@@ -115,7 +151,7 @@ namespace FUHotelManagementWPF.ViewModels.Reservations
             {
                 return false;
             }
-            if (SelectedFilter.Status is { } s && row.Status != s)
+            if (_selectedChip.Status is { } s && row.Status != s)
             {
                 return false;
             }
