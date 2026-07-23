@@ -23,6 +23,8 @@ namespace Services
         public async Task<ServiceResult<Room>> CreateAsync(
             string roomNumber, int floor, int roomTypeId, RoomStatus status, bool isActive)
         {
+            if (!AuthorizationPolicy.CanManageRooms)
+                return ServiceResult<Room>.Failure("Chi Admin hoac Manager duoc tao phong.");
             var error = Validate(roomNumber, floor, roomTypeId, status, isCreating: true);
             if (error != null)
             {
@@ -71,6 +73,8 @@ namespace Services
         public async Task<ServiceResult<Room>> UpdateAsync(
             int id, string roomNumber, int floor, int roomTypeId, RoomStatus status, bool isActive)
         {
+            if (!AuthorizationPolicy.CanManageRooms)
+                return ServiceResult<Room>.Failure("Chi Admin hoac Manager duoc sua phong.");
             var error = Validate(roomNumber, floor, roomTypeId, status, isCreating: false);
             if (error != null)
             {
@@ -154,6 +158,10 @@ namespace Services
         public async Task<ServiceResult<Room>> UpdateStatusAsync(
             int id, RoomStatus newStatus, bool canManageMaintenance)
         {
+            // Giu tham so de frontend cu van build, nhung khong tin quyen do caller truyen vao.
+            canManageMaintenance = AuthorizationPolicy.CanManageRooms;
+            if (!canManageMaintenance)
+                return ServiceResult<Room>.Failure("Chi Admin hoac Manager duoc doi trang thai phong.");
             if (newStatus == RoomStatus.Reserved || newStatus == RoomStatus.Occupied)
             {
                 return ServiceResult<Room>.Failure(
@@ -237,6 +245,8 @@ namespace Services
 
         public async Task<ServiceResult> DeleteAsync(int id)
         {
+            if (!AuthorizationPolicy.CanManageRooms)
+                return ServiceResult.Failure("Chi Admin hoac Manager duoc xoa hoac ngung dung phong.");
             var room = await _roomRepository.GetByIdAsync(id);
             if (room == null)
             {

@@ -18,6 +18,8 @@ namespace Services
         public async Task<ServiceResult<RoomType>> CreateAsync(
             string typeName, int capacity, decimal basePrice, string? description, bool isActive)
         {
+            if (!AuthorizationPolicy.CanManageRooms)
+                return ServiceResult<RoomType>.Failure("Chi Admin hoac Manager duoc tao loai phong.");
             var error = Validate(typeName, capacity, basePrice);
             if (error != null)
             {
@@ -45,6 +47,8 @@ namespace Services
         public async Task<ServiceResult<RoomType>> UpdateAsync(
             int id, string typeName, int capacity, decimal basePrice, string? description, bool isActive)
         {
+            if (!AuthorizationPolicy.CanManageRooms)
+                return ServiceResult<RoomType>.Failure("Chi Admin hoac Manager duoc sua loai phong.");
             var error = Validate(typeName, capacity, basePrice);
             if (error != null)
             {
@@ -83,6 +87,8 @@ namespace Services
 
         public async Task<ServiceResult> DeleteAsync(int id)
         {
+            if (!AuthorizationPolicy.CanManageRooms)
+                return ServiceResult.Failure("Chi Admin hoac Manager duoc xoa hoac ngung dung loai phong.");
             var roomType = await _roomTypeRepository.GetByIdAsync(id);
             if (roomType == null)
             {
