@@ -156,6 +156,31 @@
     </Style>
     <Style x:Key="InputPasswordBox" TargetType="PasswordBox" BasedOn="{StaticResource {x:Type PasswordBox}}" />
 
+    <!-- Nut mui ten tron tren anh gallery (hinh tron hoan hao - ngoai le cua he bo goc 4px) -->
+    <Style x:Key="GalleryArrow" TargetType="Button">
+        <Setter Property="Width" Value="34" />
+        <Setter Property="Height" Value="34" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="bd" CornerRadius="999" Background="#B3FFFFFF">
+                        <TextBlock Text="{TemplateBinding Content}"
+                                   FontFamily="Segoe MDL2 Assets" FontSize="12"
+                                   Foreground="{StaticResource InkBrush}"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="bd" Property="Background" Value="#F2FFFFFF" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <!-- Card: khoi noi dung bo goc, moi panel/section trong module boc bang cai nay.
          Muon co chieu sau (dialog, card noi) thi them Effect="{StaticResource SoftShadow}" -->
     <Style x:Key="Card" TargetType="Border">

@@ -28,8 +28,9 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
             : "Tạo phòng mới vào danh mục vận hành của khách sạn.";
         public string HeaderIcon => IsEdit ? "" : "";
 
-        /// <summary>Anh xem truoc theo loai phong dang chon - doi loai la anh doi theo.</summary>
-        public string PreviewImage => RoomImages.Thumbnail(SelectedRoomType?.TypeName ?? string.Empty);
+        /// <summary>Ảnh xem trước theo loại phòng đang chọn - đổi loại là ảnh đổi theo.</summary>
+        public string PreviewImage => RoomImages.Thumbnail(
+            SelectedRoomType?.Id ?? 0, SelectedRoomType?.TypeName ?? string.Empty);
 
         private string _roomNumber = string.Empty;
         public string RoomNumber
@@ -155,7 +156,7 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
 
             try
             {
-                RoomImages.SetCustomImage(SelectedRoomType.TypeName, dialog.FileName);
+                RoomImages.SetCustomImage(SelectedRoomType.Id, dialog.FileName);
                 OnPropertyChanged(nameof(PreviewImage));
                 Notify.Success($"Đã đổi ảnh loại phòng {SelectedRoomType.TypeName}.");
             }

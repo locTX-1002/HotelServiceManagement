@@ -6,11 +6,11 @@ using System.Linq;
 namespace FUHotelManagementWPF.ViewModels.Rooms
 {
     /// <summary>
-    /// Anh theo LOAI phong, 2 nguon theo thu tu uu tien:
-    /// 1) Anh NGUOI DUNG tu chon (bam vao anh trong dialog -> chon file tu may),
-    ///    duoc copy vao thu muc RoomImages/ canh exe - giu qua cac lan mo app.
-    /// 2) Anh nhung san trong Assets/Rooms/{key}-{n}.jpg (3 anh/loai).
-    /// Ten loai chua "suite"/"deluxe"/"family" thi dung bo do, con lai standard.
+    /// Ảnh của loại phòng, 2 nguồn theo thứ tự ưu tiên:
+    /// 1) Ảnh người dùng tự chọn — lưu THEO ID loại phòng (RoomImages/type-{id}-*.jpg cạnh exe).
+    ///    Dùng Id chứ không dùng tên: loại mới đặt tên bất kỳ vẫn có ảnh riêng, và đổi ảnh loại này
+    ///    không đụng loại khác.
+    /// 2) Ảnh mẫu nhúng sẵn theo TÊN (standard/deluxe/suite/family) cho dữ liệu seed.
     /// </summary>
     public static class RoomImages
     {
@@ -18,9 +18,9 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
 
         private static string RuntimeDir => Path.Combine(AppContext.BaseDirectory, "RoomImages");
 
-        private static string TypeKey(string typeName)
+        private static string SeedKey(string typeName)
         {
-            var name = typeName.ToLowerInvariant();
+            var name = (typeName ?? string.Empty).ToLowerInvariant();
             if (name.Contains("suite"))
             {
                 return "suite";
@@ -36,32 +36,29 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
             return "standard";
         }
 
-        private static string? FindCustom(string key)
+        private static string? FindCustom(int roomTypeId)
         {
-            if (!Directory.Exists(RuntimeDir))
+            if (roomTypeId <= 0 || !Directory.Exists(RuntimeDir))
             {
                 return null;
             }
-            return Directory.GetFiles(RuntimeDir, key + "-custom-*")
+            return Directory.GetFiles(RuntimeDir, $"type-{roomTypeId}-*")
                 .OrderByDescending(f => f)
                 .FirstOrDefault();
         }
 
-        public static string Thumbnail(string typeName)
-        {
-            var key = TypeKey(typeName);
-            return FindCustom(key) ?? $"pack://application:,,,/Assets/Rooms/{key}-1.jpg";
-        }
+        public static string Thumbnail(int roomTypeId, string typeName)
+            => FindCustom(roomTypeId) ?? $"pack://application:,,,/Assets/Rooms/{SeedKey(typeName)}-1.jpg";
 
-        public static List<string> Gallery(string typeName)
+        public static List<string> Gallery(int roomTypeId, string typeName)
         {
-            var key = TypeKey(typeName);
             var images = new List<string>();
-            var custom = FindCustom(key);
+            var custom = FindCustom(roomTypeId);
             if (custom != null)
             {
                 images.Add(custom);
             }
+            var key = SeedKey(typeName);
             for (var i = 1; i <= PerType; i++)
             {
                 images.Add($"pack://application:,,,/Assets/Rooms/{key}-{i}.jpg");
@@ -70,20 +67,23 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
         }
 
         /// <summary>
-        /// Nguoi dung chon anh tu may: copy vao RoomImages/ canh exe. Ten file kem
-        /// timestamp de WPF khong cache anh cu (URI doi -> binding tu refresh).
+        /// Gán ảnh người dùng chọn cho MỘT loại phòng cụ thể. Tên file kèm timestamp để WPF
+        /// không cache ảnh cũ (URI đổi → binding tự vẽ lại).
         /// </summary>
-        public static void SetCustomImage(string typeName, string sourcePath)
+        public static void SetCustomImage(int roomTypeId, string sourcePath)
         {
-            var key = TypeKey(typeName);
+            if (roomTypeId <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(roomTypeId));
+            }
             Directory.CreateDirectory(RuntimeDir);
-            foreach (var old in Directory.GetFiles(RuntimeDir, key + "-custom-*"))
+            foreach (var old in Directory.GetFiles(RuntimeDir, $"type-{roomTypeId}-*"))
             {
                 File.Delete(old);
             }
             var destination = Path.Combine(
                 RuntimeDir,
-                $"{key}-custom-{DateTime.Now:yyyyMMddHHmmss}{Path.GetExtension(sourcePath)}");
+                $"type-{roomTypeId}-{DateTime.Now:yyyyMMddHHmmss}{Path.GetExtension(sourcePath)}");
             File.Copy(sourcePath, destination);
         }
     }

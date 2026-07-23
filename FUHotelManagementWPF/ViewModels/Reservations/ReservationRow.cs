@@ -11,7 +11,8 @@ namespace FUHotelManagementWPF.ViewModels.Reservations
         public Reservation Reservation { get; }
         public string StatusText { get; }
 
-        public string Thumbnail => RoomImages.Thumbnail(Reservation.Room?.RoomType?.TypeName ?? string.Empty);
+        public string Thumbnail => RoomImages.Thumbnail(
+            Reservation.Room?.RoomTypeId ?? 0, Reservation.Room?.RoomType?.TypeName ?? string.Empty);
         public string GuestName => Reservation.Guest?.FullName ?? string.Empty;
         public string RoomNumber => Reservation.Room?.RoomNumber ?? string.Empty;
         public string TypeName => Reservation.Room?.RoomType?.TypeName ?? string.Empty;

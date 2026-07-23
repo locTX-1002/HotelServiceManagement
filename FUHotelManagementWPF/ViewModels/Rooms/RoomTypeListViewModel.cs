@@ -17,7 +17,7 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
         public string ActiveText => RoomType.IsActive ? "Đang dùng" : "Ngừng dùng";
         public bool IsActive => RoomType.IsActive;
 
-        public string Thumbnail => RoomImages.Thumbnail(RoomType.TypeName);
+        public string Thumbnail => RoomImages.Thumbnail(RoomType.Id, RoomType.TypeName);
         public string SubText => string.IsNullOrWhiteSpace(RoomType.Description)
             ? $"{RoomType.Capacity} khách"
             : RoomType.Description!;

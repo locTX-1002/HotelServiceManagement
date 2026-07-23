@@ -138,10 +138,29 @@
                                 </Style.Triggers>
                             </Style>
                         </StackPanel.Style>
-                        <Border Height="150" CornerRadius="4,4,0,0">
+                        <!-- Gallery ảnh: mũi tên chuyển + bộ đếm (thay dialog Chi tiết cũ) -->
+                        <Border Height="180" CornerRadius="4,4,0,0">
                             <Border.Background>
-                                <ImageBrush ImageSource="{Binding ThumbnailSource}" Stretch="UniformToFill" />
+                                <ImageBrush ImageSource="{Binding DataContext.DetailImage,
+                                            RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            Stretch="UniformToFill" />
                             </Border.Background>
+                            <Grid>
+                                <Button Style="{StaticResource GalleryArrow}" Content="&#xE76B;"
+                                        HorizontalAlignment="Left" Margin="10,0,0,0"
+                                        Command="{Binding DataContext.PrevImageCommand,
+                                                  RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                                <Button Style="{StaticResource GalleryArrow}" Content="&#xE76C;"
+                                        HorizontalAlignment="Right" Margin="0,0,10,0"
+                                        Command="{Binding DataContext.NextImageCommand,
+                                                  RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                                <Border CornerRadius="4" Background="#99000000" Padding="9,3"
+                                        HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,10,9">
+                                    <TextBlock Text="{Binding DataContext.GalleryCounter,
+                                               RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                               Foreground="White" FontSize="11" />
+                                </Border>
+                            </Grid>
                         </Border>
                         <StackPanel Margin="18,16,18,18">
                             <DockPanel>

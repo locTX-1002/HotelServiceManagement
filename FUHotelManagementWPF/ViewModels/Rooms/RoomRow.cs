@@ -27,8 +27,8 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
         public string? DescriptionText => Room.RoomType?.Description;
         public bool HasDescription => !string.IsNullOrWhiteSpace(DescriptionText);
 
-        /// <summary>Thumbnail theo LOAI phong - xem RoomImages de biet cach map/thay anh.</summary>
-        public string ThumbnailSource => RoomImages.Thumbnail(TypeName);
+        /// <summary>Thumbnail theo LOẠI phòng (ưu tiên ảnh riêng đã gán cho loại đó).</summary>
+        public string ThumbnailSource => RoomImages.Thumbnail(Room.RoomTypeId, TypeName);
 
         public RoomRow(Room room)
         {

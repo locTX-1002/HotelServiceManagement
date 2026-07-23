@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Threading.Tasks;
 using BusinessObjects.Entities;
 using FUHotelManagementWPF.MvvmCore;
@@ -22,8 +24,14 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
             : "Định nghĩa hạng phòng mới: sức chứa, giá và mô tả bán hàng.";
         public string HeaderIcon => IsEdit ? "" : "";
 
-        /// <summary>Anh dai dien doi theo ten loai dang go (map suite/deluxe/family/standard).</summary>
-        public string PreviewImage => RoomImages.Thumbnail(TypeName);
+        /// <summary>
+        /// Ảnh xem trước: ảnh vừa chọn (nếu có) → ảnh riêng của loại → ảnh mẫu theo tên.
+        /// Chọn được ngay cả khi chưa nhập tên; loại tạo mới sẽ gán ảnh sau khi lưu (đã có Id).
+        /// </summary>
+        public string PreviewImage => _pendingImagePath
+            ?? RoomImages.Thumbnail(_existing?.Id ?? 0, TypeName);
+
+        private string? _pendingImagePath;
 
         private string _typeName = string.Empty;
         public string TypeName
@@ -49,8 +57,40 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
         public string BasePriceText
         {
             get => _basePriceText;
-            set => SetProperty(ref _basePriceText, value);
+            set
+            {
+                if (SetProperty(ref _basePriceText, value))
+                {
+                    OnPropertyChanged(nameof(PriceHint));
+                }
+            }
         }
+
+        /// <summary>
+        /// Đọc lại số tiền vừa gõ cho dễ kiểm: "20000" → "= 20.000 đ / đêm".
+        /// Tiền VND nhiều số 0 rất dễ gõ thiếu/thừa, dòng này bắt lỗi ngay bằng mắt.
+        /// </summary>
+        public string PriceHint
+        {
+            get
+            {
+                if (string.IsNullOrWhiteSpace(_basePriceText))
+                {
+                    return "Nhập số tiền, ví dụ 500000";
+                }
+                var digits = new string(_basePriceText.Where(char.IsDigit).ToArray());
+                if (!decimal.TryParse(digits, out var value))
+                {
+                    return "Chỉ nhập chữ số";
+                }
+                return $"= {value:N0} đ / đêm";
+            }
+        }
+
+        /// <summary>Mức giá hay dùng - bấm là điền luôn, khỏi gõ 6 số 0.</summary>
+        public List<decimal> QuickPrices { get; } = [300_000, 500_000, 800_000, 1_200_000, 1_500_000];
+
+        public RelayCommand PickPriceCommand { get; }
 
         private string? _description;
         public string? Description
@@ -97,20 +137,24 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
 
             SaveCommand = new AsyncRelayCommand(SaveAsync, _ => !IsBusy);
             ChooseImageCommand = new RelayCommand(_ => ChooseImage());
+            PickPriceCommand = new RelayCommand(p =>
+            {
+                if (p is decimal price)
+                {
+                    BasePriceText = price.ToString("0", CultureInfo.InvariantCulture);
+                }
+            });
         }
 
-        /// <summary>Bam vao anh -> chon file tu may cho loai phong nay.</summary>
+        /// <summary>
+        /// Bấm vào ảnh → chọn file từ máy. Không cần nhập tên trước: đang sửa thì gán ngay theo Id,
+        /// tạo mới thì giữ tạm và gán sau khi lưu (lúc đó mới có Id).
+        /// </summary>
         private void ChooseImage()
         {
-            if (string.IsNullOrWhiteSpace(TypeName))
-            {
-                Notify.Warning("Nhập tên loại phòng trước rồi mới đổi ảnh.");
-                return;
-            }
-
             var dialog = new Microsoft.Win32.OpenFileDialog
             {
-                Title = $"Chọn ảnh cho loại phòng {TypeName}",
+                Title = "Chọn ảnh cho loại phòng",
                 Filter = "Ảnh|*.jpg;*.jpeg;*.png",
             };
             if (dialog.ShowDialog() != true)
@@ -120,13 +164,22 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
 
             try
             {
-                RoomImages.SetCustomImage(TypeName, dialog.FileName);
+                if (_existing != null)
+                {
+                    RoomImages.SetCustomImage(_existing.Id, dialog.FileName);
+                    _pendingImagePath = null;
+                    Notify.Success("Đã đổi ảnh loại phòng.");
+                }
+                else
+                {
+                    // Chưa có Id - xem trước ngay, gán thật khi lưu xong
+                    _pendingImagePath = dialog.FileName;
+                }
                 OnPropertyChanged(nameof(PreviewImage));
-                Notify.Success($"Đã đổi ảnh loại phòng {TypeName}.");
             }
             catch (Exception)
             {
-                Notify.Error("Không sao chép được ảnh. Kiểm tra file rồi thử lại.");
+                Notify.Error("Không đọc được ảnh. Kiểm tra file rồi thử lại.");
             }
         }
 
@@ -169,6 +222,18 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
 
                 if (result.Ok)
                 {
+                    // Loại mới vừa có Id -> giờ mới gán được ảnh đã chọn lúc chưa lưu
+                    if (_pendingImagePath != null && result.Data != null)
+                    {
+                        try
+                        {
+                            RoomImages.SetCustomImage(result.Data.Id, _pendingImagePath);
+                        }
+                        catch (Exception)
+                        {
+                            Notify.Warning("Đã lưu loại phòng nhưng chưa gán được ảnh.");
+                        }
+                    }
                     Notify.Success(result.Message);
                     RequestClose?.Invoke(true);
                 }

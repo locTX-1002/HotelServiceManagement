@@ -88,6 +88,25 @@
                     </StackPanel>
                 </Grid>
 
+                <!-- Đọc lại số tiền + mức giá hay dùng (VND nhiều số 0 rất dễ gõ nhầm) -->
+                <TextBlock Text="{Binding PriceHint}" Style="{StaticResource CaptionText}"
+                           FontSize="12" FontWeight="SemiBold" Margin="0,6,0,0" />
+                <ItemsControl ItemsSource="{Binding QuickPrices}" Margin="0,6,0,0">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Button Content="{Binding StringFormat={}{0:N0}}"
+                                    Style="{StaticResource GhostButton}"
+                                    Padding="10,3" FontSize="11.5" Margin="0,0,6,0"
+                                    Command="{Binding DataContext.PickPriceCommand,
+                                              RelativeSource={RelativeSource AncestorType=Window}}"
+                                    CommandParameter="{Binding}" />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
                 <TextBlock Text="MÔ TẢ (TUỲ CHỌN)" Style="{StaticResource FieldLabel}" Margin="0,13,0,5" />
                 <TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}"
                          Height="60" TextWrapping="Wrap" AcceptsReturn="True"

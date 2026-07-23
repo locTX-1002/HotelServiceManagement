@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
@@ -48,11 +49,43 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
                 if (SetProperty(ref _selectedRow, value))
                 {
                     OnPropertyChanged(nameof(HasSelection));
+                    ResetGallery();
                 }
             }
         }
 
         public bool HasSelection => _selectedRow != null;
+
+        // --- Gallery ảnh trong panel chi tiết (thay cho dialog Chi tiết cũ) ---
+        private List<string> _gallery = [];
+        private int _galleryIndex;
+
+        public string DetailImage => _gallery.Count > 0 ? _gallery[_galleryIndex] : string.Empty;
+        public string GalleryCounter => _gallery.Count > 0 ? $"{_galleryIndex + 1} / {_gallery.Count}" : string.Empty;
+
+        public RelayCommand PrevImageCommand { get; }
+        public RelayCommand NextImageCommand { get; }
+
+        private void ResetGallery()
+        {
+            _gallery = _selectedRow == null
+                ? []
+                : RoomImages.Gallery(_selectedRow.Room.RoomTypeId, _selectedRow.TypeName);
+            _galleryIndex = 0;
+            OnPropertyChanged(nameof(DetailImage));
+            OnPropertyChanged(nameof(GalleryCounter));
+        }
+
+        private void MoveGallery(int delta)
+        {
+            if (_gallery.Count == 0)
+            {
+                return;
+            }
+            _galleryIndex = (_galleryIndex + delta + _gallery.Count) % _gallery.Count;
+            OnPropertyChanged(nameof(DetailImage));
+            OnPropertyChanged(nameof(GalleryCounter));
+        }
 
         private string _searchText = string.Empty;
         public string SearchText
@@ -80,6 +113,8 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
             EditCommand = new RelayCommand(p => OpenEditDialog(p as RoomRow));
             ChangeStatusCommand = new RelayCommand(_ => OpenStatusDialog());
             DeleteCommand = new AsyncRelayCommand(DeleteAsync);
+            PrevImageCommand = new RelayCommand(_ => MoveGallery(-1));
+            NextImageCommand = new RelayCommand(_ => MoveGallery(1));
         }
 
         private async void OpenStatusDialog()
