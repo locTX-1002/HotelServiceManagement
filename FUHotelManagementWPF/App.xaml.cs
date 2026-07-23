@@ -18,6 +18,28 @@ public partial class App : Application
         {
             await DatabaseService.EnsureMigratedAsync();
         }
+        catch (InvalidOperationException ex)
+        {
+            // Loi cau hinh, khong phai loi SQL - noi dung viec can lam thay vi do tai SQL Server
+            splash.Close();
+            MessageBox.Show(
+                "Thiếu cấu hình để khởi động.\n\n" + ex.Message + "\n\n" +
+                "Tạo file FUHotelManagementWPF/appsettings.Local.json (file này đã gitignore, " +
+                "mỗi máy một bản riêng) với nội dung:\n\n" +
+                "{\n" +
+                "  \"BootstrapAdmin\": {\n" +
+                "    \"Email\": \"admin@hotel.com\",\n" +
+                "    \"FullName\": \"Hotel Administrator\",\n" +
+                "    \"Password\": \"MatKhauCuaBan@2026\"\n" +
+                "  }\n" +
+                "}\n\n" +
+                "Mật khẩu phải từ 8 ký tự, có chữ hoa, chữ thường, chữ số và ký tự đặc biệt.",
+                "Lỗi khởi động",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+            Shutdown(-1);
+            return;
+        }
         catch (Exception ex)
         {
             splash.Close();
