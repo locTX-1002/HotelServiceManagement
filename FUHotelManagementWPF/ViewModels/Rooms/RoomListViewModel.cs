@@ -250,12 +250,13 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
             }
 
             // MessageBox chi dung cho xac nhan xoa - dung quy uoc nhom
-            var confirm = MessageBox.Show(
-                $"Xoá phòng {row.Room.RoomNumber}?\n\nPhòng đã có lịch sử đặt sẽ chuyển sang ngừng dùng thay vì xoá hẳn.",
-                "Xác nhận xoá",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Question);
-            if (confirm != MessageBoxResult.Yes)
+            var ok = ConfirmDialog.Ask(
+                $"Xoá phòng {row.Room.RoomNumber}?",
+                "Phòng sẽ biến mất khỏi sơ đồ và không đặt được nữa.",
+                "Nếu phòng đã từng có khách đặt thì hệ thống chỉ chuyển sang Ngừng dùng "
+                + "chứ không xoá hẳn, để giữ lịch sử và số liệu báo cáo.",
+                "Xoá phòng", isDanger: true);
+            if (!ok)
             {
                 return;
             }

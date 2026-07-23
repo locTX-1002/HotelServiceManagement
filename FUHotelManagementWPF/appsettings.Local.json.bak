@@ -1,0 +1,7 @@
+{
+  "BootstrapAdmin": {
+    "Email": "admin@hotel.com",
+    "FullName": "Hotel Administrator",
+    "Password": "FuHotel@2026"
+  }
+}

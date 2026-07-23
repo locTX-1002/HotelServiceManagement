@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using BusinessObjects.Entities;
 using FUHotelManagementWPF.MvvmCore;
+using FUHotelManagementWPF.Views.Dialogs;
 using Services;
 
 namespace FUHotelManagementWPF.ViewModels.CheckInOut
@@ -143,10 +144,11 @@ namespace FUHotelManagementWPF.ViewModels.CheckInOut
                 return;
             }
 
-            var confirm = MessageBox.Show(
-                $"Xoá dòng phụ thu \"{line.Name}\" ({line.SubtotalText})?",
-                "Xác nhận xoá", MessageBoxButton.YesNo, MessageBoxImage.Question);
-            if (confirm != MessageBoxResult.Yes)
+            var ok = ConfirmDialog.Ask(
+                $"Xoá dòng {line.Name}?",
+                $"Khách sẽ không phải trả {line.SubtotalText} này nữa.",
+                confirmLabel: "Xoá dòng", isDanger: true);
+            if (!ok)
             {
                 return;
             }

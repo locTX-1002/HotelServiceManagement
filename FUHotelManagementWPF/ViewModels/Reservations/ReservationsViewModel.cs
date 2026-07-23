@@ -212,10 +212,12 @@ namespace FUHotelManagementWPF.ViewModels.Reservations
             {
                 return Task.CompletedTask;
             }
-            var confirm = MessageBox.Show(
-                $"Huỷ đặt phòng {SelectedRow.BookingCode} ({SelectedRow.GuestName})?",
-                "Xác nhận huỷ", MessageBoxButton.YesNo, MessageBoxImage.Question);
-            return confirm == MessageBoxResult.Yes
+            var ok = ConfirmDialog.Ask(
+                $"Huỷ đặt phòng của {SelectedRow.GuestName}?",
+                $"Đơn {SelectedRow.BookingCode} sẽ chuyển sang Đã huỷ và phòng {SelectedRow.RoomNumber} được giải phóng.",
+                "Đơn đã huỷ không khôi phục lại được, muốn đặt lại thì tạo đơn mới.",
+                "Huỷ đơn", isDanger: true);
+            return ok
                 ? RunAction(r => _service.CancelAsync(r.Reservation.Id))
                 : Task.CompletedTask;
         }
@@ -226,11 +228,12 @@ namespace FUHotelManagementWPF.ViewModels.Reservations
             {
                 return Task.CompletedTask;
             }
-            var confirm = MessageBox.Show(
-                $"Đánh dấu KHÔNG ĐẾN cho {SelectedRow.BookingCode} ({SelectedRow.GuestName})?\n\n" +
-                "Tiền cọc (nếu có) sẽ không tự hoàn — xử lý thủ công ngoài hệ thống.",
-                "Xác nhận Không đến", MessageBoxButton.YesNo, MessageBoxImage.Question);
-            return confirm == MessageBoxResult.Yes
+            var ok = ConfirmDialog.Ask(
+                $"Ghi nhận {SelectedRow.GuestName} không đến?",
+                $"Phòng {SelectedRow.RoomNumber} sẽ được trả về trạng thái trống để bán cho khách khác.",
+                "Tiền cọc nếu có sẽ không tự hoàn lại — phần đó xử lý ngoài hệ thống.",
+                "Ghi không đến", isDanger: true);
+            return ok
                 ? RunAction(r => _service.NoShowAsync(r.Reservation.Id))
                 : Task.CompletedTask;
         }

@@ -351,6 +351,22 @@
                                         CommandParameter="{Binding}" />
                             </UniformGrid>
 
+                            <!-- Khách quá hạn đến: xử lý được ngay ở đây, không phải sang màn Đặt phòng -->
+                            <UniformGrid Columns="2" Margin="0,14,0,0"
+                                         Visibility="{Binding ShowNoShow, Converter={StaticResource BoolToVis}}">
+                                <Button Content="Không đến" Style="{StaticResource GhostButton}"
+                                        Padding="0,8" Margin="0,0,5,0"
+                                        Foreground="{StaticResource DangerBrush}"
+                                        Command="{Binding DataContext.NoShowCommand,
+                                                  RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                        CommandParameter="{Binding}" />
+                                <Button Content="Huỷ đơn" Style="{StaticResource GhostButton}"
+                                        Padding="0,8" Margin="5,0,0,0"
+                                        Command="{Binding DataContext.CancelCommand,
+                                                  RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                        CommandParameter="{Binding}" />
+                            </UniformGrid>
+
                             <Button Content="{Binding ActionLabel}" Style="{StaticResource PrimaryButton}"
                                     Padding="0,10" Margin="0,8,0,0" FontSize="13.5"
                                     Command="{Binding DataContext.ActionCommand,

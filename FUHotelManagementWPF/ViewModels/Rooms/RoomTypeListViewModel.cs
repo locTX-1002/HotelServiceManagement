@@ -149,12 +149,13 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
                 return;
             }
 
-            var confirm = MessageBox.Show(
-                $"Xoá loại phòng \"{row.RoomType.TypeName}\"?\n\nLoại đang được phòng sử dụng sẽ chuyển sang ngừng dùng thay vì xoá hẳn.",
-                "Xác nhận xoá",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Question);
-            if (confirm != MessageBoxResult.Yes)
+            var ok = ConfirmDialog.Ask(
+                $"Xoá hạng phòng {row.RoomType.TypeName}?",
+                "Hạng này sẽ không còn chọn được khi thêm phòng mới.",
+                "Nếu đang có phòng thuộc hạng này thì hệ thống chỉ chuyển sang Ngừng dùng "
+                + "chứ không xoá hẳn, để các phòng đó không bị mất giá và sức chứa.",
+                "Xoá hạng phòng", isDanger: true);
+            if (!ok)
             {
                 return;
             }

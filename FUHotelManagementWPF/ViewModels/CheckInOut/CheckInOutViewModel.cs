@@ -261,12 +261,12 @@ namespace FUHotelManagementWPF.ViewModels.CheckInOut
             {
                 return;
             }
-            var confirm = MessageBox.Show(
-                $"Đánh dấu KHÔNG ĐẾN cho {item.GuestName} (phòng {item.RoomNumber})?\n\n"
-                + "Phòng sẽ được giải phóng để bán cho khách khác.\n"
-                + "Tiền cọc nếu có sẽ không tự hoàn — xử lý thủ công ngoài hệ thống.",
-                "Xác nhận Không đến", MessageBoxButton.YesNo, MessageBoxImage.Question);
-            if (confirm != MessageBoxResult.Yes)
+            var ok = ConfirmDialog.Ask(
+                $"Ghi nhận {item.GuestName} không đến?",
+                $"Phòng {item.RoomNumber} sẽ được trả về trạng thái trống để bán cho khách khác.",
+                "Tiền cọc nếu có sẽ không tự hoàn lại — phần đó xử lý ngoài hệ thống.",
+                "Ghi không đến", isDanger: true);
+            if (!ok)
             {
                 return;
             }
@@ -282,10 +282,12 @@ namespace FUHotelManagementWPF.ViewModels.CheckInOut
             {
                 return;
             }
-            var confirm = MessageBox.Show(
-                $"Huỷ đặt phòng {item.BookingCode} của {item.GuestName}?",
-                "Xác nhận huỷ", MessageBoxButton.YesNo, MessageBoxImage.Question);
-            if (confirm != MessageBoxResult.Yes)
+            var ok = ConfirmDialog.Ask(
+                $"Huỷ đặt phòng của {item.GuestName}?",
+                $"Đơn {item.BookingCode} sẽ chuyển sang Đã huỷ và phòng {item.RoomNumber} được giải phóng.",
+                "Đơn đã huỷ không khôi phục lại được, muốn đặt lại thì tạo đơn mới.",
+                "Huỷ đơn", isDanger: true);
+            if (!ok)
             {
                 return;
             }
@@ -433,11 +435,14 @@ namespace FUHotelManagementWPF.ViewModels.CheckInOut
             }
             else
             {
-                var confirm = MessageBox.Show(
-                    $"Check-out phòng {item.RoomNumber} ({item.GuestName})?\n\n" +
-                    $"Đã ở {item.Nights} đêm. Phòng sẽ chuyển sang Đang dọn, hoá đơn lập ở màn Hoá đơn.",
-                    "Xác nhận check-out", MessageBoxButton.YesNo, MessageBoxImage.Question);
-                if (confirm != MessageBoxResult.Yes)
+                var confirmed = ConfirmDialog.Ask(
+                    $"Cho {item.GuestName} trả phòng {item.RoomNumber}?",
+                    $"Khách đã ở {item.ChargeableNights} đêm, tạm tính {item.TotalChargeText}. "
+                    + "Phòng sẽ chuyển sang Đang dọn.",
+                    "Kiểm đồ trong phòng và ghi phụ thu trước khi trả — trả rồi không ghi thêm được. "
+                    + "Hoá đơn chính thức lập ở màn Hoá đơn.",
+                    "Cho trả phòng");
+                if (!confirmed)
                 {
                     return;
                 }
