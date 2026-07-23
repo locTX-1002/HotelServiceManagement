@@ -316,7 +316,8 @@ namespace FUHotelManagementWPF.ViewModels.Reservations
                         return;
                     }
 
-                    var created = await _guestService.CreateAsync(NewFullName, NewPhone, GuestKeyword.Trim(), NewEmail);
+                    var created = await _guestService.CreateAsync(NewFullName, NewEmail, NewPhone,
+                        GuestKeyword.Trim(), BusinessObjects.Enums.GuestTag.None, null);
                     if (!created.Ok)
                     {
                         ErrorMessage = created.Message;
@@ -339,13 +340,18 @@ namespace FUHotelManagementWPF.ViewModels.Reservations
                 ServiceResult result;
                 if (IsEdit)
                 {
-                    result = await _reservationService.UpdateAsync(_existing!.Id, guestId, SelectedRoom.Id,
-                        NumberOfGuests, CheckIn, CheckOut, SelectedStatus.Status!.Value, SpecialRequests);
+                    // Doi khach cua don da tao khong con ho tro o tang service - chi doi phong, ngay, so khach
+                    var updated = await _reservationService.UpdateAsync(_existing!.Id, SelectedRoom.Id,
+                        NumberOfGuests, CheckIn, CheckOut, SpecialRequests);
+                    result = updated.Ok
+                        ? ServiceResult.Success(updated.Message)
+                        : ServiceResult.Failure(updated.Message);
                 }
                 else
                 {
-                    var created = await _reservationService.CreateAsync(guestId, SelectedRoom.Id, NumberOfGuests,
-                        CheckIn, CheckOut, SelectedStatus.Status!.Value, SpecialRequests, AppSession.CurrentUser?.Id);
+                    // Don tao tai quay khong nhan coc o buoc nay - thu coc lam o man Hoa don
+                    var created = await _reservationService.CreateAsync(guestId, SelectedRoom.Id,
+                        NumberOfGuests, CheckIn, CheckOut, SpecialRequests, null, null);
                     result = created.Ok ? ServiceResult.Success(created.Message) : ServiceResult.Failure(created.Message);
                 }
 

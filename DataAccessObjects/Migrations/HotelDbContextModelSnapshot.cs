@@ -249,7 +249,14 @@ namespace DataAccessObjects.Migrations
 
                     b.HasIndex("ReceivedByUserId");
 
-                    b.ToTable("Payments");
+                    b.HasIndex("TransactionId")
+                        .IsUnique()
+                        .HasFilter("[TransactionId] IS NOT NULL");
+
+                    b.ToTable("Payments", t =>
+                        {
+                            t.HasCheckConstraint("CK_Payment_Amount_Positive", "[Amount] > 0");
+                        });
                 });
 
             modelBuilder.Entity("BusinessObjects.Entities.Promotion", b =>

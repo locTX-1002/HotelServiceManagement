@@ -1,13 +1,5 @@
 using BusinessObjects.Entities;
+namespace Repositories;
 
-namespace Repositories
-{
-    public interface ISurchargeRepository
-    {
-        Task<List<SurchargeItem>> GetActiveItemsAsync();
-        Task<List<Surcharge>> GetForStayAsync(int stayId);
-        Task<Dictionary<int, decimal>> GetTotalsAsync(IEnumerable<int> stayIds);
-        Task<(bool Ok, string Message)> AddAsync(int stayId, int surchargeItemId, int quantity, int createdByUserId);
-        Task<(bool Ok, string Message)> RemoveAsync(int surchargeId);
-    }
+public interface ISurchargeRepository { Task<List<SurchargeItem>> GetItemsAsync(); Task<SurchargeItem?> GetItemAsync(int id); Task SaveItemAsync(SurchargeItem x, bool add); Task<List<Surcharge>> GetByStayAsync(int id); Task<Surcharge?> AddToStayAsync(int stayId, int itemId, int quantity, int? userId); Task<Surcharge?> UpdateAsync(int id, int quantity); Task<bool> DeleteAsync(int id);     Task<Dictionary<int, decimal>> GetTotalsAsync(IEnumerable<int> stayIds);
 }

@@ -46,7 +46,7 @@ namespace DataAccessObjects
 
         /// <summary>
         /// Ap moi migration con thieu vao database (tu tao DB neu chua co) - goi 1 lan luc app
-        /// khoi dong, giong co che cua ban web: thanh vien moi chi can F5 la DB tu dung.
+        /// khoi dong; thanh vien moi chi can F5 de app tu chuan bi database.
         /// </summary>
         public static async Task EnsureMigratedAsync()
         {

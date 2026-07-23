@@ -1,20 +1,17 @@
 using BusinessObjects.Entities;
 using DataAccessObjects;
 
-namespace Repositories
+namespace Repositories;
+
+public sealed class StayRepository : IStayRepository
 {
-    public class StayRepository : IStayRepository
-    {
-        public Task<List<Reservation>> GetPendingArrivalsAsync() => StayDAO.Instance.GetPendingArrivalsAsync();
-        public Task<List<Stay>> GetActiveAsync() => StayDAO.Instance.GetActiveAsync();
-
-        public Task<(bool Ok, string Message)> CheckInAsync(int reservationId, DateTime actualCheckIn, int checkedInByUserId)
-            => StayDAO.Instance.CheckInAsync(reservationId, actualCheckIn, checkedInByUserId);
-
-        public Task<(bool Ok, string Message)> CheckOutAsync(int stayId, int checkedOutByUserId)
-            => StayDAO.Instance.CheckOutAsync(stayId, checkedOutByUserId);
-
-        public Task<(bool Ok, string Message)> ExtendAsync(int stayId, DateTime newCheckOut)
-            => StayDAO.Instance.ExtendAsync(stayId, newCheckOut);
-    }
+    public Task<List<Stay>> GetActiveAsync() => StayDAO.Instance.GetActiveAsync();
+    public Task<Stay?> GetByIdAsync(int id) => StayDAO.Instance.GetByIdAsync(id);
+    public Task<Stay?> CheckInAsync(int reservationId, int? userId, DateTime actualCheckIn)
+        => StayDAO.Instance.CheckInAsync(reservationId, userId, actualCheckIn);
+    public Task<Stay?> CheckOutAsync(int stayId, int? userId, DateTime actualCheckOut)
+        => StayDAO.Instance.CheckOutAsync(stayId, userId, actualCheckOut);
+    public Task<List<Reservation>> GetArrivalsAsync() => StayDAO.Instance.GetArrivalsAsync();
+    public Task<(bool Ok, string Message)> ExtendAsync(int stayId, DateTime newCheckOut)
+        => StayDAO.Instance.ExtendAsync(stayId, newCheckOut);
 }

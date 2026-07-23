@@ -193,7 +193,7 @@ namespace FUHotelManagementWPF.ViewModels.Reservations
             }
         }
 
-        private async Task RunAction(Func<ReservationRow, Task<ServiceResult>> action)
+        private async Task RunAction(Func<ReservationRow, Task<ServiceResult<BusinessObjects.Entities.Reservation>>> action)
         {
             if (SelectedRow == null)
             {

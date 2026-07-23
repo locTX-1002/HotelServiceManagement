@@ -39,8 +39,7 @@ FUHotelManagementWPF/
 | Phiên đăng nhập | `AppSession` |
 | Hộp thoại | WPF/HandyControl dialog |
 | Thông báo | `Notify.Success/Error/Warning/Info` |
-| Danh sách chính | Card-row có thumbnail (phương án B đã chốt) |
-| Bảng dữ liệu thuần số | `DataGrid` |
+| Bảng dữ liệu | `DataGrid` |
 | Trạng thái tải | HandyControl `LoadingCircle` |
 | Validation | `INotifyDataErrorInfo` |
 | Cấu hình | `appsettings.json` và `appsettings.Local.json` |
@@ -171,31 +170,34 @@ Quy tắc:
 
 Đọc thêm [Quy ước giao diện](QUY_UOC_GIAO_DIEN.md).
 
-## 10. Danh sách và bảng
+## 10. DataGrid và danh sách
 
-**Phương án B (đã chốt) — danh sách chính dạng card-row có ảnh:**
-
-- Đối tượng có hình ảnh/đại diện (phòng, loại phòng, khách, món dịch vụ…) hiển thị bằng
-  card-row: thumbnail 64×46 bo góc 8 bên trái, tên đậm + dòng phụ caption, badge trạng thái,
-  giá trị chính (giá tiền…) căn phải, nút hành động Ghost nhỏ ngoài cùng.
-- Card-row: nền `CardBrush`, viền `LineBrush`, bo 12, cách nhau 8px.
-- Double-click card mở chi tiết (nếu có màn chi tiết).
-- `DataGrid` chỉ dùng cho dữ liệu thuần số/bảng báo cáo — style đã có sẵn app-wide.
-- Trạng thái dùng badge; danh sách rỗng có hướng dẫn ngắn; đang tải có loading indicator.
-- Có tìm kiếm/lọc ở ViewModel; toolbar có dòng đếm tổng ("6 phòng · 6 đang dùng").
+- `RowHeight` tối thiểu 44.
+- Không hiển thị grid line dày đặc.
+- Tối đa khoảng 7 cột; thông tin chi tiết chuyển sang dialog/panel.
+- Cột số, ngày, trạng thái phải căn chỉnh có chủ đích.
+- Trạng thái dùng badge.
+- Có tìm kiếm/lọc ở ViewModel và service phù hợp.
+- Danh sách rỗng phải có hướng dẫn ngắn.
+- Đang tải phải có loading indicator.
 
 ## 11. Dialog
 
 - Dialog tạo/sửa dùng ViewModel riêng khi form phức tạp.
-- Header màu phân biệt: XANH (`BrandSoft`) khi thêm mới, VÀNG (`WarningSoft`) khi đang sửa,
-  kèm icon tròn + phụ đề.
-- Có khối ảnh xem trước khi đối tượng có ảnh; bấm vào ảnh để chọn file từ máy
-  (`RoomImages.SetCustomImage`).
 - Validate trước khi đóng.
 - Disable nút lưu khi đang xử lý.
 - Xóa/hủy cần xác nhận.
 - Không đóng dialog nếu service trả lỗi.
 - Sau khi thành công, tải lại hoặc cập nhật collection theo một chiến lược nhất quán.
+
+### Dialog thanh toán
+
+- Chỉ hiển thị hai lựa chọn: Tiền mặt và Chuyển khoản.
+- Tiền mặt không hiển thị trường mã giao dịch.
+- Chuyển khoản bắt buộc nhập mã giao dịch và có thể hiển thị QR theo số tiền còn lại.
+- Hiển thị rõ tổng hóa đơn, đã thanh toán và số tiền còn lại.
+- Không cho nhập số tiền lớn hơn số còn lại.
+- Sau khi ghi nhận thành công, tải lại trạng thái `Unpaid/PartiallyPaid/Paid`.
 
 ## 12. Phân quyền giao diện
 
@@ -206,10 +208,30 @@ Vai trò hiện có:
 - Receptionist.
 - ServiceStaff.
 
+## 13. Hợp đồng backend đã chốt để tích hợp
+
+Frontend chỉ tham chiếu các interface trong project `Services`; không gọi Repository hoặc DAO.
+
+| Màn hình/luồng | Service chính | Lưu ý bắt buộc |
+|---|---|---|
+| Đặt phòng | `IReservationService` | Hiển thị `ServiceResult.Message` khi trùng lịch hoặc sai trạng thái |
+| Check-in/check-out | `IStayService` | Check-out chỉ thành công khi đơn dịch vụ đã đóng và hóa đơn `Paid` |
+| Dịch vụ | `IServiceCatalogService`, `IServiceOrderService` | Chỉ cho chuyển trạng thái theo luồng Pending → Processing → Completed |
+| Hóa đơn | `IInvoiceService` | Nếu dữ liệu thay đổi đồng thời, tải lại stay/hóa đơn rồi thao tác lại |
+| Thanh toán | `IPaymentService` | Cash không có transaction ID; BankTransfer bắt buộc có; chỉ Admin/Manager được void |
+| Phụ thu/khuyến mãi | `ISurchargeService`, `IPromotionService` | Không sửa/xóa phụ thu sau khi đã có thanh toán |
+| Báo cáo | `IReportService` | CSV được service trả về dạng chuỗi; ViewModel chọn đường dẫn và ghi file |
+| Nhân viên | `IUserManagementService` | Chỉ Admin; mật khẩu phải đạt `PasswordPolicy` |
+| Buồng phòng | `IHousekeepingRequestService` | ServiceStaff/Manager/Admin xử lý trạng thái |
+| Tài khoản khách | `IGuestAccountService` | Mật khẩu không được giữ trong property hoặc log |
+
+Mọi command thay đổi dữ liệu phải kiểm tra `ServiceResult.Ok`. Khi `Ok == false`, giữ nguyên
+màn hình/form và hiển thị `Message`; không suy luận thành công từ việc không phát sinh exception.
+
 Frontend có thể ẩn hoặc disable chức năng không được phép, nhưng service vẫn phải kiểm tra
 quyền. Không coi việc ẩn nút là cơ chế bảo mật duy nhất.
 
-## 13. Các module cần triển khai
+## 14. Các module cần triển khai
 
 Khung hiện đã có đăng nhập, navigation và module Phòng. Các module còn lại cần thay
 `PlaceholderViewModel` bằng ViewModel thật:
@@ -239,7 +261,7 @@ Views/Dialogs/
 └── XxxEditDialog.xaml.cs
 ```
 
-## 14. Accessibility và khả năng sử dụng
+## 15. Accessibility và khả năng sử dụng
 
 - Bảo đảm tab order hợp lý.
 - Nút icon phải có tooltip hoặc accessible name.
@@ -249,7 +271,7 @@ Views/Dialogs/
 - Focus phải quay về vị trí hợp lý sau khi đóng dialog.
 - Kiểm tra thao tác chính bằng bàn phím.
 
-## 15. Checklist trước khi mở PR
+## 16. Checklist trước khi mở PR
 
 - [ ] Module chỉ sử dụng XAML, ViewModel và các service của solution.
 - [ ] View chỉ bind; không chứa business rule.
@@ -259,7 +281,6 @@ Views/Dialogs/
 - [ ] Form dùng cơ chế validation chung.
 - [ ] Có loading, empty và error state.
 - [ ] Dùng theme token; không hardcode màu và cỡ chữ.
-- [ ] Danh sách chính theo card-row phương án B; DataGrid chỉ cho bảng số liệu.
 - [ ] Navigation dùng `NavigationService`.
 - [ ] Đã thêm DataTemplate vào `ViewMappings.xaml`.
 - [ ] Đã kiểm tra quyền hiển thị.

@@ -146,9 +146,10 @@ namespace FUHotelManagementWPF.ViewModels.Guests
             try
             {
                 var result = IsEdit
-                    ? await _service.UpdateAsync(_existing!.Id, FullName, Phone, IdentityNumber, Email,
+                    ? await _service.UpdateAsync(_existing!.Id, FullName, Email, Phone, IdentityNumber,
                         SelectedTag.Tag, TagNote)
-                    : await _service.CreateAsync(FullName, Phone, IdentityNumber, Email);
+                    : await _service.CreateAsync(FullName, Email, Phone, IdentityNumber,
+                        SelectedTag.Tag, TagNote);
 
                 if (result.Ok)
                 {

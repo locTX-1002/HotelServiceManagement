@@ -4,4 +4,5 @@
   <Project Path="FUHotelManagementWPF/FUHotelManagementWPF.csproj" />
   <Project Path="Repositories/Repositories.csproj" />
   <Project Path="Services/Services.csproj" />
+  <Project Path="Tests/HotelManagement.Tests.csproj" />
 </Solution>

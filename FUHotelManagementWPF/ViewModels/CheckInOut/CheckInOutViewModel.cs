@@ -358,7 +358,10 @@ namespace FUHotelManagementWPF.ViewModels.CheckInOut
             ServiceResult result;
             if (item.Kind == FlowKind.Arrival)
             {
-                result = await _service.CheckInAsync(item.Reservation.Id, AppSession.CurrentUser?.Id ?? 0);
+                var checkIn = await _service.CheckInAsync(item.Reservation.Id);
+                result = checkIn.Ok
+                    ? ServiceResult.Success(checkIn.Message)
+                    : ServiceResult.Failure(checkIn.Message);
             }
             else
             {
@@ -370,7 +373,10 @@ namespace FUHotelManagementWPF.ViewModels.CheckInOut
                 {
                     return;
                 }
-                result = await _service.CheckOutAsync(item.Stay!.Id, AppSession.CurrentUser?.Id ?? 0);
+                var checkOut = await _service.CheckOutAsync(item.Stay!.Id);
+                result = checkOut.Ok
+                    ? ServiceResult.Success(checkOut.Message)
+                    : ServiceResult.Failure(checkOut.Message);
             }
 
             if (result.Ok)

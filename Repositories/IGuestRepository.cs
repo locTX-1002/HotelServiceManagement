@@ -1,13 +1,16 @@
 using BusinessObjects.Entities;
 
-namespace Repositories
+namespace Repositories;
+
+public interface IGuestRepository
 {
-    public interface IGuestRepository
-    {
-        Task<List<Guest>> SearchAsync(string? keyword);
-        Task<Guest?> GetByIdAsync(int id);
-        Task<bool> IdentityExistsAsync(string identityNumber, int? excludeId = null);
-        Task<Guest> AddAsync(Guest guest);
-        Task UpdateAsync(Guest guest);
-    }
+    Task<List<Guest>> GetAllAsync();
+    Task<Guest?> GetByIdAsync(int id);
+    Task<List<Guest>> SearchAsync(string keyword);
+    Task<bool> IdentityNumberExistsAsync(string value, int? excludeId = null);
+    Task<bool> HasReservationsAsync(int guestId);
+    Task AddAsync(Guest entity);
+    Task UpdateAsync(Guest entity);
+    Task DeleteAsync(Guest entity);
+    Task<Guest?> FindExactAsync(string idOrPhone);
 }

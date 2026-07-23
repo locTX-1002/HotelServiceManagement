@@ -1,13 +1,4 @@
 using BusinessObjects.Entities;
+namespace Services;
 
-namespace Services
-{
-    public interface ISurchargeService
-    {
-        Task<List<SurchargeItem>> GetActiveItemsAsync();
-        Task<List<Surcharge>> GetForStayAsync(int stayId);
-        Task<Dictionary<int, decimal>> GetTotalsAsync(IEnumerable<int> stayIds);
-        Task<ServiceResult> AddAsync(int stayId, int surchargeItemId, int quantity, int createdByUserId);
-        Task<ServiceResult> RemoveAsync(int surchargeId);
-    }
-}
+public interface ISurchargeService { Task<List<SurchargeItem>> GetItemsAsync(); Task<ServiceResult<SurchargeItem>> SaveItemAsync(int? id, string name, string unit, decimal price, bool active); Task<List<Surcharge>> GetByStayAsync(int id); Task<ServiceResult<Surcharge>> AddToStayAsync(int stayId, int itemId, int quantity); Task<ServiceResult<Surcharge>> UpdateAsync(int id, int quantity); Task<ServiceResult> DeleteAsync(int id);  Task<Dictionary<int, decimal>> GetTotalsAsync(IEnumerable<int> stayIds); }

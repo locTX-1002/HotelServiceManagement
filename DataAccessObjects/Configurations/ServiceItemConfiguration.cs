@@ -9,7 +9,7 @@ namespace DataAccessObjects.Configurations
         public void Configure(EntityTypeBuilder<ServiceItem> builder)
         {
             builder.HasKey(si => si.Id);
-            
+
             builder.Property(si => si.ServiceName)
                    .IsRequired()
                    .HasMaxLength(150);

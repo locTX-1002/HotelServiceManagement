@@ -85,7 +85,7 @@ namespace FUHotelManagementWPF.ViewModels.CheckInOut
         {
             try
             {
-                var items = await _service.GetActiveItemsAsync();
+                var items = await _service.GetItemsAsync();
                 Items.Clear();
                 foreach (var item in items)
                 {
@@ -103,7 +103,7 @@ namespace FUHotelManagementWPF.ViewModels.CheckInOut
 
         private async Task ReloadLinesAsync()
         {
-            var lines = await _service.GetForStayAsync(_stayId);
+            var lines = await _service.GetByStayAsync(_stayId);
             Lines.Clear();
             foreach (var line in lines)
             {
@@ -124,8 +124,7 @@ namespace FUHotelManagementWPF.ViewModels.CheckInOut
                 return;
             }
 
-            var result = await _service.AddAsync(
-                _stayId, SelectedItem.Id, Quantity, AppSession.CurrentUser?.Id ?? 0);
+            var result = await _service.AddToStayAsync(_stayId, SelectedItem.Id, Quantity);
             if (!result.Ok)
             {
                 ErrorMessage = result.Message;
@@ -152,7 +151,7 @@ namespace FUHotelManagementWPF.ViewModels.CheckInOut
                 return;
             }
 
-            var result = await _service.RemoveAsync(line.Surcharge.Id);
+            var result = await _service.DeleteAsync(line.Surcharge.Id);
             if (result.Ok)
             {
                 Notify.Success(result.Message);

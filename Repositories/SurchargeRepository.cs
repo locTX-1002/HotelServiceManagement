@@ -1,21 +1,7 @@
 using BusinessObjects.Entities;
 using DataAccessObjects;
+namespace Repositories;
 
-namespace Repositories
-{
-    public class SurchargeRepository : ISurchargeRepository
-    {
-        public Task<List<SurchargeItem>> GetActiveItemsAsync() => SurchargeDAO.Instance.GetActiveItemsAsync();
-
-        public Task<List<Surcharge>> GetForStayAsync(int stayId) => SurchargeDAO.Instance.GetForStayAsync(stayId);
-
-        public Task<Dictionary<int, decimal>> GetTotalsAsync(IEnumerable<int> stayIds)
-            => SurchargeDAO.Instance.GetTotalsAsync(stayIds);
-
-        public Task<(bool Ok, string Message)> AddAsync(int stayId, int surchargeItemId, int quantity, int createdByUserId)
-            => SurchargeDAO.Instance.AddAsync(stayId, surchargeItemId, quantity, createdByUserId);
-
-        public Task<(bool Ok, string Message)> RemoveAsync(int surchargeId)
-            => SurchargeDAO.Instance.RemoveAsync(surchargeId);
-    }
+public sealed class SurchargeRepository : ISurchargeRepository { public Task<List<SurchargeItem>> GetItemsAsync() => SurchargeDAO.Instance.GetItemsAsync(); public Task<SurchargeItem?> GetItemAsync(int id) => SurchargeDAO.Instance.GetItemAsync(id); public Task SaveItemAsync(SurchargeItem x, bool add) => SurchargeDAO.Instance.SaveItemAsync(x, add); public Task<List<Surcharge>> GetByStayAsync(int id) => SurchargeDAO.Instance.GetByStayAsync(id); public Task<Surcharge?> AddToStayAsync(int s, int i, int q, int? u) => SurchargeDAO.Instance.AddToStayAsync(s, i, q, u); public Task<Surcharge?> UpdateAsync(int id, int quantity) => SurchargeDAO.Instance.UpdateAsync(id, quantity); public Task<bool> DeleteAsync(int id) => SurchargeDAO.Instance.DeleteAsync(id);     public Task<Dictionary<int, decimal>> GetTotalsAsync(IEnumerable<int> stayIds)
+        => SurchargeDAO.Instance.GetTotalsAsync(stayIds);
 }
