@@ -27,10 +27,40 @@
                 </Setter.Value>
             </Setter>
         </Style>
+        <!-- Chip loc trang thai: chip dang chon to mau thuong hieu -->
+        <Style x:Key="StatusChip" TargetType="Button">
+            <Setter Property="Padding" Value="11,5" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Margin" Value="0,0,7,0" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Foreground" Value="{StaticResource InkBrush}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd" Background="{StaticResource CardBrush}" CornerRadius="4"
+                                BorderBrush="{StaticResource LineBrush}" BorderThickness="1"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="{StaticResource SurfaceAltBrush}" />
+                            </Trigger>
+                            <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="{StaticResource BrandBrush}" />
+                                <Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource BrandBrush}" />
+                                <Setter Property="Foreground" Value="White" />
+                            </DataTrigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </UserControl.Resources>
 
     <Grid Margin="0,14,0,0">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
@@ -51,16 +81,36 @@
             </StackPanel>
         </DockPanel>
 
-        <hc:LoadingCircle Grid.Row="1" Width="34" Height="34"
+        <!-- Chip loc trang thai (co so dem) -->
+        <ItemsControl Grid.Row="1" ItemsSource="{Binding StatusChips}" Margin="0,0,0,12">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <WrapPanel />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <Button Style="{StaticResource StatusChip}"
+                            Command="{Binding DataContext.PickStatusCommand,
+                                      RelativeSource={RelativeSource AncestorType=UserControl}}"
+                            CommandParameter="{Binding}">
+                        <TextBlock><Run Text="{Binding Label, Mode=OneWay}" /><Run Text=" " /><Run
+                            Text="{Binding Count, Mode=OneWay}" FontWeight="SemiBold" /></TextBlock>
+                    </Button>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <hc:LoadingCircle Grid.Row="2" Width="34" Height="34"
                           Foreground="{StaticResource BrandBrush}"
                           Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}" />
-        <TextBlock Grid.Row="1" Text="Chưa có phòng nào — bấm + Thêm phòng để tạo phòng đầu tiên."
+        <TextBlock Grid.Row="2" Text="{Binding EmptyText}"
                    Style="{StaticResource CaptionText}" FontSize="13"
                    HorizontalAlignment="Center" VerticalAlignment="Center"
                    Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVis}}" />
 
         <!-- D3 master-detail: danh sach trai + panel chi tiet phai -->
-        <Grid Grid.Row="1">
+        <Grid Grid.Row="2">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="1.35*" />
                 <ColumnDefinition Width="16" />

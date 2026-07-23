@@ -39,4 +39,34 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
 
     /// <summary>Lua chon trang thai cho combobox/danh sach.</summary>
     public record StatusOption(BusinessObjects.Enums.RoomStatus Status, string Label);
+
+    /// <summary>
+    /// Chip loc trang thai tren thanh cong cu. Status = null nghia la "Tat ca".
+    /// Count do ViewModel cap nhat lai sau moi lan tai danh sach.
+    /// </summary>
+    public class RoomStatusChip : MvvmCore.ViewModelBase
+    {
+        public string Label { get; }
+        public BusinessObjects.Enums.RoomStatus? Status { get; }
+
+        private int _count;
+        public int Count
+        {
+            get => _count;
+            set => SetProperty(ref _count, value);
+        }
+
+        private bool _isSelected;
+        public bool IsSelected
+        {
+            get => _isSelected;
+            set => SetProperty(ref _isSelected, value);
+        }
+
+        public RoomStatusChip(string label, BusinessObjects.Enums.RoomStatus? status)
+        {
+            Label = label;
+            Status = status;
+        }
+    }
 }

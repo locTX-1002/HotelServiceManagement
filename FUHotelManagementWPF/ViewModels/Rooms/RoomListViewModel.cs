@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Data;
+using BusinessObjects.Enums;
 using FUHotelManagementWPF.MvvmCore;
 using FUHotelManagementWPF.Views.Dialogs;
 using Services;
@@ -37,7 +38,12 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
             }
         }
 
-        public bool IsEmpty => !IsLoading && Rows.Count == 0;
+        public bool IsEmpty => !IsLoading && !RowsView.Cast<object>().Any();
+
+        /// <summary>Phan biet "chua co phong nao" voi "bo loc khong ra ket qua".</summary>
+        public string EmptyText => Rows.Count == 0
+            ? "Chưa có phòng nào — bấm + Thêm phòng để tạo phòng đầu tiên."
+            : "Không có phòng nào khớp bộ lọc hiện tại.";
 
         // D3 master-detail: chon dong ben trai -> panel chi tiet ben phai
         private RoomRow? _selectedRow;
@@ -96,10 +102,44 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
                 if (SetProperty(ref _searchText, value))
                 {
                     RowsView.Refresh();
+                    OnPropertyChanged(nameof(IsEmpty));
+                    OnPropertyChanged(nameof(EmptyText));
                 }
             }
         }
 
+        // --- Chip loc trang thai: Tat ca / Trong / Da dat / Dang o / Dang don / Bao tri ---
+        public ObservableCollection<RoomStatusChip> StatusChips { get; } = [];
+        private RoomStatusChip _selectedChip;
+
+        private void PickChip(RoomStatusChip chip)
+        {
+            foreach (var item in StatusChips)
+            {
+                item.IsSelected = ReferenceEquals(item, chip);
+            }
+            _selectedChip = chip;
+            RowsView.Refresh();
+            OnPropertyChanged(nameof(IsEmpty));
+            OnPropertyChanged(nameof(EmptyText));
+            // Dong dang chon co the bi loc mat -> bo chon cho panel chi tiet khoi hien nham
+            if (SelectedRow != null && !FilterRow(SelectedRow))
+            {
+                SelectedRow = null;
+            }
+        }
+
+        private void RefreshChipCounts()
+        {
+            foreach (var chip in StatusChips)
+            {
+                chip.Count = chip.Status == null
+                    ? Rows.Count
+                    : Rows.Count(r => r.Room.Status == chip.Status);
+            }
+        }
+
+        public RelayCommand PickStatusCommand { get; }
         public RelayCommand AddCommand { get; }
         public RelayCommand EditCommand { get; }
         public RelayCommand ChangeStatusCommand { get; }
@@ -109,6 +149,16 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
         {
             _refreshAll = refreshAll;
             RowsView = new ListCollectionView(Rows) { Filter = FilterRow };
+
+            StatusChips.Add(new RoomStatusChip("Tất cả", null));
+            foreach (var status in Enum.GetValues<RoomStatus>())
+            {
+                StatusChips.Add(new RoomStatusChip(RoomService.RoomStatusText(status), status));
+            }
+            _selectedChip = StatusChips[0];
+            _selectedChip.IsSelected = true;
+            PickStatusCommand = new RelayCommand(p => { if (p is RoomStatusChip chip) { PickChip(chip); } });
+
             AddCommand = new RelayCommand(_ => OpenEditDialog(null));
             EditCommand = new RelayCommand(p => OpenEditDialog(p as RoomRow));
             ChangeStatusCommand = new RelayCommand(_ => OpenStatusDialog());
@@ -148,6 +198,7 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
                 {
                     Rows.Add(new RoomRow(room));
                 }
+                RefreshChipCounts();
                 OnPropertyChanged(nameof(TotalText));
                 OnPropertyChanged(nameof(IsEmpty));
             }
@@ -163,13 +214,18 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
 
         private bool FilterRow(object item)
         {
-            if (string.IsNullOrWhiteSpace(SearchText))
-            {
-                return true;
-            }
             if (item is not RoomRow row)
             {
                 return false;
+            }
+            // Chip trang thai va o tim kiem cong don voi nhau
+            if (_selectedChip.Status != null && row.Room.Status != _selectedChip.Status)
+            {
+                return false;
+            }
+            if (string.IsNullOrWhiteSpace(SearchText))
+            {
+                return true;
             }
             var keyword = SearchText.Trim().ToLower();
             return row.Room.RoomNumber.ToLower().Contains(keyword)
