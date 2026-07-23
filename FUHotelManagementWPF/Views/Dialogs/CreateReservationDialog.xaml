@@ -52,14 +52,30 @@
                                    Foreground="{StaticResource DangerBrush}" TextWrapping="Wrap" />
                     </Border>
 
-                    <!-- Form tạo khách mới -->
-                    <StackPanel Margin="0,10,0,0" Visibility="{Binding ShowNewGuestFields, Converter={StaticResource BoolToVis}}">
-                        <TextBlock Text="Khách mới — điền thông tin (CCCD lấy từ ô tìm ở trên):"
-                                   Style="{StaticResource CaptionText}" Margin="0,0,0,6" />
-                        <TextBox Text="{Binding NewFullName}" hc:InfoElement.Placeholder="Họ tên" Margin="0,0,0,6" />
-                        <TextBox Text="{Binding NewPhone}" hc:InfoElement.Placeholder="Số điện thoại" Margin="0,0,0,6" />
-                        <TextBox Text="{Binding NewEmail}" hc:InfoElement.Placeholder="Email (tuỳ chọn)" />
-                    </StackPanel>
+                    <!-- Form tạo khách mới. Dat nhan RO RANG tren tung o thay vi dung
+                         hc:InfoElement.Placeholder - style TextBox chung cua app thay
+                         template goc cua HandyControl nen placeholder khong ve ra duoc. -->
+                    <Border Margin="0,10,0,0" CornerRadius="4" Padding="12,10"
+                            Background="{StaticResource SurfaceAltBrush}"
+                            Visibility="{Binding ShowNewGuestFields, Converter={StaticResource BoolToVis}}">
+                        <StackPanel>
+                            <TextBlock Text="Chưa có khách này trong hệ thống — điền thông tin để tạo mới"
+                                       Style="{StaticResource CaptionText}" FontSize="12"
+                                       TextWrapping="Wrap" Margin="0,0,0,10" />
+
+                            <TextBlock Text="HỌ TÊN KHÁCH *" Style="{StaticResource FieldLabel}" />
+                            <TextBox Text="{Binding NewFullName}" Margin="0,0,0,9" />
+
+                            <TextBlock Text="SỐ ĐIỆN THOẠI *" Style="{StaticResource FieldLabel}" />
+                            <TextBox Text="{Binding NewPhone}" Margin="0,0,0,9" />
+
+                            <TextBlock Text="EMAIL (TUỲ CHỌN)" Style="{StaticResource FieldLabel}" />
+                            <TextBox Text="{Binding NewEmail}" />
+
+                            <TextBlock Text="{Binding IdentityHint}" Style="{StaticResource CaptionText}"
+                                       FontSize="11.5" TextWrapping="Wrap" Margin="0,9,0,0" />
+                        </StackPanel>
+                    </Border>
 
                     <!-- 2. Ngày -->
                     <TextBlock Text="2 · NGÀY NHẬN → TRẢ" Style="{StaticResource FieldLabel}" Margin="0,16,0,5" />
@@ -110,27 +126,24 @@
                         </ComboBox.ItemTemplate>
                     </ComboBox>
 
-                    <!-- 4. Số khách + trạng thái -->
+                    <!-- 4. Số khách. Trạng thái không hỏi nữa: đơn tạo tại quầy thì
+                         chính lễ tân là người xác nhận, nên luôn vào Đã xác nhận.
+                         Muốn hạ xuống Chờ xác nhận thì đổi ở màn Đặt phòng. -->
                     <Grid Margin="0,16,0,0" Visibility="{Binding HasSearchedRooms, Converter={StaticResource BoolToVis}}">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="12" />
+                            <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
-                        <StackPanel Grid.Column="0">
+                        <StackPanel Grid.Column="0" Width="130">
                             <TextBlock Text="SỐ KHÁCH" Style="{StaticResource FieldLabel}" />
                             <hc:NumericUpDown Minimum="1" Maximum="20" Value="{Binding NumberOfGuests}" />
                         </StackPanel>
-                        <StackPanel Grid.Column="2">
-                            <TextBlock Text="TRẠNG THÁI" Style="{StaticResource FieldLabel}" />
-                            <!-- Chi co 2 lua chon nen bay ca hai ra, khoi phai mo dropdown -->
-                            <UniformGrid Columns="2">
-                                <RadioButton Content="Chờ xác nhận" Style="{StaticResource SegmentLeft}"
-                                             IsChecked="{Binding IsPendingStatus}" />
-                                <RadioButton Content="Đã xác nhận" Style="{StaticResource SegmentRight}"
-                                             IsChecked="{Binding IsConfirmedStatus}" />
-                            </UniformGrid>
-                        </StackPanel>
+                        <Border Grid.Column="1" Background="{StaticResource SurfaceAltBrush}" CornerRadius="4"
+                                Padding="11,8" Margin="12,16,0,0" VerticalAlignment="Bottom"
+                                Visibility="{Binding ShowConfirmedHint, Converter={StaticResource BoolToVis}}">
+                            <TextBlock Text="Đơn được tạo ở trạng thái Đã xác nhận — khách đến là check-in được ngay."
+                                       Style="{StaticResource CaptionText}" FontSize="11.5" TextWrapping="Wrap" />
+                        </Border>
                     </Grid>
 
                     <TextBlock Text="YÊU CẦU ĐẶC BIỆT (TUỲ CHỌN)" Style="{StaticResource FieldLabel}" Margin="0,14,0,5" />

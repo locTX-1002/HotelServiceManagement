@@ -35,7 +35,13 @@ namespace FUHotelManagementWPF.ViewModels.Reservations
         public string GuestKeyword
         {
             get => _guestKeyword;
-            set => SetProperty(ref _guestKeyword, value);
+            set
+            {
+                if (SetProperty(ref _guestKeyword, value))
+                {
+                    OnPropertyChanged(nameof(IdentityHint));
+                }
+            }
         }
 
         private Guest? _matchedGuest;
@@ -65,6 +71,23 @@ namespace FUHotelManagementWPF.ViewModels.Reservations
         private bool _guestSearched;
         /// <summary>Đã bấm tìm mà không thấy → hiện form tạo khách mới.</summary>
         public bool ShowNewGuestFields => _guestSearched && _matchedGuest == null;
+
+        /// <summary>Noi ro chuoi vua go se duoc luu vao dau, khoi le tan phai doan.</summary>
+        public string IdentityHint
+        {
+            get
+            {
+                var key = GuestKeyword.Trim();
+                if (string.IsNullOrEmpty(key))
+                {
+                    return string.Empty;
+                }
+                return $"CCCD/CMND lưu theo ô tìm ở trên: {key}";
+            }
+        }
+
+        /// <summary>Bang thong bao trang thai chi hien luc tao moi, luc sua thi khong.</summary>
+        public bool ShowConfirmedHint => !IsEdit;
 
         public string NewFullName { get; set; } = string.Empty;
         public string NewPhone { get; set; } = string.Empty;
@@ -132,28 +155,7 @@ namespace FUHotelManagementWPF.ViewModels.Reservations
         public ReservationStatusFilter SelectedStatus
         {
             get => _selectedStatus;
-            set
-            {
-                if (SetProperty(ref _selectedStatus, value))
-                {
-                    OnPropertyChanged(nameof(IsPendingStatus));
-                    OnPropertyChanged(nameof(IsConfirmedStatus));
-                }
-            }
-        }
-
-        // Chi co dung 2 trang thai luc tao nen dung 2 nut bam thay vi dropdown -
-        // do mot cu bam, va nhin la thay ca hai lua chon.
-        public bool IsPendingStatus
-        {
-            get => _selectedStatus.Status == ReservationStatus.Pending;
-            set { if (value) { SelectedStatus = StatusOptions[0]; } }
-        }
-
-        public bool IsConfirmedStatus
-        {
-            get => _selectedStatus.Status == ReservationStatus.Confirmed;
-            set { if (value) { SelectedStatus = StatusOptions[1]; } }
+            set => SetProperty(ref _selectedStatus, value);
         }
 
         /// <summary>Chon nhanh so dem: dat ngay tra = ngay nhan + n.</summary>
@@ -190,7 +192,10 @@ namespace FUHotelManagementWPF.ViewModels.Reservations
         public CreateReservationDialogViewModel(Reservation? existing)
         {
             _existing = existing;
-            _selectedStatus = StatusOptions[0];
+            // Don tao tai quay thi chinh le tan la nguoi xac nhan -> vao thang Da xac nhan,
+            // khach den la co trong danh sach check-in ngay. Muon ha xuong Cho xac nhan
+            // thi doi o man Dat phong.
+            _selectedStatus = StatusOptions[1];
 
             PickNightsCommand = new RelayCommand(PickNights);
             FindGuestCommand = new AsyncRelayCommand(_ => FindGuestAsync());
