@@ -13,5 +13,8 @@ namespace Repositories
 
         public Task<(bool Ok, string Message)> CheckOutAsync(int stayId, int checkedOutByUserId)
             => StayDAO.Instance.CheckOutAsync(stayId, checkedOutByUserId);
+
+        public Task<(bool Ok, string Message)> ExtendAsync(int stayId, DateTime newCheckOut)
+            => StayDAO.Instance.ExtendAsync(stayId, newCheckOut);
     }
 }

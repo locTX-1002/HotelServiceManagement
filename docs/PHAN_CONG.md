@@ -1,8 +1,28 @@
 # Phân công module — đồ án PRN212 nhóm 2 SE1919
 
-Tài liệu này chia phần việc còn lại của app WPF thành 4 gói độc lập. Mỗi gói là
-một lát cắt dọc trọn vẹn: từ DAO chạm database lên tới màn hình. Nhận gói nào
-thì làm trọn gói đó, không phải chờ ai.
+> **Đọc kỹ chỗ này trước, kẻo hiểu nhầm:** đây **không phải** phân công làm
+> frontend. Dự án WPF không chia frontend/backend như bản web cũ. Mỗi gói dưới
+> đây là **một module hoàn chỉnh xuyên suốt 5 tầng** — từ câu truy vấn database
+> lên tới màn hình. Người nhận gói nào thì tự viết cả DAO, Repository, Service,
+> ViewModel lẫn View của gói đó.
+
+## Kiến trúc dự án — mỗi gói phải đi qua đủ các tầng này
+
+Đúng mô hình 3 lớp mà đề PRN212 yêu cầu, tầng trình bày dùng MVVM:
+
+```
+BusinessObjects        entity + enum dùng chung (ĐÃ XONG, không phải viết lại)
+        ↓
+DataAccessObjects      XxxDAO  — Singleton, mọi câu truy vấn EF Core nằm ở đây
+        ↓
+Repositories           IXxxRepository + XxxRepository — lớp trung gian
+        ↓
+Services               IXxxService + XxxService — QUY TẮC NGHIỆP VỤ nằm ở đây
+        ↓
+FUHotelManagementWPF   XxxViewModel (logic màn hình) + XxxView.xaml (giao diện)
+```
+
+Ba tầng dưới cùng chiếm phần lớn công sức của một gói. `.xaml` chỉ là tầng cuối.
 
 ## Tình hình hiện tại
 
@@ -19,8 +39,15 @@ thì làm trọn gói đó, không phải chờ ai.
 | **Người dùng & phân quyền** | **chưa làm** | **gói D** |
 | Trang chủ | đang thiết kế | Lộc |
 
+**Vì sao mấy module đầu Lộc làm trước:** phải có ít nhất một module chạy được
+xuyên suốt 5 tầng thì mới có bài mẫu để cả nhóm soi theo, và mới biết khung
+điều hướng, theme, validate, toast có ổn không. Giờ khung đã đứng, bốn gói còn
+lại là bốn module thật, không phải phần thừa: gói Dịch vụ và gói Hoá đơn còn
+nặng hơn module Khách hàng.
+
 Đề xuất người nhận (Lộc chốt lại): Phúc → A, Phát → B, Khoa → C, Tú → D.
-Gói D nhẹ nhất nên kèm thêm việc test tổng thể ở cuối dự án.
+Gói D nhẹ nhất nên kèm thêm việc test tổng thể ở cuối dự án. Ai muốn đổi gói
+thì nói trong nhóm, không có gì cố định.
 
 ## Trước khi viết dòng code đầu tiên
 
@@ -28,13 +55,22 @@ Gói D nhẹ nhất nên kèm thêm việc test tổng thể ở cuối dự án
 
 - [README.md](../README.md) — mục "Cách cắm 1 module vào khung (5 bước)" và bảng
   "Chuẩn code bắt buộc"
-- [docs/FRONTEND_WPF.md](FRONTEND_WPF.md) — chuẩn viết ViewModel và View
+- [docs/FRONTEND_WPF.md](FRONTEND_WPF.md) — chuẩn viết ViewModel và View.
+  Tên file có chữ FRONTEND nhưng nội dung là chuẩn **tầng trình bày của WPF**
+  (MVVM, binding, command), không liên quan gì tới web
 - [docs/QUY_UOC_GIAO_DIEN.md](QUY_UOC_GIAO_DIEN.md) — bo góc 4px, màu lấy từ
   token, định dạng danh sách
 
-Luồng Login (`LoginViewModel` + `LoginWindow.xaml`) là bài mẫu có đủ mọi chuẩn.
-Module Khách hàng (`GuestsViewModel` + `GuestsView.xaml` + `GuestEditDialog`) là
-bài mẫu CRUD đầy đủ nhất — copy cấu trúc từ đó cho nhanh.
+Hai bài mẫu để soi:
+
+- **Luồng Login** (`AuthService` → `LoginViewModel` → `LoginWindow.xaml`) —
+  ngắn nhất, đủ cả 5 tầng
+- **Module Khách hàng** (`GuestDAO` → `GuestRepository` → `GuestService` →
+  `GuestsViewModel` → `GuestsView.xaml` + `GuestEditDialog`) — mẫu CRUD đầy đủ
+  nhất, gói nào cũng có cấu trúc tương tự nên copy từ đây cho nhanh
+
+Tên file trong từng gói dưới đây là **gợi ý**, đặt khác cũng được miễn giữ đúng
+thứ tự tầng và đúng chuẩn trong README.
 
 ## Nguyên tắc chung
 
@@ -59,25 +95,29 @@ Mọi thao tác ghi (đọc lên, sửa, lưu xuống) phải nằm gọn trong 
 `HotelDbContext` duy nhất**. Entity có cột `RowVersion` chống ghi đè; tách ra
 hai context là dính lỗi concurrency lúc chạy thật.
 
-**Lấy logic nghiệp vụ từ bản web**
+**Tham khảo bản web — đọc để đỡ nghĩ lại, không coi là chuẩn**
 
-Bản web cũ đã được kiểm thử kỹ, nghiệp vụ port sang chứ không nghĩ lại từ đầu.
-Code còn nguyên ở tag `v1.0-web`, xem bằng lệnh:
+Bản web cũ còn nguyên ở tag `v1.0-web`, xem bằng lệnh:
 
 ```bash
 git show v1.0-web:backend/HotelServiceManagement.Infrastructure/Services/InvoiceService.cs
 ```
 
-Đường dẫn cụ thể ghi trong từng gói bên dưới. Đọc để lấy **quy tắc nghiệp vụ**,
-không copy nguyên si — bản web có DTO, controller, JWT, còn bên này gọi service
-thẳng từ ViewModel.
+Đường dẫn cụ thể ghi trong từng gói bên dưới. Nhưng **bản web cũng có chỗ sai
+và chỗ làm dở**, ví dụ nó có sẵn giao diện gia hạn lưu trú mà backend chưa bao
+giờ viết, bấm vào không ra gì. Nên đọc để lấy ý tưởng và các trường hợp biên
+người ta đã nghĩ tới, còn đúng sai thì tự soi lại theo câu hỏi "quầy lễ tân
+thật có làm vậy không". Thấy vô lý thì nói trong nhóm, đừng bê nguyên.
+
+Bên này cũng khác bản web về cấu trúc: web có DTO, controller, JWT; bên này
+ViewModel gọi thẳng Service.
 
 ## Gói A — Dịch vụ
 
 Quản lý danh mục dịch vụ (đồ ăn, giặt ủi, spa...) và gọi dịch vụ cho phòng đang
 có khách ở.
 
-**File phải tạo**
+**Các file cần có (gợi ý tên)**
 
 ```
 DataAccessObjects/ServiceCategoryDAO.cs
@@ -132,7 +172,7 @@ v1.0-web:backend/HotelServiceManagement.Infrastructure/Services/ServiceOrderServ
 
 Lập hoá đơn cho khách đã trả phòng, thu tiền nhiều lần cho tới khi đủ.
 
-**File phải tạo**
+**Các file cần có (gợi ý tên)**
 
 ```
 DataAccessObjects/InvoiceDAO.cs
@@ -185,7 +225,7 @@ v1.0-web:backend/HotelServiceManagement.Infrastructure/Services/PaymentService.c
 Thống kê doanh thu theo khoảng ngày. **Đây là yêu cầu cứng của đề bài** nên phải
 làm đúng chữ, đặc biệt là phần sắp xếp.
 
-**File phải tạo**
+**Các file cần có (gợi ý tên)**
 
 ```
 DataAccessObjects/ReportDAO.cs
@@ -229,7 +269,7 @@ v1.0-web:backend/HotelServiceManagement.Infrastructure/Services/ReportService.cs
 
 Quản lý tài khoản nhân viên và lọc thanh điều hướng theo vai trò.
 
-**File phải tạo**
+**Các file cần có (gợi ý tên)**
 
 ```
 DataAccessObjects/UserDAO.cs        (mở rộng, hiện chỉ có GetActiveByEmailAsync)

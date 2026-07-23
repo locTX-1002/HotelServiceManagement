@@ -10,5 +10,8 @@ namespace Services
         Task<List<Stay>> GetActiveAsync();
         Task<ServiceResult> CheckInAsync(int reservationId, int checkedInByUserId);
         Task<ServiceResult> CheckOutAsync(int stayId, int checkedOutByUserId);
+
+        /// <summary>Gia han (hoac rut ngan) ngay tra cho khach dang o.</summary>
+        Task<ServiceResult> ExtendAsync(int stayId, DateTime newCheckOut);
     }
 }

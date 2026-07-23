@@ -139,5 +139,71 @@ namespace DataAccessObjects
             await context.SaveChangesAsync();
             return (true, $"Đã check-out phòng {stay.Reservation.Room.RoomNumber}. Phòng chuyển sang Đang dọn.");
         }
+
+        /// <summary>
+        /// Gia han luu tru: doi ngay tra cua don khi khach dang o muon o them.
+        /// Truoc day khach dang o khong sua don duoc nen le tan phai check-out roi tao don moi,
+        /// lam hong lich su va sai doanh thu.
+        /// </summary>
+        public async Task<(bool Ok, string Message)> ExtendAsync(int stayId, DateTime newCheckOut)
+        {
+            await using var context = HotelDbContextFactory.Create();
+
+            var stay = await context.Stays
+                .Include(s => s.Reservation).ThenInclude(r => r.Room)
+                .FirstOrDefaultAsync(s => s.Id == stayId);
+
+            if (stay == null)
+            {
+                return (false, "Không tìm thấy lượt lưu trú.");
+            }
+            if (stay.Status != StayStatus.Active)
+            {
+                return (false, "Chỉ khách đang lưu trú mới gia hạn được.");
+            }
+
+            var reservation = stay.Reservation;
+            var target = newCheckOut.Date;
+
+            if (target <= stay.ActualCheckIn.Date)
+            {
+                return (false, "Ngày trả mới phải sau ngày khách nhận phòng.");
+            }
+            if (target == reservation.CheckOutDate.Date)
+            {
+                return (false, "Ngày trả mới trùng với ngày trả hiện tại.");
+            }
+            if (target < DateTime.Today)
+            {
+                return (false, "Ngày trả mới không được ở quá khứ.");
+            }
+
+            // Rut ngan thi khong can kiem tra dat chong, chi keo dai moi can
+            if (target > reservation.CheckOutDate.Date)
+            {
+                var busy = await context.Reservations.AsNoTracking().AnyAsync(other =>
+                    other.Id != reservation.Id
+                    && other.RoomId == reservation.RoomId
+                    && (other.Status == ReservationStatus.Pending
+                        || other.Status == ReservationStatus.Confirmed
+                        || other.Status == ReservationStatus.CheckedIn)
+                    && other.CheckInDate < target
+                    && other.CheckOutDate > reservation.CheckOutDate);
+
+                if (busy)
+                {
+                    return (false,
+                        "Phòng đã có khách khác đặt trong khoảng muốn ở thêm. "
+                        + "Chọn ngày ngắn hơn hoặc đổi khách sang phòng khác.");
+                }
+            }
+
+            var oldDate = reservation.CheckOutDate;
+            reservation.CheckOutDate = target;
+            await context.SaveChangesAsync();
+
+            var word = target > oldDate.Date ? "gia hạn" : "rút ngắn";
+            return (true, $"Đã {word} phòng {reservation.Room.RoomNumber} tới {target:dd/MM/yyyy}.");
+        }
     }
 }

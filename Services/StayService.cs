@@ -25,5 +25,11 @@ namespace Services
             var (ok, message) = await _repo.CheckOutAsync(stayId, checkedOutByUserId);
             return ok ? ServiceResult.Success(message) : ServiceResult.Failure(message);
         }
+
+        public async Task<ServiceResult> ExtendAsync(int stayId, DateTime newCheckOut)
+        {
+            var (ok, message) = await _repo.ExtendAsync(stayId, newCheckOut);
+            return ok ? ServiceResult.Success(message) : ServiceResult.Failure(message);
+        }
     }
 }
