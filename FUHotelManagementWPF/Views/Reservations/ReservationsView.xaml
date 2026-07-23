@@ -109,38 +109,35 @@
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
 
-                    <DockPanel Grid.Row="0" Margin="0,0,0,10">
-                        <Button DockPanel.Dock="Right" Content="+ Tạo đặt phòng"
+                    <!-- Tat ca cong cu gom mot hang: tim, loc, tong so, nut tao -->
+                    <Grid Grid.Row="0" Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" MaxWidth="320" />
+                            <ColumnDefinition Width="10" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBox Grid.Column="0" VerticalAlignment="Center"
+                                 hc:InfoElement.Placeholder="Tìm khách, số phòng, mã đặt…"
+                                 Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                                 ToolTip="Tìm theo tên khách, số phòng, mã đặt" />
+
+                        <ComboBox Grid.Column="2" MinWidth="170" VerticalAlignment="Center"
+                                  ItemsSource="{Binding Chips}" SelectedItem="{Binding SelectedChip}"
+                                  DisplayMemberPath="Display"
+                                  ToolTip="Lọc theo trạng thái đặt phòng" />
+
+                        <TextBlock Grid.Column="3" Text="{Binding TotalText}"
+                                   Style="{StaticResource CaptionText}" FontSize="12.5"
+                                   VerticalAlignment="Center" Margin="12,0,0,0" />
+
+                        <Button Grid.Column="5" Content="+ Tạo đặt phòng"
                                 Style="{StaticResource PrimaryButton}" Padding="16,8"
                                 Command="{Binding AddCommand}" />
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <TextBlock Text="Tìm:" Style="{StaticResource CaptionText}" FontSize="12.5"
-                                       VerticalAlignment="Center" Margin="2,0,8,0" />
-                            <TextBox Width="240" VerticalAlignment="Center"
-                                     Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
-                                     ToolTip="Tìm theo tên khách, số phòng, mã đặt" />
-                            <TextBlock Text="{Binding TotalText}" Style="{StaticResource CaptionText}"
-                                       FontSize="12.5" VerticalAlignment="Center" Margin="14,0,0,0" />
-                        </StackPanel>
-                    </DockPanel>
-
-                    <!-- Chip loc trang thai kem so dem -->
-                    <ItemsControl Grid.Row="1" ItemsSource="{Binding Chips}" Margin="0,0,0,12">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Button Style="{StaticResource ResChip}"
-                                        Command="{Binding DataContext.PickChipCommand,
-                                                  RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                        CommandParameter="{Binding}">
-                                    <TextBlock><Run Text="{Binding Label, Mode=OneWay}" /><Run Text=" " /><Run
-                                        Text="{Binding Count, Mode=OneWay}" FontWeight="SemiBold" /></TextBlock>
-                                </Button>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
+                    </Grid>
 
                     <hc:LoadingCircle Grid.Row="2" Width="34" Height="34"
                                       Foreground="{StaticResource BrandBrush}"

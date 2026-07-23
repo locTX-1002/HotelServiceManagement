@@ -25,24 +25,28 @@ namespace FUHotelManagementWPF.ViewModels.Reservations
         /// <summary>Tab "Lich phong" - cung du lieu, khac cach nhin.</summary>
         public RoomCalendarViewModel Calendar { get; }
 
-        // Chip loc trang thai thay cho dropdown: bay het ra kem so dem
+        // Loc trang thai bang dropdown: bay 7 chip ra mot hang thi 5 cai thuong la 0,
+        // chiem tron mot dong ma khong noi them duoc gi.
         public ObservableCollection<ReservationChip> Chips { get; } = [];
+
         private ReservationChip _selectedChip = null!;
-
-        public RelayCommand PickChipCommand { get; }
-
-        private void PickChip(ReservationChip chip)
+        public ReservationChip SelectedChip
         {
-            foreach (var item in Chips)
+            get => _selectedChip;
+            set
             {
-                item.IsSelected = ReferenceEquals(item, chip);
-            }
-            _selectedChip = chip;
-            RowsView.Refresh();
-            OnPropertyChanged(nameof(IsEmpty));
-            if (SelectedRow != null && !Filter(SelectedRow))
-            {
-                SelectedRow = null;
+                if (value != null && !ReferenceEquals(_selectedChip, value))
+                {
+                    _selectedChip = value;
+                    OnPropertyChanged();
+                    RowsView.Refresh();
+                    OnPropertyChanged(nameof(IsEmpty));
+                    // Dong dang chon co the bi loc mat -> bo chon cho khoi tro nham
+                    if (SelectedRow != null && !Filter(SelectedRow))
+                    {
+                        SelectedRow = null;
+                    }
+                }
             }
         }
 
@@ -99,8 +103,6 @@ namespace FUHotelManagementWPF.ViewModels.Reservations
             Chips.Add(new ReservationChip("Đã huỷ", ReservationStatus.Cancelled));
             Chips.Add(new ReservationChip("Không đến", ReservationStatus.NoShow));
             _selectedChip = Chips[0];
-            _selectedChip.IsSelected = true;
-            PickChipCommand = new RelayCommand(p => { if (p is ReservationChip c) { PickChip(c); } });
 
             // Lich phong tai lai ca hai tab de danh sach va lich khong lech nhau
             Calendar = new RoomCalendarViewModel(async () =>

@@ -48,15 +48,11 @@ namespace FUHotelManagementWPF.ViewModels.Reservations
         public int Count
         {
             get => _count;
-            set => SetProperty(ref _count, value);
+            set { if (SetProperty(ref _count, value)) { OnPropertyChanged(nameof(Display)); } }
         }
 
-        private bool _isSelected;
-        public bool IsSelected
-        {
-            get => _isSelected;
-            set => SetProperty(ref _isSelected, value);
-        }
+        /// <summary>Hien trong dropdown: "Da xac nhan (4)".</summary>
+        public string Display => $"{Label} ({Count})";
 
         public ReservationChip(string label, ReservationStatus? status)
         {

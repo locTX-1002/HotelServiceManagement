@@ -178,13 +178,38 @@
                                     <TextBlock Text="{Binding StatusText}" />
                                 </Border>
 
-                                <!-- Nút làm ngay trên dòng, không phải chọn rồi mới làm được -->
-                                <Button Grid.Column="3" Content="{Binding ActionLabel}"
-                                        Style="{StaticResource PrimaryButton}" Padding="14,7"
-                                        VerticalAlignment="Center"
-                                        Command="{Binding DataContext.ActionCommand,
-                                                  RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                        CommandParameter="{Binding}" />
+                                <!-- Nút làm ngay trên dòng, không phải chọn rồi mới làm được.
+                                     Dòng quá hạn có thêm nút phụ vì đó là lúc cần xử lý khác đi:
+                                     khách không tới thì đánh dấu Không đến, khách ở thêm thì gia hạn. -->
+                                <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Button Content="Không đến" Style="{StaticResource GhostButton}"
+                                            Padding="11,7" Margin="0,0,6,0" FontSize="12"
+                                            Foreground="{StaticResource DangerBrush}"
+                                            Visibility="{Binding ShowNoShow, Converter={StaticResource BoolToVis}}"
+                                            ToolTip="Khách không tới — giải phóng phòng để bán cho khách khác"
+                                            Command="{Binding DataContext.NoShowCommand,
+                                                      RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            CommandParameter="{Binding}" />
+                                    <Button Content="Huỷ" Style="{StaticResource GhostButton}"
+                                            Padding="11,7" Margin="0,0,6,0" FontSize="12"
+                                            Visibility="{Binding ShowCancel, Converter={StaticResource BoolToVis}}"
+                                            ToolTip="Khách báo không tới nữa — huỷ hẳn đơn"
+                                            Command="{Binding DataContext.CancelCommand,
+                                                      RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            CommandParameter="{Binding}" />
+                                    <Button Content="Gia hạn" Style="{StaticResource GhostButton}"
+                                            Padding="11,7" Margin="0,0,6,0" FontSize="12"
+                                            Visibility="{Binding ShowExtendOnRow, Converter={StaticResource BoolToVis}}"
+                                            ToolTip="Khách muốn ở thêm — đổi ngày trả"
+                                            Command="{Binding DataContext.ExtendCommand,
+                                                      RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            CommandParameter="{Binding}" />
+                                    <Button Content="{Binding ActionLabel}"
+                                            Style="{StaticResource PrimaryButton}" Padding="14,7"
+                                            Command="{Binding DataContext.ActionCommand,
+                                                      RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            CommandParameter="{Binding}" />
+                                </StackPanel>
                             </Grid>
                         </Border>
                     </DataTemplate>

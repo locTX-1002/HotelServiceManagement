@@ -137,6 +137,15 @@ namespace FUHotelManagementWPF.ViewModels.CheckInOut
         /// <summary>Chi khach dang o moi gia han va ghi phu thu duoc.</summary>
         public bool CanExtend => Kind == FlowKind.Stay;
 
+        // ---- Nut phu tren dong, chi hien voi viec qua han ----
+        // Khach qua han den thi le tan con phai danh dau khong den hoac huy don,
+        // truoc day phai roi man nay sang Dat phong tim lai don moi lam duoc.
+        public bool ShowNoShow => Kind == FlowKind.Arrival && IsOverdue;
+        public bool ShowCancel => Kind == FlowKind.Arrival && IsOverdue;
+
+        /// <summary>Khach qua han tra thi gia han la viec hay lam nhat - dua thang len dong.</summary>
+        public bool ShowExtendOnRow => Kind == FlowKind.Stay && IsOverdue;
+
         /// <summary>Thứ tự ưu tiên: quá hạn → việc hôm nay → còn lại (theo ngày gần nhất).</summary>
         public int SortRank => IsOverdue ? 0 : IsToday ? 1 : 2;
         public DateTime SortDate => Kind == FlowKind.Arrival ? Reservation.CheckInDate : Reservation.CheckOutDate;
@@ -239,8 +248,65 @@ namespace FUHotelManagementWPF.ViewModels.CheckInOut
         public RelayCommand PickFilterCommand { get; }
         public AsyncRelayCommand ExtendCommand { get; }
         public AsyncRelayCommand SurchargeCommand { get; }
+        public AsyncRelayCommand NoShowCommand { get; }
+        public AsyncRelayCommand CancelCommand { get; }
 
         private readonly ISurchargeService _surchargeService = new SurchargeService();
+        private readonly IReservationService _reservationService = new ReservationService();
+
+        /// <summary>Khach qua han den ma khong toi: giai phong phong de con ban cho nguoi khac.</summary>
+        private async Task MarkNoShowAsync(object? parameter)
+        {
+            if (parameter is not FlowItem { Kind: FlowKind.Arrival } item)
+            {
+                return;
+            }
+            var confirm = MessageBox.Show(
+                $"Đánh dấu KHÔNG ĐẾN cho {item.GuestName} (phòng {item.RoomNumber})?\n\n"
+                + "Phòng sẽ được giải phóng để bán cho khách khác.\n"
+                + "Tiền cọc nếu có sẽ không tự hoàn — xử lý thủ công ngoài hệ thống.",
+                "Xác nhận Không đến", MessageBoxButton.YesNo, MessageBoxImage.Question);
+            if (confirm != MessageBoxResult.Yes)
+            {
+                return;
+            }
+
+            var result = await _reservationService.NoShowAsync(item.Reservation.Id);
+            await ApplyResultAsync(result.Ok, result.Message);
+        }
+
+        /// <summary>Khach goi bao khong toi nua - huy han don thay vi de treo.</summary>
+        private async Task CancelReservationAsync(object? parameter)
+        {
+            if (parameter is not FlowItem { Kind: FlowKind.Arrival } item)
+            {
+                return;
+            }
+            var confirm = MessageBox.Show(
+                $"Huỷ đặt phòng {item.BookingCode} của {item.GuestName}?",
+                "Xác nhận huỷ", MessageBoxButton.YesNo, MessageBoxImage.Question);
+            if (confirm != MessageBoxResult.Yes)
+            {
+                return;
+            }
+
+            var result = await _reservationService.CancelAsync(item.Reservation.Id);
+            await ApplyResultAsync(result.Ok, result.Message);
+        }
+
+        private async Task ApplyResultAsync(bool ok, string message)
+        {
+            if (ok)
+            {
+                Notify.Success(message);
+                SelectedItem = null;
+                await LoadAsync();
+            }
+            else
+            {
+                Notify.Error(message);
+            }
+        }
 
         /// <summary>Khach o them: doi ngay tra ngay tren don dang co.</summary>
         private async Task ExtendAsync(object? parameter)
@@ -294,6 +360,8 @@ namespace FUHotelManagementWPF.ViewModels.CheckInOut
             PickFilterCommand = new RelayCommand(p => { if (p is FlowFilter f) { SelectedFilter = f; } });
             ExtendCommand = new AsyncRelayCommand(ExtendAsync);
             SurchargeCommand = new AsyncRelayCommand(OpenSurchargeAsync);
+            NoShowCommand = new AsyncRelayCommand(MarkNoShowAsync);
+            CancelCommand = new AsyncRelayCommand(CancelReservationAsync);
             _ = LoadAsync();
         }
 
