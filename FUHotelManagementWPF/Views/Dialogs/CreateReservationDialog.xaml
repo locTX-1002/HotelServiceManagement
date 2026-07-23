@@ -77,6 +77,20 @@
                                 Padding="14,8" Command="{Binding FindRoomsCommand}" />
                     </Grid>
 
+                    <!-- Chon nhanh so dem: khoi phai mo lich chon tay cho cac khoang hay dung -->
+                    <StackPanel Orientation="Horizontal" Margin="0,7,0,0">
+                        <TextBlock Text="Nhanh:" Style="{StaticResource CaptionText}" FontSize="11.5"
+                                   VerticalAlignment="Center" Margin="0,0,7,0" />
+                        <Button Content="1 đêm" Style="{StaticResource QuickChip}"
+                                Command="{Binding PickNightsCommand}" CommandParameter="1" />
+                        <Button Content="2 đêm" Style="{StaticResource QuickChip}"
+                                Command="{Binding PickNightsCommand}" CommandParameter="2" />
+                        <Button Content="3 đêm" Style="{StaticResource QuickChip}"
+                                Command="{Binding PickNightsCommand}" CommandParameter="3" />
+                        <Button Content="1 tuần" Style="{StaticResource QuickChip}"
+                                Command="{Binding PickNightsCommand}" CommandParameter="7" />
+                    </StackPanel>
+
                     <!-- 3. Phòng trống -->
                     <TextBlock Text="3 · CHỌN PHÒNG" Style="{StaticResource FieldLabel}" Margin="0,16,0,5"
                                Visibility="{Binding HasSearchedRooms, Converter={StaticResource BoolToVis}}" />
@@ -109,8 +123,13 @@
                         </StackPanel>
                         <StackPanel Grid.Column="2">
                             <TextBlock Text="TRẠNG THÁI" Style="{StaticResource FieldLabel}" />
-                            <ComboBox ItemsSource="{Binding StatusOptions}" SelectedItem="{Binding SelectedStatus}"
-                                      DisplayMemberPath="Label" />
+                            <!-- Chi co 2 lua chon nen bay ca hai ra, khoi phai mo dropdown -->
+                            <UniformGrid Columns="2">
+                                <RadioButton Content="Chờ xác nhận" Style="{StaticResource SegmentLeft}"
+                                             IsChecked="{Binding IsPendingStatus}" />
+                                <RadioButton Content="Đã xác nhận" Style="{StaticResource SegmentRight}"
+                                             IsChecked="{Binding IsConfirmedStatus}" />
+                            </UniformGrid>
                         </StackPanel>
                     </Grid>
 

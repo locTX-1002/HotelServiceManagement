@@ -369,4 +369,106 @@
         </Setter>
     </Style>
 
+    <!-- ============================================================
+         THE ANH (TILE): anh phu kin o, phu mo toi tu day len, chu trang
+         de len anh. Dung cho luoi hang phong o trang chu VA so do phong -
+         hai man phai giong het nhau nen style nam chung o day.
+         ============================================================ -->
+    <Style x:Key="TileShade" TargetType="Border">
+        <Setter Property="CornerRadius" Value="4" />
+        <Setter Property="Background">
+            <Setter.Value>
+                <LinearGradientBrush StartPoint="0,1" EndPoint="0,0">
+                    <GradientStop Color="#D9101410" Offset="0" />
+                    <GradientStop Color="#59101410" Offset="0.45" />
+                    <GradientStop Color="#00101410" Offset="1" />
+                </LinearGradientBrush>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="TileName" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="White" />
+        <Setter Property="FontSize" Value="19" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+    </Style>
+
+    <Style x:Key="TileMeta" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="#D9FFFFFF" />
+        <Setter Property="FontSize" Value="11.5" />
+        <Setter Property="Margin" Value="0,3,0,0" />
+        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+    </Style>
+
+    <!-- ============================================================
+         QUICK CHIP: nut nho dat canh o nhap de dien nhanh mot gia tri
+         hay dung (so dem, khoang gia...). Dung chung cho moi module.
+         ============================================================ -->
+    <Style x:Key="QuickChip" TargetType="Button">
+        <Setter Property="Padding" Value="10,4" />
+        <Setter Property="FontSize" Value="11.5" />
+        <Setter Property="Margin" Value="0,0,6,0" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Foreground" Value="{StaticResource InkSoftBrush}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="bd" Background="{StaticResource SurfaceAltBrush}" CornerRadius="4"
+                            BorderBrush="{StaticResource LineBrush}" BorderThickness="1"
+                            Padding="{TemplateBinding Padding}">
+                        <ContentPresenter VerticalAlignment="Center" HorizontalAlignment="Center" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="bd" Property="Background" Value="{StaticResource BrandSoftBrush}" />
+                            <Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource BrandBrush}" />
+                            <Setter Property="Foreground" Value="{StaticResource BrandDarkBrush}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ============================================================
+         SEGMENT: cap RadioButton dinh lien nhau thay cho ComboBox khi
+         chi co 2-3 lua chon - bay het ra, chon xong trong 1 cu bam.
+         ============================================================ -->
+    <Style x:Key="SegmentBase" TargetType="RadioButton">
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="Foreground" Value="{StaticResource InkBrush}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="RadioButton">
+                    <Border x:Name="bd" Background="{StaticResource CardBrush}"
+                            BorderBrush="{StaticResource LineBrush}" BorderThickness="1"
+                            CornerRadius="{TemplateBinding Tag}" Padding="10,7" MinHeight="34">
+                        <ContentPresenter x:Name="cp" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="bd" Property="Background" Value="{StaticResource SurfaceAltBrush}" />
+                        </Trigger>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="bd" Property="Background" Value="{StaticResource BrandBrush}" />
+                            <Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource BrandBrush}" />
+                            <Setter TargetName="cp" Property="TextElement.Foreground" Value="White" />
+                            <Setter TargetName="cp" Property="TextElement.FontWeight" Value="SemiBold" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="SegmentLeft" TargetType="RadioButton" BasedOn="{StaticResource SegmentBase}">
+        <Setter Property="Tag" Value="4,0,0,4" />
+    </Style>
+
+    <Style x:Key="SegmentRight" TargetType="RadioButton" BasedOn="{StaticResource SegmentBase}">
+        <Setter Property="Tag" Value="0,4,4,0" />
+    </Style>
+
 </ResourceDictionary>
