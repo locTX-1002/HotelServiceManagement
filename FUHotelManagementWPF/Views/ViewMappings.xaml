@@ -9,9 +9,11 @@
                     xmlns:viewsGuests="clr-namespace:FUHotelManagementWPF.Views.Guests"
                     xmlns:vmHome="clr-namespace:FUHotelManagementWPF.ViewModels.Home"
                     xmlns:viewsHome="clr-namespace:FUHotelManagementWPF.Views.Home"
+                    xmlns:vmInvoices="clr-namespace:FUHotelManagementWPF.ViewModels.Invoices"
                     xmlns:views="clr-namespace:FUHotelManagementWPF.Views"
                     xmlns:viewsRooms="clr-namespace:FUHotelManagementWPF.Views.Rooms"
-                    xmlns:viewsRes="clr-namespace:FUHotelManagementWPF.Views.Reservations">
+                    xmlns:viewsRes="clr-namespace:FUHotelManagementWPF.Views.Reservations"
+                    xmlns:viewsInvoices="clr-namespace:FUHotelManagementWPF.Views.Invoices">
 
     <!-- ============================================================
          DANG KY VIEW CHO VIEWMODEL (dieu huong ViewModel-first).
@@ -45,6 +47,10 @@
 
     <DataTemplate DataType="{x:Type vmGuests:GuestsViewModel}">
         <viewsGuests:GuestsView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vmInvoices:InvoicesViewModel}">
+        <viewsInvoices:InvoicesView />
     </DataTemplate>
 
 </ResourceDictionary>
