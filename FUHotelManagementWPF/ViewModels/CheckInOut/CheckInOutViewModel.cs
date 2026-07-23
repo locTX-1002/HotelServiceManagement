@@ -74,6 +74,57 @@ namespace FUHotelManagementWPF.ViewModels.CheckInOut
 
         public int Nights => Stay == null ? 0 : Math.Max(1, (DateTime.Today - Stay.ActualCheckIn.Date).Days);
 
+        // ---- Cho bang lam viec ben phai ----
+        public string TypeName => Reservation.Room?.RoomType?.TypeName ?? string.Empty;
+        public string GuestPhone => Reservation.Guest?.PhoneNumber ?? "—";
+        public string BookingCode => Reservation.BookingCode;
+        public string GuestCountText => $"{Reservation.NumberOfGuests} khách";
+        public string HeaderText => $"Phòng {RoomNumber} · {TypeName}";
+        public string? SpecialRequests => Reservation.SpecialRequests;
+        public bool HasSpecialRequests => !string.IsNullOrWhiteSpace(Reservation.SpecialRequests);
+
+        public string CheckInLabel => Kind == FlowKind.Arrival ? "NGÀY NHẬN" : "VÀO LÚC";
+        public string CheckInValue => Kind == FlowKind.Arrival
+            ? Reservation.CheckInDate.ToString("dd/MM/yyyy")
+            : Stay!.ActualCheckIn.ToString("dd/MM/yyyy HH:mm");
+
+        public string PlannedOutText => Reservation.CheckOutDate.ToString("dd/MM/yyyy");
+
+        /// <summary>
+        /// So dem tinh tien. Khach chua den thi theo don. Khach dang o thi tinh tu luc vao
+        /// den HOM NAY neu da qua ngay tra - o qua han la phai tra tien nhung dem o them,
+        /// giong cach ban web tinh theo ngay tra thuc te.
+        /// </summary>
+        public int ChargeableNights
+        {
+            get
+            {
+                if (Kind == FlowKind.Arrival)
+                {
+                    return Math.Max(1, (Reservation.CheckOutDate.Date - Reservation.CheckInDate.Date).Days);
+                }
+                var until = Reservation.CheckOutDate.Date > DateTime.Today
+                    ? Reservation.CheckOutDate.Date
+                    : DateTime.Today;
+                return Math.Max(1, (until - Stay!.ActualCheckIn.Date).Days);
+            }
+        }
+
+        /// <summary>So dem o qua so voi don - hien rieng de le tan giai thich duoc voi khach.</summary>
+        public int ExtraNights => Kind == FlowKind.Stay && IsOverdue
+            ? (DateTime.Today - Reservation.CheckOutDate.Date).Days
+            : 0;
+
+        public bool HasExtraNights => ExtraNights > 0;
+        public string ExtraNightsText => $"Trong đó {ExtraNights} đêm quá hạn so với đơn";
+
+        public decimal BasePrice => Reservation.Room?.RoomType?.BasePrice ?? 0;
+        public decimal RoomCharge => ChargeableNights * BasePrice;
+
+        public string NightsText => $"{ChargeableNights} đêm × {BasePrice:N0} đ";
+        public string RoomChargeText => $"{RoomCharge:N0} đ";
+        public string EstimateLabel => Kind == FlowKind.Arrival ? "Dự kiến cả kỳ" : "Tạm tính";
+
         /// <summary>Thứ tự ưu tiên: quá hạn → việc hôm nay → còn lại (theo ngày gần nhất).</summary>
         public int SortRank => IsOverdue ? 0 : IsToday ? 1 : 2;
         public DateTime SortDate => Kind == FlowKind.Arrival ? Reservation.CheckInDate : Reservation.CheckOutDate;
@@ -110,6 +161,16 @@ namespace FUHotelManagementWPF.ViewModels.CheckInOut
             get => _selectedFilter;
             set { if (SetProperty(ref _selectedFilter, value)) { ItemsView.Refresh(); OnPropertyChanged(nameof(IsEmpty)); } }
         }
+
+        // Bang lam viec ben phai: chon mot viec de xem du thong tin truoc khi bam
+        private FlowItem? _selectedItem;
+        public FlowItem? SelectedItem
+        {
+            get => _selectedItem;
+            set { if (SetProperty(ref _selectedItem, value)) { OnPropertyChanged(nameof(HasSelection)); } }
+        }
+
+        public bool HasSelection => _selectedItem != null;
 
         private bool _isLoading;
         public bool IsLoading
@@ -219,6 +280,8 @@ namespace FUHotelManagementWPF.ViewModels.CheckInOut
             if (result.Ok)
             {
                 Notify.Success(result.Message);
+                // Viec vua xong bien khoi danh sach, bo chon de bang ben phai khong tro vao don da chet
+                SelectedItem = null;
                 await LoadAsync();
             }
             else
