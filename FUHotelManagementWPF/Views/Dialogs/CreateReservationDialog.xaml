@@ -135,6 +135,26 @@
                         <hc:NumericUpDown Minimum="1" Maximum="20" Value="{Binding NumberOfGuests}" />
                     </StackPanel>
 
+                    <!-- Tien coc tuy chon - chi khi tao don moi (sua don khong doi coc) -->
+                    <Grid Margin="0,14,0,0" Visibility="{Binding CanEditGuest, Converter={StaticResource BoolToVis}}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="12" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="TIỀN CỌC (TUỲ CHỌN)" Style="{StaticResource FieldLabel}" />
+                            <TextBox Text="{Binding DepositText, UpdateSourceTrigger=PropertyChanged}"
+                                     ToolTip="Bỏ trống nếu không thu cọc" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="PHƯƠNG THỨC CỌC" Style="{StaticResource FieldLabel}" />
+                            <ComboBox ItemsSource="{Binding DepositMethods}"
+                                      SelectedItem="{Binding SelectedDepositMethod}"
+                                      DisplayMemberPath="Label" />
+                        </StackPanel>
+                    </Grid>
+
                     <TextBlock Text="YÊU CẦU ĐẶC BIỆT (TUỲ CHỌN)" Style="{StaticResource FieldLabel}" Margin="0,14,0,5" />
                     <TextBox Text="{Binding SpecialRequests}" Height="52" TextWrapping="Wrap"
                              AcceptsReturn="True" VerticalScrollBarVisibility="Auto" />
