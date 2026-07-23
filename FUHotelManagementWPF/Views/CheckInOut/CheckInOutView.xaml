@@ -204,6 +204,13 @@
                                             Command="{Binding DataContext.ExtendCommand,
                                                       RelativeSource={RelativeSource AncestorType=UserControl}}"
                                             CommandParameter="{Binding}" />
+                                    <!-- Sang man Hoa don (module cua Phat) de lap hoa don/thu tien truoc khi tra phong -->
+                                    <Button Content="Hoá đơn" Style="{StaticResource GhostButton}"
+                                            Padding="11,7" Margin="0,0,6,0" FontSize="12"
+                                            Visibility="{Binding IsStay, Converter={StaticResource BoolToVis}}"
+                                            ToolTip="Mở màn Hoá đơn để lập hoá đơn và thu tiền"
+                                            Command="{Binding DataContext.GoInvoiceCommand,
+                                                      RelativeSource={RelativeSource AncestorType=UserControl}}" />
                                     <Button Content="{Binding ActionLabel}"
                                             Style="{StaticResource PrimaryButton}" Padding="14,7"
                                             Command="{Binding DataContext.ActionCommand,

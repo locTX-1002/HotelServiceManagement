@@ -72,11 +72,15 @@ namespace FUHotelManagementWPF.ViewModels.Guests
 
         public RelayCommand AddCommand { get; }
         public RelayCommand EditCommand { get; }
+        public RelayCommand ActivateAccountCommand { get; }
+        public AsyncRelayCommand DeleteCommand { get; }
 
         public GuestsViewModel()
         {
             AddCommand = new RelayCommand(_ => OpenDialog(null));
             EditCommand = new RelayCommand(_ => OpenDialog(SelectedRow?.Guest));
+            ActivateAccountCommand = new RelayCommand(_ => OpenActivateDialog());
+            DeleteCommand = new AsyncRelayCommand(DeleteAsync);
             _ = LoadAsync();
         }
 
@@ -116,6 +120,52 @@ namespace FUHotelManagementWPF.ViewModels.Guests
             {
                 await LoadAsync();
             }
+        }
+
+        // Xoa khach dang chon - service tu chan neu khach da co lich su dat phong (hien nguyen Message).
+        private async System.Threading.Tasks.Task DeleteAsync(object? _)
+        {
+            if (SelectedRow == null)
+            {
+                return;
+            }
+
+            var confirmed = Views.Dialogs.ConfirmDialog.Ask(
+                $"Xoá khách \"{SelectedRow.Guest.FullName}\"?",
+                "Hồ sơ sẽ bị xoá hẳn khỏi hệ thống.",
+                "Khách đã có lịch sử đặt phòng sẽ không xoá được — hệ thống sẽ báo lại.",
+                "Xoá khách",
+                isDanger: true);
+            if (!confirmed)
+            {
+                return;
+            }
+
+            var result = await _service.DeleteAsync(SelectedRow.Guest.Id);
+            if (result.Ok)
+            {
+                Notify.Success(result.Message);
+                await LoadAsync();
+            }
+            else
+            {
+                Notify.Error(result.Message);
+            }
+        }
+
+        // Kich hoat tai khoan dat phong cho khach dang chon (dang nhap bang SDT).
+        // Da co tai khoan hay chua do service tu kiem tra va bao Message.
+        private void OpenActivateDialog()
+        {
+            if (SelectedRow == null)
+            {
+                return;
+            }
+
+            new ActivateAccountDialog(new ActivateAccountDialogViewModel(SelectedRow.Guest))
+            {
+                Owner = RoomMapViewModel.ActiveWindow(),
+            }.ShowDialog();
         }
     }
 }

@@ -168,6 +168,25 @@ namespace FUHotelManagementWPF.ViewModels.Reservations
 
         public string SpecialRequests { get; set; } = string.Empty;
 
+        // Tien coc (tuy chon, chi khi TAO don - service khong nhan coc luc sua).
+        // Nhap dang text roi parse de bao loi ro rang thay vi binding decimal im lang fail.
+        public string DepositText { get; set; } = string.Empty;
+
+        public record DepositMethodOption(PaymentMethod Method, string Label);
+
+        public List<DepositMethodOption> DepositMethods { get; } =
+        [
+            new(PaymentMethod.Cash, "Tiền mặt"),
+            new(PaymentMethod.BankTransfer, "Chuyển khoản"),
+        ];
+
+        private DepositMethodOption? _selectedDepositMethod;
+        public DepositMethodOption? SelectedDepositMethod
+        {
+            get => _selectedDepositMethod;
+            set => SetProperty(ref _selectedDepositMethod, value);
+        }
+
         private string? _errorMessage;
         public string? ErrorMessage
         {
@@ -349,9 +368,26 @@ namespace FUHotelManagementWPF.ViewModels.Reservations
                 }
                 else
                 {
-                    // Don tao tai quay khong nhan coc o buoc nay - thu coc lam o man Hoa don
+                    // Tien coc tuy chon theo phan cong: bo trong = khong coc; co nhap thi phai la so hop le
+                    decimal? deposit = null;
+                    if (!string.IsNullOrWhiteSpace(DepositText))
+                    {
+                        if (!decimal.TryParse(DepositText.Trim(), out var parsed) || parsed < 0)
+                        {
+                            ErrorMessage = "Tiền cọc phải là số không âm (bỏ trống nếu không thu cọc).";
+                            return;
+                        }
+                        if (parsed > 0 && SelectedDepositMethod == null)
+                        {
+                            ErrorMessage = "Chọn phương thức thanh toán cọc.";
+                            return;
+                        }
+                        deposit = parsed > 0 ? parsed : null;
+                    }
+
                     var created = await _reservationService.CreateAsync(guestId, SelectedRoom.Id,
-                        NumberOfGuests, CheckIn, CheckOut, SpecialRequests, null, null);
+                        NumberOfGuests, CheckIn, CheckOut, SpecialRequests,
+                        deposit, deposit != null ? SelectedDepositMethod!.Method : null);
                     result = created.Ok ? ServiceResult.Success(created.Message) : ServiceResult.Failure(created.Message);
                 }
 
