@@ -60,12 +60,15 @@ namespace FUHotelManagementWPF.ViewModels
         }
 
         /// <summary>Dinh vi tren header: Trang chu / ten module dang mo.</summary>
-        public string Breadcrumb => $"Trang chủ  /  {SelectedModule.Title}";
+        public string Breadcrumb => SelectedModule.Title == "Trang chủ"
+            ? "Trang chủ"
+            : $"Trang chủ  /  {SelectedModule.Title}";
 
         public RelayCommand LogoutCommand { get; }
 
         public MainViewModel()
         {
+            const string homeGroup = "TỔNG QUAN";
             const string opGroup = "VẬN HÀNH";
             const string peopleGroup = "ĐỐI TƯỢNG";
             const string moneyGroup = "TÀI CHÍNH";
@@ -73,6 +76,7 @@ namespace FUHotelManagementWPF.ViewModels
 
             Modules =
             [
+                new("", "Trang chủ", homeGroup, () => new Home.HomeViewModel()),
                 new("", "Sơ đồ phòng", opGroup, () => new Rooms.RoomsViewModel()),
                 new("", "Đặt phòng", opGroup, () => new Reservations.ReservationsViewModel()),
                 new("", "Check-in / Check-out", opGroup, () => new CheckInOut.CheckInOutViewModel()),

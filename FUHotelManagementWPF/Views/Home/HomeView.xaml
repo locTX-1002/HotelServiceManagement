@@ -1,0 +1,377 @@
+<UserControl x:Class="FUHotelManagementWPF.Views.Home.HomeView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:hc="https://handyorg.github.io/handycontrol">
+    <UserControl.Resources>
+        <!-- O hang phong: anh phu kin, phu mo toi tu day len de chu noi ro -->
+        <Style x:Key="TileShade" TargetType="Border">
+            <Setter Property="CornerRadius" Value="4" />
+            <Setter Property="Background">
+                <Setter.Value>
+                    <LinearGradientBrush StartPoint="0,1" EndPoint="0,0">
+                        <GradientStop Color="#D9101410" Offset="0" />
+                        <GradientStop Color="#59101410" Offset="0.45" />
+                        <GradientStop Color="#00101410" Offset="1" />
+                    </LinearGradientBrush>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="TileName" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="FontSize" Value="19" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        </Style>
+
+        <Style x:Key="TileMeta" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#D9FFFFFF" />
+            <Setter Property="FontSize" Value="11.5" />
+            <Setter Property="Margin" Value="0,3,0,0" />
+            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        </Style>
+
+        <!-- Nut dat phong tren o anh: chu trang, gach chan khi re chuot -->
+        <Style x:Key="TileBook" TargetType="Button">
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="FontSize" Value="11.5" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
+            <Setter Property="Margin" Value="0,9,0,0" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd" Background="#33FFFFFF" CornerRadius="4" Padding="12,5"
+                                BorderBrush="#59FFFFFF" BorderThickness="1">
+                            <ContentPresenter />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="#66FFFFFF" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- O so lieu tren dai van hanh duoi cung -->
+        <Style x:Key="OpsCell" TargetType="Border">
+            <Setter Property="Background" Value="{StaticResource CardBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="4" />
+            <Setter Property="Padding" Value="14,10" />
+        </Style>
+    </UserControl.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel>
+
+            <!-- ================= HERO ================= -->
+            <Grid Height="300">
+                <Border>
+                    <Border.Background>
+                        <ImageBrush ImageSource="{Binding HeroImage}" Stretch="UniformToFill" />
+                    </Border.Background>
+                </Border>
+                <!-- Phu toi nghieng sang trai de chu doc duoc tren moi anh -->
+                <Border>
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                            <GradientStop Color="#D91D231D" Offset="0" />
+                            <GradientStop Color="#8C1D231D" Offset="0.55" />
+                            <GradientStop Color="#401D231D" Offset="1" />
+                        </LinearGradientBrush>
+                    </Border.Background>
+                </Border>
+
+                <StackPanel VerticalAlignment="Center" Margin="40,0,40,26" MaxWidth="560"
+                            HorizontalAlignment="Left">
+                    <TextBlock Text="{Binding Tagline}" Foreground="#CCDCE0D3" FontSize="12"
+                               TextWrapping="Wrap" />
+                    <TextBlock Text="{Binding HotelName}" Foreground="White" FontSize="34"
+                               FontWeight="Light" Margin="0,10,0,0" TextWrapping="Wrap" />
+                    <TextBlock Text="{Binding Greeting}" Foreground="#E6FFFFFF" FontSize="15"
+                               Margin="0,10,0,0" />
+                    <TextBlock Text="{Binding TodayText}" Foreground="#A6FFFFFF" FontSize="12"
+                               Margin="0,3,0,0" />
+
+                    <StackPanel Orientation="Horizontal" Margin="0,18,0,0">
+                        <Button Style="{StaticResource GalleryArrow}" Content="&#xE76B;"
+                                Command="{Binding PrevHeroCommand}" />
+                        <Button Style="{StaticResource GalleryArrow}" Content="&#xE76C;" Margin="9,0,0,0"
+                                Command="{Binding NextHeroCommand}" />
+                        <TextBlock Text="{Binding HeroCounter}" Foreground="#A6FFFFFF" FontSize="11"
+                                   VerticalAlignment="Center" Margin="12,0,0,0" />
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+
+            <!-- ======= THANH TRA CUU PHONG TRONG (noi len day hero) ======= -->
+            <Border Style="{StaticResource Card}" Margin="40,-30,40,0" Padding="16,13"
+                    Effect="{StaticResource SoftShadowLarge}">
+                <StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" Margin="0,0,14,0">
+                            <TextBlock Text="NHẬN PHÒNG" Style="{StaticResource FieldLabel}" />
+                            <DatePicker SelectedDate="{Binding CheckIn}" Margin="0,3,0,0" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Margin="0,0,14,0">
+                            <TextBlock Text="TRẢ PHÒNG" Style="{StaticResource FieldLabel}" />
+                            <DatePicker SelectedDate="{Binding CheckOut}" Margin="0,3,0,0" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="2" Width="96" Margin="0,0,14,0">
+                            <TextBlock Text="SỐ KHÁCH" Style="{StaticResource FieldLabel}" />
+                            <hc:NumericUpDown Value="{Binding Guests}" Minimum="1" Maximum="10"
+                                              Margin="0,3,0,0" />
+                        </StackPanel>
+                        <Button Grid.Column="3" Content="TÌM PHÒNG TRỐNG" VerticalAlignment="Bottom"
+                                Style="{StaticResource PrimaryButton}" Padding="20,9"
+                                Command="{Binding SearchCommand}" />
+                    </Grid>
+
+                    <!-- Ket qua tra cuu: bam Dat ngay la mo dialog voi ngay da dien san -->
+                    <Border Background="{StaticResource BrandSoftBrush}" CornerRadius="4"
+                            Padding="12,9" Margin="0,11,0,0"
+                            Visibility="{Binding HasSearchResult, Converter={StaticResource BoolToVis}}">
+                        <DockPanel>
+                            <Button DockPanel.Dock="Right" Content="Đặt ngay"
+                                    Style="{StaticResource PrimaryButton}" Padding="14,6"
+                                    Command="{Binding BookCommand}" />
+                            <TextBlock Text="{Binding SearchResult}" FontSize="12.5"
+                                       VerticalAlignment="Center" TextWrapping="Wrap" Margin="0,0,12,0" />
+                        </DockPanel>
+                    </Border>
+                </StackPanel>
+            </Border>
+
+            <!-- ================= VE CHUNG TOI ================= -->
+            <Grid Margin="40,32,40,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <Border Grid.Column="0" Width="260" Height="180" CornerRadius="4"
+                        Effect="{StaticResource SoftShadow}">
+                    <Border.Background>
+                        <ImageBrush ImageSource="{Binding AboutImage}" Stretch="UniformToFill" />
+                    </Border.Background>
+                </Border>
+
+                <StackPanel Grid.Column="1" Margin="26,0,0,0" VerticalAlignment="Center">
+                    <TextBlock Text="VỀ CHÚNG TÔI" Foreground="{StaticResource BrandBrush}"
+                               FontSize="10.5" FontWeight="SemiBold" />
+                    <TextBlock Text="Nơi mỗi kỳ nghỉ là một câu chuyện"
+                               Style="{StaticResource SectionTitleText}" FontSize="21" Margin="0,7,0,0" />
+                    <TextBlock Text="{Binding AboutText}" Style="{StaticResource CaptionText}"
+                               FontSize="12.5" TextWrapping="Wrap" Margin="0,9,0,0" />
+
+                    <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
+                        <StackPanel Margin="0,0,34,0">
+                            <TextBlock Text="{Binding RoomCount}" FontSize="22"
+                                       Foreground="{StaticResource BrandBrush}" FontWeight="SemiBold" />
+                            <TextBlock Text="phòng nghỉ" Style="{StaticResource CaptionText}" FontSize="11.5" />
+                        </StackPanel>
+                        <StackPanel Margin="0,0,34,0">
+                            <TextBlock Text="{Binding RoomTypeCount}" FontSize="22"
+                                       Foreground="{StaticResource BrandBrush}" FontWeight="SemiBold" />
+                            <TextBlock Text="hạng phòng" Style="{StaticResource CaptionText}" FontSize="11.5" />
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock Text="{Binding EstablishedYear}" FontSize="22"
+                                       Foreground="{StaticResource BrandBrush}" FontWeight="SemiBold" />
+                            <TextBlock Text="năm thành lập" Style="{StaticResource CaptionText}" FontSize="11.5" />
+                        </StackPanel>
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+
+            <!-- ================= HANG PHONG (luoi mosaic) ================= -->
+            <DockPanel Margin="40,34,40,12">
+                <TextBlock DockPanel.Dock="Right" Text="{Binding PriceFromText}"
+                           Style="{StaticResource CaptionText}" FontSize="12"
+                           VerticalAlignment="Bottom" />
+                <StackPanel>
+                    <TextBlock Text="PHÒNG NGHỈ" Foreground="{StaticResource BrandBrush}"
+                               FontSize="10.5" FontWeight="SemiBold" />
+                    <TextBlock Text="Chọn không gian của bạn"
+                               Style="{StaticResource SectionTitleText}" FontSize="21" Margin="0,6,0,0" />
+                </StackPanel>
+            </DockPanel>
+
+            <Grid Margin="40,0,40,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="1.4*" />
+                    <ColumnDefinition Width="12" />
+                    <ColumnDefinition Width="1*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="12" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <!-- O lon: hang cao cap nhat -->
+                <Border Grid.Row="0" Grid.Column="0" Height="292" CornerRadius="4"
+                        Visibility="{Binding HasFeatured, Converter={StaticResource BoolToVis}}"
+                        DataContext="{Binding FeaturedTile}">
+                    <Grid>
+                        <Border CornerRadius="4">
+                            <Border.Background>
+                                <ImageBrush ImageSource="{Binding Image}" Stretch="UniformToFill" />
+                            </Border.Background>
+                        </Border>
+                        <Border Style="{StaticResource TileShade}" />
+                        <StackPanel VerticalAlignment="Bottom" Margin="18,0,18,16">
+                            <TextBlock Text="{Binding Name}" Style="{StaticResource TileName}" FontSize="23" />
+                            <TextBlock Text="{Binding MetaText}" Style="{StaticResource TileMeta}" />
+                            <TextBlock Text="{Binding Description}" Foreground="#B3FFFFFF" FontSize="11.5"
+                                       TextWrapping="Wrap" MaxHeight="34" Margin="0,6,0,0"
+                                       Visibility="{Binding HasDescription, Converter={StaticResource BoolToVis}}" />
+                            <Button Content="Đặt phòng  →" Style="{StaticResource TileBook}"
+                                    Command="{Binding DataContext.BookCommand,
+                                              RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                    CommandParameter="{Binding RoomType}" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!-- Hai o doc ben phai -->
+                <Grid Grid.Row="0" Grid.Column="2">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="12" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <Border Grid.Row="0" Height="140" CornerRadius="4"
+                            Visibility="{Binding HasSecond, Converter={StaticResource BoolToVis}}"
+                            DataContext="{Binding SecondTile}">
+                        <Grid>
+                            <Border CornerRadius="4">
+                                <Border.Background>
+                                    <ImageBrush ImageSource="{Binding Image}" Stretch="UniformToFill" />
+                                </Border.Background>
+                            </Border>
+                            <Border Style="{StaticResource TileShade}" />
+                            <StackPanel VerticalAlignment="Bottom" Margin="14,0,14,12">
+                                <TextBlock Text="{Binding Name}" Style="{StaticResource TileName}" FontSize="16" />
+                                <TextBlock Text="{Binding MetaText}" Style="{StaticResource TileMeta}" FontSize="11" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <Border Grid.Row="2" Height="140" CornerRadius="4"
+                            Visibility="{Binding HasThird, Converter={StaticResource BoolToVis}}"
+                            DataContext="{Binding ThirdTile}">
+                        <Grid>
+                            <Border CornerRadius="4">
+                                <Border.Background>
+                                    <ImageBrush ImageSource="{Binding Image}" Stretch="UniformToFill" />
+                                </Border.Background>
+                            </Border>
+                            <Border Style="{StaticResource TileShade}" />
+                            <StackPanel VerticalAlignment="Bottom" Margin="14,0,14,12">
+                                <TextBlock Text="{Binding Name}" Style="{StaticResource TileName}" FontSize="16" />
+                                <TextBlock Text="{Binding MetaText}" Style="{StaticResource TileMeta}" FontSize="11" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </Grid>
+
+                <!-- O trai ngang duoi cung -->
+                <Border Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3" Height="132" CornerRadius="4"
+                        Visibility="{Binding HasWide, Converter={StaticResource BoolToVis}}"
+                        DataContext="{Binding WideTile}">
+                    <Grid>
+                        <Border CornerRadius="4">
+                            <Border.Background>
+                                <ImageBrush ImageSource="{Binding Image}" Stretch="UniformToFill" />
+                            </Border.Background>
+                        </Border>
+                        <Border Style="{StaticResource TileShade}" />
+                        <StackPanel VerticalAlignment="Bottom" Margin="18,0,18,13">
+                            <TextBlock Text="{Binding Name}" Style="{StaticResource TileName}" FontSize="18" />
+                            <TextBlock Text="{Binding MetaText}" Style="{StaticResource TileMeta}" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <Button Content="Xem tất cả hạng phòng" Style="{StaticResource GhostButton}"
+                    Padding="16,7" HorizontalAlignment="Left" Margin="40,14,0,0"
+                    Command="{Binding OpenRoomTypesCommand}" />
+
+            <!-- ================= DAI SO LIEU VAN HANH ================= -->
+            <Border Background="{StaticResource SurfaceAltBrush}" Margin="0,32,0,0" Padding="40,16">
+                <StackPanel>
+                    <DockPanel Margin="0,0,0,10">
+                        <Button DockPanel.Dock="Right" Content="Tải lại" Style="{StaticResource GhostButton}"
+                                Padding="12,5" FontSize="11.5" Command="{Binding RefreshCommand}" />
+                        <TextBlock Text="TÌNH HÌNH HÔM NAY" Foreground="{StaticResource InkSoftBrush}"
+                                   FontSize="10.5" FontWeight="SemiBold" VerticalAlignment="Center" />
+                    </DockPanel>
+
+                    <UniformGrid Columns="4">
+                        <Border Style="{StaticResource OpsCell}" Margin="0,0,10,0">
+                            <StackPanel>
+                                <TextBlock Text="Phòng trống" Style="{StaticResource CaptionText}" FontSize="11.5" />
+                                <TextBlock Text="{Binding AvailableRooms}" FontSize="23" FontWeight="SemiBold"
+                                           Foreground="{StaticResource SuccessBrush}" />
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{StaticResource OpsCell}" Margin="0,0,10,0">
+                            <StackPanel>
+                                <TextBlock Text="Đang lưu trú" Style="{StaticResource CaptionText}" FontSize="11.5" />
+                                <TextBlock Text="{Binding StayingRooms}" FontSize="23" FontWeight="SemiBold" />
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{StaticResource OpsCell}" Margin="0,0,10,0">
+                            <StackPanel>
+                                <TextBlock Text="Đến hôm nay" Style="{StaticResource CaptionText}" FontSize="11.5" />
+                                <TextBlock Text="{Binding ArrivalsToday}" FontSize="23" FontWeight="SemiBold"
+                                           Foreground="{StaticResource WarningBrush}" />
+                            </StackPanel>
+                        </Border>
+                        <!-- Con viec qua han thi o nay vien do va bam duoc de nhay sang xu ly -->
+                        <Border Style="{StaticResource OpsCell}">
+                            <DockPanel>
+                                <Button DockPanel.Dock="Right" Content="Xử lý" VerticalAlignment="Center"
+                                        Style="{StaticResource GhostButton}" Padding="11,5" FontSize="11.5"
+                                        Foreground="{StaticResource DangerBrush}"
+                                        Visibility="{Binding HasOverdue, Converter={StaticResource BoolToVis}}"
+                                        Command="{Binding OpenCheckInOutCommand}" />
+                                <StackPanel>
+                                    <TextBlock Text="Việc quá hạn" Style="{StaticResource CaptionText}" FontSize="11.5" />
+                                    <TextBlock Text="{Binding OverdueTasks}" FontSize="23" FontWeight="SemiBold">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Foreground" Value="{StaticResource InkSoftBrush}" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding HasOverdue}" Value="True">
+                                                        <Setter Property="Foreground" Value="{StaticResource DangerBrush}" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </StackPanel>
+                            </DockPanel>
+                        </Border>
+                    </UniformGrid>
+                </StackPanel>
+            </Border>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
