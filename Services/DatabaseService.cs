@@ -26,6 +26,10 @@ namespace Services
             var passwordError = PasswordPolicy.Validate(password);
             if (passwordError != null) throw new InvalidOperationException(passwordError);
             await new UserRepository().EnsureBootstrapAdminAsync(fullName, email, BCrypt.Net.BCrypt.HashPassword(password));
+
+            // Database moi tinh thi do san du lieu mau, khoi ai phai chay script tay.
+            // Da co khach hang roi thi ham nay khong lam gi ca.
+            await new DatabaseRepository().SeedDemoDataAsync();
         }
     }
 }

@@ -87,26 +87,32 @@ Ba tài khoản `manager@`, `receptionist@`, `service@` **bị khoá tự độn
 khởi động**, đăng nhập không được. Đó là cố ý — muốn thử phân quyền thì tạo tài
 khoản thật ở màn Người dùng khi màn đó làm xong.
 
-## 5. Thêm dữ liệu mẫu để xem giao diện
+## 5. Dữ liệu mẫu — tự có sẵn
 
-Database mới chỉ có phòng trống, màn nào cũng trắng nên khó hình dung. Chạy
-script này để có 9 khách, 11 đặt phòng đủ mọi trạng thái, 2 khách đang ở, 1
-khách quá hạn:
+Lần chạy đầu trên máy trắng, app tự tạo luôn dữ liệu mẫu để bạn thấy giao diện có
+nội dung thật: 8 khách (có VIP và khách cảnh báo), 11 đặt phòng đủ 6 trạng thái,
+2 khách đang ở trong đó 1 quá hạn trả, 1 khách quá hạn đến, và phòng đủ các
+trạng thái Trống / Đã đặt / Đang ở / Đang dọn.
+
+**Cả nhóm sẽ thấy y hệt nhau** vì dữ liệu sinh từ code trong repo, không phải từ
+file ai đó gửi. Mốc ngày tính theo hôm nay nên hôm nào mở cũng có "khách đến hôm
+nay" và "khách quá hạn" đúng nghĩa — khác với file backup, dữ liệu trong đó đứng
+im rồi cũ dần.
+
+App chỉ đổ dữ liệu khi **bảng khách hàng đang trống**. Đã có dữ liệu rồi thì nó
+không đụng vào, nên không sợ mất bài của mình.
+
+Muốn quay lại đúng trạng thái ban đầu như mọi người, xoá database rồi mở lại app:
+
+```bash
+sqlcmd -S .\SQLEXPRESS -E -Q "DROP DATABASE FUHotelManagementDB"
+```
+
+Còn `docs/seed-demo.sql` giữ lại cho ai muốn đổ thêm dữ liệu vào database đang
+có sẵn. Chạy nó thì **bắt buộc kèm `-f 65001`**, thiếu là tên tiếng Việt hỏng:
 
 ```bash
 sqlcmd -S .\SQLEXPRESS -d FUHotelManagementDB -E -I -f 65001 -i docs\seed-demo.sql
-```
-
-**Cờ `-f 65001` bắt buộc.** Thiếu nó thì sqlcmd đọc file UTF-8 như bảng mã cũ,
-tên tiếng Việt hỏng hết thành `Nguyá»…n Minh Anh`.
-
-Chạy lại nhiều lần vẫn an toàn — script tự kiểm tra, có rồi thì không chèn nữa.
-Mốc thời gian tính theo ngày hiện tại nên chạy hôm nào cũng ra đúng tình huống.
-
-Muốn xoá dữ liệu mẫu để nạp lại:
-
-```bash
-sqlcmd -S .\SQLEXPRESS -d FUHotelManagementDB -E -I -i docs\seed-demo-clean.sql
 ```
 
 ## 6. Gặp lỗi thì xem ở đây
