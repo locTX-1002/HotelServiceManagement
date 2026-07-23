@@ -3,7 +3,8 @@
 > Dành cho thành viên nhóm 2 SE1919. Làm theo đúng thứ tự là chạy được, tổng
 > cộng khoảng 5 phút.
 >
-> **Không ai phải xin file database.** App tự tạo database lúc chạy lần đầu.
+> **Không ai phải xin file database.** App tự tạo database lúc chạy lần đầu,
+> và tài khoản đăng nhập đã để sẵn trong repo.
 
 ## 1. Cần có sẵn
 
@@ -28,11 +29,19 @@ git checkout develop
 Mở file `FUHotelManagement.slnx` bằng Visual Studio. Lưu ý đuôi là **`.slnx`**
 chứ không phải `.sln`.
 
-## 3. Tạo file cấu hình riêng của máy mình
+## 3. Cấu hình — đa số không phải làm gì
 
-Đây là bước **bắt buộc**, bỏ qua là app không khởi động được.
+Tài khoản demo đã để sẵn trong `appsettings.json`, clone về là chạy được ngay:
 
-Tạo file mới: `FUHotelManagementWPF/appsettings.Local.json`
+```
+admin@hotel.com  /  FuHotel@2026
+```
+
+Chỉ cần tạo `FUHotelManagementWPF/appsettings.Local.json` khi rơi vào một trong
+hai trường hợp dưới. File này đã gitignore nên không lên git, và nội dung trong
+đó **ghi đè** file chung.
+
+**Muốn mật khẩu riêng:**
 
 ```json
 {
@@ -44,18 +53,11 @@ Tạo file mới: `FUHotelManagementWPF/appsettings.Local.json`
 }
 ```
 
-File này đã được gitignore nên **không lên git**, mỗi người một bản, mật khẩu ai
-nấy giữ. Đây cũng chính là mật khẩu để đăng nhập vào app.
+Mật khẩu phải đủ 4 điều kiện, thiếu một cái là app báo lỗi ngay lúc mở: từ 8 ký
+tự, có chữ hoa, chữ thường, chữ số và ký tự đặc biệt.
 
-**Mật khẩu phải đủ 4 điều kiện**, thiếu một cái là app báo lỗi ngay lúc mở:
-
-- từ 8 ký tự trở lên
-- có chữ hoa
-- có chữ thường
-- có chữ số và ký tự đặc biệt
-
-Máy nào không dùng instance `SQLEXPRESS` thì thêm luôn vào file này, **đừng sửa
-`appsettings.json` chung**:
+**Máy không dùng instance `SQLEXPRESS`** — thêm chuỗi kết nối vào chính file
+local đó, **đừng sửa `appsettings.json` chung**:
 
 ```json
 {
@@ -78,10 +80,8 @@ Lần chạy đầu app sẽ hiện màn hình "Đang chuẩn bị cơ sở dữ
 lúc đó nó đang tự tạo database `FUHotelManagementDB`, chạy migration và seed
 phòng, loại phòng, bảng giá phụ thu. **Không phải chạy lệnh gì thêm.**
 
-Đăng nhập bằng:
-
-- Email: `admin@hotel.com`
-- Mật khẩu: chính là cái vừa đặt trong `appsettings.Local.json`
+Đăng nhập bằng `admin@hotel.com` / `FuHotel@2026` (hoặc mật khẩu riêng nếu
+bạn đã tạo file local ở bước 3).
 
 Ba tài khoản `manager@`, `receptionist@`, `service@` **bị khoá tự động mỗi lần
 khởi động**, đăng nhập không được. Đó là cố ý — muốn thử phân quyền thì tạo tài
@@ -113,8 +113,9 @@ sqlcmd -S .\SQLEXPRESS -d FUHotelManagementDB -E -I -i docs\seed-demo-clean.sql
 
 ### "Thiếu cấu hình BootstrapAdmin"
 
-Chưa tạo `appsettings.Local.json`, hoặc mật khẩu trong đó chưa đủ mạnh. Quay lại
-bước 3.
+Chỉ xảy ra khi bạn có tạo `appsettings.Local.json` nhưng mật khẩu trong đó chưa
+đủ mạnh, hoặc thiếu Email/FullName. Xoá file đó đi là app quay về dùng tài khoản
+demo trong `appsettings.json`.
 
 ### "Không kết nối được SQL Server"
 

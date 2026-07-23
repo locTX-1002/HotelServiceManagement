@@ -92,10 +92,20 @@
 
                 <!-- Khong bay mat khau ra man dang nhap nua: mat khau admin gio lay tu
                      appsettings.Local.json rieng tung may nen ghi cung o day la sai. -->
-                <TextBlock HorizontalAlignment="Center" Margin="0,16,0,0"
-                           Style="{StaticResource CaptionText}" FontSize="11.5"
-                           TextWrapping="Wrap" TextAlignment="Center" MaxWidth="280"
-                           Text="Tài khoản admin lấy theo appsettings.Local.json trên máy bạn" />
+                <!-- Tai khoan demo cua do an, de san cho ca nhom vao nhanh.
+                     Ai muon mat khau rieng thi de trong appsettings.Local.json, no se ghi de. -->
+                <Border Background="{StaticResource SurfaceAltBrush}" CornerRadius="4"
+                        Padding="11,8" Margin="0,16,0,0">
+                    <StackPanel>
+                        <TextBlock Text="Tài khoản demo" Style="{StaticResource FieldLabel}"
+                                   HorizontalAlignment="Center" />
+                        <TextBlock HorizontalAlignment="Center" Margin="0,4,0,0" FontSize="12.5">
+                            <Run Text="admin@hotel.com" FontWeight="SemiBold" /><Run
+                            Text="  ·  " Foreground="{StaticResource InkSoftBrush}" /><Run
+                            Text="FuHotel@2026" FontWeight="SemiBold" />
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
             </StackPanel>
         </Border>
     </Grid>
