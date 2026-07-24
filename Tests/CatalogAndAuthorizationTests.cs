@@ -92,7 +92,7 @@ public class CatalogAndAuthorizationTests
 
     // ================== 1. PHONG / LOAI PHONG ==================
 
-    [Fact]
+    [DbFact]
     public async Task LoaiPhongVaPhong_VongDoiDayDu_ThanhCong()
     {
         var rac = new DonDep();
@@ -145,7 +145,7 @@ public class CatalogAndAuthorizationTests
         }
     }
 
-    [Fact]
+    [DbFact]
     public async Task TaoPhong_TrungSoPhong_BiChan()
     {
         var rac = new DonDep();
@@ -184,7 +184,7 @@ public class CatalogAndAuthorizationTests
         }
     }
 
-    [Fact]
+    [DbFact]
     public async Task TaoLoaiPhong_TrungTen_BiChan()
     {
         var rac = new DonDep();
@@ -216,7 +216,7 @@ public class CatalogAndAuthorizationTests
         }
     }
 
-    [Fact]
+    [DbFact]
     public async Task PhanQuyen_Receptionist_KhongDuocQuanLyPhongVaLoaiPhong()
     {
         var rac = new DonDep();
@@ -258,7 +258,7 @@ public class CatalogAndAuthorizationTests
 
     // ================== 2. DANH MUC DICH VU ==================
 
-    [Fact]
+    [DbFact]
     public async Task DanhMucDichVu_TaoCategoryVaItem_SuaGia_BatTat_ThanhCong()
     {
         var rac = new DonDep();
@@ -311,7 +311,7 @@ public class CatalogAndAuthorizationTests
         }
     }
 
-    [Fact]
+    [DbFact]
     public async Task DanhMucDichVu_DuLieuKhongHopLe_BiChan()
     {
         var rac = new DonDep();
@@ -345,7 +345,7 @@ public class CatalogAndAuthorizationTests
         }
     }
 
-    [Fact]
+    [DbFact]
     public async Task PhanQuyen_ReceptionistVaServiceStaff_KhongDuocQuanLyDanhMucDichVu()
     {
         try
@@ -368,7 +368,7 @@ public class CatalogAndAuthorizationTests
 
     // ================== 3. DANH MUC PHU THU ==================
 
-    [Fact]
+    [DbFact]
     public async Task PhuThu_TaoVaSua_ThanhCong()
     {
         var rac = new DonDep();
@@ -401,7 +401,7 @@ public class CatalogAndAuthorizationTests
         }
     }
 
-    [Fact]
+    [DbFact]
     public async Task PhuThu_GiaKhongDuongHoacTenRong_BiChan()
     {
         var rac = new DonDep();
@@ -435,7 +435,7 @@ public class CatalogAndAuthorizationTests
         }
     }
 
-    [Fact]
+    [DbFact]
     public async Task PhanQuyen_ReceptionistVaServiceStaff_KhongDuocQuanLyDanhMucPhuThu()
     {
         try
@@ -458,7 +458,7 @@ public class CatalogAndAuthorizationTests
 
     // ================== 4. KHUYEN MAI ==================
 
-    [Fact]
+    [DbFact]
     public async Task KhuyenMai_TaoMaPhanTramVaMaTienCoDinh_ThanhCong()
     {
         var rac = new DonDep();
@@ -496,7 +496,7 @@ public class CatalogAndAuthorizationTests
         }
     }
 
-    [Fact]
+    [DbFact]
     public async Task KhuyenMai_GiaTriKhongHopLe_BiChan()
     {
         var rac = new DonDep();
@@ -545,7 +545,7 @@ public class CatalogAndAuthorizationTests
         }
     }
 
-    [Fact]
+    [DbFact]
     public async Task KhuyenMai_NgayKetThucTruocNgayBatDau_BiChan()
     {
         try
@@ -565,7 +565,7 @@ public class CatalogAndAuthorizationTests
         }
     }
 
-    [Fact]
+    [DbFact]
     public async Task PhanQuyen_ServiceStaffVaReceptionist_KhongDuocSuaKhuyenMai()
     {
         try
@@ -593,7 +593,7 @@ public class CatalogAndAuthorizationTests
 
     // ================== 5. NGUOI DUNG ==================
 
-    [Fact]
+    [DbFact]
     public async Task NguoiDung_TaoTaiKhoanMoi_VaKhoaMoLai_ThanhCong()
     {
         var rac = new DonDep();
@@ -638,7 +638,7 @@ public class CatalogAndAuthorizationTests
         }
     }
 
-    [Fact]
+    [DbFact]
     public async Task NguoiDung_MatKhauYeuHoacEmailTrung_BiChan()
     {
         var rac = new DonDep();
@@ -685,7 +685,7 @@ public class CatalogAndAuthorizationTests
         }
     }
 
-    [Fact]
+    [DbFact]
     public async Task NguoiDung_TuKhoaChinhMinh_BiChan()
     {
         try
@@ -707,7 +707,7 @@ public class CatalogAndAuthorizationTests
         }
     }
 
-    [Fact]
+    [DbFact]
     public async Task PhanQuyen_KhongPhaiAdmin_KhongDuocQuanLyNguoiDung()
     {
         try
@@ -744,7 +744,7 @@ public class CatalogAndAuthorizationTests
         }
     }
 
-    [Fact]
+    [DbFact]
     public async Task PhanQuyen_ChuaDangNhap_MoiThaoTacDanhMucDeuBiChan()
     {
         try

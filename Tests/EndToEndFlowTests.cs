@@ -38,7 +38,7 @@ public class EndToEndFlowTests
 
     // ---------------------------------------------------------------- 1. Luong day du
 
-    [Fact]
+    [DbFact]
     public async Task LuongDayDu_TuDatPhongDenCheckOut_ThanhCong()
     {
         await using var sandbox = await Sandbox.CreateAsync();
@@ -138,7 +138,7 @@ public class EndToEndFlowTests
 
     // ------------------------------------------------- 2. Chan check-in khi thieu giay to
 
-    [Fact]
+    [DbFact]
     public async Task CheckIn_KhiKhachChuaCoCccd_BiChan()
     {
         await using var sandbox = await Sandbox.CreateAsync();
@@ -177,7 +177,7 @@ public class EndToEndFlowTests
 
     // ------------------------------------------- 3. Chan check-out khi hoa don chua Paid
 
-    [Fact]
+    [DbFact]
     public async Task CheckOut_KhiHoaDonChuaThanhToanDu_BiChan()
     {
         await using var sandbox = await Sandbox.CreateAsync();
@@ -215,7 +215,7 @@ public class EndToEndFlowTests
 
     // -------------------------------------- 4. Chan check-out khi con don dich vu chua chot
 
-    [Fact]
+    [DbFact]
     public async Task CheckOut_KhiConDonDichVuChuaChot_BiChan()
     {
         await using var sandbox = await Sandbox.CreateAsync();
@@ -257,7 +257,7 @@ public class EndToEndFlowTests
 
     // ---------------------------------------------------------- 5. Chan dat phong trung lich
 
-    [Fact]
+    [DbFact]
     public async Task DatPhong_TrungLichCungPhong_BiChan()
     {
         await using var sandbox = await Sandbox.CreateAsync();
@@ -290,7 +290,7 @@ public class EndToEndFlowTests
 
     // ------------------------------------------------------------------- 6. Huy dat phong
 
-    [Fact]
+    [DbFact]
     public async Task HuyDatPhong_TuTrangThaiChoVaDaXacNhan_ThanhCong()
     {
         await using var sandbox = await Sandbox.CreateAsync();
@@ -328,7 +328,7 @@ public class EndToEndFlowTests
 
     // ------------------------------------------------------- 7. Phan quyen tren luong chinh
 
-    [Fact]
+    [DbFact]
     public async Task CheckIn_ChiLeTanTroLenDuocPhep_ServiceStaffBiChan()
     {
         await using var sandbox = await Sandbox.CreateAsync();

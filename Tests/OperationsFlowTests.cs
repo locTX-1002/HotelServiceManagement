@@ -175,7 +175,7 @@ public class OperationsFlowTests
 
     // ================= 1. DON DICH VU: TIEN VA TRANG THAI =================
 
-    [Fact]
+    [DbFact]
     public async Task TaoDonDichVu_ServiceTinhDungTongTien_TheoGiaTrongDb()
     {
         await using var fixture = await StayFixture.CreateAsync();
@@ -205,7 +205,7 @@ public class OperationsFlowTests
         Assert.Equal(expected, order.OrderDetails.Sum(d => d.Subtotal));
     }
 
-    [Fact]
+    [DbFact]
     public async Task DonDichVu_PendingToProcessingToCompleted_Ok_VaCompletedLaTrangThaiCuoi()
     {
         await using var fixture = await StayFixture.CreateAsync();
@@ -239,7 +239,7 @@ public class OperationsFlowTests
         Assert.Equal(ServiceOrderStatus.Completed, Assert.Single(saved).Status);
     }
 
-    [Fact]
+    [DbFact]
     public async Task DonDichVu_HuyTuPendingVaTuProcessing_DeuOk()
     {
         await using var fixture = await StayFixture.CreateAsync();
@@ -266,7 +266,7 @@ public class OperationsFlowTests
         Assert.Equal(ServiceOrderStatus.Cancelled, cancelProcessing.Data!.Status);
     }
 
-    [Fact]
+    [DbFact]
     public async Task TaoDonDichVu_DuLieuKhongHopLe_DeuBiChan()
     {
         await using var active = await StayFixture.CreateAsync();
@@ -301,7 +301,7 @@ public class OperationsFlowTests
 
     // ================= 2. PHAN QUYEN DON DICH VU =================
 
-    [Fact]
+    [DbFact]
     public async Task PhanQuyenTaoDon_LeTanTaoDuoc_NhanVienDichVuVaKhachVangLaiBiChan()
     {
         await using var fixture = await StayFixture.CreateAsync();
@@ -326,7 +326,7 @@ public class OperationsFlowTests
         Assert.True(byReceptionist.Ok, byReceptionist.Message);
     }
 
-    [Fact]
+    [DbFact]
     public async Task PhanQuyenXuLyDon_NhanVienDichVuManagerAdminDuoc_LeTanBiChan()
     {
         await using var fixture = await StayFixture.CreateAsync();
@@ -362,7 +362,7 @@ public class OperationsFlowTests
 
     // ================= 3. YEU CAU BUONG PHONG =================
 
-    [Fact]
+    [DbFact]
     public async Task TaoYeuCauBuongPhong_StayDangHoatDongThiOk_StayDaDongVaGhiChuQuaDaiBiChan()
     {
         await using var active = await StayFixture.CreateAsync();
@@ -395,7 +395,7 @@ public class OperationsFlowTests
         Assert.Empty(all.Where(x => x.StayId == closed.StayId));
     }
 
-    [Fact]
+    [DbFact]
     public async Task YeuCauBuongPhong_PendingToAcknowledgedToCompleted_Ok_VaCompletedLaTrangThaiCuoi()
     {
         await using var fixture = await StayFixture.CreateAsync();
@@ -426,7 +426,7 @@ public class OperationsFlowTests
         Assert.False(string.IsNullOrWhiteSpace(backToPending.Message));
     }
 
-    [Fact]
+    [DbFact]
     public async Task YeuCauBuongPhong_HuyTuPendingVaTuAcknowledged_DeuOk()
     {
         await using var fixture = await StayFixture.CreateAsync();
@@ -451,7 +451,7 @@ public class OperationsFlowTests
         Assert.Equal(HousekeepingRequestStatus.Cancelled, cancelAcknowledged.Data!.Status);
     }
 
-    [Fact]
+    [DbFact]
     public async Task YeuCauBuongPhong_LocTheoTrangThai_DemDungSoLuong()
     {
         await using var fixture = await StayFixture.CreateAsync();
@@ -487,7 +487,7 @@ public class OperationsFlowTests
         Assert.Single(mine.Where(x => x.Status == HousekeepingRequestStatus.Cancelled));
     }
 
-    [Fact]
+    [DbFact]
     public async Task PhanQuyenBuongPhong_LeTanKhongXuLyDuoc_NhanVienDichVuXuLyDuoc()
     {
         await using var fixture = await StayFixture.CreateAsync();
@@ -517,7 +517,7 @@ public class OperationsFlowTests
     private static DateTime RandomReportDay()
         => new DateTime(2010, 1, 1).AddDays(Random.Shared.Next(0, 2000));
 
-    [Fact]
+    [DbFact]
     public async Task BaoCaoDoanhThu_TongKhopChiTietTheoNgay_VaSapXepGiamDan()
     {
         await using var first = await StayFixture.CreateAsync();
@@ -562,7 +562,7 @@ public class OperationsFlowTests
         Assert.True(data.ByDay[0].Date > data.ByDay[1].Date, "Danh sach theo ngay phai sap xep giam dan.");
     }
 
-    [Fact]
+    [DbFact]
     public async Task BaoCaoDoanhThu_NgayKetThucTruocNgayBatDau_BiChan()
     {
         using var session = new SessionGuard();
@@ -576,7 +576,7 @@ public class OperationsFlowTests
         Assert.Null(report.Data);
     }
 
-    [Fact]
+    [DbFact]
     public async Task BaoCaoCongSuat_TongPhongKhopSoPhongDangHoatDongTrongDb()
     {
         using var session = new SessionGuard();
@@ -600,7 +600,7 @@ public class OperationsFlowTests
         Assert.Equal(expectedRate, data.OccupancyRate);
     }
 
-    [Fact]
+    [DbFact]
     public async Task XuatCsvDoanhThu_CoTieuDeVaDuDongDuLieuHopLe()
     {
         await using var fixture = await StayFixture.CreateAsync();
@@ -632,7 +632,7 @@ public class OperationsFlowTests
 
     // ================= 5. PHAN QUYEN BAO CAO =================
 
-    [Fact]
+    [DbFact]
     public async Task PhanQuyenBaoCao_ChiAdminVaManagerXemDuoc()
     {
         using var session = new SessionGuard();

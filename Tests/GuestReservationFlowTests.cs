@@ -51,7 +51,7 @@ public class GuestReservationFlowTests : IAsyncLifetime
 
     // ----------------------------------------------------------------- KHACH HANG
 
-    [Fact]
+    [DbFact]
     public async Task TaoKhach_RoiTimKiemTheoTenVaSdt_RaDungKhachVuaTao()
     {
         await DangNhapAsync(EmailLeTan);
@@ -75,7 +75,7 @@ public class GuestReservationFlowTests : IAsyncLifetime
         Assert.Equal(ten, chinhXac!.FullName);
     }
 
-    [Fact]
+    [DbFact]
     public async Task SuaHoSoKhach_DoiTenEmailCccd_LuuXuongDbVaDocLaiDung()
     {
         await DangNhapAsync(EmailLeTan);
@@ -102,7 +102,7 @@ public class GuestReservationFlowTests : IAsyncLifetime
         Assert.NotEmpty(loi.Message);
     }
 
-    [Fact]
+    [DbFact]
     public async Task XoaKhach_ChuaCoBooking_XoaDuocVaBienMatKhoiDb()
     {
         await DangNhapAsync(EmailLeTan);
@@ -114,7 +114,7 @@ public class GuestReservationFlowTests : IAsyncLifetime
         Assert.Null(await _guests.FindExactAsync(khach.PhoneNumber));
     }
 
-    [Fact]
+    [DbFact]
     public async Task XoaKhach_DaCoBooking_BiChanKemLyDo()
     {
         await DangNhapAsync(EmailLeTan);
@@ -134,7 +134,7 @@ public class GuestReservationFlowTests : IAsyncLifetime
         Assert.NotNull(await _guests.FindExactAsync(khach.PhoneNumber));
     }
 
-    [Fact]
+    [DbFact]
     public async Task TaoKhach_TrungSoGiayTo_BiChan_ConTrungSdtThiVanChoPhep()
     {
         await DangNhapAsync(EmailLeTan);
@@ -153,7 +153,7 @@ public class GuestReservationFlowTests : IAsyncLifetime
         GhiNhoDeDonDep(trungSdt.Data!.Id);
     }
 
-    [Fact]
+    [DbFact]
     public async Task DoiTagKhach_VipRoiBlacklisted_LuuKemGhiChuVaDocLaiDung()
     {
         await DangNhapAsync(EmailLeTan);
@@ -184,7 +184,7 @@ public class GuestReservationFlowTests : IAsyncLifetime
 
     // ------------------------------------------------------- TAI KHOAN KHACH HANG
 
-    [Fact]
+    [DbFact]
     public async Task KichHoatTaiKhoanKhach_DangNhapDungMatKhauOk_SaiMatKhauBiChan()
     {
         await DangNhapAsync(EmailLeTan);
@@ -204,7 +204,7 @@ public class GuestReservationFlowTests : IAsyncLifetime
         Assert.NotEmpty(saiMatKhau.Message);
     }
 
-    [Fact]
+    [DbFact]
     public async Task KichHoatTaiKhoanKhach_LanThuHaiChoCungKhach_BiChan()
     {
         await DangNhapAsync(EmailLeTan);
@@ -218,7 +218,7 @@ public class GuestReservationFlowTests : IAsyncLifetime
         Assert.Contains("tai khoan", lanHai.Message);
     }
 
-    [Fact]
+    [DbFact]
     public async Task KichHoatTaiKhoanKhach_MatKhauYeu_BiChanVaKhongTaoTaiKhoan()
     {
         await DangNhapAsync(EmailLeTan);
@@ -235,7 +235,7 @@ public class GuestReservationFlowTests : IAsyncLifetime
 
     // ------------------------------------------------------------------ DAT PHONG
 
-    [Fact]
+    [DbFact]
     public async Task DatPhong_CoTienCoc_LuuDungSoTien_ThieuPhuongThucThiBiChan()
     {
         await DangNhapAsync(EmailLeTan);
@@ -265,7 +265,7 @@ public class GuestReservationFlowTests : IAsyncLifetime
         Assert.Contains("phuong thuc", thieuPhuongThuc.Message);
     }
 
-    [Fact]
+    [DbFact]
     public async Task DatPhong_TrungLichCungMotPhong_BiChan()
     {
         await DangNhapAsync(EmailLeTan);
@@ -291,7 +291,7 @@ public class GuestReservationFlowTests : IAsyncLifetime
         Assert.True(don3.Ok, don3.Message);
     }
 
-    [Fact]
+    [DbFact]
     public async Task SuaDatPhong_DoiNgayVaSoKhach_LuuDung()
     {
         await DangNhapAsync(EmailLeTan);
@@ -322,7 +322,7 @@ public class GuestReservationFlowTests : IAsyncLifetime
         Assert.NotEmpty(ngaySai.Message);
     }
 
-    [Fact]
+    [DbFact]
     public async Task SuaDatPhong_DonDaCheckedIn_BiChan()
     {
         await DangNhapAsync(EmailLeTan);
@@ -352,7 +352,7 @@ public class GuestReservationFlowTests : IAsyncLifetime
 
     // ----------------------------------------------------------------- PHAN QUYEN
 
-    [Fact]
+    [DbFact]
     public async Task PhanQuyen_NhanVienDichVu_KhongTaoDuocKhachVaDatPhong_LeTanThiDuoc()
     {
         // Le tan tao truoc mot khach de co du lieu doi chieu.
