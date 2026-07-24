@@ -15,6 +15,7 @@ public sealed class InvoicesViewModel : ViewModelBase
     private readonly IPaymentService _paymentService = new PaymentService();
     private readonly ISurchargeService _surchargeService = new SurchargeService();
     private readonly IPromotionService _promotionService = new PromotionService();
+    private int _selectedStayLoadVersion;
 
     public ObservableCollection<Stay> ActiveStays { get; } = [];
     public ObservableCollection<Surcharge> Surcharges { get; } = [];
@@ -35,7 +36,7 @@ public sealed class InvoicesViewModel : ViewModelBase
         {
             if (SetProperty(ref _selectedStay, value))
             {
-                _ = LoadSelectedStayAsync();
+                _ = LoadSelectedStayAsync(++_selectedStayLoadVersion);
                 OnPropertyChanged(nameof(HasSelectedStay));
             }
         }
@@ -99,15 +100,20 @@ public sealed class InvoicesViewModel : ViewModelBase
         }
     }
 
-    public bool CanRecordPayment => Invoice != null
+    private bool CanManageBilling => AppSession.RoleName is "Admin" or "Manager" or "Receptionist";
+    public bool CanRecordPayment => CanManageBilling
+                                    && Invoice != null
                                     && Invoice.Status != InvoiceStatus.Cancelled
                                     && RemainingAmount > 0;
-    public bool CanEditSurcharges => SelectedStay != null && PaidAmount <= 0;
+    public bool CanEditSurcharges => CanManageBilling
+                                     && SelectedStay != null
+                                     && PaidAmount <= 0;
     public bool CanCancelInvoice => Invoice != null
                                     && Invoice.Status != InvoiceStatus.Cancelled
                                     && PaidAmount <= 0
                                     && AppSession.RoleName is "Admin" or "Manager";
     public bool CanVoidPayment => AppSession.RoleName is "Admin" or "Manager";
+    public bool CanPrepareInvoice => CanManageBilling && SelectedStay != null && PaidAmount <= 0;
 
     public string InvoiceStatusText => Invoice?.Status switch
     {
@@ -135,10 +141,10 @@ public sealed class InvoicesViewModel : ViewModelBase
     public AsyncRelayCommand RefreshCommand { get; }
     public AsyncRelayCommand PrepareInvoiceCommand { get; }
     public AsyncRelayCommand CancelInvoiceCommand { get; }
-    public RelayCommand AddSurchargeCommand { get; }
-    public RelayCommand EditSurchargeCommand { get; }
+    public AsyncRelayCommand AddSurchargeCommand { get; }
+    public AsyncRelayCommand EditSurchargeCommand { get; }
     public AsyncRelayCommand DeleteSurchargeCommand { get; }
-    public RelayCommand RecordPaymentCommand { get; }
+    public AsyncRelayCommand RecordPaymentCommand { get; }
     public AsyncRelayCommand VoidPaymentCommand { get; }
 
     public InvoicesViewModel()
@@ -146,10 +152,10 @@ public sealed class InvoicesViewModel : ViewModelBase
         RefreshCommand = new AsyncRelayCommand(_ => LoadAsync());
         PrepareInvoiceCommand = new AsyncRelayCommand(PrepareInvoiceAsync);
         CancelInvoiceCommand = new AsyncRelayCommand(CancelInvoiceAsync);
-        AddSurchargeCommand = new RelayCommand(_ => OpenSurchargeDialog(null));
-        EditSurchargeCommand = new RelayCommand(x => OpenSurchargeDialog(x as Surcharge));
+        AddSurchargeCommand = new AsyncRelayCommand(_ => OpenSurchargeDialogAsync(null));
+        EditSurchargeCommand = new AsyncRelayCommand(x => OpenSurchargeDialogAsync(x as Surcharge));
         DeleteSurchargeCommand = new AsyncRelayCommand(DeleteSurchargeAsync);
-        RecordPaymentCommand = new RelayCommand(_ => OpenPaymentDialog());
+        RecordPaymentCommand = new AsyncRelayCommand(_ => OpenPaymentDialogAsync());
         VoidPaymentCommand = new AsyncRelayCommand(VoidPaymentAsync);
         _ = LoadAsync();
     }
@@ -164,15 +170,17 @@ public sealed class InvoicesViewModel : ViewModelBase
             var staysTask = _stayService.GetActiveAsync();
             var promotionsTask = _promotionService.GetAllAsync();
             await Task.WhenAll(staysTask, promotionsTask);
+            var stays = await staysTask;
+            var promotions = await promotionsTask;
 
             ActiveStays.Clear();
-            foreach (var stay in staysTask.Result)
+            foreach (var stay in stays)
             {
                 ActiveStays.Add(stay);
             }
 
             var today = DateTime.Today;
-            Promotions = promotionsTask.Result
+            Promotions = promotions
                 .Where(x => x.IsActive && today >= x.StartDate.Date && today <= x.EndDate.Date)
                 .OrderBy(x => x.Code)
                 .ToList();
@@ -194,11 +202,13 @@ public sealed class InvoicesViewModel : ViewModelBase
         }
     }
 
-    private async Task LoadSelectedStayAsync()
+    private async Task LoadSelectedStayAsync(int? requestedVersion = null)
     {
+        var loadVersion = requestedVersion ?? ++_selectedStayLoadVersion;
+        var selectedStay = SelectedStay;
         ErrorMessage = null;
         ClearSelectedData();
-        if (SelectedStay == null)
+        if (selectedStay == null)
         {
             return;
         }
@@ -206,16 +216,23 @@ public sealed class InvoicesViewModel : ViewModelBase
         IsLoading = true;
         try
         {
-            var surchargeTask = _surchargeService.GetByStayAsync(SelectedStay.Id);
-            var invoiceTask = _invoiceService.GetByStayAsync(SelectedStay.Id);
+            var surchargeTask = _surchargeService.GetByStayAsync(selectedStay.Id);
+            var invoiceTask = _invoiceService.GetByStayAsync(selectedStay.Id);
             await Task.WhenAll(surchargeTask, invoiceTask);
+            var surcharges = await surchargeTask;
+            var invoice = await invoiceTask;
 
-            foreach (var surcharge in surchargeTask.Result)
+            if (loadVersion != _selectedStayLoadVersion || SelectedStay?.Id != selectedStay.Id)
+            {
+                return;
+            }
+
+            foreach (var surcharge in surcharges)
             {
                 Surcharges.Add(surcharge);
             }
 
-            Invoice = invoiceTask.Result;
+            Invoice = invoice;
             SelectedPromotion = Invoice?.PromotionCode == null
                 ? null
                 : Promotions.FirstOrDefault(x => x.Code == Invoice.PromotionCode);
@@ -223,17 +240,23 @@ public sealed class InvoicesViewModel : ViewModelBase
 
             if (Invoice != null)
             {
-                await LoadPaymentSummaryAsync();
+                await LoadPaymentSummaryAsync(loadVersion, Invoice);
             }
             RaiseInvoiceState();
         }
         catch (Exception)
         {
-            ErrorMessage = "Không tải được chi tiết stay và hoá đơn.";
+            if (loadVersion == _selectedStayLoadVersion)
+            {
+                ErrorMessage = "Không tải được chi tiết stay và hoá đơn.";
+            }
         }
         finally
         {
-            IsLoading = false;
+            if (loadVersion == _selectedStayLoadVersion)
+            {
+                IsLoading = false;
+            }
         }
     }
 
@@ -286,18 +309,25 @@ public sealed class InvoicesViewModel : ViewModelBase
             return;
         }
 
-        var result = await _invoiceService.CancelAsync(Invoice.Id);
-        if (!result.Ok)
+        try
         {
-            Notify.Error(result.Message);
-            return;
-        }
+            var result = await _invoiceService.CancelAsync(Invoice.Id);
+            if (!result.Ok)
+            {
+                Notify.Error(result.Message);
+                return;
+            }
 
-        Notify.Success(result.Message);
-        await LoadSelectedStayAsync();
+            Notify.Success(result.Message);
+            await LoadSelectedStayAsync();
+        }
+        catch (Exception)
+        {
+            Notify.Error("Không huỷ được hoá đơn. Vui lòng kiểm tra kết nối rồi thử lại.");
+        }
     }
 
-    private async void OpenSurchargeDialog(Surcharge? existing)
+    private async Task OpenSurchargeDialogAsync(Surcharge? existing)
     {
         if (SelectedStay == null)
         {
@@ -330,18 +360,25 @@ public sealed class InvoicesViewModel : ViewModelBase
             return;
         }
 
-        var result = await _surchargeService.DeleteAsync(surcharge.Id);
-        if (!result.Ok)
+        try
         {
-            Notify.Error(result.Message);
-            return;
-        }
+            var result = await _surchargeService.DeleteAsync(surcharge.Id);
+            if (!result.Ok)
+            {
+                Notify.Error(result.Message);
+                return;
+            }
 
-        Notify.Success(result.Message);
-        await LoadSelectedStayAsync();
+            Notify.Success(result.Message);
+            await LoadSelectedStayAsync();
+        }
+        catch (Exception)
+        {
+            Notify.Error("Không xoá được phụ thu. Vui lòng kiểm tra kết nối rồi thử lại.");
+        }
     }
 
-    private async void OpenPaymentDialog()
+    private async Task OpenPaymentDialogAsync()
     {
         if (!CanRecordPayment || Invoice == null)
         {
@@ -373,34 +410,56 @@ public sealed class InvoicesViewModel : ViewModelBase
             return;
         }
 
-        var result = await _paymentService.VoidAsync(payment.Id);
-        if (!result.Ok)
+        if (payment.Status != PaymentStatus.Completed)
         {
-            Notify.Error(result.Message);
+            Notify.Warning("Chỉ có thể huỷ giao dịch đã hoàn tất.");
             return;
         }
 
-        Notify.Success(result.Message);
-        await LoadSelectedStayAsync();
+        try
+        {
+            var result = await _paymentService.VoidAsync(payment.Id);
+            if (!result.Ok)
+            {
+                Notify.Error(result.Message);
+                return;
+            }
+
+            Notify.Success(result.Message);
+            await LoadSelectedStayAsync();
+        }
+        catch (Exception)
+        {
+            Notify.Error("Không huỷ được giao dịch. Vui lòng kiểm tra kết nối rồi thử lại.");
+        }
     }
 
-    private async Task LoadPaymentSummaryAsync()
+    private async Task LoadPaymentSummaryAsync(int? selectedStayLoadVersion = null, Invoice? expectedInvoice = null)
     {
-        Payments.Clear();
-        PaidAmount = 0;
-        RemainingAmount = Invoice?.TotalAmount ?? 0;
-        if (Invoice == null)
+        var invoice = expectedInvoice ?? Invoice;
+        if (invoice == null)
+        {
+            Payments.Clear();
+            PaidAmount = 0;
+            RemainingAmount = 0;
+            return;
+        }
+
+        var result = await _paymentService.GetSummaryAsync(invoice.Id);
+        if (selectedStayLoadVersion.HasValue
+            && (selectedStayLoadVersion.Value != _selectedStayLoadVersion
+                || SelectedStay?.Id != invoice.StayId))
         {
             return;
         }
 
-        var result = await _paymentService.GetSummaryAsync(Invoice.Id);
         if (!result.Ok || result.Data == null)
         {
             ErrorMessage = result.Message;
             return;
         }
 
+        Payments.Clear();
         Invoice = result.Data.Invoice;
         PaidAmount = result.Data.PaidAmount;
         RemainingAmount = result.Data.RemainingAmount;
@@ -430,6 +489,7 @@ public sealed class InvoicesViewModel : ViewModelBase
         OnPropertyChanged(nameof(CanEditSurcharges));
         OnPropertyChanged(nameof(CanCancelInvoice));
         OnPropertyChanged(nameof(CanVoidPayment));
+        OnPropertyChanged(nameof(CanPrepareInvoice));
     }
 
     private static Window? ActiveWindow()
