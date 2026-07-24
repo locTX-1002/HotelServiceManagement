@@ -165,7 +165,7 @@ namespace FUHotelManagementWPF.ViewModels.Home
             };
             if (dialog.ShowDialog() == true)
             {
-                Notify.Success("Đã tạo đặt phòng.");
+                // Dialog da bao thanh cong roi - bao them o day thi hien 2 toast chong nhau.
                 await LoadAsync();
             }
         }

@@ -1,4 +1,6 @@
 using System;
+using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading.Tasks;
 using BusinessObjects.Entities;
 using FUHotelManagementWPF.MvvmCore;
@@ -6,6 +8,17 @@ using Services;
 
 namespace FUHotelManagementWPF.ViewModels.CheckInOut
 {
+    /// <summary>Mot khoan trong bang tam tinh tien phong luc gia han.</summary>
+    public class ChargeLine
+    {
+        public string Label { get; init; } = string.Empty;
+        public string RangeText { get; init; } = string.Empty;
+        public int Nights { get; init; }
+        public string NightsText { get; init; } = string.Empty;
+        public string AmountText { get; init; } = string.Empty;
+        public bool IsOverdue { get; init; }
+    }
+
     /// <summary>
     /// Gia han luu tru: khach dang o muon o them thi doi ngay tra ngay tren don,
     /// khong phai check-out roi tao don moi (lam hong lich su va sai doanh thu).
@@ -28,22 +41,70 @@ namespace FUHotelManagementWPF.ViewModels.CheckInOut
             {
                 if (SetProperty(ref _newCheckOut, value))
                 {
-                    OnPropertyChanged(nameof(PreviewText));
+                    RebuildCharges();
                     OnPropertyChanged(nameof(DiffText));
                     OnPropertyChanged(nameof(IsShortening));
                 }
             }
         }
 
-        /// <summary>Tong tien phong neu tra vao ngay dang chon - de le tan bao gia ngay cho khach.</summary>
-        public string PreviewText
+        /// <summary>
+        /// Tam tinh tien phong, tach ra tung khoan de le tan doc duoc dang thu tien cho
+        /// nhung dem nao. Khach o qua han thi dem qua han VAN tinh tien - va phai nhin
+        /// thay dong do, khong nhet chung vao mot con so tong roi de nguoi doc tu doan.
+        /// </summary>
+        public ObservableCollection<ChargeLine> ChargeLines { get; } = [];
+
+        private int TotalNights => ChargeLines.Sum(line => line.Nights);
+        public string TotalNightsText => $"{TotalNights} đêm";
+        public string TotalAmountText => $"{TotalNights * _basePrice:N0} đ";
+
+        /// <summary>
+        /// Chia khoang [ngay vao that -> ngay tra moi] thanh 3 doan noi duoi nhau,
+        /// khong chong lan nen cong lai dung bang tong so dem:
+        ///   1. Da o theo don : ngay vao   -> han tra tren don
+        ///   2. Qua han       : han tra    -> hom nay
+        ///   3. O them        : hom nay    -> ngay tra moi
+        /// Doan nao bi ngay tra moi cat cho am thi bo han, nho vay le tan chon ngay
+        /// som hon cung khong ra so dem am.
+        /// </summary>
+        private void RebuildCharges()
         {
-            get
-            {
-                var nights = Math.Max(1, (NewCheckOut.Date - _stay.ActualCheckIn.Date).Days);
-                return $"{nights} đêm × {_basePrice:N0} đ = {nights * _basePrice:N0} đ";
-            }
+            ChargeLines.Clear();
+
+            var arrived = _stay.ActualCheckIn.Date;
+            var planned = _stay.Reservation.CheckOutDate.Date;
+            var today = DateTime.Today;
+            var target = NewCheckOut.Date;
+
+            AddCharge("Đã ở theo đơn", arrived, Earlier(planned, target), false);
+            AddCharge("Quá hạn", planned, Earlier(today, target), true);
+            AddCharge("Ở thêm", Later(planned, today), target, false);
+
+            OnPropertyChanged(nameof(TotalNightsText));
+            OnPropertyChanged(nameof(TotalAmountText));
         }
+
+        private void AddCharge(string label, DateTime from, DateTime to, bool isOverdue)
+        {
+            var nights = (to - from).Days;
+            if (nights <= 0)
+            {
+                return;
+            }
+            ChargeLines.Add(new ChargeLine
+            {
+                Label = label,
+                RangeText = $"{from:dd/MM} → {to:dd/MM}",
+                Nights = nights,
+                NightsText = $"{nights} đêm",
+                AmountText = $"{nights * _basePrice:N0} đ",
+                IsOverdue = isOverdue,
+            });
+        }
+
+        private static DateTime Earlier(DateTime a, DateTime b) => a < b ? a : b;
+        private static DateTime Later(DateTime a, DateTime b) => a > b ? a : b;
 
         public string DiffText
         {
@@ -87,6 +148,7 @@ namespace FUHotelManagementWPF.ViewModels.CheckInOut
 
             // Mac dinh de nghi them 1 dem so voi ngay tra hien tai
             _newCheckOut = stay.Reservation.CheckOutDate.Date.AddDays(1);
+            RebuildCharges();
 
             PickNightsCommand = new RelayCommand(p =>
             {

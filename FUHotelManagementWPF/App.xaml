@@ -23,6 +23,11 @@
                 <Setter Property="FontSize" Value="13" />
                 <Setter Property="Background" Value="{StaticResource SurfaceBrush}" />
                 <Setter Property="Foreground" Value="{StaticResource InkBrush}" />
+                <!-- Keo cac canh ve dung diem anh, khong thi vien va duong ke bi mo nua pixel -->
+                <Setter Property="UseLayoutRounding" Value="True" />
+                <!-- Anh phong to nho lai bang thuat toan tot nhat: anh phong 1600px thu
+                     xuong o 58px ma dung che do mac dinh se ram va rang cua -->
+                <Setter Property="RenderOptions.BitmapScalingMode" Value="HighQuality" />
             </Style>
         </ResourceDictionary>
     </Application.Resources>

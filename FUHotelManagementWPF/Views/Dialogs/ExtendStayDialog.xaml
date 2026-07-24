@@ -2,7 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Gia hạn lưu trú"
-        Width="430" SizeToContent="Height"
+        Width="480" SizeToContent="Height"
         WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
         ShowInTaskbar="False"
         Style="{StaticResource BaseWindow}">
@@ -39,15 +39,75 @@
                             Command="{Binding PickNightsCommand}" CommandParameter="7" />
                 </StackPanel>
 
+                <!-- Tam tinh tach theo tung khoan. Gop het vao mot con so tong thi le tan
+                     khong biet dang thu tien cho nhung dem nao - nhat la khi khach qua han,
+                     vi dem qua han van tinh tien nhung truoc day khong hien ra dau ca. -->
                 <Border Background="{StaticResource SurfaceAltBrush}" CornerRadius="4"
-                        Padding="12,10" Margin="0,14,0,0">
+                        Padding="12,10" Margin="0,14,0,0" Grid.IsSharedSizeScope="True">
                     <StackPanel>
                         <TextBlock Text="{Binding DiffText}" FontSize="12.5" FontWeight="SemiBold" />
-                        <TextBlock Text="{Binding PreviewText}" Style="{StaticResource CaptionText}"
-                                   FontSize="12" Margin="0,4,0,0" />
+
+                        <ItemsControl ItemsSource="{Binding ChargeLines}" Margin="0,9,0,0">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="0,0,0,4">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="10" />
+                                            <ColumnDefinition Width="Auto" SharedSizeGroup="Range" />
+                                            <ColumnDefinition Width="12" />
+                                            <ColumnDefinition Width="Auto" SharedSizeGroup="Nights" />
+                                            <ColumnDefinition Width="14" />
+                                            <ColumnDefinition Width="Auto" SharedSizeGroup="Amount" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="{Binding Label}" FontSize="12">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsOverdue}" Value="True">
+                                                            <Setter Property="Foreground" Value="{StaticResource WarningBrush}" />
+                                                            <Setter Property="FontWeight" Value="SemiBold" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                        <TextBlock Grid.Column="2" Text="{Binding RangeText}" FontSize="11.5"
+                                                   Foreground="{StaticResource InkSoftBrush}"
+                                                   VerticalAlignment="Center" />
+                                        <TextBlock Grid.Column="4" Text="{Binding NightsText}" FontSize="12"
+                                                   HorizontalAlignment="Right" />
+                                        <TextBlock Grid.Column="6" Text="{Binding AmountText}" FontSize="12"
+                                                   HorizontalAlignment="Right" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <Border Height="1" Background="{StaticResource LineBrush}" Margin="0,5,0,7" />
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="10" />
+                                <ColumnDefinition Width="Auto" SharedSizeGroup="Range" />
+                                <ColumnDefinition Width="12" />
+                                <ColumnDefinition Width="Auto" SharedSizeGroup="Nights" />
+                                <ColumnDefinition Width="14" />
+                                <ColumnDefinition Width="Auto" SharedSizeGroup="Amount" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="Tổng tiền phòng" FontSize="12.5" FontWeight="SemiBold" />
+                            <TextBlock Grid.Column="4" Text="{Binding TotalNightsText}" FontSize="12.5"
+                                       FontWeight="SemiBold" HorizontalAlignment="Right" />
+                            <TextBlock Grid.Column="6" Text="{Binding TotalAmountText}" FontSize="12.5"
+                                       FontWeight="SemiBold" HorizontalAlignment="Right" />
+                        </Grid>
+
+                        <TextBlock Text="Chưa gồm dịch vụ và phụ thu — số cuối cùng chốt ở màn Hoá đơn."
+                                   Style="{StaticResource CaptionText}" FontSize="11" TextWrapping="Wrap"
+                                   Margin="0,8,0,0" />
                         <TextBlock Text="Rút ngắn ngày trả không hoàn tiền tự động — xử lý ở màn Hoá đơn."
                                    Style="{StaticResource CaptionText}" FontSize="11" TextWrapping="Wrap"
-                                   Margin="0,6,0,0"
+                                   Margin="0,4,0,0"
                                    Visibility="{Binding IsShortening, Converter={StaticResource BoolToVis}}" />
                     </StackPanel>
                 </Border>
