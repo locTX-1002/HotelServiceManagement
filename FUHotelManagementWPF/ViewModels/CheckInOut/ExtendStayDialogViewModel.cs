@@ -33,6 +33,12 @@ namespace FUHotelManagementWPF.ViewModels.CheckInOut
         public string GuestText { get; }
         public string CurrentText { get; }
 
+        /// <summary>
+        /// Ngay som nhat con chon duoc. Service cung chan ngay qua khu, nhung chan
+        /// ngay tren lich thi le tan khoi bam Luu roi moi an bao loi.
+        /// </summary>
+        public DateTime MinCheckOut { get; }
+
         private DateTime _newCheckOut;
         public DateTime NewCheckOut
         {
@@ -110,13 +116,30 @@ namespace FUHotelManagementWPF.ViewModels.CheckInOut
         {
             get
             {
-                var diff = (NewCheckOut.Date - _stay.Reservation.CheckOutDate.Date).Days;
-                return diff switch
+                // Cung phai do tu HOM NAY khi khach da qua han, khong thi dong nay bao
+                // "o them 3 dem" trong khi le tan vua bam "+1 dem" - lai venh so nhu cu.
+                var planned = _stay.Reservation.CheckOutDate.Date;
+                var today = DateTime.Today;
+                var overdue = (today - planned).Days;
+                var diff = (NewCheckOut.Date - Later(planned, today)).Days;
+
+                if (diff < 0)
                 {
-                    > 0 => $"Ở thêm {diff} đêm so với đơn hiện tại",
-                    < 0 => $"Rút ngắn {-diff} đêm so với đơn hiện tại",
-                    _ => "Trùng với ngày trả hiện tại — chọn ngày khác",
-                };
+                    return overdue > 0
+                        ? "Ngày trả mới đã trôi qua — chọn từ hôm nay trở đi"
+                        : $"Rút ngắn {-diff} đêm so với đơn hiện tại";
+                }
+                if (diff == 0)
+                {
+                    // Qua han ma chon dung hom nay la ca hop le: khach tra phong hom nay,
+                    // tinh du tien may dem qua han.
+                    return overdue > 0
+                        ? $"Trả hôm nay, tính đủ {overdue} đêm quá hạn"
+                        : "Trùng với ngày trả hiện tại — chọn ngày khác";
+                }
+                return overdue > 0
+                    ? $"Quá hạn {overdue} đêm · ở thêm {diff} đêm kể từ hôm nay"
+                    : $"Ở thêm {diff} đêm so với đơn hiện tại";
             }
         }
 
@@ -146,15 +169,21 @@ namespace FUHotelManagementWPF.ViewModels.CheckInOut
             GuestText = stay.Reservation.Guest?.FullName ?? string.Empty;
             CurrentText = $"Vào {stay.ActualCheckIn:dd/MM/yyyy} · đơn hẹn trả {stay.Reservation.CheckOutDate:dd/MM/yyyy}";
 
-            // Mac dinh de nghi them 1 dem so voi ngay tra hien tai
-            _newCheckOut = stay.Reservation.CheckOutDate.Date.AddDays(1);
+            // Moc de cong them dem. Khach da qua han thi may dem tu han cu toi gio
+            // KHACH DA O ROI, cong tiep tu han cu se ra mot ngay trong qua khu:
+            // "+1 dem" cua khach qua han 2 ngay lai roi vao hom qua. Nen khi qua han
+            // thi moc phai la hom nay.
+            var baseline = Later(stay.Reservation.CheckOutDate.Date, DateTime.Today);
+            MinCheckOut = Later(stay.ActualCheckIn.Date.AddDays(1), DateTime.Today);
+
+            _newCheckOut = baseline.AddDays(1);
             RebuildCharges();
 
             PickNightsCommand = new RelayCommand(p =>
             {
                 if (p is string text && int.TryParse(text, out var days))
                 {
-                    NewCheckOut = stay.Reservation.CheckOutDate.Date.AddDays(days);
+                    NewCheckOut = baseline.AddDays(days);
                 }
             });
 
