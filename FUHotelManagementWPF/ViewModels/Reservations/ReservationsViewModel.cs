@@ -228,10 +228,12 @@ namespace FUHotelManagementWPF.ViewModels.Reservations
             {
                 return Task.CompletedTask;
             }
+            // Khach khong den thi mat coc - noi thang so tien de le tan tra loi khach duoc ngay.
+            var deposit = SelectedRow.Reservation.DepositAmount;
             var ok = ConfirmDialog.Ask(
                 $"Ghi nhận {SelectedRow.GuestName} không đến?",
                 $"Phòng {SelectedRow.RoomNumber} sẽ được trả về trạng thái trống để bán cho khách khác.",
-                "Tiền cọc nếu có sẽ không tự hoàn lại — phần đó xử lý ngoài hệ thống.",
+                deposit > 0 ? $"Khách mất cọc {deposit:N0} đ — không hoàn lại." : null,
                 "Ghi không đến", isDanger: true);
             return ok
                 ? RunAction(r => _service.NoShowAsync(r.Reservation.Id))

@@ -269,10 +269,12 @@ namespace FUHotelManagementWPF.ViewModels.CheckInOut
             {
                 return;
             }
+            // Khach khong den thi mat coc - noi thang so tien de le tan tra loi khach duoc ngay.
+            var deposit = item.Reservation.DepositAmount;
             var ok = ConfirmDialog.Ask(
                 $"Ghi nhận {item.GuestName} không đến?",
                 $"Phòng {item.RoomNumber} sẽ được trả về trạng thái trống để bán cho khách khác.",
-                "Tiền cọc nếu có sẽ không tự hoàn lại — phần đó xử lý ngoài hệ thống.",
+                deposit > 0 ? $"Khách mất cọc {deposit:N0} đ — không hoàn lại." : null,
                 "Ghi không đến", isDanger: true);
             if (!ok)
             {
