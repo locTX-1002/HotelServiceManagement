@@ -17,11 +17,11 @@
                 <ComboBox.ItemTemplate>
                     <DataTemplate>
                         <TextBlock>
-                            <Run Text="{Binding Name}" FontWeight="SemiBold" />
+                            <Run Text="{Binding Name, Mode=OneWay}" FontWeight="SemiBold" />
                             <Run Text=" · " />
-                            <Run Text="{Binding UnitPrice, StringFormat={}{0:N0}}" />
+                            <Run Text="{Binding UnitPrice, Mode=OneWay, StringFormat={}{0:N0}}" />
                             <Run Text=" đ/" />
-                            <Run Text="{Binding Unit}" />
+                            <Run Text="{Binding Unit, Mode=OneWay}" />
                         </TextBlock>
                     </DataTemplate>
                 </ComboBox.ItemTemplate>
