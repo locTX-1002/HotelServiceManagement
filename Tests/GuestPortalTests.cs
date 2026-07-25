@@ -90,7 +90,7 @@ public class GuestPortalTests
             Assert.False(xacNhan.Ok);
 
             var taoKhach = await new GuestService().CreateAsync(
-                "Khach gia mao", null, $"09{Guid.NewGuid():N}"[..11], null, GuestTag.None, null);
+                "Khach gia mao", null, $"0{Random.Shared.NextInt64(900_000_000, 999_999_999)}", null, GuestTag.None, null);
             Assert.False(taoKhach.Ok);
 
             var taoUser = await new UserManagementService()
@@ -166,8 +166,8 @@ public class GuestPortalTests
         {
             var suffix = $"gp{Guid.NewGuid():N}"[..12];
             var guest = await new GuestService().CreateAsync(
-                $"Khach {suffix}", $"{suffix}@test.local", $"09{Guid.NewGuid():N}"[..11],
-                $"CCCD{Guid.NewGuid():N}"[..15], GuestTag.None, null);
+                $"Khach {suffix}", $"{suffix}@test.local", $"0{Random.Shared.NextInt64(900_000_000, 999_999_999)}",
+                $"{Random.Shared.NextInt64(100_000_000_000, 999_999_999_999)}", GuestTag.None, null);
             Assert.True(guest.Ok, guest.Message);
             _guestIds.Add(guest.Data!.Id);
 

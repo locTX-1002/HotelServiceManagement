@@ -92,18 +92,21 @@ public sealed class GuestService : IGuestService
     private static string? Validate(string fullName, string? email, string phoneNumber,
         string? identityNumber, GuestTag tag, string? tagNote)
     {
-        if (string.IsNullOrWhiteSpace(fullName)) return "Chua nhap ho ten.";
-        if (fullName.Trim().Length > 100) return "Ho ten toi da 100 ky tu.";
-        if (string.IsNullOrWhiteSpace(phoneNumber)) return "Chua nhap so dien thoai.";
-        if (phoneNumber.Trim().Length > 20) return "So dien thoai toi da 20 ky tu.";
-        if (!string.IsNullOrWhiteSpace(email))
-        {
-            if (email.Trim().Length > 150) return "Email toi da 150 ky tu.";
-            try { _ = new MailAddress(email.Trim()); }
-            catch (FormatException) { return "Email khong hop le."; }
-        }
-        if (!string.IsNullOrWhiteSpace(identityNumber) && identityNumber.Trim().Length > 50)
-            return "So giay to toi da 50 ky tu.";
+        if (string.IsNullOrWhiteSpace(fullName)) return "Chưa nhập họ tên.";
+        if (fullName.Trim().Length > 100) return "Họ tên tối đa 100 ký tự.";
+
+        // Dung InputPolicy chung ca app. Truoc day chi kiem do dai + MailAddress, ma
+        // MailAddress chap nhan ca "mana@nn." nen du lieu kieu do da lot vao DB.
+        var phoneError = InputPolicy.ValidatePhone(phoneNumber, required: true);
+        if (phoneError != null) return phoneError;
+
+        if (!string.IsNullOrWhiteSpace(email) && email.Trim().Length > 150)
+            return "Email tối đa 150 ký tự.";
+        var emailError = InputPolicy.ValidateEmail(email, required: false);
+        if (emailError != null) return emailError;
+
+        var identityError = InputPolicy.ValidateIdentity(identityNumber, required: false);
+        if (identityError != null) return identityError;
         if (!Enum.IsDefined(tag)) return "Nhom khach hang khong hop le.";
         if (!string.IsNullOrWhiteSpace(tagNote) && tagNote.Trim().Length > 300)
             return "Ghi chu toi da 300 ky tu.";

@@ -166,7 +166,7 @@ public class EndToEndFlowTests
 
             // Chieu nguoc lai: bo sung CCCD xong thi check-in duoc ngay
             var update = await new GuestService().UpdateAsync(guest.Id, guest.FullName, guest.Email,
-                guest.PhoneNumber, $"CCCD{Guid.NewGuid():N}"[..15], GuestTag.None, null);
+                guest.PhoneNumber, $"{Random.Shared.NextInt64(100_000_000_000, 999_999_999_999)}", GuestTag.None, null);
             Assert.True(update.Ok, update.Message);
 
             var retry = await new StayService().CheckInAsync(booking.Data.Id, DateTime.Now);
@@ -440,8 +440,8 @@ public class EndToEndFlowTests
             var result = await new GuestService().CreateAsync(
                 $"Khach {suffix}",
                 $"{suffix}@test.local",
-                $"09{Guid.NewGuid():N}"[..11],
-                withIdentity ? $"CCCD{Guid.NewGuid():N}"[..15] : null,
+                $"0{Random.Shared.NextInt64(900_000_000, 999_999_999)}",
+                withIdentity ? $"{Random.Shared.NextInt64(100_000_000_000, 999_999_999_999)}" : null,
                 GuestTag.None,
                 null);
             Assert.True(result.Ok, result.Message);

@@ -441,6 +441,8 @@ public class GuestReservationFlowTests : IAsyncLifetime
 
     private static string TenNgauNhien() => $"KH {Guid.NewGuid():N}"[..14];
     private static string EmailNgauNhien() => $"{Guid.NewGuid():N}"[..12] + "@test.local";
-    private static string SdtNgauNhien() => $"09{Random.Shared.NextInt64(100_000_000_000, 999_999_999_999)}";
-    private static string CccdNgauNhien() => $"T{Guid.NewGuid():N}"[..13];
+    // Sinh dung DINH DANG THAT: SDT 10 so bat dau bang 0, CCCD 12 so. Truoc day sinh
+    // SDT 14 so va CCCD bat dau bang chu "T" - qua duoc vi luc do service chi kiem do dai.
+    private static string SdtNgauNhien() => $"0{Random.Shared.NextInt64(900_000_000, 999_999_999)}";
+    private static string CccdNgauNhien() => $"{Random.Shared.NextInt64(100_000_000_000, 999_999_999_999)}";
 }
