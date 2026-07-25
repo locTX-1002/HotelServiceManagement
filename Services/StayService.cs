@@ -17,35 +17,35 @@ public sealed class StayService : IStayService
 
     public async Task<ServiceResult<Stay>> CheckInAsync(int reservationId, DateTime? actualCheckIn = null)
     {
-        if (!CanOperate()) return ServiceResult<Stay>.Failure("Ban khong co quyen check-in.");
+        if (!CanOperate()) return ServiceResult<Stay>.Failure("Bạn không có quyền nhận phòng.");
         var reservation = await _reservations.GetByIdAsync(reservationId);
-        if (reservation == null) return ServiceResult<Stay>.Failure("Khong tim thay dat phong.");
+        if (reservation == null) return ServiceResult<Stay>.Failure("Không tìm thấy đặt phòng.");
         if (reservation.Status != ReservationStatus.Confirmed)
-            return ServiceResult<Stay>.Failure("Chi dat phong da xac nhan moi duoc check-in.");
+            return ServiceResult<Stay>.Failure("Chỉ đặt phòng đã xác nhận mới nhận phòng được.");
         if (string.IsNullOrWhiteSpace(reservation.Guest.IdentityNumber))
-            return ServiceResult<Stay>.Failure("Phai xac minh giay to khach hang truoc khi check-in.");
+            return ServiceResult<Stay>.Failure("Phải xác minh giấy tờ khách hàng trước khi nhận phòng.");
         var time = actualCheckIn ?? DateTime.Now;
         var stay = await _stays.CheckInAsync(reservationId, AppSession.CurrentUser?.Id, time);
         return stay == null
-            ? ServiceResult<Stay>.Failure("Khong the check-in do trang thai phong/dat phong da thay doi.")
-            : ServiceResult<Stay>.Success(stay, "Check-in thanh cong.");
+            ? ServiceResult<Stay>.Failure("Không nhận phòng được vì trạng thái phòng hoặc đặt phòng đã thay đổi.")
+            : ServiceResult<Stay>.Success(stay, "Nhận phòng thành công.");
     }
 
     public async Task<ServiceResult<Stay>> CheckOutAsync(int stayId, DateTime? actualCheckOut = null)
     {
-        if (!CanOperate()) return ServiceResult<Stay>.Failure("Ban khong co quyen check-out.");
+        if (!CanOperate()) return ServiceResult<Stay>.Failure("Bạn không có quyền trả phòng.");
         var stay = await _stays.GetByIdAsync(stayId);
         if (stay == null || stay.Status != StayStatus.Active)
-            return ServiceResult<Stay>.Failure("Khong tim thay ky luu tru dang hoat dong.");
+            return ServiceResult<Stay>.Failure("Không tìm thấy lượt lưu trú đang hoạt động.");
         if (stay.ServiceOrders.Any(o => o.Status is ServiceOrderStatus.Pending or ServiceOrderStatus.Processing))
-            return ServiceResult<Stay>.Failure("Phai hoan tat hoac huy tat ca don dich vu truoc khi check-out.");
+            return ServiceResult<Stay>.Failure("Phải hoàn tất hoặc huỷ tất cả đơn dịch vụ trước khi trả phòng.");
         if (stay.Invoice == null || stay.Invoice.Status != InvoiceStatus.Paid)
-            return ServiceResult<Stay>.Failure("Hoa don phai duoc thanh toan day du truoc khi check-out.");
+            return ServiceResult<Stay>.Failure("Hoá đơn phải được thanh toán đầy đủ trước khi trả phòng.");
         var result = await _stays.CheckOutAsync(stayId, AppSession.CurrentUser?.Id,
             actualCheckOut ?? DateTime.Now);
         return result == null
-            ? ServiceResult<Stay>.Failure("Khong the check-out do trang thai da thay doi.")
-            : ServiceResult<Stay>.Success(result, "Check-out thanh cong; phong chuyen sang dang don.");
+            ? ServiceResult<Stay>.Failure("Không trả phòng được vì trạng thái đã thay đổi.")
+            : ServiceResult<Stay>.Success(result, "Trả phòng thành công; phòng chuyển sang Đang dọn.");
     }
 
     private static bool CanOperate() => AppSession.RoleName is "Admin" or "Manager" or "Receptionist";

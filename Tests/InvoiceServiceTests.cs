@@ -67,7 +67,7 @@ public class InvoiceServiceTests
             .PrepareAsync(1, null, new DateTime(2026, 7, 21));
 
         Assert.False(result.Ok);
-        Assert.Contains("tai lai", result.Message);
+        Assert.Contains("tải lại", result.Message);
     }
 
     private static User Admin() => new() { Id = 1, Role = new Role { RoleName = "Admin" } };

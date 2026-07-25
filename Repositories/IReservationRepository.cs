@@ -6,7 +6,7 @@ public interface IReservationRepository
 {
     Task<List<Reservation>> GetAllAsync();
 
-    /// <summary>Don dat phong cua dung mot khach - man "Dat phong cua toi" ben phia khach.</summary>
+    /// <summary>Don dat phong cua dung mot khach - man "Đặt phòng của tôi" ben phia khach.</summary>
     Task<List<Reservation>> GetByGuestAsync(int guestId);
 
     Task<Reservation?> GetByIdAsync(int id);

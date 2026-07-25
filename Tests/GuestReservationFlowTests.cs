@@ -129,7 +129,7 @@ public class GuestReservationFlowTests : IAsyncLifetime
         var xoa = await _guests.DeleteAsync(khach.Id);
 
         Assert.False(xoa.Ok);
-        Assert.Contains("dat phong", xoa.Message);
+        Assert.Contains("đặt phòng", xoa.Message);
         // Ho so van con nguyen - chan xoa chu khong xoa nua chung.
         Assert.NotNull(await _guests.FindExactAsync(khach.PhoneNumber));
     }
@@ -144,7 +144,7 @@ public class GuestReservationFlowTests : IAsyncLifetime
         var trungCccd = await _guests.CreateAsync(TenNgauNhien(), EmailNgauNhien(), SdtNgauNhien(),
             khach.IdentityNumber, GuestTag.None, null);
         Assert.False(trungCccd.Ok);
-        Assert.Contains("giay to", trungCccd.Message);
+        Assert.Contains("giấy tờ", trungCccd.Message);
 
         // Chieu hop le: he thong hien KHONG chan trung so dien thoai (xem notes).
         var trungSdt = await _guests.CreateAsync(TenNgauNhien(), EmailNgauNhien(), khach.PhoneNumber,
@@ -215,7 +215,7 @@ public class GuestReservationFlowTests : IAsyncLifetime
 
         var lanHai = await _accounts.ActivateAsync(khach.Id, "KhachKhac@2026");
         Assert.False(lanHai.Ok);
-        Assert.Contains("tai khoan", lanHai.Message);
+        Assert.Contains("tài khoản", lanHai.Message);
     }
 
     [DbFact]
@@ -262,7 +262,7 @@ public class GuestReservationFlowTests : IAsyncLifetime
         var thieuPhuongThuc = await _reservations.CreateAsync(khach.Id, phong.Id, 1,
             nhan.AddDays(10), nhan.AddDays(12), null, 300_000m, null);
         Assert.False(thieuPhuongThuc.Ok);
-        Assert.Contains("phuong thuc", thieuPhuongThuc.Message);
+        Assert.Contains("phương thức", thieuPhuongThuc.Message);
     }
 
     [DbFact]
@@ -283,7 +283,7 @@ public class GuestReservationFlowTests : IAsyncLifetime
             nhan.AddDays(1), tra.AddDays(2), null, null, null);
 
         Assert.False(don2.Ok);
-        Assert.Contains("trung", don2.Message);
+        Assert.Contains("trùng", don2.Message);
 
         // Khoang khong giao nhau tren cung phong thi van dat duoc.
         var don3 = await _reservations.CreateAsync(khach.Id, phong.Id, 1,
@@ -342,7 +342,7 @@ public class GuestReservationFlowTests : IAsyncLifetime
             nhan.AddDays(1), tra.AddDays(1), null);
 
         Assert.False(sua.Ok);
-        Assert.Contains("khong cho phep", sua.Message);
+        Assert.Contains("không cho phép", sua.Message);
 
         // Du lieu cu phai giu nguyen.
         var tuDb = (await _reservations.GetAllAsync()).Single(r => r.Id == dat.Data.Id);
@@ -368,11 +368,11 @@ public class GuestReservationFlowTests : IAsyncLifetime
         // Neu (bat ngo) tao duoc thi van phai ghi so de don - khong thi assert fail se de lai rac trong DB
         if (taoKhach.Ok && taoKhach.Data != null) GhiNhoDeDonDep(taoKhach.Data.Id);
         Assert.False(taoKhach.Ok);
-        Assert.Contains("quyen", taoKhach.Message);
+        Assert.Contains("quyền", taoKhach.Message);
 
         var taoDon = await _reservations.CreateAsync(khach.Id, phong.Id, 1, nhan, tra, null, null, null);
         Assert.False(taoDon.Ok);
-        Assert.Contains("quyen", taoDon.Message);
+        Assert.Contains("quyền", taoDon.Message);
 
         var xoaKhach = await _guests.DeleteAsync(khach.Id);
         Assert.False(xoaKhach.Ok);

@@ -25,7 +25,7 @@ public sealed class ReservationService : IReservationService
         var guestId = AppSession.CurrentGuestId;
         if (guestId == null)
         {
-            return ServiceResult<List<Reservation>>.Failure("Chua dang nhap bang tai khoan khach hang.");
+            return ServiceResult<List<Reservation>>.Failure("Chưa đăng nhập bằng tài khoản khách hàng.");
         }
         return ServiceResult<List<Reservation>>.Success(await _reservations.GetByGuestAsync(guestId.Value));
     }
@@ -35,18 +35,18 @@ public sealed class ReservationService : IReservationService
         decimal? depositAmount, PaymentMethod? depositPaymentMethod)
     {
         if (!AuthorizationPolicy.CanOperateFrontDesk)
-            return ServiceResult<Reservation>.Failure("Ban khong co quyen tao dat phong.");
+            return ServiceResult<Reservation>.Failure("Bạn không có quyền tạo đặt phòng.");
         var error = Validate(numberOfGuests, checkInDate, checkOutDate, specialRequests,
             depositAmount, depositPaymentMethod);
         if (error != null) return ServiceResult<Reservation>.Failure(error);
 
         var guest = await _guests.GetByIdAsync(guestId);
-        if (guest == null) return ServiceResult<Reservation>.Failure("Khong tim thay khach hang.");
+        if (guest == null) return ServiceResult<Reservation>.Failure("Không tìm thấy khách hàng.");
         var room = await _rooms.GetByIdAsync(roomId);
         var roomError = ValidateRoom(room, numberOfGuests);
         if (roomError != null) return ServiceResult<Reservation>.Failure(roomError);
         if (await _reservations.HasOverlapAsync(roomId, checkInDate, checkOutDate))
-            return ServiceResult<Reservation>.Failure("Phong da co lich dat trung khoang thoi gian nay.");
+            return ServiceResult<Reservation>.Failure("Phòng đã có lịch đặt trùng khoảng thời gian này.");
 
         var entity = new Reservation
         {
@@ -66,26 +66,26 @@ public sealed class ReservationService : IReservationService
         await _reservations.AddAsync(entity);
         entity.Guest = guest;
         entity.Room = room!;
-        return ServiceResult<Reservation>.Success(entity, "Da tao dat phong.");
+        return ServiceResult<Reservation>.Success(entity, "Đã tạo đặt phòng.");
     }
 
     public async Task<ServiceResult<Reservation>> UpdateAsync(int id, int roomId,
         int numberOfGuests, DateTime checkInDate, DateTime checkOutDate, string? specialRequests)
     {
         if (!AuthorizationPolicy.CanOperateFrontDesk)
-            return ServiceResult<Reservation>.Failure("Ban khong co quyen sua dat phong.");
+            return ServiceResult<Reservation>.Failure("Bạn không có quyền sửa đặt phòng.");
         var error = Validate(numberOfGuests, checkInDate, checkOutDate, specialRequests, null, null);
         if (error != null) return ServiceResult<Reservation>.Failure(error);
         var entity = await _reservations.GetByIdAsync(id);
-        if (entity == null) return ServiceResult<Reservation>.Failure("Khong tim thay dat phong.");
+        if (entity == null) return ServiceResult<Reservation>.Failure("Không tìm thấy đặt phòng.");
         if (entity.Status is not (ReservationStatus.Pending or ReservationStatus.Confirmed))
-            return ServiceResult<Reservation>.Failure("Trang thai hien tai khong cho phep sua dat phong.");
+            return ServiceResult<Reservation>.Failure("Trạng thái hiện tại không cho phép sửa đặt phòng.");
 
         var room = await _rooms.GetByIdAsync(roomId);
         var roomError = ValidateRoom(room, numberOfGuests);
         if (roomError != null) return ServiceResult<Reservation>.Failure(roomError);
         if (await _reservations.HasOverlapAsync(roomId, checkInDate, checkOutDate, id))
-            return ServiceResult<Reservation>.Failure("Phong da co lich dat trung khoang thoi gian nay.");
+            return ServiceResult<Reservation>.Failure("Phòng đã có lịch đặt trùng khoảng thời gian này.");
 
         entity.RoomId = roomId;
         entity.NumberOfGuests = numberOfGuests;
@@ -95,34 +95,34 @@ public sealed class ReservationService : IReservationService
         Detach(entity);
         await _reservations.UpdateAsync(entity);
         entity.Room = room!;
-        return ServiceResult<Reservation>.Success(entity, "Da cap nhat dat phong.");
+        return ServiceResult<Reservation>.Success(entity, "Đã cập nhật đặt phòng.");
     }
 
     public Task<ServiceResult<Reservation>> ConfirmAsync(int id)
         => !AuthorizationPolicy.CanOperateFrontDesk
-            ? Task.FromResult(ServiceResult<Reservation>.Failure("Ban khong co quyen xac nhan dat phong."))
+            ? Task.FromResult(ServiceResult<Reservation>.Failure("Bạn không có quyền xác nhận đặt phòng."))
             : ChangeStatusAsync(id, ReservationStatus.Pending, ReservationStatus.Confirmed,
-            "Chi dat phong dang cho moi co the xac nhan.", "Da xac nhan dat phong.");
+            "Chỉ đặt phòng đang chờ mới xác nhận được.", "Đã xác nhận đặt phòng.");
 
     public async Task<ServiceResult<Reservation>> CancelAsync(int id)
     {
         if (!AuthorizationPolicy.CanOperateFrontDesk)
-            return ServiceResult<Reservation>.Failure("Ban khong co quyen huy dat phong.");
+            return ServiceResult<Reservation>.Failure("Bạn không có quyền huỷ đặt phòng.");
         var entity = await _reservations.GetByIdAsync(id);
-        if (entity == null) return ServiceResult<Reservation>.Failure("Khong tim thay dat phong.");
+        if (entity == null) return ServiceResult<Reservation>.Failure("Không tìm thấy đặt phòng.");
         if (entity.Status is not (ReservationStatus.Pending or ReservationStatus.Confirmed))
-            return ServiceResult<Reservation>.Failure("Trang thai hien tai khong cho phep huy dat phong.");
+            return ServiceResult<Reservation>.Failure("Trạng thái hiện tại không cho phép huỷ đặt phòng.");
         entity.Status = ReservationStatus.Cancelled;
         Detach(entity);
         await _reservations.UpdateAsync(entity);
-        return ServiceResult<Reservation>.Success(entity, "Da huy dat phong.");
+        return ServiceResult<Reservation>.Success(entity, "Đã huỷ đặt phòng.");
     }
 
     private async Task<ServiceResult<Reservation>> ChangeStatusAsync(int id,
         ReservationStatus expected, ReservationStatus target, string invalid, string success)
     {
         var entity = await _reservations.GetByIdAsync(id);
-        if (entity == null) return ServiceResult<Reservation>.Failure("Khong tim thay dat phong.");
+        if (entity == null) return ServiceResult<Reservation>.Failure("Không tìm thấy đặt phòng.");
         if (entity.Status != expected) return ServiceResult<Reservation>.Failure(invalid);
         entity.Status = target;
         Detach(entity);
@@ -143,23 +143,23 @@ public sealed class ReservationService : IReservationService
     private static string? Validate(int guests, DateTime checkIn, DateTime checkOut,
         string? requests, decimal? deposit, PaymentMethod? method)
     {
-        if (guests < 1) return "So khach phai lon hon 0.";
-        if (checkOut <= checkIn) return "Ngay tra phong phai sau ngay nhan phong.";
+        if (guests < 1) return "Số khách phải lớn hơn 0.";
+        if (checkOut <= checkIn) return "Ngày trả phòng phải sau ngày nhận phòng.";
         if (!string.IsNullOrWhiteSpace(requests) && requests.Trim().Length > 500)
-            return "Yeu cau dac biet toi da 500 ky tu.";
-        if (deposit < 0) return "Tien coc khong duoc am.";
-        if (deposit > 0 && method == null) return "Phai chon phuong thuc thanh toan tien coc.";
-        if (method != null && !Enum.IsDefined(method.Value)) return "Phuong thuc thanh toan khong hop le.";
+            return "Yêu cầu đặc biệt tối đa 500 ký tự.";
+        if (deposit < 0) return "Tiền cọc không được âm.";
+        if (deposit > 0 && method == null) return "Phải chọn phương thức thanh toán tiền cọc.";
+        if (method != null && !Enum.IsDefined(method.Value)) return "Phương thức thanh toán không hợp lệ.";
         return null;
     }
 
     private static string? ValidateRoom(Room? room, int guests)
     {
-        if (room == null) return "Khong tim thay phong.";
-        if (!room.IsActive) return "Phong da ngung hoat dong.";
-        if (room.Status == RoomStatus.Maintenance) return "Phong dang bao tri.";
-        if (!room.RoomType.IsActive) return "Loai phong da ngung hoat dong.";
-        return guests > room.RoomType.Capacity ? "So khach vuot suc chua cua loai phong." : null;
+        if (room == null) return "Không tìm thấy phòng.";
+        if (!room.IsActive) return "Phòng đã ngừng hoạt động.";
+        if (room.Status == RoomStatus.Maintenance) return "Phòng đang bảo trì.";
+        if (!room.RoomType.IsActive) return "Loại phòng đã ngừng hoạt động.";
+        return guests > room.RoomType.Capacity ? "Số khách vượt sức chứa của loại phòng." : null;
     }
 
     private static void Detach(Reservation entity)
@@ -175,7 +175,7 @@ public sealed class ReservationService : IReservationService
 
     public async Task<ServiceResult<List<Room>>> GetAvailableRoomsAsync(DateTime checkIn, DateTime checkOut)
     {
-        if (checkOut <= checkIn) return ServiceResult<List<Room>>.Failure("Ngay tra phai sau ngay nhan.");
+        if (checkOut <= checkIn) return ServiceResult<List<Room>>.Failure("Ngày trả phải sau ngày nhận.");
         var rooms = await _reservations.GetAvailableRoomsAsync(checkIn, checkOut);
         return ServiceResult<List<Room>>.Success(rooms);
     }
@@ -183,15 +183,15 @@ public sealed class ReservationService : IReservationService
     public async Task<ServiceResult<Reservation>> NoShowAsync(int id)
     {
         var reservation = await _reservations.GetByIdAsync(id);
-        if (reservation == null) return ServiceResult<Reservation>.Failure("Khong tim thay dat phong.");
+        if (reservation == null) return ServiceResult<Reservation>.Failure("Không tìm thấy đặt phòng.");
         if (reservation.Status != ReservationStatus.Confirmed)
-            return ServiceResult<Reservation>.Failure("Chi dat phong da xac nhan moi danh dau Khong den duoc.");
+            return ServiceResult<Reservation>.Failure("Chỉ đặt phòng đã xác nhận mới đánh dấu Không đến được.");
         if (reservation.Stay != null)
-            return ServiceResult<Reservation>.Failure("Dat phong da co luot luu tru, khong danh dau Khong den duoc.");
+            return ServiceResult<Reservation>.Failure("Đặt phòng đã có lượt lưu trú, không đánh dấu Không đến được.");
 
         reservation.Status = ReservationStatus.NoShow;
         await _reservations.UpdateAsync(reservation);
-        return ServiceResult<Reservation>.Success(reservation, "Da danh dau khach khong den.");
+        return ServiceResult<Reservation>.Success(reservation, "Đã đánh dấu khách không đến.");
     }
 
     /// <summary>Ten trang thai tieng Viet dung chung cho danh sach va lich phong.</summary>

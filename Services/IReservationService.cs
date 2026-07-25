@@ -8,7 +8,7 @@ public interface IReservationService
     Task<List<Reservation>> GetAllAsync();
 
     /// <summary>
-    /// Don dat phong CUA CHINH khach dang dang nhap (man "Dat phong cua toi").
+    /// Don dat phong CUA CHINH khach dang dang nhap (man "Đặt phòng của tôi").
     /// Khong nhan guestId tu ben ngoai - lay tu phien, de khong ai truyen id nguoi khac vao xem trom.
     /// </summary>
     Task<ServiceResult<List<Reservation>>> GetMyReservationsAsync();

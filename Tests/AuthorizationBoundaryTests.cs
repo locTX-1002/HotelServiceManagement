@@ -15,7 +15,9 @@ public class AuthorizationBoundaryTests
             .UpdateStatusAsync(1, RoomStatus.Maintenance, canManageMaintenance: true);
 
         Assert.False(result.Ok);
-        Assert.Contains("Admin", result.Message);
+        // Thong bao hien ten vai tro bang tieng Viet ("Quan tri vien") cho khop voi
+        // phan con lai cua giao dien, khong dung ten ky thuat "Admin" nua.
+        Assert.Contains("Quản trị viên", result.Message);
     }
 
     [Fact]

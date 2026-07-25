@@ -19,7 +19,7 @@ namespace Services
             string typeName, int capacity, decimal basePrice, string? description, bool isActive)
         {
             if (!AuthorizationPolicy.CanManageRooms)
-                return ServiceResult<RoomType>.Failure("Chi Admin hoac Manager duoc tao loai phong.");
+                return ServiceResult<RoomType>.Failure("Chỉ Quản trị viên hoặc Quản lý được tạo loại phòng.");
             var error = Validate(typeName, capacity, basePrice);
             if (error != null)
             {
@@ -48,7 +48,7 @@ namespace Services
             int id, string typeName, int capacity, decimal basePrice, string? description, bool isActive)
         {
             if (!AuthorizationPolicy.CanManageRooms)
-                return ServiceResult<RoomType>.Failure("Chi Admin hoac Manager duoc sua loai phong.");
+                return ServiceResult<RoomType>.Failure("Chỉ Quản trị viên hoặc Quản lý được sửa loại phòng.");
             var error = Validate(typeName, capacity, basePrice);
             if (error != null)
             {
@@ -88,7 +88,7 @@ namespace Services
         public async Task<ServiceResult> DeleteAsync(int id)
         {
             if (!AuthorizationPolicy.CanManageRooms)
-                return ServiceResult.Failure("Chi Admin hoac Manager duoc xoa hoac ngung dung loai phong.");
+                return ServiceResult.Failure("Chỉ Quản trị viên hoặc Quản lý được xoá hoặc ngừng dùng loại phòng.");
             var roomType = await _roomTypeRepository.GetByIdAsync(id);
             if (roomType == null)
             {

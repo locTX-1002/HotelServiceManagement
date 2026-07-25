@@ -160,7 +160,7 @@ public class EndToEndFlowTests
             var checkIn = await new StayService().CheckInAsync(booking.Data.Id, DateTime.Now);
 
             Assert.False(checkIn.Ok);
-            Assert.Contains("giay to", checkIn.Message);
+            Assert.Contains("giấy tờ", checkIn.Message);
             // Phong khong duoc dinh trang thai khi check-in bi chan
             Assert.Equal(RoomStatus.Available, await RoomStatusAsync(sandbox.RoomId));
 
@@ -194,7 +194,7 @@ public class EndToEndFlowTests
 
             var blocked = await new StayService().CheckOutAsync(stay.StayId, asOf);
             Assert.False(blocked.Ok);
-            Assert.Contains("thanh toan", blocked.Message);
+            Assert.Contains("thanh toán", blocked.Message);
 
             // Tra mot phan van chua du -> van bi chan
             var half = Math.Round(invoice.Data.TotalAmount / 2, 2);
@@ -240,7 +240,7 @@ public class EndToEndFlowTests
 
             var blocked = await new StayService().CheckOutAsync(stay.StayId, asOf);
             Assert.False(blocked.Ok);
-            Assert.Contains("dich vu", blocked.Message);
+            Assert.Contains("dịch vụ", blocked.Message);
 
             // Huy don dich vu (ServiceStaff) roi check-out lai -> thong
             await SignInAsync("ServiceStaff");
@@ -277,7 +277,7 @@ public class EndToEndFlowTests
                 guestB.Id, sandbox.RoomId, 1,
                 DateTime.Today.AddDays(12), DateTime.Today.AddDays(16), null, null, null);
             Assert.False(overlapped.Ok);
-            Assert.Contains("trung", overlapped.Message);
+            Assert.Contains("trùng", overlapped.Message);
 
             // Sat ngay tra cua don truoc (14-16) thi khong giao -> phai cho dat
             var adjacent = await new ReservationService().CreateAsync(
@@ -347,7 +347,7 @@ public class EndToEndFlowTests
             await SignInAsync("ServiceStaff");
             var denied = await new StayService().CheckInAsync(booking.Data.Id, DateTime.Now);
             Assert.False(denied.Ok);
-            Assert.Contains("quyen", denied.Message);
+            Assert.Contains("quyền", denied.Message);
 
             // Dung vai tro: le tan check-in duoc
             await SignInAsync("Receptionist");

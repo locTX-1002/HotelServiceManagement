@@ -21,13 +21,13 @@ public sealed class GuestService : IGuestService
         string phoneNumber, string? identityNumber, GuestTag tag, string? tagNote)
     {
         if (!AuthorizationPolicy.CanOperateFrontDesk)
-            return ServiceResult<Guest>.Failure("Ban khong co quyen tao ho so khach hang.");
+            return ServiceResult<Guest>.Failure("Bạn không có quyền tạo hồ sơ khách hàng.");
         var error = Validate(fullName, email, phoneNumber, identityNumber, tag, tagNote);
         if (error != null) return ServiceResult<Guest>.Failure(error);
 
         var identity = Normalize(identityNumber);
         if (identity != null && await _repository.IdentityNumberExistsAsync(identity))
-            return ServiceResult<Guest>.Failure("So giay to da ton tai.");
+            return ServiceResult<Guest>.Failure("Số giấy tờ đã tồn tại.");
 
         var guest = new Guest
         {
@@ -46,26 +46,26 @@ public sealed class GuestService : IGuestService
         catch (DbUpdateException)
         {
             if (identity != null && await _repository.IdentityNumberExistsAsync(identity))
-                return ServiceResult<Guest>.Failure("So giay to da ton tai.");
+                return ServiceResult<Guest>.Failure("Số giấy tờ đã tồn tại.");
             throw;
         }
 
-        return ServiceResult<Guest>.Success(guest, "Da tao ho so khach hang.");
+        return ServiceResult<Guest>.Success(guest, "Đã tạo hồ sơ khách hàng.");
     }
 
     public async Task<ServiceResult<Guest>> UpdateAsync(int id, string fullName, string? email,
         string phoneNumber, string? identityNumber, GuestTag tag, string? tagNote)
     {
         if (!AuthorizationPolicy.CanOperateFrontDesk)
-            return ServiceResult<Guest>.Failure("Ban khong co quyen sua ho so khach hang.");
+            return ServiceResult<Guest>.Failure("Bạn không có quyền sửa hồ sơ khách hàng.");
         var error = Validate(fullName, email, phoneNumber, identityNumber, tag, tagNote);
         if (error != null) return ServiceResult<Guest>.Failure(error);
         var guest = await _repository.GetByIdAsync(id);
-        if (guest == null) return ServiceResult<Guest>.Failure("Khong tim thay khach hang.");
+        if (guest == null) return ServiceResult<Guest>.Failure("Không tìm thấy khách hàng.");
 
         var identity = Normalize(identityNumber);
         if (identity != null && await _repository.IdentityNumberExistsAsync(identity, id))
-            return ServiceResult<Guest>.Failure("So giay to da ton tai.");
+            return ServiceResult<Guest>.Failure("Số giấy tờ đã tồn tại.");
 
         guest.FullName = fullName.Trim();
         guest.Email = Normalize(email);
@@ -74,19 +74,19 @@ public sealed class GuestService : IGuestService
         guest.Tag = tag;
         guest.TagNote = tag == GuestTag.None ? null : Normalize(tagNote);
         await _repository.UpdateAsync(guest);
-        return ServiceResult<Guest>.Success(guest, "Da cap nhat ho so khach hang.");
+        return ServiceResult<Guest>.Success(guest, "Đã cập nhật hồ sơ khách hàng.");
     }
 
     public async Task<ServiceResult> DeleteAsync(int id)
     {
         if (!AuthorizationPolicy.CanOperateFrontDesk)
-            return ServiceResult.Failure("Ban khong co quyen xoa ho so khach hang.");
+            return ServiceResult.Failure("Bạn không có quyền xoá hồ sơ khách hàng.");
         var guest = await _repository.GetByIdAsync(id);
-        if (guest == null) return ServiceResult.Failure("Khong tim thay khach hang.");
+        if (guest == null) return ServiceResult.Failure("Không tìm thấy khách hàng.");
         if (await _repository.HasReservationsAsync(id))
-            return ServiceResult.Failure("Khach hang da co lich su dat phong nen khong the xoa.");
+            return ServiceResult.Failure("Khách hàng đã có lịch sử đặt phòng nên không xoá được.");
         await _repository.DeleteAsync(guest);
-        return ServiceResult.Success("Da xoa ho so khach hang.");
+        return ServiceResult.Success("Đã xoá hồ sơ khách hàng.");
     }
 
     private static string? Validate(string fullName, string? email, string phoneNumber,
@@ -107,9 +107,9 @@ public sealed class GuestService : IGuestService
 
         var identityError = InputPolicy.ValidateIdentity(identityNumber, required: false);
         if (identityError != null) return identityError;
-        if (!Enum.IsDefined(tag)) return "Nhom khach hang khong hop le.";
+        if (!Enum.IsDefined(tag)) return "Nhóm khách hàng không hợp lệ.";
         if (!string.IsNullOrWhiteSpace(tagNote) && tagNote.Trim().Length > 300)
-            return "Ghi chu toi da 300 ky tu.";
+            return "Ghi chú tối đa 300 ký tự.";
         return null;
     }
 
