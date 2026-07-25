@@ -315,6 +315,98 @@ public class EndToEndFlowTests
         finally { AppSession.SignOut(); }
     }
 
+    // ------------------- 4c. Gan the VIP sau khi khach da tra tien khong lam tut tong bill
+
+    /// <summary>
+    /// Giam gia chot tai luc lap hoa don. Neu tinh lai theo the VIP hien tai thi khach duoc
+    /// gan VIP sau khi tra tien se lam tong tut xuong duoi so da thu, va luc do vua khong
+    /// tinh lai duoc vua khong tra phong duoc.
+    /// </summary>
+    [DbFact]
+    public async Task GanTheVipSauKhiDaThanhToan_KhongLamTutTongHoaDon()
+    {
+        await using var sandbox = await Sandbox.CreateAsync();
+        try
+        {
+            await SignInAsync("Receptionist");
+            var stay = await sandbox.CheckInNewGuestAsync();
+
+            var asOf = DateTime.Today.AddDays(1).AddHours(11);
+            var first = await new InvoiceService().PrepareAsync(stay.StayId, null, asOf);
+            Assert.True(first.Ok, first.Message);
+            Assert.Equal(0m, first.Data!.DiscountAmount);
+            var roomOnly = first.Data.TotalAmount;
+            var payAll = await new PaymentService().RecordAsync(
+                first.Data.Id, roomOnly, PaymentMethod.Cash, null);
+            Assert.True(payAll.Ok, payAll.Message);
+
+            // Le tan gan the VIP cho khach SAU khi hoa don da tra du
+            Guest guest;
+            await using (var context = HotelDbContextFactory.Create())
+            {
+                guest = await context.Reservations.AsNoTracking().Where(r => r.Id == stay.ReservationId)
+                    .Select(r => r.Guest).FirstAsync();
+            }
+            var tag = await new GuestService().UpdateAsync(guest.Id, guest.FullName, guest.Email,
+                guest.PhoneNumber, guest.IdentityNumber, GuestTag.Vip, null);
+            Assert.True(tag.Ok, tag.Message);
+
+            // Them mot mon dich vu roi tinh lai: giam gia phai giu nguyen 0, tong chi tang
+            var item = await FirstServiceItemAsync();
+            var order = await new ServiceOrderService().CreateAsync(
+                stay.StayId, [new ServiceOrderLine(item.Id, 1)]);
+            Assert.True(order.Ok, order.Message);
+            await SignInAsync("ServiceStaff");
+            await new ServiceOrderService().ChangeStatusAsync(order.Data!.Id, ServiceOrderStatus.Completed);
+            await SignInAsync("Receptionist");
+
+            var again = await new InvoiceService().PrepareAsync(stay.StayId, null, asOf);
+            Assert.True(again.Ok, again.Message);
+            Assert.Equal(0m, again.Data!.DiscountAmount);
+            Assert.Equal(roomOnly + item.UnitPrice, again.Data.TotalAmount);
+            Assert.Equal(InvoiceStatus.PartiallyPaid, again.Data.Status);
+        }
+        finally { AppSession.SignOut(); }
+    }
+
+    // ------------------------ 4d. Khong doi don gia loai phong khi con don chua ket thuc
+
+    /// <summary>
+    /// Hoa don tinh tien phong theo BasePrice hien tai, nen doi gia giua chung la khach phai
+    /// tra theo gia moi thay vi gia luc dat.
+    /// </summary>
+    [DbFact]
+    public async Task DoiDonGiaLoaiPhong_KhiConDonChuaKetThuc_BiChan()
+    {
+        await using var sandbox = await Sandbox.CreateAsync();
+        try
+        {
+            await SignInAsync("Manager");
+            var type = new RoomTypeService();
+
+            // Chua co don nao -> doi gia thoai mai
+            var free = await type.UpdateAsync(sandbox.RoomTypeId, $"TT{Guid.NewGuid():N}"[..14],
+                4, BasePrice + 100_000, null, true);
+            Assert.True(free.Ok, free.Message);
+
+            await SignInAsync("Receptionist");
+            var stay = await sandbox.CheckInNewGuestAsync();
+
+            await SignInAsync("Manager");
+            var blocked = await type.UpdateAsync(sandbox.RoomTypeId, free.Data!.TypeName,
+                4, BasePrice + 500_000, null, true);
+            Assert.False(blocked.Ok);
+            Assert.Contains("đơn giá", blocked.Message);
+
+            // Doi ten / mo ta thi van cho vi khong dung toi tien
+            var rename = await type.UpdateAsync(sandbox.RoomTypeId, $"TT{Guid.NewGuid():N}"[..14],
+                4, free.Data.BasePrice, "Doi mo ta thoi", true);
+            Assert.True(rename.Ok, rename.Message);
+            _ = stay;
+        }
+        finally { AppSession.SignOut(); }
+    }
+
     // ---------------------------------------------------------- 5. Chan dat phong trung lich
 
     [DbFact]
