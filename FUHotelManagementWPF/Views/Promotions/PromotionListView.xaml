@@ -96,7 +96,7 @@
                 <Button Content="Tất cả" Style="{StaticResource ChipAll}" Margin="14,0,6,0"
                         Command="{Binding SetFilterCommand}"
                         CommandParameter="{x:Static vmPromo:PromotionFilter.All}" />
-                <Button Content="Đang chạy" Style="{StaticResource ChipRunning}"
+                <Button Content="Đang áp dụng" Style="{StaticResource ChipRunning}"
                         Command="{Binding SetFilterCommand}"
                         CommandParameter="{x:Static vmPromo:PromotionFilter.Running}" />
                 <Button Content="Hết hạn" Style="{StaticResource ChipExpired}"

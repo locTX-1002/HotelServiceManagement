@@ -73,8 +73,10 @@ namespace FUHotelManagementWPF.ViewModels.Promotions
 
         public string StatusText => Status switch
         {
-            PromotionStatus.Running => "Đang chạy",
-            PromotionStatus.Upcoming => "Chưa bắt đầu",
+            // "Dang chay" nghe nhu mot tien trinh may moc. Khuyen mai thi dung tu ve
+            // hieu luc: dang ap dung / chua toi ngay / het han / da tat.
+            PromotionStatus.Running => "Đang áp dụng",
+            PromotionStatus.Upcoming => "Chưa tới ngày",
             PromotionStatus.Expired => "Hết hạn",
             _ => "Đã tắt",
         };

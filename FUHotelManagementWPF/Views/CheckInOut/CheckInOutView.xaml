@@ -68,7 +68,7 @@
             <Button DockPanel.Dock="Right" Content="Tải lại" Style="{StaticResource GhostButton}"
                     Padding="14,7" VerticalAlignment="Top" Command="{Binding RefreshCommand}" />
             <StackPanel>
-                <TextBlock Text="Check-in / Check-out" Style="{StaticResource PageTitleText}" />
+                <TextBlock Text="Nhận / Trả phòng" Style="{StaticResource PageTitleText}" />
                 <TextBlock Text="{Binding TodayText}" Style="{StaticResource CaptionText}"
                            FontSize="12.5" Margin="0,3,0,0" />
             </StackPanel>

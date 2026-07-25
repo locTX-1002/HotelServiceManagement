@@ -193,12 +193,17 @@
 
     <!-- Badge: pill nho hien trang thai (Dang o / Da dat / Trong / Qua han...).
          Dung: <Border Style="{StaticResource BadgeSuccess}"><TextBlock Text="Trong"/></Border> -->
+    <!-- Chip trang thai. MinWidth + chu can giua de MOI chip rong bang nhau: truoc day
+         chip co ro theo do dai chu, ma cac dong lai can phai, nen mep trai so le thanh
+         hinh rang cua doc theo ca danh sach. -->
     <Style x:Key="BadgeBase" TargetType="Border">
         <Setter Property="CornerRadius" Value="4" />
         <Setter Property="Padding" Value="10,3.5" />
+        <Setter Property="MinWidth" Value="104" />
         <Setter Property="HorizontalAlignment" Value="Left" />
         <Setter Property="TextElement.FontSize" Value="11.5" />
         <Setter Property="TextElement.FontWeight" Value="SemiBold" />
+        <Setter Property="TextBlock.TextAlignment" Value="Center" />
     </Style>
     <Style x:Key="BadgeSuccess" TargetType="Border" BasedOn="{StaticResource BadgeBase}">
         <Setter Property="Background" Value="{StaticResource SuccessSoftBrush}" />

@@ -75,7 +75,7 @@ namespace FUHotelManagementWPF.ViewModels.Promotions
             get
             {
                 var running = Rows.Count(r => r.Status == PromotionStatus.Running);
-                return $"{Rows.Count} khuyến mãi · {running} đang chạy";
+                return $"{Rows.Count} khuyến mãi · {running} đang áp dụng";
             }
         }
 

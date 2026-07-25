@@ -35,7 +35,7 @@ namespace FUHotelManagementWPF.ViewModels.CheckInOut
             Reservation.Room?.RoomTypeId ?? 0, Reservation.Room?.RoomType?.TypeName ?? string.Empty);
         public string RoomNumber => Reservation.Room?.RoomNumber ?? string.Empty;
         public string GuestName => Reservation.Guest?.FullName ?? string.Empty;
-        public string ActionLabel => Kind == FlowKind.Arrival ? "Check-in" : "Check-out";
+        public string ActionLabel => Kind == FlowKind.Arrival ? "Nhận phòng" : "Trả phòng";
 
         /// <summary>Dong nay la khach dang o (co nut Hoa don / Gia han).</summary>
         public bool IsStay => Kind == FlowKind.Stay;

@@ -162,6 +162,8 @@ namespace FUHotelManagementWPF.ViewModels.Users
             }
             if (HasErrors || ErrorMessage != null)
             {
+                // Vien do khong noi duoc vi sao - day cau loi len banner cho nhin thay ngay.
+                ErrorMessage ??= FirstError();
                 return;
             }
 

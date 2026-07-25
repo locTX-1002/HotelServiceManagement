@@ -153,6 +153,9 @@ namespace FUHotelManagementWPF.ViewModels.Guests
 
             if (HasErrors)
             {
+                // Vien do khong noi duoc vi sao - phai day cau loi len banner, khong thi
+                // nguoi dung ngoi nhin o do ma khong biet sai cho nao.
+                ErrorMessage = FirstError();
                 return;
             }
 
