@@ -500,6 +500,8 @@
         <Setter Property="Foreground" Value="{StaticResource InkBrush}" />
         <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="mvvm:SearchBoxAssist.Enable" Value="True" />
+        <Setter Property="ToolTip" Value="Gõ để lọc · Enter để lọc ngay · Esc để xoá" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="TextBox">
@@ -509,17 +511,44 @@
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Text="&#xE721;" FontFamily="Segoe MDL2 Assets"
                                        FontSize="13" VerticalAlignment="Center" Margin="9,0,6,0"
                                        Foreground="{StaticResource InkSoftBrush}" />
                             <ScrollViewer Grid.Column="1" x:Name="PART_ContentHost"
-                                          VerticalAlignment="Center" Margin="0,0,9,0" />
+                                          VerticalAlignment="Center" Margin="0,0,4,0" />
+
+                            <!-- Nut xoa nhanh, chi hien khi da go gi do. Xem SearchBoxAssist
+                                 de biet vi sao la nut X chu khong phai nut "Tìm". -->
+                            <Button Grid.Column="2" x:Name="PART_Clear" Width="22" Height="22"
+                                    Margin="0,0,5,0" Cursor="Hand" Focusable="False"
+                                    ToolTip="Xoá ô tìm kiếm (Esc)">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border x:Name="pad" CornerRadius="11" Background="Transparent">
+                                            <TextBlock Text="&#xE711;" FontFamily="Segoe MDL2 Assets"
+                                                       FontSize="10" HorizontalAlignment="Center"
+                                                       VerticalAlignment="Center"
+                                                       Foreground="{StaticResource InkSoftBrush}" />
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="pad" Property="Background"
+                                                        Value="{StaticResource SurfaceAltBrush}" />
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
                         </Grid>
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsKeyboardFocused" Value="True">
                             <Setter Property="BorderBrush" Value="{StaticResource BrandBrush}" />
+                        </Trigger>
+                        <Trigger Property="Text" Value="">
+                            <Setter TargetName="PART_Clear" Property="Visibility" Value="Collapsed" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
