@@ -1,3 +1,4 @@
+using BusinessObjects;
 using BusinessObjects.Entities;
 using BusinessObjects.Enums;
 using Repositories;
@@ -58,7 +59,7 @@ public sealed class StayService : IStayService
             : ServiceResult<Stay>.Success(result, "Trả phòng thành công; phòng chuyển sang Đang dọn.");
     }
 
-    private static bool CanOperate() => AppSession.RoleName is "Admin" or "Manager" or "Receptionist";
+    private static bool CanOperate() => AppSession.RoleName is RoleNames.Admin or RoleNames.Manager or RoleNames.Receptionist;
 
     public Task<List<Stay>> GetBillableAsync() => _stays.GetBillableAsync();
 

@@ -1,3 +1,4 @@
+using BusinessObjects;
 using BusinessObjects.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -56,7 +57,7 @@ namespace DataAccessObjects
         public async Task EnsureBootstrapAdminAsync(string fullName, string email, string passwordHash)
         {
             await using var c = HotelDbContextFactory.Create();
-            var adminRole = await c.Roles.FirstAsync(r => r.RoleName == "Admin");
+            var adminRole = await c.Roles.FirstAsync(r => r.RoleName == RoleNames.Admin);
             var admin = await c.Users.FirstOrDefaultAsync(u => u.Email == email)
                 ?? await c.Users.FirstOrDefaultAsync(u => u.RoleId == adminRole.Id);
             if (admin == null)

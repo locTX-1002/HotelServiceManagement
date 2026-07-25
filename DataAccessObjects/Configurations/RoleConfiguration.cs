@@ -1,3 +1,4 @@
+using BusinessObjects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using BusinessObjects.Entities;
@@ -14,10 +15,10 @@ namespace DataAccessObjects.Configurations
 
             // Seed Roles
             builder.HasData(
-                new Role { Id = 1, RoleName = "Admin" },
-                new Role { Id = 2, RoleName = "Manager" },
-                new Role { Id = 3, RoleName = "Receptionist" },
-                new Role { Id = 4, RoleName = "ServiceStaff" }
+                new Role { Id = 1, RoleName = RoleNames.Admin },
+                new Role { Id = 2, RoleName = RoleNames.Manager },
+                new Role { Id = 3, RoleName = RoleNames.Receptionist },
+                new Role { Id = 4, RoleName = RoleNames.ServiceStaff }
             );
         }
     }

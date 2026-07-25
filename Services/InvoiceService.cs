@@ -1,3 +1,4 @@
+using BusinessObjects;
 using BusinessObjects.Entities;
 using BusinessObjects.Enums;
 using Repositories;
@@ -17,7 +18,7 @@ public sealed class InvoiceService : IInvoiceService
     public Task<Invoice?> GetByIdAsync(int id) => _invoices.GetByIdAsync(id); public Task<Invoice?> GetByStayAsync(int id) => _invoices.GetByStayAsync(id);
     public async Task<ServiceResult<Invoice>> PrepareAsync(int stayId, string? promotionCode = null, DateTime? asOf = null)
     {
-        if (AppSession.RoleName is not ("Admin" or "Manager" or "Receptionist")) return ServiceResult<Invoice>.Failure("Bạn không có quyền lập hoá đơn.");
+        if (AppSession.RoleName is not (RoleNames.Admin or RoleNames.Manager or RoleNames.Receptionist)) return ServiceResult<Invoice>.Failure("Bạn không có quyền lập hoá đơn.");
         var stay = await _invoices.GetStayForBillingAsync(stayId); if (stay == null || stay.Status is not (StayStatus.Active or StayStatus.Completed)) return ServiceResult<Invoice>.Failure("Không tìm thấy lượt lưu trú hợp lệ.");
         var invoice = stay.Invoice; var isNew = invoice == null; var paid = invoice?.Payments.Where(p => p.Status == PaymentStatus.Completed).Sum(p => p.Amount) ?? 0;
         var date = asOf ?? stay.ActualCheckOut ?? DateTime.Now; var nights = Math.Max(1, (date.Date - stay.ActualCheckIn.Date).Days); var room = nights * stay.Reservation.Room.RoomType.BasePrice; var services = stay.ServiceOrders.Where(o => o.Status == ServiceOrderStatus.Completed).Sum(o => o.TotalAmount); var surcharge = stay.Surcharges.Sum(x => x.Subtotal); var subtotal = room + services + surcharge; decimal discount = 0; string? applied = null;
@@ -61,5 +62,5 @@ public sealed class InvoiceService : IInvoiceService
             : frozen ? "Đã cập nhật hoá đơn. Giảm giá giữ nguyên vì hoá đơn đã thu tiền."
             : "Đã tính lại hoá đơn.");
     }
-    public async Task<ServiceResult> CancelAsync(int id) { if (AppSession.RoleName is not ("Admin" or "Manager")) return ServiceResult.Failure("Bạn không có quyền huỷ hoá đơn."); return await _invoices.CancelAsync(id) ? ServiceResult.Success("Đã huỷ hoá đơn.") : ServiceResult.Failure("Không huỷ được hoá đơn đã có thanh toán."); }
+    public async Task<ServiceResult> CancelAsync(int id) { if (AppSession.RoleName is not (RoleNames.Admin or RoleNames.Manager)) return ServiceResult.Failure("Bạn không có quyền huỷ hoá đơn."); return await _invoices.CancelAsync(id) ? ServiceResult.Success("Đã huỷ hoá đơn.") : ServiceResult.Failure("Không huỷ được hoá đơn đã có thanh toán."); }
 }

@@ -1,3 +1,4 @@
+using BusinessObjects;
 using BusinessObjects.Entities;
 using Repositories;
 namespace Services;
@@ -11,7 +12,7 @@ public sealed class UserManagementService : IUserManagementService
     /// khoan Admin dang co. Neu khong chan, bat ky Admin nao cung tu nhan ban duoc
     /// quyen cao nhat va khong con cach nao thu hoi tu trong app.
     /// </summary>
-    public const string AdminRoleName = "Admin";
+    public const string AdminRoleName = RoleNames.Admin;
 
     private readonly IUserRepository _r; public UserManagementService() : this(new UserRepository()) { }
     public UserManagementService(IUserRepository r) => _r = r;

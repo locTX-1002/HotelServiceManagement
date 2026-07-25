@@ -1,3 +1,4 @@
+using BusinessObjects;
 using BusinessObjects.Entities;
 using BusinessObjects.Enums;
 using Repositories;
@@ -100,7 +101,7 @@ public class InvoiceServiceTests
         Assert.Contains("hoàn tiền", result.Message);
     }
 
-    private static User Admin() => new() { Id = 1, Role = new Role { RoleName = "Admin" } };
+    private static User Admin() => new() { Id = 1, Role = new Role { RoleName = RoleNames.Admin } };
 
     private sealed class FakeInvoiceRepository(Stay stay) : IInvoiceRepository
     {

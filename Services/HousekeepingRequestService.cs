@@ -1,3 +1,4 @@
+using BusinessObjects;
 using BusinessObjects.Entities;
 using BusinessObjects.Enums;
 using Repositories;
@@ -22,7 +23,7 @@ public sealed class HousekeepingRequestService : IHousekeepingRequestService
 
     public async Task<ServiceResult<HousekeepingRequest>> ChangeStatusAsync(int id, HousekeepingRequestStatus target)
     {
-        if (AppSession.RoleName is not ("Admin" or "Manager" or "ServiceStaff")) return ServiceResult<HousekeepingRequest>.Failure("Bạn không có quyền xử lý yêu cầu.");
+        if (AppSession.RoleName is not (RoleNames.Admin or RoleNames.Manager or RoleNames.ServiceStaff)) return ServiceResult<HousekeepingRequest>.Failure("Bạn không có quyền xử lý yêu cầu.");
         var request = await _repository.GetByIdAsync(id);
         if (request == null) return ServiceResult<HousekeepingRequest>.Failure("Không tìm thấy yêu cầu.");
         var allowed = (request.Status, target) switch

@@ -1,3 +1,4 @@
+using BusinessObjects;
 using BusinessObjects.Entities;
 using BusinessObjects.Enums;
 using DataAccessObjects;
@@ -98,7 +99,7 @@ public class CatalogAndAuthorizationTests
         var rac = new DonDep();
         try
         {
-            await DangNhapAsync("Manager");
+            await DangNhapAsync(RoleNames.Manager);
             var roomTypeService = new RoomTypeService();
             var roomService = new RoomService();
             var hau = Hau();
@@ -151,7 +152,7 @@ public class CatalogAndAuthorizationTests
         var rac = new DonDep();
         try
         {
-            await DangNhapAsync("Admin");
+            await DangNhapAsync(RoleNames.Admin);
             var roomTypeService = new RoomTypeService();
             var roomService = new RoomService();
             var hau = Hau();
@@ -190,7 +191,7 @@ public class CatalogAndAuthorizationTests
         var rac = new DonDep();
         try
         {
-            await DangNhapAsync("Manager");
+            await DangNhapAsync(RoleNames.Manager);
             var roomTypeService = new RoomTypeService();
             var ten = $"TestLoai_{Hau()}";
 
@@ -222,7 +223,7 @@ public class CatalogAndAuthorizationTests
         var rac = new DonDep();
         try
         {
-            await DangNhapAsync("Receptionist");
+            await DangNhapAsync(RoleNames.Receptionist);
             var hau = Hau();
 
             // Chup trang thai phong seed truoc khi thu, de doi chieu la test khong lam gi no
@@ -264,7 +265,7 @@ public class CatalogAndAuthorizationTests
         var rac = new DonDep();
         try
         {
-            await DangNhapAsync("Manager");
+            await DangNhapAsync(RoleNames.Manager);
             var catalog = new ServiceCatalogService();
             var hau = Hau();
 
@@ -317,7 +318,7 @@ public class CatalogAndAuthorizationTests
         var rac = new DonDep();
         try
         {
-            await DangNhapAsync("Admin");
+            await DangNhapAsync(RoleNames.Admin);
             var catalog = new ServiceCatalogService();
             var hau = Hau();
 
@@ -352,11 +353,11 @@ public class CatalogAndAuthorizationTests
         {
             var catalog = new ServiceCatalogService();
 
-            await DangNhapAsync("Receptionist");
+            await DangNhapAsync(RoleNames.Receptionist);
             var letan = await catalog.SaveCategoryAsync(null, $"TestDM_{Hau()}", true);
             ChanVoiThongBao(letan.Ok, letan.Message, "Receptionist tao danh muc dich vu");
 
-            await DangNhapAsync("ServiceStaff");
+            await DangNhapAsync(RoleNames.ServiceStaff);
             var nvdv = await catalog.SaveItemAsync(null, 1, $"TestDV_{Hau()}", 50_000m, true);
             ChanVoiThongBao(nvdv.Ok, nvdv.Message, "ServiceStaff tao dich vu");
         }
@@ -374,7 +375,7 @@ public class CatalogAndAuthorizationTests
         var rac = new DonDep();
         try
         {
-            await DangNhapAsync("Manager");
+            await DangNhapAsync(RoleNames.Manager);
             var surcharge = new SurchargeService();
             var hau = Hau();
 
@@ -407,7 +408,7 @@ public class CatalogAndAuthorizationTests
         var rac = new DonDep();
         try
         {
-            await DangNhapAsync("Admin");
+            await DangNhapAsync(RoleNames.Admin);
             var surcharge = new SurchargeService();
             var hau = Hau();
 
@@ -442,11 +443,11 @@ public class CatalogAndAuthorizationTests
         {
             var surcharge = new SurchargeService();
 
-            await DangNhapAsync("Receptionist");
+            await DangNhapAsync(RoleNames.Receptionist);
             var letan = await surcharge.SaveItemAsync(null, $"TestPT_{Hau()}", "cai", 50_000m, true);
             ChanVoiThongBao(letan.Ok, letan.Message, "Receptionist tao danh muc phu thu");
 
-            await DangNhapAsync("ServiceStaff");
+            await DangNhapAsync(RoleNames.ServiceStaff);
             var nvdv = await surcharge.SaveItemAsync(null, $"TestPT_{Hau()}", "cai", 50_000m, true);
             ChanVoiThongBao(nvdv.Ok, nvdv.Message, "ServiceStaff tao danh muc phu thu");
         }
@@ -464,7 +465,7 @@ public class CatalogAndAuthorizationTests
         var rac = new DonDep();
         try
         {
-            await DangNhapAsync("Manager");
+            await DangNhapAsync(RoleNames.Manager);
             var promotion = new PromotionService();
             var homNay = DateTime.Today;
             var hau = Hau();
@@ -502,7 +503,7 @@ public class CatalogAndAuthorizationTests
         var rac = new DonDep();
         try
         {
-            await DangNhapAsync("Admin");
+            await DangNhapAsync(RoleNames.Admin);
             var promotion = new PromotionService();
             var homNay = DateTime.Today;
             var hau = Hau();
@@ -550,7 +551,7 @@ public class CatalogAndAuthorizationTests
     {
         try
         {
-            await DangNhapAsync("Manager");
+            await DangNhapAsync(RoleNames.Manager);
             var homNay = DateTime.Today;
 
             var nguocNgay = await new PromotionService().SaveAsync(
@@ -573,13 +574,13 @@ public class CatalogAndAuthorizationTests
             var promotion = new PromotionService();
             var homNay = DateTime.Today;
 
-            await DangNhapAsync("ServiceStaff");
+            await DangNhapAsync(RoleNames.ServiceStaff);
             var nvdv = await promotion.SaveAsync(
                 null, $"TESTNV{Hau()}", null, PromotionType.Percentage, 10m,
                 homNay, homNay.AddDays(10), true);
             ChanVoiThongBao(nvdv.Ok, nvdv.Message, "ServiceStaff tao khuyen mai");
 
-            await DangNhapAsync("Receptionist");
+            await DangNhapAsync(RoleNames.Receptionist);
             var letan = await promotion.SaveAsync(
                 null, $"TESTLT{Hau()}", null, PromotionType.Percentage, 10m,
                 homNay, homNay.AddDays(10), true);
@@ -599,7 +600,7 @@ public class CatalogAndAuthorizationTests
         var rac = new DonDep();
         try
         {
-            await DangNhapAsync("Admin");
+            await DangNhapAsync(RoleNames.Admin);
             var users = new UserManagementService();
             var hau = Hau();
             var email = $"test{hau}@hotel.test";
@@ -644,7 +645,7 @@ public class CatalogAndAuthorizationTests
         var rac = new DonDep();
         try
         {
-            await DangNhapAsync("Admin");
+            await DangNhapAsync(RoleNames.Admin);
             var users = new UserManagementService();
             var hau = Hau();
             var email = $"test{hau}@hotel.test";
@@ -690,7 +691,7 @@ public class CatalogAndAuthorizationTests
     {
         try
         {
-            var admin = await LayUserTheoVaiTroAsync("Admin");
+            var admin = await LayUserTheoVaiTroAsync(RoleNames.Admin);
             AppSession.SignIn(admin);
 
             var tuKhoa = await new UserManagementService().SetActiveAsync(admin.Id, false);
@@ -714,7 +715,7 @@ public class CatalogAndAuthorizationTests
         {
             var users = new UserManagementService();
 
-            foreach (var vaiTro in new[] { "Manager", "Receptionist", "ServiceStaff" })
+            foreach (var vaiTro in new[] { RoleNames.Manager, RoleNames.Receptionist, RoleNames.ServiceStaff })
             {
                 await DangNhapAsync(vaiTro);
 
@@ -732,7 +733,7 @@ public class CatalogAndAuthorizationTests
             }
 
             // Chieu dung: Admin xem duoc danh sach
-            await DangNhapAsync("Admin");
+            await DangNhapAsync(RoleNames.Admin);
             var adminXem = await users.GetAllAsync();
             Assert.True(adminXem.Ok, adminXem.Message);
             Assert.NotNull(adminXem.Data);

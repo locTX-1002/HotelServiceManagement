@@ -1,3 +1,4 @@
+using BusinessObjects;
 using System.Collections.ObjectModel;
 using System.Windows;
 using BusinessObjects.Entities;
@@ -158,7 +159,7 @@ public sealed class InvoicesViewModel : ViewModelBase
         }
     }
 
-    private bool CanManageBilling => AppSession.RoleName is "Admin" or "Manager" or "Receptionist";
+    private bool CanManageBilling => AppSession.RoleName is RoleNames.Admin or RoleNames.Manager or RoleNames.Receptionist;
     public bool CanRecordPayment => CanManageBilling
                                     && Invoice != null
                                     && Invoice.Status != InvoiceStatus.Cancelled
@@ -171,8 +172,8 @@ public sealed class InvoicesViewModel : ViewModelBase
     public bool CanCancelInvoice => Invoice != null
                                     && Invoice.Status != InvoiceStatus.Cancelled
                                     && PaidAmount <= 0
-                                    && AppSession.RoleName is "Admin" or "Manager";
-    public bool CanVoidPayment => AppSession.RoleName is "Admin" or "Manager";
+                                    && AppSession.RoleName is RoleNames.Admin or RoleNames.Manager;
+    public bool CanVoidPayment => AppSession.RoleName is RoleNames.Admin or RoleNames.Manager;
     // Hoa don da thu tien van cho tinh lai - khach goi them dich vu sau khi lap hoa don
     // la chuyen binh thuong. Chi chan khi hoa don da huy.
     public bool CanPrepareInvoice => CanManageBilling && SelectedStay != null

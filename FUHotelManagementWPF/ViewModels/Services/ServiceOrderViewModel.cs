@@ -1,3 +1,4 @@
+using BusinessObjects;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -114,8 +115,8 @@ namespace FUHotelManagementWPF.ViewModels.Services
         // AuthorizationPolicy la internal cua tang Services nen man hinh khong goi duoc.
         // Chep lai dung dieu kien o day de AN nut; service van kiem doc lap - day chi la
         // lop cho do bam vao roi bi tu choi.
-        public bool CanCreate => AppSession.RoleName is "Admin" or "Manager" or "Receptionist";
-        public bool CanProcess => AppSession.RoleName is "Admin" or "Manager" or "ServiceStaff";
+        public bool CanCreate => AppSession.RoleName is RoleNames.Admin or RoleNames.Manager or RoleNames.Receptionist;
+        public bool CanProcess => AppSession.RoleName is RoleNames.Admin or RoleNames.Manager or RoleNames.ServiceStaff;
 
         private StayOption? _selectedStay;
         public StayOption? SelectedStay

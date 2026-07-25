@@ -1,3 +1,4 @@
+using BusinessObjects;
 using BusinessObjects.Entities;
 using BusinessObjects.Enums;
 using DataAccessObjects;
@@ -180,7 +181,7 @@ public class OperationsFlowTests
     {
         await using var fixture = await StayFixture.CreateAsync();
         using var session = new SessionGuard();
-        await SignInAsync("Receptionist");
+        await SignInAsync(RoleNames.Receptionist);
 
         var items = await AvailableItemsAsync();
         var expected = items[0].UnitPrice * 2 + items[1].UnitPrice * 3;
@@ -210,14 +211,14 @@ public class OperationsFlowTests
     {
         await using var fixture = await StayFixture.CreateAsync();
         using var session = new SessionGuard();
-        await SignInAsync("Receptionist");
+        await SignInAsync(RoleNames.Receptionist);
 
         var items = await AvailableItemsAsync();
         var orders = new ServiceOrderService();
         var created = await orders.CreateAsync(fixture.StayId, [new ServiceOrderLine(items[0].Id, 1)]);
         Assert.True(created.Ok, created.Message);
 
-        await SignInAsync("ServiceStaff");
+        await SignInAsync(RoleNames.ServiceStaff);
         var toProcessing = await orders.ChangeStatusAsync(created.Data!.Id, ServiceOrderStatus.Processing);
         Assert.True(toProcessing.Ok, toProcessing.Message);
         Assert.Equal(ServiceOrderStatus.Processing, toProcessing.Data!.Status);
@@ -244,7 +245,7 @@ public class OperationsFlowTests
     {
         await using var fixture = await StayFixture.CreateAsync();
         using var session = new SessionGuard();
-        await SignInAsync("Receptionist");
+        await SignInAsync(RoleNames.Receptionist);
 
         var items = await AvailableItemsAsync();
         var orders = new ServiceOrderService();
@@ -253,7 +254,7 @@ public class OperationsFlowTests
         Assert.True(first.Ok, first.Message);
         Assert.True(second.Ok, second.Message);
 
-        await SignInAsync("ServiceStaff");
+        await SignInAsync(RoleNames.ServiceStaff);
 
         var cancelPending = await orders.ChangeStatusAsync(first.Data!.Id, ServiceOrderStatus.Cancelled);
         Assert.True(cancelPending.Ok, cancelPending.Message);
@@ -272,7 +273,7 @@ public class OperationsFlowTests
         await using var active = await StayFixture.CreateAsync();
         await using var closed = await StayFixture.CreateAsync(StayStatus.Completed);
         using var session = new SessionGuard();
-        await SignInAsync("Receptionist");
+        await SignInAsync(RoleNames.Receptionist);
 
         var items = await AvailableItemsAsync();
         var orders = new ServiceOrderService();
@@ -311,7 +312,7 @@ public class OperationsFlowTests
         var orders = new ServiceOrderService();
         var line = new ServiceOrderLine[] { new(items[0].Id, 1) };
 
-        await SignInAsync("ServiceStaff");
+        await SignInAsync(RoleNames.ServiceStaff);
         var byServiceStaff = await orders.CreateAsync(fixture.StayId, line);
         Assert.False(byServiceStaff.Ok);
         Assert.False(string.IsNullOrWhiteSpace(byServiceStaff.Message));
@@ -321,7 +322,7 @@ public class OperationsFlowTests
         var byAnonymous = await orders.CreateAsync(fixture.StayId, line);
         Assert.False(byAnonymous.Ok);
 
-        await SignInAsync("Receptionist");
+        await SignInAsync(RoleNames.Receptionist);
         var byReceptionist = await orders.CreateAsync(fixture.StayId, line);
         Assert.True(byReceptionist.Ok, byReceptionist.Message);
     }
@@ -331,7 +332,7 @@ public class OperationsFlowTests
     {
         await using var fixture = await StayFixture.CreateAsync();
         using var session = new SessionGuard();
-        await SignInAsync("Receptionist");
+        await SignInAsync(RoleNames.Receptionist);
 
         var items = await AvailableItemsAsync();
         var orders = new ServiceOrderService();
@@ -347,15 +348,15 @@ public class OperationsFlowTests
         Assert.False(byReceptionist.Ok);
         Assert.False(string.IsNullOrWhiteSpace(byReceptionist.Message));
 
-        await SignInAsync("ServiceStaff");
+        await SignInAsync(RoleNames.ServiceStaff);
         var byServiceStaff = await orders.ChangeStatusAsync(first.Data.Id, ServiceOrderStatus.Processing);
         Assert.True(byServiceStaff.Ok, byServiceStaff.Message);
 
-        await SignInAsync("Manager");
+        await SignInAsync(RoleNames.Manager);
         var byManager = await orders.ChangeStatusAsync(second.Data!.Id, ServiceOrderStatus.Processing);
         Assert.True(byManager.Ok, byManager.Message);
 
-        await SignInAsync("Admin");
+        await SignInAsync(RoleNames.Admin);
         var byAdmin = await orders.ChangeStatusAsync(third.Data!.Id, ServiceOrderStatus.Processing);
         Assert.True(byAdmin.Ok, byAdmin.Message);
     }
@@ -368,7 +369,7 @@ public class OperationsFlowTests
         await using var active = await StayFixture.CreateAsync();
         await using var closed = await StayFixture.CreateAsync(StayStatus.Completed);
         using var session = new SessionGuard();
-        await SignInAsync("Receptionist");
+        await SignInAsync(RoleNames.Receptionist);
 
         var housekeeping = new HousekeepingRequestService();
 
@@ -400,13 +401,13 @@ public class OperationsFlowTests
     {
         await using var fixture = await StayFixture.CreateAsync();
         using var session = new SessionGuard();
-        await SignInAsync("Receptionist");
+        await SignInAsync(RoleNames.Receptionist);
 
         var housekeeping = new HousekeepingRequestService();
         var created = await housekeeping.CreateAsync(fixture.StayId, HousekeepingRequestType.Cleaning, null);
         Assert.True(created.Ok, created.Message);
 
-        await SignInAsync("ServiceStaff");
+        await SignInAsync(RoleNames.ServiceStaff);
         var acknowledged = await housekeeping.ChangeStatusAsync(created.Data!.Id, HousekeepingRequestStatus.Acknowledged);
         Assert.True(acknowledged.Ok, acknowledged.Message);
         Assert.Equal(HousekeepingRequestStatus.Acknowledged, acknowledged.Data!.Status);
@@ -431,7 +432,7 @@ public class OperationsFlowTests
     {
         await using var fixture = await StayFixture.CreateAsync();
         using var session = new SessionGuard();
-        await SignInAsync("Receptionist");
+        await SignInAsync(RoleNames.Receptionist);
 
         var housekeeping = new HousekeepingRequestService();
         var first = await housekeeping.CreateAsync(fixture.StayId, HousekeepingRequestType.ExtraWater, null);
@@ -439,7 +440,7 @@ public class OperationsFlowTests
         Assert.True(first.Ok, first.Message);
         Assert.True(second.Ok, second.Message);
 
-        await SignInAsync("Manager");
+        await SignInAsync(RoleNames.Manager);
 
         var cancelPending = await housekeeping.ChangeStatusAsync(first.Data!.Id, HousekeepingRequestStatus.Cancelled);
         Assert.True(cancelPending.Ok, cancelPending.Message);
@@ -456,7 +457,7 @@ public class OperationsFlowTests
     {
         await using var fixture = await StayFixture.CreateAsync();
         using var session = new SessionGuard();
-        await SignInAsync("Receptionist");
+        await SignInAsync(RoleNames.Receptionist);
 
         var housekeeping = new HousekeepingRequestService();
         var requests = new List<int>();
@@ -467,7 +468,7 @@ public class OperationsFlowTests
             requests.Add(created.Data!.Id);
         }
 
-        await SignInAsync("ServiceStaff");
+        await SignInAsync(RoleNames.ServiceStaff);
         // requests[0] giu Pending; [1] -> Acknowledged; [2] -> Completed; [3] -> Cancelled
         var toAcknowledged = await housekeeping.ChangeStatusAsync(requests[1], HousekeepingRequestStatus.Acknowledged);
         Assert.True(toAcknowledged.Ok, toAcknowledged.Message);
@@ -492,7 +493,7 @@ public class OperationsFlowTests
     {
         await using var fixture = await StayFixture.CreateAsync();
         using var session = new SessionGuard();
-        await SignInAsync("Receptionist");
+        await SignInAsync(RoleNames.Receptionist);
 
         var housekeeping = new HousekeepingRequestService();
         var created = await housekeeping.CreateAsync(fixture.StayId, HousekeepingRequestType.Cleaning, null);
@@ -503,7 +504,7 @@ public class OperationsFlowTests
         Assert.False(byReceptionist.Ok);
         Assert.False(string.IsNullOrWhiteSpace(byReceptionist.Message));
 
-        await SignInAsync("ServiceStaff");
+        await SignInAsync(RoleNames.ServiceStaff);
         var byServiceStaff = await housekeeping.ChangeStatusAsync(created.Data.Id, HousekeepingRequestStatus.Acknowledged);
         Assert.True(byServiceStaff.Ok, byServiceStaff.Message);
     }
@@ -529,7 +530,7 @@ public class OperationsFlowTests
         await first.AddPaidInvoiceAsync(dayOne.AddHours(10), 1_000_000, 200_000, 50_000, 100_000, 900_000);
         await second.AddPaidInvoiceAsync(dayTwo.AddHours(9), 2_000_000, 300_000, 0, 0, 2_300_000);
 
-        await SignInAsync("Manager");
+        await SignInAsync(RoleNames.Manager);
         var report = await new ReportService().GetRevenueAsync(dayOne, dayTwo);
 
         Assert.True(report.Ok, report.Message);
@@ -566,7 +567,7 @@ public class OperationsFlowTests
     public async Task BaoCaoDoanhThu_NgayKetThucTruocNgayBatDau_BiChan()
     {
         using var session = new SessionGuard();
-        await SignInAsync("Manager");
+        await SignInAsync(RoleNames.Manager);
 
         var today = DateTime.Today;
         var report = await new ReportService().GetRevenueAsync(today, today.AddDays(-1));
@@ -580,7 +581,7 @@ public class OperationsFlowTests
     public async Task BaoCaoCongSuat_TongPhongKhopSoPhongDangHoatDongTrongDb()
     {
         using var session = new SessionGuard();
-        await SignInAsync("Admin");
+        await SignInAsync(RoleNames.Admin);
 
         await using var db = HotelDbContextFactory.Create();
         var activeRooms = await db.Rooms.CountAsync(r => r.IsActive);
@@ -609,7 +610,7 @@ public class OperationsFlowTests
         var day = RandomReportDay();
         await fixture.AddPaidInvoiceAsync(day.AddHours(8), 500_000, 100_000, 0, 50_000, 550_000);
 
-        await SignInAsync("Manager");
+        await SignInAsync(RoleNames.Manager);
         var csv = await new ReportService().ExportRevenueCsvAsync(day, day);
 
         Assert.True(csv.Ok, csv.Message);
@@ -639,7 +640,7 @@ public class OperationsFlowTests
         var reports = new ReportService();
         var today = DateTime.Today;
 
-        foreach (var role in new[] { "Receptionist", "ServiceStaff" })
+        foreach (var role in new[] { RoleNames.Receptionist, RoleNames.ServiceStaff })
         {
             await SignInAsync(role);
 
@@ -654,7 +655,7 @@ public class OperationsFlowTests
             Assert.False(csv.Ok, $"{role} khong duoc phep xuat CSV.");
         }
 
-        foreach (var role in new[] { "Admin", "Manager" })
+        foreach (var role in new[] { RoleNames.Admin, RoleNames.Manager })
         {
             await SignInAsync(role);
 

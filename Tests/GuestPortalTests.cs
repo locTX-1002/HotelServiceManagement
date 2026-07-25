@@ -1,3 +1,4 @@
+using BusinessObjects;
 using BusinessObjects.Entities;
 using BusinessObjects.Enums;
 using DataAccessObjects;
@@ -23,7 +24,7 @@ public class GuestPortalTests
         try
         {
             // Le tan tao 2 khach, moi khach 1 don, roi kich hoat tai khoan cho khach A
-            await TestUsers.SignInAsync("Receptionist");
+            await TestUsers.SignInAsync(RoleNames.Receptionist);
             var (guestA, _) = await box.CreateGuestWithBookingAsync();
             var (guestB, _) = await box.CreateGuestWithBookingAsync();
 
@@ -56,7 +57,7 @@ public class GuestPortalTests
         await using var box = await Box.CreateAsync();
         try
         {
-            await TestUsers.SignInAsync("Receptionist");
+            await TestUsers.SignInAsync(RoleNames.Receptionist);
             var (guest, _) = await box.CreateGuestWithBookingAsync();
             var activate = await new GuestAccountService().ActivateAsync(guest.Id, Password);
             Assert.True(activate.Ok, activate.Message);
@@ -75,7 +76,7 @@ public class GuestPortalTests
         await using var box = await Box.CreateAsync();
         try
         {
-            await TestUsers.SignInAsync("Receptionist");
+            await TestUsers.SignInAsync(RoleNames.Receptionist);
             var (guest, reservation) = await box.CreateGuestWithBookingAsync();
             var activate = await new GuestAccountService().ActivateAsync(guest.Id, Password);
             Assert.True(activate.Ok, activate.Message);
@@ -106,7 +107,7 @@ public class GuestPortalTests
         await using var box = await Box.CreateAsync();
         try
         {
-            await TestUsers.SignInAsync("Receptionist");
+            await TestUsers.SignInAsync(RoleNames.Receptionist);
             var (guest, _) = await box.CreateGuestWithBookingAsync();
             Assert.True((await new GuestAccountService().ActivateAsync(guest.Id, Password)).Ok);
             AppSession.SignOut();

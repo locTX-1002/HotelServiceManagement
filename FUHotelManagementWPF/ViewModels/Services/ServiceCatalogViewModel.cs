@@ -1,3 +1,4 @@
+using BusinessObjects;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -37,7 +38,7 @@ namespace FUHotelManagementWPF.ViewModels.Services
         public ObservableCollection<ServiceItemRow> Items { get; } = [];
 
         /// <summary>Chi Admin/Manager duoc sua danh muc; nguoi khac chi xem.</summary>
-        public bool CanManage => AppSession.RoleName is "Admin" or "Manager";
+        public bool CanManage => AppSession.RoleName is RoleNames.Admin or RoleNames.Manager;
 
         private ServiceItemRow? _selectedItem;
         public ServiceItemRow? SelectedItem

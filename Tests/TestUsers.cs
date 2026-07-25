@@ -1,3 +1,4 @@
+using BusinessObjects;
 using BusinessObjects.Entities;
 using DataAccessObjects;
 using Microsoft.EntityFrameworkCore;
@@ -24,7 +25,7 @@ public static class TestUsers
 
     private static readonly Dictionary<string, int> RoleIds = new()
     {
-        ["Admin"] = 1, ["Manager"] = 2, ["Receptionist"] = 3, ["ServiceStaff"] = 4,
+        [RoleNames.Admin] = 1, [RoleNames.Manager] = 2, [RoleNames.Receptionist] = 3, [RoleNames.ServiceStaff] = 4,
     };
 
     /// <summary>Dang nhap bang user THAT co vai tro yeu cau; thieu thi tao moi.</summary>
@@ -41,7 +42,7 @@ public static class TestUsers
             if (existing != null) return existing;
 
             // Chua co -> tao qua service that. Phai dang nhap Admin truoc vi CreateAsync doi quyen Admin.
-            var admin = await FindAsync("Admin")
+            var admin = await FindAsync(RoleNames.Admin)
                 ?? throw new InvalidOperationException(
                     "DB khong co tai khoan Admin nao dang hoat dong. Chay app 1 lan de bootstrap admin truoc khi test.");
 

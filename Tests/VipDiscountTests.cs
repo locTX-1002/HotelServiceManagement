@@ -1,3 +1,4 @@
+using BusinessObjects;
 using BusinessObjects.Entities;
 using BusinessObjects.Enums;
 using DataAccessObjects;
@@ -21,7 +22,7 @@ public class VipDiscountTests
         await using var box = await Box.CreateAsync(BasePrice);
         try
         {
-            await TestUsers.SignInAsync("Receptionist");
+            await TestUsers.SignInAsync(RoleNames.Receptionist);
             var stayId = await box.CheckInAsync(GuestTag.Vip);
 
             var invoice = await new InvoiceService().PrepareAsync(stayId, null, DateTime.Today.AddDays(1).AddHours(11));
@@ -43,7 +44,7 @@ public class VipDiscountTests
         await using var box = await Box.CreateAsync(BasePrice);
         try
         {
-            await TestUsers.SignInAsync("Receptionist");
+            await TestUsers.SignInAsync(RoleNames.Receptionist);
             var stayId = await box.CheckInAsync(GuestTag.None);
 
             var invoice = await new InvoiceService().PrepareAsync(stayId, null, DateTime.Today.AddDays(1).AddHours(11));
@@ -62,7 +63,7 @@ public class VipDiscountTests
         await using var box = await Box.CreateAsync(BasePrice);
         try
         {
-            await TestUsers.SignInAsync("Manager");
+            await TestUsers.SignInAsync(RoleNames.Manager);
             // Ma giam 20% con hieu luc trong hom nay
             var code = $"T{Guid.NewGuid():N}"[..10].ToUpperInvariant();
             var promo = await new PromotionService().SaveAsync(
@@ -71,7 +72,7 @@ public class VipDiscountTests
             Assert.True(promo.Ok, promo.Message);
             box.PromotionId = promo.Data!.Id;
 
-            await TestUsers.SignInAsync("Receptionist");
+            await TestUsers.SignInAsync(RoleNames.Receptionist);
             var stayId = await box.CheckInAsync(GuestTag.Vip);
 
             var invoice = await new InvoiceService().PrepareAsync(stayId, code, DateTime.Today.AddDays(1).AddHours(11));

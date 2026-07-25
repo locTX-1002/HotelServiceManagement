@@ -1,3 +1,4 @@
+using BusinessObjects;
 using BusinessObjects.Entities;
 using BusinessObjects.Enums;
 using DataAccessObjects;
@@ -44,7 +45,7 @@ public class EndToEndFlowTests
         await using var sandbox = await Sandbox.CreateAsync();
         try
         {
-            await SignInAsync("Receptionist");
+            await SignInAsync(RoleNames.Receptionist);
 
             // 1) Ho so khach co CCCD -> du dieu kien check-in
             var guest = await sandbox.CreateGuestAsync(withIdentity: true);
@@ -77,7 +78,7 @@ public class EndToEndFlowTests
                 stayId, [new ServiceOrderLine(item.Id, 2)]);
             Assert.True(order.Ok, order.Message);
 
-            await SignInAsync("ServiceStaff");
+            await SignInAsync(RoleNames.ServiceStaff);
             var processing = await new ServiceOrderService()
                 .ChangeStatusAsync(order.Data!.Id, ServiceOrderStatus.Processing);
             Assert.True(processing.Ok, processing.Message);
@@ -86,7 +87,7 @@ public class EndToEndFlowTests
             Assert.True(completed.Ok, completed.Message);
 
             // 6) Phu thu (khach lam hong do) - le tan them
-            await SignInAsync("Receptionist");
+            await SignInAsync(RoleNames.Receptionist);
             var surchargeItem = await FirstSurchargeItemAsync();
             var surcharge = await new SurchargeService().AddToStayAsync(stayId, surchargeItem.Id, 1);
             Assert.True(surcharge.Ok, surcharge.Message);
@@ -144,7 +145,7 @@ public class EndToEndFlowTests
         await using var sandbox = await Sandbox.CreateAsync();
         try
         {
-            await SignInAsync("Receptionist");
+            await SignInAsync(RoleNames.Receptionist);
 
             // Ho so tam: chua kip xac minh giay to
             var guest = await sandbox.CreateGuestAsync(withIdentity: false);
@@ -183,7 +184,7 @@ public class EndToEndFlowTests
         await using var sandbox = await Sandbox.CreateAsync();
         try
         {
-            await SignInAsync("Receptionist");
+            await SignInAsync(RoleNames.Receptionist);
             var stay = await sandbox.CheckInNewGuestAsync();
 
             // Lap hoa don nhung khong tra dong nao (don khong co tien coc)
@@ -221,7 +222,7 @@ public class EndToEndFlowTests
         await using var sandbox = await Sandbox.CreateAsync();
         try
         {
-            await SignInAsync("Receptionist");
+            await SignInAsync(RoleNames.Receptionist);
             var stay = await sandbox.CheckInNewGuestAsync();
 
             // Don dich vu de o trang thai Pending -> chua tinh tien, cung chua duoc phep tra phong
@@ -243,12 +244,12 @@ public class EndToEndFlowTests
             Assert.Contains("dịch vụ", blocked.Message);
 
             // Huy don dich vu (ServiceStaff) roi check-out lai -> thong
-            await SignInAsync("ServiceStaff");
+            await SignInAsync(RoleNames.ServiceStaff);
             var cancelOrder = await new ServiceOrderService()
                 .ChangeStatusAsync(order.Data!.Id, ServiceOrderStatus.Cancelled);
             Assert.True(cancelOrder.Ok, cancelOrder.Message);
 
-            await SignInAsync("Receptionist");
+            await SignInAsync(RoleNames.Receptionist);
             var ok = await new StayService().CheckOutAsync(stay.StayId, asOf);
             Assert.True(ok.Ok, ok.Message);
         }
@@ -268,7 +269,7 @@ public class EndToEndFlowTests
         await using var sandbox = await Sandbox.CreateAsync();
         try
         {
-            await SignInAsync("Receptionist");
+            await SignInAsync(RoleNames.Receptionist);
             var stay = await sandbox.CheckInNewGuestAsync();
 
             // 1) Lap hoa don va thu du ngay - luc nay chua co dich vu nao
@@ -287,13 +288,13 @@ public class EndToEndFlowTests
             var order = await new ServiceOrderService().CreateAsync(
                 stay.StayId, [new ServiceOrderLine(item.Id, 1)]);
             Assert.True(order.Ok, order.Message);
-            await SignInAsync("ServiceStaff");
+            await SignInAsync(RoleNames.ServiceStaff);
             var done = await new ServiceOrderService()
                 .ChangeStatusAsync(order.Data!.Id, ServiceOrderStatus.Completed);
             Assert.True(done.Ok, done.Message);
 
             // 3) Hoa don dang "Paid" nhung thieu tien dich vu -> khong duoc cho tra phong
-            await SignInAsync("Receptionist");
+            await SignInAsync(RoleNames.Receptionist);
             var blocked = await new StayService().CheckOutAsync(stay.StayId, asOf);
             Assert.False(blocked.Ok);
             Assert.Contains("tính lại hoá đơn", blocked.Message);
@@ -328,7 +329,7 @@ public class EndToEndFlowTests
         await using var sandbox = await Sandbox.CreateAsync();
         try
         {
-            await SignInAsync("Receptionist");
+            await SignInAsync(RoleNames.Receptionist);
             var stay = await sandbox.CheckInNewGuestAsync();
 
             var asOf = DateTime.Today.AddDays(1).AddHours(11);
@@ -356,9 +357,9 @@ public class EndToEndFlowTests
             var order = await new ServiceOrderService().CreateAsync(
                 stay.StayId, [new ServiceOrderLine(item.Id, 1)]);
             Assert.True(order.Ok, order.Message);
-            await SignInAsync("ServiceStaff");
+            await SignInAsync(RoleNames.ServiceStaff);
             await new ServiceOrderService().ChangeStatusAsync(order.Data!.Id, ServiceOrderStatus.Completed);
-            await SignInAsync("Receptionist");
+            await SignInAsync(RoleNames.Receptionist);
 
             var again = await new InvoiceService().PrepareAsync(stay.StayId, null, asOf);
             Assert.True(again.Ok, again.Message);
@@ -381,7 +382,7 @@ public class EndToEndFlowTests
         await using var sandbox = await Sandbox.CreateAsync();
         try
         {
-            await SignInAsync("Manager");
+            await SignInAsync(RoleNames.Manager);
             var type = new RoomTypeService();
 
             // Chua co don nao -> doi gia thoai mai
@@ -389,10 +390,10 @@ public class EndToEndFlowTests
                 4, BasePrice + 100_000, null, true);
             Assert.True(free.Ok, free.Message);
 
-            await SignInAsync("Receptionist");
+            await SignInAsync(RoleNames.Receptionist);
             var stay = await sandbox.CheckInNewGuestAsync();
 
-            await SignInAsync("Manager");
+            await SignInAsync(RoleNames.Manager);
             var blocked = await type.UpdateAsync(sandbox.RoomTypeId, free.Data!.TypeName,
                 4, BasePrice + 500_000, null, true);
             Assert.False(blocked.Ok);
@@ -415,7 +416,7 @@ public class EndToEndFlowTests
         await using var sandbox = await Sandbox.CreateAsync();
         try
         {
-            await SignInAsync("Receptionist");
+            await SignInAsync(RoleNames.Receptionist);
             var guestA = await sandbox.CreateGuestAsync(withIdentity: true);
             var guestB = await sandbox.CreateGuestAsync(withIdentity: true);
 
@@ -448,7 +449,7 @@ public class EndToEndFlowTests
         await using var sandbox = await Sandbox.CreateAsync();
         try
         {
-            await SignInAsync("Receptionist");
+            await SignInAsync(RoleNames.Receptionist);
             var guest = await sandbox.CreateGuestAsync(withIdentity: true);
 
             // Huy don dang cho xac nhan
@@ -486,7 +487,7 @@ public class EndToEndFlowTests
         await using var sandbox = await Sandbox.CreateAsync();
         try
         {
-            await SignInAsync("Receptionist");
+            await SignInAsync(RoleNames.Receptionist);
             var guest = await sandbox.CreateGuestAsync(withIdentity: true);
             var booking = await new ReservationService().CreateAsync(
                 guest.Id, sandbox.RoomId, 1, DateTime.Today, DateTime.Today.AddDays(1),
@@ -496,13 +497,13 @@ public class EndToEndFlowTests
             Assert.True(confirm.Ok, confirm.Message);
 
             // Sai vai tro: nhan vien dich vu khong duoc check-in
-            await SignInAsync("ServiceStaff");
+            await SignInAsync(RoleNames.ServiceStaff);
             var denied = await new StayService().CheckInAsync(booking.Data.Id, DateTime.Now);
             Assert.False(denied.Ok);
             Assert.Contains("quyền", denied.Message);
 
             // Dung vai tro: le tan check-in duoc
-            await SignInAsync("Receptionist");
+            await SignInAsync(RoleNames.Receptionist);
             var allowed = await new StayService().CheckInAsync(booking.Data.Id, DateTime.Now);
             Assert.True(allowed.Ok, allowed.Message);
         }

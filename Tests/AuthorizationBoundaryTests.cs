@@ -1,3 +1,4 @@
+using BusinessObjects;
 using BusinessObjects.Entities;
 using BusinessObjects.Enums;
 using Services;
@@ -9,21 +10,21 @@ public class AuthorizationBoundaryTests
     [Fact]
     public async Task ServiceStaff_CannotForgeRoomMaintenancePermission()
     {
-        SignInAs("ServiceStaff");
+        SignInAs(RoleNames.ServiceStaff);
 
         var result = await new RoomService()
             .UpdateStatusAsync(1, RoomStatus.Maintenance, canManageMaintenance: true);
 
         Assert.False(result.Ok);
         // Thong bao hien ten vai tro bang tieng Viet ("Quan tri vien") cho khop voi
-        // phan con lai cua giao dien, khong dung ten ky thuat "Admin" nua.
+        // phan con lai cua giao dien, khong dung ten ky thuat RoleNames.Admin nua.
         Assert.Contains("Quản trị viên", result.Message);
     }
 
     [Fact]
     public async Task Receptionist_CannotCreateRoomType()
     {
-        SignInAs("Receptionist");
+        SignInAs(RoleNames.Receptionist);
 
         var result = await new RoomTypeService().CreateAsync("VIP", 2, 1_000_000, null, true);
 
@@ -33,7 +34,7 @@ public class AuthorizationBoundaryTests
     [Fact]
     public async Task ServiceStaff_CannotCreateGuest()
     {
-        SignInAs("ServiceStaff");
+        SignInAs(RoleNames.ServiceStaff);
 
         var result = await new GuestService().CreateAsync(
             "Guest", null, "0900000000", null, GuestTag.None, null);
@@ -44,7 +45,7 @@ public class AuthorizationBoundaryTests
     [Fact]
     public async Task ServiceStaff_CannotCreateReservation()
     {
-        SignInAs("ServiceStaff");
+        SignInAs(RoleNames.ServiceStaff);
 
         var result = await new ReservationService().CreateAsync(
             1, 1, 1, DateTime.Today, DateTime.Today.AddDays(1), null, null, null);
@@ -55,7 +56,7 @@ public class AuthorizationBoundaryTests
     [Fact]
     public async Task Receptionist_CannotManageServiceCatalog()
     {
-        SignInAs("Receptionist");
+        SignInAs(RoleNames.Receptionist);
 
         var result = await new ServiceCatalogService().SaveCategoryAsync(null, "Spa", true);
 
@@ -65,7 +66,7 @@ public class AuthorizationBoundaryTests
     [Fact]
     public async Task ServiceStaff_CannotActivateGuestAccount()
     {
-        SignInAs("ServiceStaff");
+        SignInAs(RoleNames.ServiceStaff);
 
         var result = await new GuestAccountService().ActivateAsync(1, "Strong@2026");
 

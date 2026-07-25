@@ -1,3 +1,4 @@
+using BusinessObjects;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -50,16 +51,16 @@ namespace FUHotelManagementWPF.ViewModels.Users
         public ObservableCollection<UserRow> Rows { get; } = [];
 
         /// <summary>Toan module chi danh cho Admin - vai tro khac chi thay dong thong bao.</summary>
-        public bool IsAdmin => AppSession.RoleName == "Admin";
+        public bool IsAdmin => AppSession.RoleName == RoleNames.Admin;
         public bool IsNotAdmin => !IsAdmin;
 
         public List<RoleFilterOption> RoleFilters { get; } =
         [
             new(string.Empty, "Tất cả"),
-            new("Admin", "Quản trị viên"),
-            new("Manager", "Quản lý"),
-            new("Receptionist", "Lễ tân"),
-            new("ServiceStaff", "Nhân viên dịch vụ"),
+            new(RoleNames.Admin, "Quản trị viên"),
+            new(RoleNames.Manager, "Quản lý"),
+            new(RoleNames.Receptionist, "Lễ tân"),
+            new(RoleNames.ServiceStaff, "Nhân viên dịch vụ"),
         ];
 
         private string _searchText = string.Empty;

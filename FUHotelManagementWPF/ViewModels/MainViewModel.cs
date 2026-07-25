@@ -1,3 +1,4 @@
+using BusinessObjects;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -23,10 +24,10 @@ namespace FUHotelManagementWPF.ViewModels
 
         public string RoleDisplay => AppSession.RoleName switch
         {
-            "Admin" => "Quản trị viên",
-            "Manager" => "Quản lý",
-            "Receptionist" => "Lễ tân",
-            "ServiceStaff" => "Nhân viên dịch vụ",
+            RoleNames.Admin => "Quản trị viên",
+            RoleNames.Manager => "Quản lý",
+            RoleNames.Receptionist => "Lễ tân",
+            RoleNames.ServiceStaff => "Nhân viên dịch vụ",
             _ => AppSession.RoleName,
         };
 

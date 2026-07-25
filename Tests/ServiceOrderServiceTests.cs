@@ -1,3 +1,4 @@
+using BusinessObjects;
 using BusinessObjects.Entities;
 using BusinessObjects.Enums;
 using Repositories;
@@ -10,7 +11,7 @@ public class ServiceOrderServiceTests
     [Fact]
     public async Task CompletedOrder_CannotChangeStatus()
     {
-        AppSession.SignIn(new User { Role = new Role { RoleName = "ServiceStaff" } });
+        AppSession.SignIn(new User { Role = new Role { RoleName = RoleNames.ServiceStaff } });
         var repository = new FakeOrderRepository(new ServiceOrder { Id = 1, Status = ServiceOrderStatus.Completed });
         var service = new ServiceOrderService(repository, new FakeCatalogRepository());
 
@@ -23,7 +24,7 @@ public class ServiceOrderServiceTests
     [Fact]
     public async Task PendingOrder_CanMoveToProcessing()
     {
-        AppSession.SignIn(new User { Role = new Role { RoleName = "ServiceStaff" } });
+        AppSession.SignIn(new User { Role = new Role { RoleName = RoleNames.ServiceStaff } });
         var repository = new FakeOrderRepository(new ServiceOrder { Id = 1, Status = ServiceOrderStatus.Pending });
         var service = new ServiceOrderService(repository, new FakeCatalogRepository());
 
@@ -36,7 +37,7 @@ public class ServiceOrderServiceTests
     [Fact]
     public async Task Receptionist_CannotProcessServiceOrder()
     {
-        AppSession.SignIn(new User { Role = new Role { RoleName = "Receptionist" } });
+        AppSession.SignIn(new User { Role = new Role { RoleName = RoleNames.Receptionist } });
         var repository = new FakeOrderRepository(new ServiceOrder { Id = 1, Status = ServiceOrderStatus.Pending });
 
         var result = await new ServiceOrderService(repository, new FakeCatalogRepository())

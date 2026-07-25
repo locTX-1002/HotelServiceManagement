@@ -1,3 +1,4 @@
+using BusinessObjects;
 using BusinessObjects.Entities;
 using BusinessObjects.Enums;
 using Repositories;
@@ -10,7 +11,7 @@ public class PaymentServiceTests
     [Fact]
     public async Task BankTransfer_RequiresTransactionId()
     {
-        AppSession.SignIn(new User { Id = 3, Role = new Role { RoleName = "Receptionist" } });
+        AppSession.SignIn(new User { Id = 3, Role = new Role { RoleName = RoleNames.Receptionist } });
         var repository = new FakePaymentRepository();
 
         var result = await new PaymentService(repository)
@@ -23,7 +24,7 @@ public class PaymentServiceTests
     [Fact]
     public async Task Receptionist_CannotVoidCompletedPayment()
     {
-        AppSession.SignIn(new User { Id = 3, Role = new Role { RoleName = "Receptionist" } });
+        AppSession.SignIn(new User { Id = 3, Role = new Role { RoleName = RoleNames.Receptionist } });
         var repository = new FakePaymentRepository();
 
         var result = await new PaymentService(repository).VoidAsync(1);
@@ -35,7 +36,7 @@ public class PaymentServiceTests
     [Fact]
     public async Task Manager_CanVoidCompletedPayment()
     {
-        AppSession.SignIn(new User { Id = 2, Role = new Role { RoleName = "Manager" } });
+        AppSession.SignIn(new User { Id = 2, Role = new Role { RoleName = RoleNames.Manager } });
         var repository = new FakePaymentRepository { PaymentToVoid = new Payment { Id = 9, Status = PaymentStatus.Cancelled } };
 
         var result = await new PaymentService(repository).VoidAsync(9);

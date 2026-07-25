@@ -1,3 +1,4 @@
+using BusinessObjects;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -80,7 +81,7 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
         public RoomStatusDialogViewModel(Room room)
         {
             _room = room;
-            _canManageMaintenance = AppSession.RoleName is "Admin" or "Manager";
+            _canManageMaintenance = AppSession.RoleName is RoleNames.Admin or RoleNames.Manager;
 
             Options = _room.Status switch
             {

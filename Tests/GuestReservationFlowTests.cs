@@ -1,3 +1,4 @@
+using BusinessObjects;
 using BusinessObjects.Entities;
 using BusinessObjects.Enums;
 using DataAccessObjects;
@@ -400,9 +401,9 @@ public class GuestReservationFlowTests : IAsyncLifetime
 
         var roleName = email switch
         {
-            EmailLeTan => "Receptionist",
-            EmailNhanVienDichVu => "ServiceStaff",
-            _ => "Admin",
+            EmailLeTan => RoleNames.Receptionist,
+            EmailNhanVienDichVu => RoleNames.ServiceStaff,
+            _ => RoleNames.Admin,
         };
         await TestUsers.SignInAsync(roleName);
     }

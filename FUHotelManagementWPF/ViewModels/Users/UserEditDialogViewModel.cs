@@ -1,3 +1,4 @@
+using BusinessObjects;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -116,9 +117,9 @@ namespace FUHotelManagementWPF.ViewModels.Users
         /// <summary>Ten vai tro trong DB la tieng Anh; man hinh phai hien tieng Viet.</summary>
         private static string Describe(string roleName) => roleName switch
         {
-            "Manager" => "Quản lý (Manager)",
-            "Receptionist" => "Lễ tân (Receptionist)",
-            "ServiceStaff" => "Nhân viên dịch vụ (ServiceStaff)",
+            RoleNames.Manager => "Quản lý (Manager)",
+            RoleNames.Receptionist => "Lễ tân (Receptionist)",
+            RoleNames.ServiceStaff => "Nhân viên dịch vụ (ServiceStaff)",
             _ => roleName,
         };
 

@@ -1,3 +1,4 @@
+using BusinessObjects;
 using BusinessObjects.Entities;
 using Services;
 
@@ -24,10 +25,10 @@ namespace FUHotelManagementWPF.ViewModels.Users
 
         public string RoleDisplay => RoleName switch
         {
-            "Admin" => "Quản trị viên",
-            "Manager" => "Quản lý",
-            "Receptionist" => "Lễ tân",
-            "ServiceStaff" => "Nhân viên dịch vụ",
+            RoleNames.Admin => "Quản trị viên",
+            RoleNames.Manager => "Quản lý",
+            RoleNames.Receptionist => "Lễ tân",
+            RoleNames.ServiceStaff => "Nhân viên dịch vụ",
             _ => "Chưa gán vai trò",
         };
 
@@ -46,7 +47,7 @@ namespace FUHotelManagementWPF.ViewModels.Users
         /// nhan ban quyen cao nhat hoac tu khoa minh ra ngoai, khong con duong thu hoi.
         /// Service cung chan doc lap - day chi la lop an nut cho do bam nham.
         /// </summary>
-        public bool IsAdminAccount => RoleName == "Admin";
+        public bool IsAdminAccount => RoleName == RoleNames.Admin;
 
         public bool CanEdit => !IsAdminAccount;
         public bool CanResetPassword => !IsAdminAccount;

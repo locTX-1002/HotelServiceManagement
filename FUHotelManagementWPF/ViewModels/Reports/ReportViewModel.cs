@@ -1,3 +1,4 @@
+using BusinessObjects;
 using System;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -25,7 +26,7 @@ namespace FUHotelManagementWPF.ViewModels.Reports
         public ObservableCollection<RevenueByDay> Rows { get; } = [];
 
         // ---- Quyen xem: doc 1 lan luc mo man, khong doi giua chung phien ----
-        public bool HasPermission { get; } = AppSession.RoleName is "Admin" or "Manager";
+        public bool HasPermission { get; } = AppSession.RoleName is RoleNames.Admin or RoleNames.Manager;
         public bool NoPermission => !HasPermission;
 
         // ---- Khoang ngay ----

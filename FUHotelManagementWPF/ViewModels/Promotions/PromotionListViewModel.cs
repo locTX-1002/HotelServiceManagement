@@ -1,3 +1,4 @@
+using BusinessObjects;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -80,7 +81,7 @@ namespace FUHotelManagementWPF.ViewModels.Promotions
         }
 
         // Service cung chan quyen, nhung an nut truoc cho do bam vao roi bi tu choi.
-        public bool CanManage => AppSession.RoleName is "Admin" or "Manager";
+        public bool CanManage => AppSession.RoleName is RoleNames.Admin or RoleNames.Manager;
 
         public RelayCommand AddCommand { get; }
         public RelayCommand EditCommand { get; }
