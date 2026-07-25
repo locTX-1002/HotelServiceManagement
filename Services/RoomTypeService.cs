@@ -74,6 +74,18 @@ namespace Services
                     "Không thể giảm sức chứa vì đang có đặt phòng vượt sức chứa mới.");
             }
 
+            // Hoa don tinh tien phong theo BasePrice HIEN TAI chu khong phai gia luc dat
+            // (Reservation khong luu gia, ma nhom khong duoc tu them cot). Vi vay doi don gia
+            // trong khi con don chua ket thuc la khach phai tra theo gia moi - doi gia da
+            // thoa thuan sau lung khach. Chan lai; doi ten / suc chua / mo ta thi van cho.
+            if (basePrice != roomType.BasePrice
+                && await _roomTypeRepository.HasOpenReservationAsync(id))
+            {
+                return ServiceResult<RoomType>.Failure(
+                    "Đang có đặt phòng hoặc khách ở theo loại phòng này nên không đổi được đơn giá. "
+                    + "Chờ các đơn đó kết thúc, hoặc tạo loại phòng mới với giá mới.");
+            }
+
             roomType.TypeName = typeName.Trim();
             roomType.Capacity = capacity;
             roomType.BasePrice = basePrice;

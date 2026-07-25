@@ -75,6 +75,21 @@ namespace DataAccessObjects
                 && r.NumberOfGuests > newCapacity);
         }
 
+        /// <summary>
+        /// Con don dat phong chua ket thuc dung loai phong nay khong? Dung de chan doi
+        /// don gia giua chung: hoa don tinh theo BasePrice HIEN TAI, nen doi gia luc khach
+        /// dang o la khach phai tra theo gia moi thay vi gia luc dat.
+        /// </summary>
+        public async Task<bool> HasOpenReservationAsync(int roomTypeId)
+        {
+            await using var context = HotelDbContextFactory.Create();
+            return await context.Reservations.AnyAsync(r =>
+                r.Room.RoomTypeId == roomTypeId
+                && (r.Status == ReservationStatus.Pending
+                    || r.Status == ReservationStatus.Confirmed
+                    || r.Status == ReservationStatus.CheckedIn));
+        }
+
         public async Task AddAsync(RoomType roomType)
         {
             await using var context = HotelDbContextFactory.Create();
