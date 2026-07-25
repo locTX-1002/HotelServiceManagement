@@ -264,11 +264,13 @@
                             <StackPanel Orientation="Horizontal">
                                 <Button Content="Sửa thông tin" Style="{StaticResource PrimaryButton}"
                                         Padding="16,7"
+                                        Visibility="{Binding CanEdit, Converter={StaticResource BoolToVis}}"
                                         Command="{Binding DataContext.EditCommand,
                                                   RelativeSource={RelativeSource AncestorType=UserControl}}" />
                                 <Button Content="Đặt lại mật khẩu" Style="{StaticResource GhostButton}"
                                         Padding="16,7" Margin="10,0,0,0"
                                         ToolTip="Đặt mật khẩu mới cho nhân viên này"
+                                        Visibility="{Binding CanResetPassword, Converter={StaticResource BoolToVis}}"
                                         Command="{Binding DataContext.ResetPasswordCommand,
                                                   RelativeSource={RelativeSource AncestorType=UserControl}}" />
                             </StackPanel>
@@ -279,9 +281,19 @@
                                     Padding="16,7" Margin="0,10,0,0" HorizontalAlignment="Left"
                                     Foreground="{StaticResource DangerBrush}"
                                     IsEnabled="{Binding CanToggleActive}"
+                                    Visibility="{Binding CanToggleActive, Converter={StaticResource BoolToVis}}"
                                     ToolTip="{Binding ToggleActiveToolTip}"
                                     Command="{Binding DataContext.ToggleActiveCommand,
                                               RelativeSource={RelativeSource AncestorType=UserControl}}" />
+
+                            <!-- Tai khoan Admin: khong co nut nao, thay bang dong giai thich -->
+                            <Border Background="{StaticResource SurfaceAltBrush}" CornerRadius="4"
+                                    Padding="12,10"
+                                    Visibility="{Binding ShowAdminLockNote, Converter={StaticResource BoolToVis}}">
+                                <TextBlock TextWrapping="Wrap" FontSize="12.5"
+                                           Foreground="{StaticResource InkSoftBrush}"
+                                           Text="Tài khoản Quản trị viên do cấu hình triển khai tạo ra. Ứng dụng không cho sửa, khoá hay đổi mật khẩu tài khoản này, và cũng không cấp vai trò Quản trị viên cho tài khoản khác." />
+                            </Border>
                         </StackPanel>
                     </Grid>
                 </Border>

@@ -27,6 +27,13 @@ public class UserManagementServiceTests
         public Task<List<User>> GetAllAsync() => Task.FromResult(new List<User> { user });
         public Task<User?> GetByIdAsync(int id) => Task.FromResult<User?>(user);
         public Task<Role?> GetRoleAsync(int id) => Task.FromResult<Role?>(user.Role);
+        public Task<List<Role>> GetRolesAsync() => Task.FromResult(new List<Role>
+        {
+            new() { Id = 1, RoleName = "Admin" },
+            new() { Id = 2, RoleName = "Manager" },
+            new() { Id = 3, RoleName = "Receptionist" },
+            new() { Id = 4, RoleName = "ServiceStaff" },
+        });
         public Task<bool> EmailExistsAsync(string email, int? excludeId = null) => Task.FromResult(false);
         public Task SaveAsync(User entity, bool add) { SaveWasCalled = true; return Task.CompletedTask; }
         public Task EnsureBootstrapAdminAsync(string fullName, string email, string passwordHash) => Task.CompletedTask;

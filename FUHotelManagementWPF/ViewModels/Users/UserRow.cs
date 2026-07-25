@@ -40,14 +40,29 @@ namespace FUHotelManagementWPF.ViewModels.Users
         /// </summary>
         public bool IsSelf => AppSession.CurrentUser?.Id == User.Id;
 
-        public bool CanToggleActive => !IsSelf;
+        /// <summary>
+        /// Tai khoan Quan tri vien khong sua / khoa / doi mat khau qua giao dien duoc.
+        /// No do cau hinh trien khai tao ra; cho sua trong app thi mot Admin co the tu
+        /// nhan ban quyen cao nhat hoac tu khoa minh ra ngoai, khong con duong thu hoi.
+        /// Service cung chan doc lap - day chi la lop an nut cho do bam nham.
+        /// </summary>
+        public bool IsAdminAccount => RoleName == "Admin";
+
+        public bool CanEdit => !IsAdminAccount;
+        public bool CanResetPassword => !IsAdminAccount;
+        public bool CanToggleActive => !IsSelf && !IsAdminAccount;
+
+        /// <summary>Hien dong giai thich thay cho cac nut da an.</summary>
+        public bool ShowAdminLockNote => IsAdminAccount;
 
         public string ToggleActiveText => User.IsActive ? "Khoá tài khoản" : "Mở khoá";
 
-        public string ToggleActiveToolTip => IsSelf
-            ? "Không thể tự khoá tài khoản đang đăng nhập"
-            : User.IsActive
-                ? "Khoá tài khoản - nhân viên này sẽ không đăng nhập được nữa"
-                : "Mở khoá để nhân viên đăng nhập lại";
+        public string ToggleActiveToolTip => IsAdminAccount
+            ? "Tài khoản Quản trị viên không thao tác được từ ứng dụng"
+            : IsSelf
+                ? "Không thể tự khoá tài khoản đang đăng nhập"
+                : User.IsActive
+                    ? "Khoá tài khoản - nhân viên này sẽ không đăng nhập được nữa"
+                    : "Mở khoá để nhân viên đăng nhập lại";
     }
 }

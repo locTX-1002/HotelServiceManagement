@@ -1,5 +1,5 @@
 using System;
-using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using BusinessObjects.Entities;
@@ -31,17 +31,11 @@ namespace FUHotelManagementWPF.ViewModels.Users
             : "Tạo tài khoản đăng nhập cho nhân viên mới.";
 
         /// <summary>
-        /// IUserManagementService khong co ham lay danh sach Role nen phai ghi cung 4 vai tro
-        /// o day. Id lay dung theo seed trong DataAccessObjects/Configurations/RoleConfiguration.cs
-        /// (1=Admin, 2=Manager, 3=Receptionist, 4=ServiceStaff) - doi seed thi phai sua theo.
+        /// Vai tro DOC TU DATABASE (bang Roles), khong ghi cung nua: truoc day 4 vai tro
+        /// va Id nam cung trong file nay nen doi seed la lech ma khong ai biet.
+        /// Danh sach nay KHONG co Admin - vai tro Quan tri vien khong duoc gan qua giao dien.
         /// </summary>
-        public List<RoleOption> RoleOptions { get; } =
-        [
-            new(1, "Quản trị viên (Admin)"),
-            new(2, "Quản lý (Manager)"),
-            new(3, "Lễ tân (Receptionist)"),
-            new(4, "Nhân viên dịch vụ (ServiceStaff)"),
-        ];
+        public ObservableCollection<RoleOption> RoleOptions { get; } = [];
 
         private string _fullName = string.Empty;
         public string FullName
@@ -57,8 +51,8 @@ namespace FUHotelManagementWPF.ViewModels.Users
             set => SetProperty(ref _email, value);
         }
 
-        private RoleOption _selectedRole;
-        public RoleOption SelectedRole
+        private RoleOption? _selectedRole;
+        public RoleOption? SelectedRole
         {
             get => _selectedRole;
             set => SetProperty(ref _selectedRole, value);
@@ -88,15 +82,45 @@ namespace FUHotelManagementWPF.ViewModels.Users
         public UserEditDialogViewModel(User? existing)
         {
             _existing = existing;
-            _selectedRole = RoleOptions[2]; // Le tan - vai tro hay tao nhat
 
             if (existing != null)
             {
                 _fullName = existing.FullName;
                 _email = existing.Email;
-                _selectedRole = RoleOptions.FirstOrDefault(o => o.Id == existing.RoleId) ?? RoleOptions[2];
             }
+
+            _ = LoadRolesAsync();
         }
+
+        /// <summary>Do vai tro tu DB vao ComboBox roi chon san dung vai tro dang co.</summary>
+        private async Task LoadRolesAsync()
+        {
+            var result = await _service.GetAssignableRolesAsync();
+            if (!result.Ok || result.Data == null)
+            {
+                ErrorMessage = result.Message;
+                return;
+            }
+
+            RoleOptions.Clear();
+            foreach (var role in result.Data)
+            {
+                RoleOptions.Add(new RoleOption(role.Id, Describe(role.RoleName)));
+            }
+
+            SelectedRole = _existing != null
+                ? RoleOptions.FirstOrDefault(o => o.Id == _existing.RoleId)
+                : RoleOptions.FirstOrDefault(o => o.Label.Contains("Lễ tân")) ?? RoleOptions.FirstOrDefault();
+        }
+
+        /// <summary>Ten vai tro trong DB la tieng Anh; man hinh phai hien tieng Viet.</summary>
+        private static string Describe(string roleName) => roleName switch
+        {
+            "Manager" => "Quản lý (Manager)",
+            "Receptionist" => "Lễ tân (Receptionist)",
+            "ServiceStaff" => "Nhân viên dịch vụ (ServiceStaff)",
+            _ => roleName,
+        };
 
         /// <summary>
         /// Luu. Hai chuoi mat khau do code-behind doc tu PasswordBox dua sang (PasswordBox
@@ -116,9 +140,14 @@ namespace FUHotelManagementWPF.ViewModels.Users
             {
                 AddError(nameof(FullName), "Chưa nhập họ tên.");
             }
-            if (string.IsNullOrWhiteSpace(Email))
+            var emailError = InputPolicy.ValidateEmail(Email, required: true);
+            if (emailError != null)
             {
-                AddError(nameof(Email), "Chưa nhập email.");
+                AddError(nameof(Email), emailError);
+            }
+            if (SelectedRole == null)
+            {
+                ErrorMessage = "Chưa chọn vai trò.";
             }
             if (IsCreate)
             {
@@ -140,8 +169,8 @@ namespace FUHotelManagementWPF.ViewModels.Users
             try
             {
                 var result = IsEdit
-                    ? await _service.UpdateAsync(_existing!.Id, FullName, Email, SelectedRole.Id)
-                    : await _service.CreateAsync(FullName, Email, password, SelectedRole.Id);
+                    ? await _service.UpdateAsync(_existing!.Id, FullName, Email, SelectedRole!.Id)
+                    : await _service.CreateAsync(FullName, Email, password, SelectedRole!.Id);
 
                 if (result.Ok)
                 {
