@@ -35,13 +35,7 @@ namespace FUHotelManagementWPF.ViewModels.Reservations
         public string GuestKeyword
         {
             get => _guestKeyword;
-            set
-            {
-                if (SetProperty(ref _guestKeyword, value))
-                {
-                    OnPropertyChanged(nameof(IdentityHint));
-                }
-            }
+            set => SetProperty(ref _guestKeyword, value);
         }
 
         private Guest? _matchedGuest;
@@ -72,37 +66,136 @@ namespace FUHotelManagementWPF.ViewModels.Reservations
         /// <summary>Đã bấm tìm mà không thấy → hiện form tạo khách mới.</summary>
         public bool ShowNewGuestFields => _guestSearched && _matchedGuest == null;
 
-        /// <summary>Noi ro chuoi vua go se duoc luu vao dau, khoi le tan phai doan.</summary>
-        public string IdentityHint
+        // --- Form tao khach moi ---
+        // Truoc day ba o nay la auto-property tran: khong ban PropertyChanged, khong kiem gi
+        // ca, va CCCD thi lay thang chuoi trong o TIM KIEM nhet vao. Ma o tim nhan "CCCD HOAC
+        // so dien thoai", nen le tan tim bang SDT roi tao khach moi la so dien thoai bi luu
+        // thanh CCCD, den luc bam Luu moi bao loi. Gio moi o mot property that, kiem ngay luc
+        // go bang InputPolicy - dung bo quy tac ma tang service dang dung.
+
+        private string _newFullName = string.Empty;
+        public string NewFullName
         {
-            get
+            get => _newFullName;
+            set { if (SetProperty(ref _newFullName, value)) { ValidateFullName(); } }
+        }
+
+        private string _newIdentity = string.Empty;
+        public string NewIdentity
+        {
+            get => _newIdentity;
+            set { if (SetProperty(ref _newIdentity, value)) { ValidateIdentity(); } }
+        }
+
+        private string _newPhone = string.Empty;
+        public string NewPhone
+        {
+            get => _newPhone;
+            set { if (SetProperty(ref _newPhone, value)) { ValidatePhone(); } }
+        }
+
+        private string _newEmail = string.Empty;
+        public string NewEmail
+        {
+            get => _newEmail;
+            set { if (SetProperty(ref _newEmail, value)) { ValidateEmail(); } }
+        }
+
+        private void ValidateFullName()
+        {
+            ClearErrors(nameof(NewFullName));
+            if (ShowNewGuestFields && string.IsNullOrWhiteSpace(NewFullName))
             {
-                var key = GuestKeyword.Trim();
-                if (string.IsNullOrEmpty(key))
-                {
-                    return string.Empty;
-                }
-                return $"CCCD/CMND lưu theo ô tìm ở trên: {key}";
+                AddError(nameof(NewFullName), "Nhập họ tên khách.");
             }
         }
 
-        public string NewFullName { get; set; } = string.Empty;
-        public string NewPhone { get; set; } = string.Empty;
-        public string NewEmail { get; set; } = string.Empty;
+        private void ValidateIdentity()
+        {
+            ClearErrors(nameof(NewIdentity));
+            var error = InputPolicy.ValidateIdentity(NewIdentity, required: ShowNewGuestFields);
+            if (error != null) { AddError(nameof(NewIdentity), error); }
+        }
+
+        private void ValidatePhone()
+        {
+            ClearErrors(nameof(NewPhone));
+            var error = InputPolicy.ValidatePhone(NewPhone, required: ShowNewGuestFields);
+            if (error != null) { AddError(nameof(NewPhone), error); }
+        }
+
+        private void ValidateEmail()
+        {
+            ClearErrors(nameof(NewEmail));
+            var error = InputPolicy.ValidateEmail(NewEmail, required: false);
+            if (error != null) { AddError(nameof(NewEmail), error); }
+        }
+
+        private void ValidateNewGuestForm()
+        {
+            ValidateFullName(); ValidateIdentity(); ValidatePhone(); ValidateEmail();
+        }
 
         // --- Ngày ---
+        // Doi ngay la tu tim lai phong trong luon. Truoc day phai bam nut "Tim phong trong";
+        // quen bam thi danh sach van la phong trong cua khoang ngay CU - chon nham mot phong
+        // that ra da co nguoi, den luc bam Luu moi bi service tu choi.
         private DateTime _checkIn = DateTime.Today;
         public DateTime CheckIn
         {
             get => _checkIn;
-            set => SetProperty(ref _checkIn, value);
+            set
+            {
+                if (SetProperty(ref _checkIn, value))
+                {
+                    if (CheckOut.Date <= value.Date) { CheckOut = value.Date.AddDays(1); }
+                    ValidateDates();
+                    RefreshRooms();
+                }
+            }
         }
 
         private DateTime _checkOut = DateTime.Today.AddDays(1);
         public DateTime CheckOut
         {
             get => _checkOut;
-            set => SetProperty(ref _checkOut, value);
+            set
+            {
+                if (SetProperty(ref _checkOut, value))
+                {
+                    ValidateDates();
+                    RefreshRooms();
+                }
+            }
+        }
+
+        /// <summary>Ngay som nhat cho chon tren lich - khong dat lui ve qua khu.</summary>
+        public DateTime MinCheckIn { get; } = DateTime.Today;
+
+        private void ValidateDates()
+        {
+            ClearErrors(nameof(CheckIn));
+            ClearErrors(nameof(CheckOut));
+
+            // Don da tao roi thi ngay nhan nam o qua khu la binh thuong, khong bat loi nguoc.
+            if (!IsEdit && CheckIn.Date < DateTime.Today)
+            {
+                AddError(nameof(CheckIn), "Ngày nhận không được ở quá khứ.");
+            }
+            if (CheckOut.Date <= CheckIn.Date)
+            {
+                AddError(nameof(CheckOut), "Ngày trả phải sau ngày nhận ít nhất một đêm.");
+            }
+        }
+
+        private bool HasDateError =>
+            GetErrors(nameof(CheckIn)).Cast<object>().Any()
+            || GetErrors(nameof(CheckOut)).Cast<object>().Any();
+
+        /// <summary>Tim lai phong trong sau khi doi ngay; bo qua khi ngay dang sai.</summary>
+        private void RefreshRooms()
+        {
+            if (!HasDateError) { _ = FindRoomsAsync(); }
         }
 
         // --- Phòng trống ---
@@ -202,7 +295,6 @@ namespace FUHotelManagementWPF.ViewModels.Reservations
         }
 
         public AsyncRelayCommand FindGuestCommand { get; }
-        public AsyncRelayCommand FindRoomsCommand { get; }
         public AsyncRelayCommand SaveCommand { get; }
 
         public CreateReservationDialogViewModel(Reservation? existing)
@@ -215,7 +307,6 @@ namespace FUHotelManagementWPF.ViewModels.Reservations
 
             PickNightsCommand = new RelayCommand(PickNights);
             FindGuestCommand = new AsyncRelayCommand(_ => FindGuestAsync());
-            FindRoomsCommand = new AsyncRelayCommand(_ => FindRoomsAsync());
             SaveCommand = new AsyncRelayCommand(SaveAsync, _ => !IsBusy);
 
             if (existing != null)
@@ -236,6 +327,10 @@ namespace FUHotelManagementWPF.ViewModels.Reservations
                     _roomsSearched = true;
                 }
             }
+
+            // Khong con nut "Tim phong trong" nen phai tu tim ngay luc mo. Doi ngay sau do
+            // se tu tim lai qua setter cua CheckIn/CheckOut.
+            _ = FindRoomsAsync();
         }
 
         private async Task FindGuestAsync()
@@ -258,12 +353,12 @@ namespace FUHotelManagementWPF.ViewModels.Reservations
                 OnPropertyChanged(nameof(ShowNewGuestFields));
                 if (MatchedGuest == null)
                 {
-                    // gợi ý điền sẵn: nếu keyword toàn số coi như SĐT, ngược lại CCCD
-                    if (key.All(char.IsDigit) && key.Length >= 9)
-                    {
-                        NewPhone = key;
-                    }
-                    OnPropertyChanged(nameof(NewPhone));
+                    // Dien san dung o theo HINH DANG chuoi vua go, khong doan bua: 12 so bat
+                    // dau bang 0 la CCCD, 10 so bat dau bang 0 la so dien thoai. Khong khop
+                    // dang nao thi de trong ca hai cho le tan tu dien.
+                    if (InputPolicy.ValidateIdentity(key, required: true) == null) { NewIdentity = key; }
+                    else if (InputPolicy.ValidatePhone(key, required: true) == null) { NewPhone = key; }
+                    ValidateNewGuestForm();
                     Notify.Info("Chưa có khách này — điền thông tin bên dưới để tạo mới.");
                 }
             }
@@ -295,9 +390,22 @@ namespace FUHotelManagementWPF.ViewModels.Reservations
                     AvailableRooms = [];
                     return;
                 }
-                AvailableRooms = result.Data!;
+                var rooms = result.Data!;
+                // Sua don: phong hien tai bi CHINH don nay chiem cho nen khong nam trong danh
+                // sach phong trong. Khong them lai thi le tan mo ra la mat phong dang chon.
+                if (IsEdit && _existing!.Room != null && rooms.All(r => r.Id != _existing.RoomId))
+                {
+                    rooms.Insert(0, _existing.Room);
+                }
+                AvailableRooms = rooms;
                 // Mo tu lich phong thi tro thang vao phong da bam, khong thi lay phong dau
-                SelectedRoom = (PreferredRoomId is { } wanted
+                // Giu phong dang chon neu doi ngay xong no van trong; het trong thi bo chon
+                // han chu khong de nguyen cho le tan tuong van dat duoc.
+                var keeping = SelectedRoom is { } current
+                    ? AvailableRooms.FirstOrDefault(r => r.Id == current.Id)
+                    : null;
+                SelectedRoom = keeping
+                               ?? (PreferredRoomId is { } wanted
                                    ? AvailableRooms.FirstOrDefault(r => r.Id == wanted)
                                    : null)
                                ?? AvailableRooms.FirstOrDefault();
@@ -335,8 +443,15 @@ namespace FUHotelManagementWPF.ViewModels.Reservations
                         return;
                     }
 
+                    ValidateNewGuestForm();
+                    if (HasErrors)
+                    {
+                        ErrorMessage = FirstError();
+                        return;
+                    }
+
                     var created = await _guestService.CreateAsync(NewFullName, NewEmail, NewPhone,
-                        GuestKeyword.Trim(), BusinessObjects.Enums.GuestTag.None, null);
+                        NewIdentity.Trim(), BusinessObjects.Enums.GuestTag.None, null);
                     if (!created.Ok)
                     {
                         ErrorMessage = created.Message;
@@ -347,9 +462,16 @@ namespace FUHotelManagementWPF.ViewModels.Reservations
                 }
             }
 
+            ValidateDates();
+            if (HasDateError)
+            {
+                ErrorMessage = FirstError();
+                return;
+            }
+
             if (SelectedRoom == null)
             {
-                ErrorMessage = "Bấm Tìm phòng trống rồi chọn một phòng.";
+                ErrorMessage = "Chọn một phòng trống trong danh sách.";
                 return;
             }
 
