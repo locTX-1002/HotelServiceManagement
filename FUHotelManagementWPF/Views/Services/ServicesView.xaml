@@ -46,7 +46,7 @@
         <TabControl Grid.Row="1">
             <!-- ============================ TAB GỌI DỊCH VỤ ============================ -->
             <TabItem Header="Gọi dịch vụ">
-                <Grid Margin="4,14,4,4" DataContext="{Binding Orders}">
+                <Grid x:Name="OrdersRoot" Margin="4,14,4,4" DataContext="{Binding Orders}">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="270" />
                         <ColumnDefinition Width="16" />
@@ -174,8 +174,7 @@
                                                 <Button Grid.Column="3" Content="Bỏ" Style="{StaticResource GhostButton}"
                                                         Padding="9,4" Margin="8,0,0,0" FontSize="11.5"
                                                         Foreground="{StaticResource DangerBrush}"
-                                                        Command="{Binding DataContext.RemoveFromCartCommand,
-                                                                  RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                        Command="{Binding DataContext.RemoveFromCartCommand, ElementName=OrdersRoot}"
                                                         CommandParameter="{Binding}" />
                                             </Grid>
                                         </DataTemplate>
@@ -245,23 +244,21 @@
                                                                 VerticalAlignment="Center">
                                                         <Button Content="Bắt đầu làm" Style="{StaticResource GhostButton}"
                                                                 Padding="11,6" FontSize="12" Margin="0,0,6,0"
+                                                                ToolTip="Bếp/nhân viên đã nhận và đang chuẩn bị đơn này"
                                                                 Visibility="{Binding ShowStart, Converter={StaticResource BoolToVis}}"
-                                                                Command="{Binding DataContext.StartCommand,
-                                                                          RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                                Command="{Binding DataContext.StartCommand, ElementName=OrdersRoot}"
                                                                 CommandParameter="{Binding}" />
                                                         <Button Content="Hoàn tất" Style="{StaticResource PrimaryButton}"
                                                                 Padding="13,6" FontSize="12" Margin="0,0,6,0"
                                                                 ToolTip="Chỉ đơn Hoàn tất mới được tính tiền vào hoá đơn"
                                                                 Visibility="{Binding ShowComplete, Converter={StaticResource BoolToVis}}"
-                                                                Command="{Binding DataContext.CompleteCommand,
-                                                                          RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                                Command="{Binding DataContext.CompleteCommand, ElementName=OrdersRoot}"
                                                                 CommandParameter="{Binding}" />
                                                         <Button Content="Huỷ" Style="{StaticResource GhostButton}"
                                                                 Padding="11,6" FontSize="12"
                                                                 Foreground="{StaticResource DangerBrush}"
                                                                 Visibility="{Binding ShowCancel, Converter={StaticResource BoolToVis}}"
-                                                                Command="{Binding DataContext.CancelOrderCommand,
-                                                                          RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                                Command="{Binding DataContext.CancelOrderCommand, ElementName=OrdersRoot}"
                                                                 CommandParameter="{Binding}" />
                                                     </StackPanel>
                                                 </Grid>
@@ -282,7 +279,7 @@
 
             <!-- ============================== TAB DANH MỤC ============================== -->
             <TabItem Header="Danh mục">
-                <Grid Margin="4,14,4,4" DataContext="{Binding Catalog}">
+                <Grid x:Name="CatalogRoot" Margin="4,14,4,4" DataContext="{Binding Catalog}">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
@@ -359,17 +356,14 @@
                                         </Border>
 
                                         <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center"
-                                                    Visibility="{Binding DataContext.CanManage,
-                                                                 RelativeSource={RelativeSource AncestorType=UserControl},
+                                                    Visibility="{Binding DataContext.CanManage, ElementName=CatalogRoot,
                                                                  Converter={StaticResource BoolToVis}}">
                                             <Button Content="Sửa" Style="{StaticResource GhostButton}"
                                                     Padding="13,6" FontSize="12" Margin="0,0,6,0"
-                                                    Command="{Binding DataContext.EditItemCommand,
-                                                              RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                                                    Command="{Binding DataContext.EditItemCommand, ElementName=CatalogRoot}" />
                                             <Button Content="{Binding ToggleText}" Style="{StaticResource GhostButton}"
                                                     Padding="13,6" FontSize="12" MinWidth="86"
-                                                    Command="{Binding DataContext.ToggleItemCommand,
-                                                              RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    Command="{Binding DataContext.ToggleItemCommand, ElementName=CatalogRoot}"
                                                     CommandParameter="{Binding}" />
                                         </StackPanel>
                                     </Grid>
