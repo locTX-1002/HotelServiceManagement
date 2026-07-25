@@ -142,12 +142,15 @@
                                     </Style.Triggers>
                                 </Style>
                             </Border.Style>
+                            <!-- Cot chip va cot nut deu CO DINH be rong: de Auto thi moi dong
+                                 co ro theo noi dung cua chinh no (dong 1 nut, dong 3 nut), nen
+                                 chip va nut nhay qua nhay lai giua cac dong - nhin rat so le. -->
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="132" />
+                                    <ColumnDefinition Width="Auto" MinWidth="252" />
                                 </Grid.ColumnDefinitions>
 
                                 <Border Grid.Column="0" Width="64" Height="46" CornerRadius="4">
@@ -189,7 +192,8 @@
                                 <!-- Nút làm ngay trên dòng, không phải chọn rồi mới làm được.
                                      Dòng quá hạn có thêm nút phụ vì đó là lúc cần xử lý khác đi:
                                      khách không tới thì đánh dấu Không đến, khách ở thêm thì gia hạn. -->
-                                <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center">
+                                <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center"
+                                            HorizontalAlignment="Right">
                                     <Button Content="Không đến" Style="{StaticResource GhostButton}"
                                             Padding="11,7" Margin="0,0,6,0" FontSize="12"
                                             Foreground="{StaticResource DangerBrush}"

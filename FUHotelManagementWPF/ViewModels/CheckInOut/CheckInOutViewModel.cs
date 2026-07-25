@@ -79,7 +79,10 @@ namespace FUHotelManagementWPF.ViewModels.CheckInOut
 
         public string SubText => Kind == FlowKind.Arrival
             ? $"{Reservation.Room?.RoomType?.TypeName} · {Reservation.NumberOfGuests} khách · {Reservation.CheckInDate:dd/MM} → {Reservation.CheckOutDate:dd/MM}"
-            : $"{Reservation.Room?.RoomType?.TypeName} · vào {Stay!.ActualCheckIn:dd/MM HH:mm} · {Nights} đêm";
+            // Bo GIO o dong phu: khi bang lam viec ben phai mo ra, cot chu hep lai va
+            // dong nay bi cat cut thanh "vao 24/07 1...". Gio chinh xac van co day du
+            // trong bang ben phai khi chon dong.
+            : $"{Reservation.Room?.RoomType?.TypeName} · vào {Stay!.ActualCheckIn:dd/MM} · {Nights} đêm";
 
         public int Nights => Stay == null ? 0 : Math.Max(1, (DateTime.Today - Stay.ActualCheckIn.Date).Days);
 

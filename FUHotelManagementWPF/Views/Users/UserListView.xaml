@@ -6,6 +6,8 @@
         <!-- Badge vai tro: doi mau theo ten vai tro goc trong DB.
              Mac dinh (ServiceStaff / chua gan) = trung tinh nhu BadgeNeutral. -->
         <Style x:Key="RoleBadge" TargetType="Border" BasedOn="{StaticResource BadgeNeutral}">
+            <!-- Ep be rong bang nhau de cot trang thai khong so le doc theo danh sach -->
+            <Setter Property="MinWidth" Value="104" />
             <Style.Triggers>
                 <DataTrigger Binding="{Binding RoleName}" Value="Admin">
                     <Setter Property="Background" Value="{StaticResource DangerSoftBrush}" />
@@ -24,6 +26,8 @@
 
         <!-- Badge trang thai: dang hoat dong = xanh, da khoa = trung tinh -->
         <Style x:Key="UserStatusBadge" TargetType="Border" BasedOn="{StaticResource BadgeNeutral}">
+            <!-- Ep be rong bang nhau de cot trang thai khong so le doc theo danh sach -->
+            <Setter Property="MinWidth" Value="104" />
             <Style.Triggers>
                 <DataTrigger Binding="{Binding IsActive}" Value="True">
                     <Setter Property="Background" Value="{StaticResource SuccessSoftBrush}" />

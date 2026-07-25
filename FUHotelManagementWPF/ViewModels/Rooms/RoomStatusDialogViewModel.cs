@@ -46,7 +46,7 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
         /// <summary>Man can sang de xu ly, tuy trang thai. Rong nghia la khong co loi tat.</summary>
         private string? NavigateTarget => _room.Status switch
         {
-            RoomStatus.Occupied => "Check-in / Check-out",
+            RoomStatus.Occupied => "Nhận / Trả phòng",
             RoomStatus.Reserved => "Đặt phòng",
             _ => null,
         };

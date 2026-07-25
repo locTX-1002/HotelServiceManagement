@@ -6,7 +6,7 @@
              xmlns:enums="clr-namespace:BusinessObjects.Enums;assembly=BusinessObjects">
     <UserControl.Resources>
         <!-- Badge trạng thái đặt phòng theo Reservation.Status -->
-        <Style x:Key="ResBadge" TargetType="Border" BasedOn="{StaticResource BadgeBase}">
+        <Style x:Key="ResBadge" TargetType="Border" BasedOn="{StaticResource BadgeColumn}">
             <Setter Property="Background" Value="{StaticResource SurfaceAltBrush}" />
             <Setter Property="TextElement.Foreground" Value="{StaticResource InkSoftBrush}" />
             <Style.Triggers>
