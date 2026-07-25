@@ -22,6 +22,24 @@ namespace FUHotelManagementWPF.ViewModels.Services
         public string SubText => $"{Stay.Reservation?.Room?.RoomType?.TypeName} · vào {Stay.ActualCheckIn:dd/MM}";
     }
 
+    /// <summary>Mot o mon trong luoi thuc don - bam mot phat la vao gio.</summary>
+    public class MenuTile
+    {
+        public ServiceItem Item { get; }
+        public MenuTile(ServiceItem item) => Item = item;
+
+        public string Name => Item.ServiceName;
+        public string PriceText => $"{Item.UnitPrice:N0} đ";
+    }
+
+    /// <summary>Mot nhom mon (Nha hang, Giat la...) tren luoi thuc don.</summary>
+    public class MenuGroup
+    {
+        public string Name { get; }
+        public ObservableCollection<MenuTile> Tiles { get; } = [];
+        public MenuGroup(string name) => Name = name;
+    }
+
     /// <summary>Mot dong trong gio hang truoc khi bam Tao don.</summary>
     public class CartLine : ViewModelBase
     {
@@ -89,7 +107,7 @@ namespace FUHotelManagementWPF.ViewModels.Services
         private readonly IStayService _stays = new StayService();
 
         public ObservableCollection<StayOption> Stays { get; } = [];
-        public ObservableCollection<ServiceItem> AvailableItems { get; } = [];
+        public ObservableCollection<MenuGroup> Menu { get; } = [];
         public ObservableCollection<CartLine> Cart { get; } = [];
         public ObservableCollection<OrderRow> Orders { get; } = [];
 
@@ -121,13 +139,6 @@ namespace FUHotelManagementWPF.ViewModels.Services
             ? string.Empty
             : $"Phòng {SelectedStay.RoomNumber} · {SelectedStay.GuestName}";
 
-        private ServiceItem? _pickedItem;
-        public ServiceItem? PickedItem
-        {
-            get => _pickedItem;
-            set => SetProperty(ref _pickedItem, value);
-        }
-
         public decimal CartTotal => Cart.Sum(x => x.Subtotal);
         public string CartTotalText => $"{CartTotal:N0} đ";
         public bool CartIsEmpty => Cart.Count == 0;
@@ -157,8 +168,9 @@ namespace FUHotelManagementWPF.ViewModels.Services
         public bool HasError => !string.IsNullOrWhiteSpace(ErrorMessage);
         public bool NoStay => !IsLoading && Stays.Count == 0;
         public bool NoOrder => HasSelectedStay && Orders.Count == 0;
+        public bool MenuIsEmpty => Menu.Count == 0;
 
-        public AsyncRelayCommand AddToCartCommand { get; }
+        public RelayCommand AddTileCommand { get; }
         public RelayCommand RemoveFromCartCommand { get; }
         public AsyncRelayCommand SubmitCommand { get; }
         public AsyncRelayCommand CompleteCommand { get; }
@@ -167,7 +179,7 @@ namespace FUHotelManagementWPF.ViewModels.Services
 
         public ServiceOrderViewModel()
         {
-            AddToCartCommand = new AsyncRelayCommand(_ => { AddToCart(); return Task.CompletedTask; });
+            AddTileCommand = new RelayCommand(AddTile);
             RemoveFromCartCommand = new RelayCommand(RemoveFromCart);
             SubmitCommand = new AsyncRelayCommand(_ => SubmitAsync());
             CompleteCommand = new AsyncRelayCommand(p => ChangeStatusAsync(p, ServiceOrderStatus.Completed));
@@ -191,12 +203,19 @@ namespace FUHotelManagementWPF.ViewModels.Services
                     Stays.Add(new StayOption(stay));
                 }
 
-                AvailableItems.Clear();
-                foreach (var item in items.OrderBy(x => x.ServiceName))
+                Menu.Clear();
+                foreach (var group in items
+                             .GroupBy(x => x.ServiceCategory?.CategoryName ?? "Khác")
+                             .OrderBy(g => g.Key))
                 {
-                    AvailableItems.Add(item);
+                    var menuGroup = new MenuGroup(group.Key);
+                    foreach (var item in group.OrderBy(x => x.ServiceName))
+                    {
+                        menuGroup.Tiles.Add(new MenuTile(item));
+                    }
+                    Menu.Add(menuGroup);
                 }
-                PickedItem = AvailableItems.FirstOrDefault();
+                OnPropertyChanged(nameof(MenuIsEmpty));
 
                 SelectedStay = Stays.FirstOrDefault(x => x.Id == keepId) ?? Stays.FirstOrDefault();
             }
@@ -239,21 +258,21 @@ namespace FUHotelManagementWPF.ViewModels.Services
         }
 
         /// <summary>Them mon vao gio. Mon da co thi cong don so luong thay vi tao dong moi.</summary>
-        private void AddToCart()
+        private void AddTile(object? parameter)
         {
-            if (PickedItem == null)
+            if (parameter is not MenuTile tile || !CanCreate)
             {
                 return;
             }
 
-            var existing = Cart.FirstOrDefault(x => x.Item.Id == PickedItem.Id);
+            var existing = Cart.FirstOrDefault(x => x.Item.Id == tile.Item.Id);
             if (existing != null)
             {
                 existing.Quantity++;
             }
             else
             {
-                var line = new CartLine(PickedItem);
+                var line = new CartLine(tile.Item);
                 line.Changed += RaiseCartState;
                 Cart.Add(line);
             }

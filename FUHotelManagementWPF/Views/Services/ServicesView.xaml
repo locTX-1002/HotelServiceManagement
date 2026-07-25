@@ -13,8 +13,8 @@
                     <Setter Property="TextElement.Foreground" Value="{StaticResource WarningBrush}" />
                 </DataTrigger>
                 <DataTrigger Binding="{Binding StatusKey}" Value="Processing">
-                    <Setter Property="Background" Value="{StaticResource InfoSoftBrush}" />
-                    <Setter Property="TextElement.Foreground" Value="{StaticResource InfoBrush}" />
+                    <Setter Property="Background" Value="{StaticResource WarningSoftBrush}" />
+                    <Setter Property="TextElement.Foreground" Value="{StaticResource WarningBrush}" />
                 </DataTrigger>
                 <DataTrigger Binding="{Binding StatusKey}" Value="Completed">
                     <Setter Property="Background" Value="{StaticResource SuccessSoftBrush}" />
@@ -33,6 +33,38 @@
                 </DataTrigger>
             </Style.Triggers>
         </Style>
+
+        <!-- O mon tren luoi thuc don: bam mot phat la vao gio, khong phai mo dropdown
+             roi bam them nua. Vien sang len khi ro chuot de biet la bam duoc. -->
+        <Style x:Key="MenuTileButton" TargetType="Button">
+            <Setter Property="Width" Value="132" />
+            <Setter Property="Height" Value="74" />
+            <Setter Property="Margin" Value="0,0,8,8" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="tile" CornerRadius="6" Padding="10,8"
+                                Background="{StaticResource CardBrush}"
+                                BorderBrush="{StaticResource LineBrush}" BorderThickness="1">
+                            <ContentPresenter />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="tile" Property="Background"
+                                        Value="{StaticResource BrandSoftBrush}" />
+                                <Setter TargetName="tile" Property="BorderBrush"
+                                        Value="{StaticResource BrandBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="tile" Property="Background"
+                                        Value="{StaticResource SurfaceAltBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </UserControl.Resources>
 
     <Grid Margin="24,18,24,24">
@@ -48,12 +80,14 @@
             <TabItem Header="Gọi dịch vụ">
                 <Grid x:Name="OrdersRoot" Margin="4,14,4,4" DataContext="{Binding Orders}">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="270" />
+                        <ColumnDefinition Width="240" />
                         <ColumnDefinition Width="16" />
-                        <ColumnDefinition Width="*" MinWidth="420" />
+                        <ColumnDefinition Width="*" MinWidth="360" />
+                        <ColumnDefinition Width="16" />
+                        <ColumnDefinition Width="300" />
                     </Grid.ColumnDefinitions>
 
-                    <!-- CỘT TRÁI: phòng đang có khách ở -->
+                    <!-- CỘT 1: phòng đang có khách ở -->
                     <DockPanel Grid.Column="0">
                         <TextBlock DockPanel.Dock="Top" Text="PHÒNG ĐANG CÓ KHÁCH"
                                    Style="{StaticResource FieldLabel}" Margin="0,0,0,8" />
@@ -83,11 +117,14 @@
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
                                     <Border Background="{StaticResource CardBrush}" BorderThickness="1"
-                                            CornerRadius="4" Padding="11,9" Cursor="Hand">
+                                            CornerRadius="6" Padding="11,9" Cursor="Hand">
                                         <Border.Style>
                                             <Style TargetType="Border">
                                                 <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
                                                 <Style.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter Property="BorderBrush" Value="{StaticResource BrandLightBrush}" />
+                                                    </Trigger>
                                                     <DataTrigger Value="True" Binding="{Binding IsSelected,
                                                                  RelativeSource={RelativeSource AncestorType=ListBoxItem}}">
                                                         <Setter Property="Background" Value="{StaticResource BrandSoftBrush}" />
@@ -111,7 +148,7 @@
                         </ListBox>
                     </DockPanel>
 
-                    <!-- CỘT PHẢI: giỏ món + danh sách đơn của phòng đang chọn -->
+                    <!-- CỘT 2: thực đơn theo nhóm + đơn đã gọi của phòng đang chọn -->
                     <Grid Grid.Column="2" Visibility="{Binding HasSelectedStay, Converter={StaticResource BoolToVis}}">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
@@ -123,79 +160,45 @@
                         <TextBlock Grid.Row="0" Text="{Binding SelectedStayTitle}"
                                    Style="{StaticResource SectionTitleText}" Margin="0,0,0,10" />
 
-                        <!-- Chọn món rồi thêm vào giỏ -->
-                        <Border Grid.Row="1" Style="{StaticResource Card}" Padding="14,12"
-                                Visibility="{Binding CanCreate, Converter={StaticResource BoolToVis}}">
-                            <StackPanel>
-                                <TextBlock Text="THÊM MÓN" Style="{StaticResource FieldLabel}" />
-                                <Grid Margin="0,0,0,10">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="10" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
-                                    <ComboBox Grid.Column="0" ItemsSource="{Binding AvailableItems}"
-                                              SelectedItem="{Binding PickedItem}">
-                                        <ComboBox.ItemTemplate>
-                                            <DataTemplate>
-                                                <TextBlock>
-                                                    <Run Text="{Binding ServiceName, Mode=OneWay}" /><Run
-                                                    Text=" · " Foreground="{StaticResource InkSoftBrush}" /><Run
-                                                    Text="{Binding UnitPrice, Mode=OneWay, StringFormat={}{0:N0}}" /><Run Text=" đ" />
-                                                </TextBlock>
-                                            </DataTemplate>
-                                        </ComboBox.ItemTemplate>
-                                    </ComboBox>
-                                    <Button Grid.Column="2" Content="Thêm vào giỏ" Style="{StaticResource GhostButton}"
-                                            Padding="14,7" Command="{Binding AddToCartCommand}" />
-                                </Grid>
+                        <ItemsControl Grid.Row="1" ItemsSource="{Binding Menu}"
+                                      Visibility="{Binding CanCreate, Converter={StaticResource BoolToVis}}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Margin="0,0,0,10">
+                                        <TextBlock Text="{Binding Name}" Style="{StaticResource FieldLabel}"
+                                                   Margin="0,0,0,6" />
+                                        <ItemsControl ItemsSource="{Binding Tiles}">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <WrapPanel />
+                                                </ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Button Style="{StaticResource MenuTileButton}"
+                                                            ToolTip="Bấm để thêm vào giỏ"
+                                                            Command="{Binding DataContext.AddTileCommand, ElementName=OrdersRoot}"
+                                                            CommandParameter="{Binding}">
+                                                        <Grid>
+                                                            <TextBlock Text="{Binding Name}" TextWrapping="Wrap"
+                                                                       VerticalAlignment="Top" FontSize="12.5"
+                                                                       LineHeight="16" MaxHeight="34"
+                                                                       TextTrimming="CharacterEllipsis" />
+                                                            <TextBlock Text="{Binding PriceText}" FontSize="13"
+                                                                       FontWeight="SemiBold" VerticalAlignment="Bottom"
+                                                                       Typography.NumeralAlignment="Tabular"
+                                                                       Foreground="{StaticResource BrandBrush}" />
+                                                        </Grid>
+                                                    </Button>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
 
-                                <TextBlock Text="Giỏ đang trống — chọn món ở ô trên rồi bấm Thêm vào giỏ."
-                                           Style="{StaticResource CaptionText}" FontSize="12"
-                                           Visibility="{Binding CartIsEmpty, Converter={StaticResource BoolToVis}}" />
-
-                                <ItemsControl ItemsSource="{Binding Cart}">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <Grid Margin="0,0,0,6">
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*" />
-                                                    <ColumnDefinition Width="Auto" />
-                                                    <ColumnDefinition Width="90" />
-                                                    <ColumnDefinition Width="Auto" />
-                                                </Grid.ColumnDefinitions>
-                                                <TextBlock Grid.Column="0" Text="{Binding Name}" FontSize="12.5"
-                                                           VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
-                                                <hc:NumericUpDown Grid.Column="1" Width="72" Minimum="1" Maximum="99"
-                                                                  Value="{Binding Quantity}" VerticalAlignment="Center" />
-                                                <TextBlock Grid.Column="2" Text="{Binding SubtotalText}" FontSize="12.5"
-                                                           FontWeight="SemiBold" HorizontalAlignment="Right"
-                                                           VerticalAlignment="Center" Margin="8,0,0,0" />
-                                                <Button Grid.Column="3" Content="Bỏ" Style="{StaticResource GhostButton}"
-                                                        Padding="9,4" Margin="8,0,0,0" FontSize="11.5"
-                                                        Foreground="{StaticResource DangerBrush}"
-                                                        Command="{Binding DataContext.RemoveFromCartCommand, ElementName=OrdersRoot}"
-                                                        CommandParameter="{Binding}" />
-                                            </Grid>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-
-                                <Border Height="1" Background="{StaticResource LineBrush}" Margin="0,4,0,10"
-                                        Visibility="{Binding CartIsEmpty, Converter={StaticResource InverseBoolToVis}}" />
-                                <DockPanel Visibility="{Binding CartIsEmpty, Converter={StaticResource InverseBoolToVis}}">
-                                    <Button DockPanel.Dock="Right" Content="Tạo đơn" Style="{StaticResource PrimaryButton}"
-                                            Padding="18,8" MinWidth="120"
-                                            IsEnabled="{Binding CanSubmit}" Command="{Binding SubmitCommand}" />
-                                    <TextBlock VerticalAlignment="Center">
-                                        <Run Text="Tổng: " Foreground="{StaticResource InkSoftBrush}" /><Run
-                                        Text="{Binding CartTotalText, Mode=OneWay}" FontWeight="SemiBold" FontSize="14" />
-                                    </TextBlock>
-                                </DockPanel>
-                            </StackPanel>
-                        </Border>
-
-                        <Border Grid.Row="2" Margin="0,12,0,0" CornerRadius="4" Padding="10,8"
+                        <Border Grid.Row="2" Margin="0,0,0,12" CornerRadius="6" Padding="10,8"
                                 Background="{StaticResource DangerSoftBrush}"
                                 Visibility="{Binding HasError, Converter={StaticResource BoolToVis}}">
                             <TextBlock Text="{Binding ErrorMessage}" Foreground="{StaticResource DangerBrush}"
@@ -203,7 +206,7 @@
                         </Border>
 
                         <!-- Đơn đã gọi của phòng này -->
-                        <DockPanel Grid.Row="3" Margin="0,14,0,0">
+                        <DockPanel Grid.Row="3">
                             <TextBlock DockPanel.Dock="Top" Text="ĐƠN ĐÃ GỌI"
                                        Style="{StaticResource FieldLabel}" Margin="0,0,0,8" />
                             <TextBlock DockPanel.Dock="Top" TextWrapping="Wrap"
@@ -217,16 +220,16 @@
                                         <DataTemplate>
                                             <Border Background="{StaticResource CardBrush}" BorderThickness="1"
                                                     BorderBrush="{StaticResource LineBrush}"
-                                                    CornerRadius="4" Padding="12,10" Margin="0,0,0,8">
+                                                    CornerRadius="6" Padding="12,10" Margin="0,0,0,8">
                                                 <Grid>
                                                     <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="*" MinWidth="150" />
+                                                        <ColumnDefinition Width="*" MinWidth="140" />
                                                         <ColumnDefinition Width="Auto" />
                                                         <ColumnDefinition Width="Auto" />
                                                     </Grid.ColumnDefinitions>
 
                                                     <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,10,0">
-                                                        <TextBlock>
+                                                        <TextBlock Typography.NumeralAlignment="Tabular">
                                                             <Run Text="{Binding TotalText, Mode=OneWay}" FontWeight="SemiBold" FontSize="13.5" /><Run
                                                             Text="  ·  " Foreground="{StaticResource InkSoftBrush}" /><Run
                                                             Text="{Binding TimeText, Mode=OneWay}" FontSize="12" />
@@ -264,7 +267,76 @@
                         </DockPanel>
                     </Grid>
 
-                    <TextBlock Grid.Column="2" Text="Chọn một phòng bên trái để gọi dịch vụ"
+                    <!-- CỘT 3: giỏ hàng ghim cố định - tổng tiền và nút Tạo đơn luôn ở một chỗ -->
+                    <Grid Grid.Column="4" Visibility="{Binding HasSelectedStay, Converter={StaticResource BoolToVis}}">
+                        <Border Style="{StaticResource Card}" Padding="14,12" VerticalAlignment="Top"
+                                Visibility="{Binding CanCreate, Converter={StaticResource BoolToVis}}">
+                            <StackPanel>
+                                <TextBlock Text="GIỎ HÀNG" Style="{StaticResource FieldLabel}" Margin="0,0,0,8" />
+
+                                <TextBlock TextWrapping="Wrap"
+                                           Text="Bấm một món bên trái để thêm vào giỏ."
+                                           Style="{StaticResource CaptionText}" FontSize="12"
+                                           Visibility="{Binding CartIsEmpty, Converter={StaticResource BoolToVis}}" />
+
+                                <ItemsControl ItemsSource="{Binding Cart}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid Margin="0,0,0,10">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto" />
+                                                    <RowDefinition Height="Auto" />
+                                                </Grid.RowDefinitions>
+
+                                                <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding Name}"
+                                                           FontSize="12.5" VerticalAlignment="Center"
+                                                           TextTrimming="CharacterEllipsis" Margin="0,0,8,0" />
+                                                <Button Grid.Row="0" Grid.Column="1" Content="Bỏ"
+                                                        Style="{StaticResource GhostButton}"
+                                                        Padding="9,3" FontSize="11"
+                                                        Foreground="{StaticResource DangerBrush}"
+                                                        Command="{Binding DataContext.RemoveFromCartCommand, ElementName=OrdersRoot}"
+                                                        CommandParameter="{Binding}" />
+
+                                                <hc:NumericUpDown Grid.Row="1" Grid.Column="0" Width="74"
+                                                                  HorizontalAlignment="Left" Margin="0,4,0,0"
+                                                                  Minimum="1" Maximum="99" Value="{Binding Quantity}" />
+                                                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SubtotalText}"
+                                                           FontSize="12.5" FontWeight="SemiBold" Margin="8,4,0,0"
+                                                           Typography.NumeralAlignment="Tabular"
+                                                           HorizontalAlignment="Right" VerticalAlignment="Center" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+
+                                <Border Height="1" Background="{StaticResource LineBrush}" Margin="0,4,0,10"
+                                        Visibility="{Binding CartIsEmpty, Converter={StaticResource InverseBoolToVis}}" />
+
+                                <DockPanel Margin="0,0,0,12"
+                                           Visibility="{Binding CartIsEmpty, Converter={StaticResource InverseBoolToVis}}">
+                                    <TextBlock DockPanel.Dock="Right" Text="{Binding CartTotalText}"
+                                               FontWeight="SemiBold" FontSize="15"
+                                               Typography.NumeralAlignment="Tabular"
+                                               Foreground="{StaticResource BrandBrush}" />
+                                    <TextBlock Text="Tổng" Foreground="{StaticResource InkSoftBrush}"
+                                               VerticalAlignment="Center" />
+                                </DockPanel>
+
+                                <Button Content="Tạo đơn" Style="{StaticResource PrimaryButton}"
+                                        Padding="18,9" HorizontalAlignment="Stretch"
+                                        Visibility="{Binding CartIsEmpty, Converter={StaticResource InverseBoolToVis}}"
+                                        IsEnabled="{Binding CanSubmit}" Command="{Binding SubmitCommand}" />
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+
+                    <TextBlock Grid.Column="2" Grid.ColumnSpan="3"
+                               Text="Chọn một phòng bên trái để gọi dịch vụ"
                                Style="{StaticResource CaptionText}" FontSize="13"
                                HorizontalAlignment="Center" VerticalAlignment="Center"
                                Visibility="{Binding HasSelectedStay, Converter={StaticResource InverseBoolToVis}}" />
@@ -292,7 +364,7 @@
                                    FontSize="12.5" VerticalAlignment="Center" />
                     </DockPanel>
 
-                    <Border Grid.Row="1" CornerRadius="4" Padding="10,8" Margin="0,0,0,10"
+                    <Border Grid.Row="1" CornerRadius="6" Padding="10,8" Margin="0,0,0,10"
                             Background="{StaticResource DangerSoftBrush}"
                             Visibility="{Binding HasError, Converter={StaticResource BoolToVis}}">
                         <TextBlock Text="{Binding ErrorMessage}" Foreground="{StaticResource DangerBrush}"
@@ -325,38 +397,44 @@
                             <DataTemplate>
                                 <Border Background="{StaticResource CardBrush}" BorderThickness="1"
                                         BorderBrush="{StaticResource LineBrush}"
-                                        CornerRadius="4" Padding="13,10">
+                                        CornerRadius="6" Padding="13,10">
+                                    <!-- Cot co dinh: de Auto thi moi dong tu co gian theo noi dung
+                                         cua rieng no, nhin xuong ca cot la so le. -->
                                     <Grid>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*" MinWidth="160" />
-                                            <ColumnDefinition Width="110" />
-                                            <ColumnDefinition Width="Auto" />
-                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="120" />
+                                            <ColumnDefinition Width="112" />
+                                            <ColumnDefinition Width="196" />
                                         </Grid.ColumnDefinitions>
 
                                         <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,10,0">
-                                            <TextBlock Text="{Binding Name}" FontSize="14" FontWeight="SemiBold" />
+                                            <TextBlock Text="{Binding Name}" FontSize="14" FontWeight="SemiBold"
+                                                       TextTrimming="CharacterEllipsis" />
                                             <TextBlock Text="{Binding CategoryName}" Style="{StaticResource CaptionText}"
                                                        FontSize="11.5" Margin="0,2,0,0" />
                                         </StackPanel>
 
                                         <TextBlock Grid.Column="1" Text="{Binding PriceText}" FontSize="13.5"
                                                    FontWeight="SemiBold" HorizontalAlignment="Right"
+                                                   Typography.NumeralAlignment="Tabular"
                                                    VerticalAlignment="Center" Margin="0,0,14,0" />
 
                                         <Border Grid.Column="2" Style="{StaticResource ItemBadge}"
+                                                HorizontalAlignment="Right"
                                                 VerticalAlignment="Center" Margin="0,0,12,0">
                                             <TextBlock Text="{Binding StatusText}" />
                                         </Border>
 
                                         <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center"
+                                                    HorizontalAlignment="Right"
                                                     Visibility="{Binding DataContext.CanManage, ElementName=CatalogRoot,
                                                                  Converter={StaticResource BoolToVis}}">
                                             <Button Content="Sửa" Style="{StaticResource GhostButton}"
-                                                    Padding="13,6" FontSize="12" Margin="0,0,6,0"
+                                                    Padding="13,6" FontSize="12" Margin="0,0,6,0" MinWidth="70"
                                                     Command="{Binding DataContext.EditItemCommand, ElementName=CatalogRoot}" />
                                             <Button Content="{Binding ToggleText}" Style="{StaticResource GhostButton}"
-                                                    Padding="13,6" FontSize="12" MinWidth="86"
+                                                    Padding="13,6" FontSize="12" MinWidth="106"
                                                     Command="{Binding DataContext.ToggleItemCommand, ElementName=CatalogRoot}"
                                                     CommandParameter="{Binding}" />
                                         </StackPanel>
