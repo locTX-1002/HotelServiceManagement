@@ -3,14 +3,47 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:hc="https://handyorg.github.io/handycontrol"
         Title="{Binding Title}"
-        Width="520" MaxHeight="720" SizeToContent="Height"
+        Width="540" MaxHeight="760" SizeToContent="Height"
         WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
         ShowInTaskbar="False"
         Style="{StaticResource BaseWindow}">
+    <Window.Resources>
+        <!-- Huy hieu so buoc: hinh tron hoan hao (width=height) - ngoai le duoc phep cua he bo goc 4px -->
+        <Style x:Key="StepBadge" TargetType="Border">
+            <Setter Property="Width" Value="24" />
+            <Setter Property="Height" Value="24" />
+            <Setter Property="CornerRadius" Value="999" />
+            <Setter Property="Background" Value="{StaticResource BrandBrush}" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Margin" Value="0,0,10,0" />
+        </Style>
+        <Style x:Key="StepNum" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="FontSize" Value="12.5" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style x:Key="StepTitle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="13.5" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{StaticResource InkBrush}" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style x:Key="StepHint" TargetType="TextBlock" BasedOn="{StaticResource CaptionText}">
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Margin" Value="9,1,0,0" />
+        </Style>
+        <!-- Noi dung moi buoc thut vao cho thang hang duoi tieu de -> nhin ra tung nhom -->
+        <Style x:Key="StepBody" TargetType="StackPanel">
+            <Setter Property="Margin" Value="34,0,0,0" />
+        </Style>
+    </Window.Resources>
+
     <Border Style="{StaticResource Card}" Effect="{StaticResource SoftShadowLarge}" Margin="14" Padding="0">
         <StackPanel>
-            <!-- Header -->
-            <Border CornerRadius="4,4,0,0" Padding="20,15">
+            <!-- Header: doi mau sang tone canh bao khi la man SUA -->
+            <Border CornerRadius="4,4,0,0" Padding="24,17">
                 <Border.Style>
                     <Style TargetType="Border">
                         <Setter Property="Background" Value="{StaticResource BrandSoftBrush}" />
@@ -22,128 +55,170 @@
                     </Style>
                 </Border.Style>
                 <StackPanel>
-                    <TextBlock Text="{Binding Title}" Style="{StaticResource SectionTitleText}" FontSize="16.5" />
-                    <TextBlock Text="{Binding Subtitle}" Style="{StaticResource CaptionText}" FontSize="11.5" Margin="0,2,0,0" />
+                    <TextBlock Text="{Binding Title}" Style="{StaticResource SectionTitleText}" FontSize="17" />
+                    <TextBlock Text="{Binding Subtitle}" Style="{StaticResource CaptionText}" FontSize="11.5" Margin="0,3,0,0" />
                 </StackPanel>
             </Border>
 
-            <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="560">
-                <StackPanel Margin="20,16,20,18">
-                    <!-- 1. Khách -->
-                    <TextBlock Text="1 · KHÁCH HÀNG (CCCD HOẶC SĐT)" Style="{StaticResource FieldLabel}" />
-                    <DockPanel>
-                        <Button DockPanel.Dock="Right" Content="Tìm" Style="{StaticResource GhostButton}"
-                                Padding="16,8" Margin="8,0,0,0" Command="{Binding FindGuestCommand}"
-                                IsEnabled="{Binding CanEditGuest}" />
-                        <TextBox Text="{Binding GuestKeyword, UpdateSourceTrigger=PropertyChanged}"
-                                 IsReadOnly="{Binding IsEdit}" />
-                    </DockPanel>
+            <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="600">
+                <StackPanel Margin="24,20,24,20">
 
-                    <!-- Khách khớp -->
-                    <Border Margin="0,8,0,0" CornerRadius="4" Padding="10,8" Background="{StaticResource SuccessSoftBrush}"
-                            Visibility="{Binding HasMatchedGuest, Converter={StaticResource BoolToVis}}">
-                        <TextBlock Text="{Binding GuestInfoText}" Foreground="{StaticResource SuccessBrush}"
-                                   FontWeight="SemiBold" TextWrapping="Wrap" />
-                    </Border>
-                    <!-- Cảnh báo blacklist -->
-                    <Border Margin="0,8,0,0" CornerRadius="4" Padding="10,8" Background="{StaticResource DangerSoftBrush}"
-                            Visibility="{Binding IsBlacklisted, Converter={StaticResource BoolToVis}}">
-                        <TextBlock Text="⚠ Khách nằm trong danh sách cảnh báo. Cân nhắc trước khi đặt phòng."
-                                   Foreground="{StaticResource DangerBrush}" TextWrapping="Wrap" />
-                    </Border>
+                    <!-- ========== BUOC 1: KHACH HANG ========== -->
+                    <StackPanel Orientation="Horizontal">
+                        <Border Style="{StaticResource StepBadge}"><TextBlock Text="1" Style="{StaticResource StepNum}" /></Border>
+                        <TextBlock Text="Khách hàng" Style="{StaticResource StepTitle}" />
+                        <TextBlock Text="tìm bằng CCCD hoặc số điện thoại" Style="{StaticResource StepHint}" />
+                    </StackPanel>
+                    <StackPanel Style="{StaticResource StepBody}" Margin="34,10,0,0">
+                        <DockPanel>
+                            <Button DockPanel.Dock="Right" Content="Tìm" Style="{StaticResource GhostButton}"
+                                    Padding="18,8" Margin="8,0,0,0" Command="{Binding FindGuestCommand}"
+                                    IsEnabled="{Binding CanEditGuest}" />
+                            <TextBox Text="{Binding GuestKeyword, UpdateSourceTrigger=PropertyChanged}"
+                                     IsReadOnly="{Binding IsEdit}" />
+                        </DockPanel>
 
-                    <!-- Form tạo khách mới. Dat nhan RO RANG tren tung o thay vi dung
-                         hc:InfoElement.Placeholder - style TextBox chung cua app thay
-                         template goc cua HandyControl nen placeholder khong ve ra duoc. -->
-                    <Border Margin="0,10,0,0" CornerRadius="4" Padding="12,10"
-                            Background="{StaticResource SurfaceAltBrush}"
-                            Visibility="{Binding ShowNewGuestFields, Converter={StaticResource BoolToVis}}">
-                        <StackPanel>
-                            <TextBlock Text="Chưa có khách này trong hệ thống — điền thông tin để tạo mới"
-                                       Style="{StaticResource CaptionText}" FontSize="12"
-                                       TextWrapping="Wrap" Margin="0,0,0,10" />
+                        <!-- Khach da co trong he thong -->
+                        <Border Margin="0,9,0,0" CornerRadius="4" Padding="11,9" Background="{StaticResource SuccessSoftBrush}"
+                                Visibility="{Binding HasMatchedGuest, Converter={StaticResource BoolToVis}}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE73E;" Style="{StaticResource IconText}"
+                                           Foreground="{StaticResource SuccessBrush}" Margin="0,1,8,0" VerticalAlignment="Top" />
+                                <TextBlock Text="{Binding GuestInfoText}" Foreground="{StaticResource SuccessBrush}"
+                                           FontWeight="SemiBold" TextWrapping="Wrap" MaxWidth="400" />
+                            </StackPanel>
+                        </Border>
+                        <!-- Canh bao khach blacklist -->
+                        <Border Margin="0,9,0,0" CornerRadius="4" Padding="11,9" Background="{StaticResource DangerSoftBrush}"
+                                Visibility="{Binding IsBlacklisted, Converter={StaticResource BoolToVis}}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE7BA;" Style="{StaticResource IconText}"
+                                           Foreground="{StaticResource DangerBrush}" Margin="0,1,8,0" VerticalAlignment="Top" />
+                                <TextBlock Text="Khách nằm trong danh sách cảnh báo. Cân nhắc trước khi đặt phòng."
+                                           Foreground="{StaticResource DangerBrush}" TextWrapping="Wrap" MaxWidth="400" />
+                            </StackPanel>
+                        </Border>
 
-                            <TextBlock Text="HỌ TÊN KHÁCH *" Style="{StaticResource FieldLabel}" />
-                            <TextBox Text="{Binding NewFullName}" Margin="0,0,0,9" />
+                        <!-- Chua co khach -> mo form tao moi. Nhan ro rang tren tung o thay cho placeholder
+                             (style TextBox chung thay template goc HandyControl nen placeholder khong ve ra). -->
+                        <Border Margin="0,10,0,0" CornerRadius="4" Padding="14,12"
+                                Background="{StaticResource SurfaceAltBrush}"
+                                Visibility="{Binding ShowNewGuestFields, Converter={StaticResource BoolToVis}}">
+                            <StackPanel>
+                                <TextBlock Text="Chưa có khách này trong hệ thống — điền thông tin để tạo mới"
+                                           Style="{StaticResource CaptionText}" FontSize="12"
+                                           TextWrapping="Wrap" Margin="0,0,0,11" />
 
-                            <TextBlock Text="SỐ ĐIỆN THOẠI *" Style="{StaticResource FieldLabel}" />
-                            <TextBox Text="{Binding NewPhone}" Margin="0,0,0,9" />
+                                <TextBlock Text="HỌ TÊN KHÁCH *" Style="{StaticResource FieldLabel}" />
+                                <TextBox Text="{Binding NewFullName}" Margin="0,0,0,10" />
 
-                            <TextBlock Text="EMAIL (TUỲ CHỌN)" Style="{StaticResource FieldLabel}" />
-                            <TextBox Text="{Binding NewEmail}" />
+                                <Grid Margin="0,0,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="12" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="SỐ ĐIỆN THOẠI *" Style="{StaticResource FieldLabel}" />
+                                        <TextBox Text="{Binding NewPhone}" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="EMAIL (TUỲ CHỌN)" Style="{StaticResource FieldLabel}" />
+                                        <TextBox Text="{Binding NewEmail}" />
+                                    </StackPanel>
+                                </Grid>
 
-                            <TextBlock Text="{Binding IdentityHint}" Style="{StaticResource CaptionText}"
-                                       FontSize="11.5" TextWrapping="Wrap" Margin="0,9,0,0" />
+                                <TextBlock Text="{Binding IdentityHint}" Style="{StaticResource CaptionText}"
+                                           FontSize="11.5" TextWrapping="Wrap" Margin="0,10,0,0" />
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+
+                    <!-- ========== BUOC 2: THOI GIAN LUU TRU ========== -->
+                    <StackPanel Orientation="Horizontal" Margin="0,22,0,0">
+                        <Border Style="{StaticResource StepBadge}"><TextBlock Text="2" Style="{StaticResource StepNum}" /></Border>
+                        <TextBlock Text="Thời gian lưu trú" Style="{StaticResource StepTitle}" />
+                    </StackPanel>
+                    <StackPanel Style="{StaticResource StepBody}" Margin="34,10,0,0">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="14" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="NHẬN PHÒNG" Style="{StaticResource FieldLabel}" />
+                                <DatePicker SelectedDate="{Binding CheckIn}" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="TRẢ PHÒNG" Style="{StaticResource FieldLabel}" />
+                                <DatePicker SelectedDate="{Binding CheckOut}" />
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- Chon nhanh so dem - khoi mo lich chon tay cho cac khoang hay dung -->
+                        <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                            <TextBlock Text="Nhanh:" Style="{StaticResource CaptionText}" FontSize="11.5"
+                                       VerticalAlignment="Center" Margin="0,0,8,0" />
+                            <Button Content="1 đêm" Style="{StaticResource QuickChip}"
+                                    Command="{Binding PickNightsCommand}" CommandParameter="1" />
+                            <Button Content="2 đêm" Style="{StaticResource QuickChip}"
+                                    Command="{Binding PickNightsCommand}" CommandParameter="2" />
+                            <Button Content="3 đêm" Style="{StaticResource QuickChip}"
+                                    Command="{Binding PickNightsCommand}" CommandParameter="3" />
+                            <Button Content="1 tuần" Style="{StaticResource QuickChip}"
+                                    Command="{Binding PickNightsCommand}" CommandParameter="7" />
                         </StackPanel>
-                    </Border>
 
-                    <!-- 2. Ngày -->
-                    <TextBlock Text="2 · NGÀY NHẬN → TRẢ" Style="{StaticResource FieldLabel}" Margin="0,16,0,5" />
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="10" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="10" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <DatePicker Grid.Column="0" SelectedDate="{Binding CheckIn}" />
-                        <DatePicker Grid.Column="2" SelectedDate="{Binding CheckOut}" />
-                        <Button Grid.Column="4" Content="Tìm phòng trống" Style="{StaticResource GhostButton}"
-                                Padding="14,8" Command="{Binding FindRoomsCommand}" />
-                    </Grid>
-
-                    <!-- Chon nhanh so dem: khoi phai mo lich chon tay cho cac khoang hay dung -->
-                    <StackPanel Orientation="Horizontal" Margin="0,7,0,0">
-                        <TextBlock Text="Nhanh:" Style="{StaticResource CaptionText}" FontSize="11.5"
-                                   VerticalAlignment="Center" Margin="0,0,7,0" />
-                        <Button Content="1 đêm" Style="{StaticResource QuickChip}"
-                                Command="{Binding PickNightsCommand}" CommandParameter="1" />
-                        <Button Content="2 đêm" Style="{StaticResource QuickChip}"
-                                Command="{Binding PickNightsCommand}" CommandParameter="2" />
-                        <Button Content="3 đêm" Style="{StaticResource QuickChip}"
-                                Command="{Binding PickNightsCommand}" CommandParameter="3" />
-                        <Button Content="1 tuần" Style="{StaticResource QuickChip}"
-                                Command="{Binding PickNightsCommand}" CommandParameter="7" />
+                        <!-- Nut hanh dong chinh cua buoc 2: tim phong trong theo khoang ngay -->
+                        <Button Content="Tìm phòng trống" Style="{StaticResource PrimaryButton}"
+                                HorizontalAlignment="Stretch" Padding="14,9" Margin="0,12,0,0"
+                                Command="{Binding FindRoomsCommand}" />
                     </StackPanel>
 
-                    <!-- 3. Phòng trống -->
-                    <TextBlock Text="3 · CHỌN PHÒNG" Style="{StaticResource FieldLabel}" Margin="0,16,0,5"
-                               Visibility="{Binding HasSearchedRooms, Converter={StaticResource BoolToVis}}" />
-                    <ComboBox ItemsSource="{Binding AvailableRooms}" SelectedItem="{Binding SelectedRoom}"
-                              Visibility="{Binding HasSearchedRooms, Converter={StaticResource BoolToVis}}">
-                        <ComboBox.ItemTemplate>
-                            <DataTemplate>
-                                <TextBlock>
-                                    <Run Text="{Binding RoomNumber, Mode=OneWay}" FontWeight="SemiBold" />
-                                    <Run Text=" · " Foreground="{StaticResource InkSoftBrush}" />
-                                    <Run Text="{Binding RoomType.TypeName, Mode=OneWay}" />
-                                    <Run Text=" · " Foreground="{StaticResource InkSoftBrush}" />
-                                    <Run Text="{Binding RoomType.Capacity, Mode=OneWay}" /><Run Text=" khách · " />
-                                    <Run Text="{Binding RoomType.BasePrice, Mode=OneWay, StringFormat={}{0:N0}}" /><Run Text=" đ/đêm" />
-                                </TextBlock>
-                            </DataTemplate>
-                        </ComboBox.ItemTemplate>
-                    </ComboBox>
-
-                    <!-- 4. Số khách. Trạng thái không hỏi nữa: đơn tạo tại quầy thì
-                         chính lễ tân là người xác nhận, nên luôn vào Đã xác nhận.
-                         Muốn hạ xuống Chờ xác nhận thì đổi ở màn Đặt phòng. -->
-                    <StackPanel Width="130" HorizontalAlignment="Left" Margin="0,16,0,0"
+                    <!-- ========== BUOC 3: CHON PHONG (hien sau khi tim) ========== -->
+                    <StackPanel Orientation="Horizontal" Margin="0,22,0,0"
                                 Visibility="{Binding HasSearchedRooms, Converter={StaticResource BoolToVis}}">
-                        <TextBlock Text="SỐ KHÁCH" Style="{StaticResource FieldLabel}" />
-                        <hc:NumericUpDown Minimum="1" Maximum="20" Value="{Binding NumberOfGuests}" />
+                        <Border Style="{StaticResource StepBadge}"><TextBlock Text="3" Style="{StaticResource StepNum}" /></Border>
+                        <TextBlock Text="Chọn phòng &amp; số khách" Style="{StaticResource StepTitle}" />
+                    </StackPanel>
+                    <StackPanel Style="{StaticResource StepBody}" Margin="34,10,0,0"
+                                Visibility="{Binding HasSearchedRooms, Converter={StaticResource BoolToVis}}">
+                        <ComboBox ItemsSource="{Binding AvailableRooms}" SelectedItem="{Binding SelectedRoom}">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock>
+                                        <Run Text="{Binding RoomNumber, Mode=OneWay}" FontWeight="SemiBold" />
+                                        <Run Text=" · " Foreground="{StaticResource InkSoftBrush}" />
+                                        <Run Text="{Binding RoomType.TypeName, Mode=OneWay}" />
+                                        <Run Text=" · " Foreground="{StaticResource InkSoftBrush}" />
+                                        <Run Text="{Binding RoomType.Capacity, Mode=OneWay}" /><Run Text=" khách · " />
+                                        <Run Text="{Binding RoomType.BasePrice, Mode=OneWay, StringFormat={}{0:N0}}" /><Run Text=" đ/đêm" />
+                                    </TextBlock>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+
+                        <!-- So khach: don tao tai quay -> le tan xac nhan luon, khong hoi trang thai. -->
+                        <StackPanel Width="130" HorizontalAlignment="Left" Margin="0,12,0,0">
+                            <TextBlock Text="SỐ KHÁCH" Style="{StaticResource FieldLabel}" />
+                            <hc:NumericUpDown Minimum="1" Maximum="20" Value="{Binding NumberOfGuests}" />
+                        </StackPanel>
                     </StackPanel>
 
-                    <!-- Tien coc tuy chon - chi khi tao don moi (sua don khong doi coc) -->
-                    <Grid Margin="0,14,0,0" Visibility="{Binding CanEditGuest, Converter={StaticResource BoolToVis}}">
+                    <!-- ========== TUY CHON THEM ========== -->
+                    <Border Height="1" Background="{StaticResource LineBrush}" Margin="0,22,0,0" />
+                    <TextBlock Text="TUỲ CHỌN THÊM" Style="{StaticResource FieldLabel}" Margin="0,16,0,0" />
+
+                    <!-- Tien coc chi khi TAO don moi (sua don khong doi coc) -->
+                    <Grid Margin="0,6,0,0" Visibility="{Binding CanEditGuest, Converter={StaticResource BoolToVis}}">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="12" />
+                            <ColumnDefinition Width="14" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0">
-                            <TextBlock Text="TIỀN CỌC (TUỲ CHỌN)" Style="{StaticResource FieldLabel}" />
+                            <TextBlock Text="TIỀN CỌC" Style="{StaticResource FieldLabel}" />
                             <TextBox Text="{Binding DepositText, UpdateSourceTrigger=PropertyChanged}"
                                      ToolTip="Bỏ trống nếu không thu cọc" />
                         </StackPanel>
@@ -155,12 +230,12 @@
                         </StackPanel>
                     </Grid>
 
-                    <TextBlock Text="YÊU CẦU ĐẶC BIỆT (TUỲ CHỌN)" Style="{StaticResource FieldLabel}" Margin="0,14,0,5" />
-                    <TextBox Text="{Binding SpecialRequests}" Height="52" TextWrapping="Wrap"
+                    <TextBlock Text="YÊU CẦU ĐẶC BIỆT" Style="{StaticResource FieldLabel}" Margin="0,12,0,5" />
+                    <TextBox Text="{Binding SpecialRequests}" Height="54" TextWrapping="Wrap"
                              AcceptsReturn="True" VerticalScrollBarVisibility="Auto" />
 
-                    <!-- Banner lỗi -->
-                    <Border Margin="0,14,0,0" CornerRadius="4" Padding="10,8" Background="{StaticResource DangerSoftBrush}">
+                    <!-- Banner loi nghiep vu tu service (trung lich, suc chua...) -->
+                    <Border Margin="0,14,0,0" CornerRadius="4" Padding="11,9" Background="{StaticResource DangerSoftBrush}">
                         <Border.Style>
                             <Style TargetType="Border">
                                 <Style.Triggers>
@@ -173,15 +248,15 @@
                             <TextBlock Text="&#xE7BA;" Style="{StaticResource IconText}"
                                        Foreground="{StaticResource DangerBrush}" Margin="0,2,8,0" VerticalAlignment="Top" />
                             <TextBlock Text="{Binding ErrorMessage}" Foreground="{StaticResource DangerBrush}"
-                                       TextWrapping="Wrap" MaxWidth="400" />
+                                       TextWrapping="Wrap" MaxWidth="410" />
                         </StackPanel>
                     </Border>
 
-                    <Border Height="1" Background="{StaticResource LineBrush}" Margin="0,16,0,0" />
+                    <Border Height="1" Background="{StaticResource LineBrush}" Margin="0,18,0,0" />
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,14,0,0">
                         <Button Content="Huỷ" Style="{StaticResource GhostButton}" IsCancel="True" />
                         <Button Content="Lưu đặt phòng" Style="{StaticResource PrimaryButton}" Margin="10,0,0,0"
-                                MinWidth="120" IsDefault="True" Command="{Binding SaveCommand}" />
+                                MinWidth="130" IsDefault="True" Command="{Binding SaveCommand}" />
                     </StackPanel>
                 </StackPanel>
             </ScrollViewer>
