@@ -471,4 +471,12 @@
         <Setter Property="Tag" Value="0,4,4,0" />
     </Style>
 
+    <!-- Lich DatePicker mac dinh bi HandyControl doi sang tieng Trung (年/月). Dat
+         Language thang tren o - uu tien cao hon override o App.xaml.cs - de ten thu
+         va thang ra tieng Viet ke ca khi thu vien chan override. Language ke thua
+         nen truyen xuong Calendar trong popup. BasedOn giu nguyen giao dien HC. -->
+    <Style TargetType="{x:Type DatePicker}" BasedOn="{StaticResource {x:Type DatePicker}}">
+        <Setter Property="Language" Value="vi-VN" />
+    </Style>
+
 </ResourceDictionary>
