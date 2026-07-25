@@ -100,7 +100,7 @@
                                 <Run Text="{Binding TypeName, Mode=OneWay}" FontWeight="SemiBold" />
                                 <Run Text=" · " Foreground="{StaticResource InkSoftBrush}" />
                                 <Run Text="{Binding Capacity, Mode=OneWay}" /><Run Text=" khách · " />
-                                <Run Text="{Binding BasePrice, Mode=OneWay, StringFormat={}{0:N0}}" /><Run Text=" đ/đêm" />
+                                <Run Text="{Binding BasePrice, Mode=OneWay, Converter={StaticResource Money}, ConverterParameter=raw}" /><Run Text=" đ/đêm" />
                             </TextBlock>
                         </DataTemplate>
                     </ComboBox.ItemTemplate>

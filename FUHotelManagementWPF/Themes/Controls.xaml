@@ -10,6 +10,9 @@
          them property phu chi de dao mot gia tri bool. -->
     <mvvm:InverseBoolToVisibilityConverter x:Key="InverseBoolToVis" />
 
+    <!-- So tien -> "1.250.000 đ". Xem MoneyConverter de biet vi sao khong dung StringFormat. -->
+    <mvvm:MoneyConverter x:Key="Money" />
+
     <!-- HE BO GOC (quy uoc, xem docs/QUY_UOC_GIAO_DIEN.md):
          nut=pill(999) | o nhap=8 | card/dialog=12 | nav item=10 | badge=pill -->
 

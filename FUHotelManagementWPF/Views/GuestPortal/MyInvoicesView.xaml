@@ -52,7 +52,7 @@
                     </StackPanel>
                     <StackPanel>
                         <TextBlock Text="TỔNG TIỀN ĐÃ CHI" Style="{StaticResource FieldLabel}" />
-                        <TextBlock Text="{Binding PaidTotal, StringFormat={}{0:N0} đ}"
+                        <TextBlock Text="{Binding PaidTotal, Converter={StaticResource Money}}"
                                    Style="{StaticResource SectionTitleText}"
                                    Foreground="{StaticResource BrandBrush}" />
                     </StackPanel>
@@ -128,22 +128,22 @@
                                     <TextBlock Grid.Row="0" Grid.Column="0" Text="Tiền phòng"
                                                Style="{StaticResource MoneyLabel}" />
                                     <TextBlock Grid.Row="0" Grid.Column="1" Style="{StaticResource MoneyValue}"
-                                               Text="{Binding Invoice.RoomCharge, StringFormat={}{0:N0} đ}" />
+                                               Text="{Binding Invoice.RoomCharge, Converter={StaticResource Money}}" />
 
                                     <TextBlock Grid.Row="1" Grid.Column="0" Text="Tiền dịch vụ"
                                                Style="{StaticResource MoneyLabel}" />
                                     <TextBlock Grid.Row="1" Grid.Column="1" Style="{StaticResource MoneyValue}"
-                                               Text="{Binding Invoice.ServiceCharge, StringFormat={}{0:N0} đ}" />
+                                               Text="{Binding Invoice.ServiceCharge, Converter={StaticResource Money}}" />
 
                                     <TextBlock Grid.Row="2" Grid.Column="0" Text="Phụ thu"
                                                Style="{StaticResource MoneyLabel}" />
                                     <TextBlock Grid.Row="2" Grid.Column="1" Style="{StaticResource MoneyValue}"
-                                               Text="{Binding Invoice.SurchargeAmount, StringFormat={}{0:N0} đ}" />
+                                               Text="{Binding Invoice.SurchargeAmount, Converter={StaticResource Money}}" />
 
                                     <TextBlock Grid.Row="3" Grid.Column="0" Text="Giảm giá"
                                                Style="{StaticResource MoneyLabel}" />
                                     <TextBlock Grid.Row="3" Grid.Column="1" Style="{StaticResource MoneyValue}"
-                                               Text="{Binding Invoice.DiscountAmount, StringFormat={}{0:N0} đ}" />
+                                               Text="{Binding Invoice.DiscountAmount, Converter={StaticResource Money}}" />
 
                                     <!-- Ly do giam gia: uu dai VIP la diem nhan nen de dang banner -->
                                     <Border Grid.Row="4" Grid.ColumnSpan="2" CornerRadius="4"
@@ -168,7 +168,7 @@
                                     <TextBlock Grid.Row="7" Grid.Column="1" HorizontalAlignment="Right"
                                                Style="{StaticResource BodyText}" FontWeight="Bold"
                                                Foreground="{StaticResource BrandBrush}"
-                                               Text="{Binding Invoice.TotalAmount, StringFormat={}{0:N0} đ}" />
+                                               Text="{Binding Invoice.TotalAmount, Converter={StaticResource Money}}" />
                                 </Grid>
                             </StackPanel>
                         </Border>

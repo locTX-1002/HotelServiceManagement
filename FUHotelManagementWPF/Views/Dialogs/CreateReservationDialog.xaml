@@ -193,7 +193,7 @@
                                         <Run Text="{Binding RoomType.TypeName, Mode=OneWay}" />
                                         <Run Text=" · " Foreground="{StaticResource InkSoftBrush}" />
                                         <Run Text="{Binding RoomType.Capacity, Mode=OneWay}" /><Run Text=" khách · " />
-                                        <Run Text="{Binding RoomType.BasePrice, Mode=OneWay, StringFormat={}{0:N0}}" /><Run Text=" đ/đêm" />
+                                        <Run Text="{Binding RoomType.BasePrice, Mode=OneWay, Converter={StaticResource Money}, ConverterParameter=raw}" /><Run Text=" đ/đêm" />
                                     </TextBlock>
                                 </DataTemplate>
                             </ComboBox.ItemTemplate>

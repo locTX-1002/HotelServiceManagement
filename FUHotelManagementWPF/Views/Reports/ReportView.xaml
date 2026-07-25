@@ -97,21 +97,21 @@
                 <Border Style="{StaticResource StatCard}">
                     <StackPanel>
                         <TextBlock Text="TIỀN PHÒNG" Style="{StaticResource FieldLabel}" />
-                        <TextBlock Text="{Binding RoomRevenue, StringFormat={}{0:N0} đ}"
+                        <TextBlock Text="{Binding RoomRevenue, Converter={StaticResource Money}}"
                                    Style="{StaticResource SectionTitleText}" />
                     </StackPanel>
                 </Border>
                 <Border Style="{StaticResource StatCard}">
                     <StackPanel>
                         <TextBlock Text="TIỀN DỊCH VỤ" Style="{StaticResource FieldLabel}" />
-                        <TextBlock Text="{Binding ServiceRevenue, StringFormat={}{0:N0} đ}"
+                        <TextBlock Text="{Binding ServiceRevenue, Converter={StaticResource Money}}"
                                    Style="{StaticResource SectionTitleText}" />
                     </StackPanel>
                 </Border>
                 <Border Style="{StaticResource StatCard}">
                     <StackPanel>
                         <TextBlock Text="PHỤ THU" Style="{StaticResource FieldLabel}" />
-                        <TextBlock Text="{Binding SurchargeRevenue, StringFormat={}{0:N0} đ}"
+                        <TextBlock Text="{Binding SurchargeRevenue, Converter={StaticResource Money}}"
                                    Style="{StaticResource SectionTitleText}" />
                     </StackPanel>
                 </Border>
@@ -126,14 +126,14 @@
                 <Border Style="{StaticResource StatCard}">
                     <StackPanel>
                         <TextBlock Text="TỔNG HOÁ ĐƠN" Style="{StaticResource FieldLabel}" />
-                        <TextBlock Text="{Binding InvoiceRevenue, StringFormat={}{0:N0} đ}"
+                        <TextBlock Text="{Binding InvoiceRevenue, Converter={StaticResource Money}}"
                                    Style="{StaticResource SectionTitleText}" />
                     </StackPanel>
                 </Border>
                 <Border Style="{StaticResource StatCard}">
                     <StackPanel>
                         <TextBlock Text="THỰC THU" Style="{StaticResource FieldLabel}" />
-                        <TextBlock Text="{Binding CollectedAmount, StringFormat={}{0:N0} đ}"
+                        <TextBlock Text="{Binding CollectedAmount, Converter={StaticResource Money}}"
                                    Style="{StaticResource SectionTitleText}"
                                    FontWeight="Bold" Foreground="{StaticResource BrandBrush}" />
                     </StackPanel>
@@ -228,27 +228,27 @@
                                 <DataGridTextColumn Header="Tiền phòng" Width="*"
                                                     HeaderStyle="{StaticResource MoneyHeader}"
                                                     ElementStyle="{StaticResource MoneyCellText}"
-                                                    Binding="{Binding RoomRevenue, StringFormat={}{0:N0} đ}" />
+                                                    Binding="{Binding RoomRevenue, Converter={StaticResource Money}}" />
                                 <DataGridTextColumn Header="Dịch vụ" Width="*"
                                                     HeaderStyle="{StaticResource MoneyHeader}"
                                                     ElementStyle="{StaticResource MoneyCellText}"
-                                                    Binding="{Binding ServiceRevenue, StringFormat={}{0:N0} đ}" />
+                                                    Binding="{Binding ServiceRevenue, Converter={StaticResource Money}}" />
                                 <DataGridTextColumn Header="Phụ thu" Width="*"
                                                     HeaderStyle="{StaticResource MoneyHeader}"
                                                     ElementStyle="{StaticResource MoneyCellText}"
-                                                    Binding="{Binding SurchargeRevenue, StringFormat={}{0:N0} đ}" />
+                                                    Binding="{Binding SurchargeRevenue, Converter={StaticResource Money}}" />
                                 <DataGridTextColumn Header="Giảm giá" Width="*"
                                                     HeaderStyle="{StaticResource MoneyHeader}"
                                                     ElementStyle="{StaticResource MoneyCellText}"
-                                                    Binding="{Binding DiscountAmount, StringFormat={}{0:N0} đ}" />
+                                                    Binding="{Binding DiscountAmount, Converter={StaticResource Money}}" />
                                 <DataGridTextColumn Header="Tổng hoá đơn" Width="*"
                                                     HeaderStyle="{StaticResource MoneyHeader}"
                                                     ElementStyle="{StaticResource MoneyCellText}"
-                                                    Binding="{Binding InvoiceRevenue, StringFormat={}{0:N0} đ}" />
+                                                    Binding="{Binding InvoiceRevenue, Converter={StaticResource Money}}" />
                                 <DataGridTextColumn Header="Thực thu" Width="*"
                                                     HeaderStyle="{StaticResource MoneyHeader}"
                                                     ElementStyle="{StaticResource MoneyCellText}"
-                                                    Binding="{Binding CollectedAmount, StringFormat={}{0:N0} đ}" />
+                                                    Binding="{Binding CollectedAmount, Converter={StaticResource Money}}" />
                             </DataGrid.Columns>
                         </DataGrid>
 

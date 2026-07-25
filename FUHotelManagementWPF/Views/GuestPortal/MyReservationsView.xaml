@@ -138,7 +138,7 @@
                                             Visibility="{Binding HasDeposit, Converter={StaticResource BoolToVis}}">
                                     <TextBlock Text="TIỀN CỌC" Style="{StaticResource FieldLabel}"
                                                HorizontalAlignment="Right" />
-                                    <TextBlock Text="{Binding DepositAmount, StringFormat={}{0:N0} đ}"
+                                    <TextBlock Text="{Binding DepositAmount, Converter={StaticResource Money}}"
                                                FontWeight="SemiBold" HorizontalAlignment="Right" />
                                 </StackPanel>
                             </Grid>

@@ -40,7 +40,7 @@
                                 <TextBlock>
                                     <Run Text="{Binding Name, Mode=OneWay}" />
                                     <Run Text=" · " Foreground="{StaticResource InkSoftBrush}" />
-                                    <Run Text="{Binding UnitPrice, Mode=OneWay, StringFormat={}{0:N0}}" /><Run Text=" đ/" /><Run
+                                    <Run Text="{Binding UnitPrice, Mode=OneWay, Converter={StaticResource Money}, ConverterParameter=raw}" /><Run Text=" đ/" /><Run
                                     Text="{Binding Unit, Mode=OneWay}" />
                                 </TextBlock>
                             </DataTemplate>

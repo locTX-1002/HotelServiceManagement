@@ -148,18 +148,18 @@
                                                 </Grid.ColumnDefinitions>
                                                 <StackPanel Grid.Column="0">
                                                     <TextBlock Text="Tiền phòng" Style="{StaticResource CaptionText}" />
-                                                    <TextBlock Text="{Binding Invoice.RoomCharge, StringFormat={}{0:N0} đ}"
+                                                    <TextBlock Text="{Binding Invoice.RoomCharge, Converter={StaticResource Money}}"
                                                                Style="{StaticResource BodyText}" Margin="0,3,0,10" />
                                                     <TextBlock Text="Tiền dịch vụ" Style="{StaticResource CaptionText}" />
-                                                    <TextBlock Text="{Binding Invoice.ServiceCharge, StringFormat={}{0:N0} đ}"
+                                                    <TextBlock Text="{Binding Invoice.ServiceCharge, Converter={StaticResource Money}}"
                                                                Style="{StaticResource BodyText}" Margin="0,3,0,10" />
                                                     <TextBlock Text="Phụ thu" Style="{StaticResource CaptionText}" />
-                                                    <TextBlock Text="{Binding Invoice.SurchargeAmount, StringFormat={}{0:N0} đ}"
+                                                    <TextBlock Text="{Binding Invoice.SurchargeAmount, Converter={StaticResource Money}}"
                                                                Style="{StaticResource BodyText}" Margin="0,3,0,0" />
                                                 </StackPanel>
                                                 <StackPanel Grid.Column="1">
                                                     <TextBlock Text="Giảm giá" Style="{StaticResource CaptionText}" />
-                                                    <TextBlock Text="{Binding Invoice.DiscountAmount, StringFormat={}{0:N0} đ}"
+                                                    <TextBlock Text="{Binding Invoice.DiscountAmount, Converter={StaticResource Money}}"
                                                                Style="{StaticResource BodyText}" Margin="0,3,0,0" />
                                                     <!-- Ly do giam (ma khuyen mai / VIP10) - de le tan giai thich duoc voi khach -->
                                                     <TextBlock Text="{Binding Invoice.PromotionCode}" Style="{StaticResource CaptionText}"
@@ -167,10 +167,10 @@
                                                                TextTrimming="CharacterEllipsis" Margin="0,1,0,10"
                                                                ToolTip="{Binding Invoice.PromotionCode}" />
                                                     <TextBlock Text="Đã thanh toán" Style="{StaticResource CaptionText}" />
-                                                    <TextBlock Text="{Binding PaidAmount, StringFormat={}{0:N0} đ}"
+                                                    <TextBlock Text="{Binding PaidAmount, Converter={StaticResource Money}}"
                                                                Style="{StaticResource BodyText}" Margin="0,3,0,10" />
                                                     <TextBlock Text="Còn lại" Style="{StaticResource CaptionText}" />
-                                                    <TextBlock Text="{Binding RemainingAmount, StringFormat={}{0:N0} đ}"
+                                                    <TextBlock Text="{Binding RemainingAmount, Converter={StaticResource Money}}"
                                                                Foreground="{StaticResource DangerBrush}"
                                                                FontWeight="SemiBold" Margin="0,3,0,0" />
                                                 </StackPanel>
@@ -186,7 +186,7 @@
                                                       Text="{Binding PromotionCode, UpdateSourceTrigger=PropertyChanged}" />
                                             <TextBlock Text="Tổng phải trả" Style="{StaticResource CaptionText}"
                                                        Margin="0,20,0,3" />
-                                            <TextBlock Text="{Binding Invoice.TotalAmount, StringFormat={}{0:N0} đ}"
+                                            <TextBlock Text="{Binding Invoice.TotalAmount, Converter={StaticResource Money}}"
                                                        Style="{StaticResource PageTitleText}"
                                                        Foreground="{StaticResource BrandBrush}" />
                                             <Button Content="{Binding PrepareInvoiceText}"
@@ -230,10 +230,10 @@
                                     <DataGridTextColumn Header="Số lượng"
                                                         Binding="{Binding Quantity}" Width="80" />
                                     <DataGridTextColumn Header="Đơn giá"
-                                                        Binding="{Binding UnitPriceSnapshot, StringFormat={}{0:N0} đ}"
+                                                        Binding="{Binding UnitPriceSnapshot, Converter={StaticResource Money}}"
                                                         Width="120" />
                                     <DataGridTextColumn Header="Thành tiền"
-                                                        Binding="{Binding Subtotal, StringFormat={}{0:N0} đ}"
+                                                        Binding="{Binding Subtotal, Converter={StaticResource Money}}"
                                                         Width="130" />
                                     <DataGridTemplateColumn Header="" Width="150">
                                         <DataGridTemplateColumn.CellTemplate>
@@ -274,7 +274,7 @@
                                     <TextBlock Text="Lịch sử thanh toán" Style="{StaticResource SectionTitleText}" />
                                     <TextBlock Style="{StaticResource CaptionText}" Margin="0,3,0,0">
                                         <Run Text="Còn lại: " />
-                                        <Run Text="{Binding RemainingAmount, Mode=OneWay, StringFormat={}{0:N0} đ}"
+                                        <Run Text="{Binding RemainingAmount, Mode=OneWay, Converter={StaticResource Money}}"
                                              FontWeight="SemiBold" />
                                     </TextBlock>
                                 </StackPanel>
@@ -292,7 +292,7 @@
                                                         Binding="{Binding PaymentDate, StringFormat={}{0:dd/MM/yyyy HH:mm}}"
                                                         Width="150" />
                                     <DataGridTextColumn Header="Số tiền"
-                                                        Binding="{Binding Amount, StringFormat={}{0:N0} đ}"
+                                                        Binding="{Binding Amount, Converter={StaticResource Money}}"
                                                         Width="130" />
                                     <DataGridTextColumn Header="Phương thức"
                                                         Binding="{Binding PaymentMethod}" Width="120" />
