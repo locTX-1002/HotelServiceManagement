@@ -88,6 +88,56 @@ public sealed class InvoicesViewModel : ViewModelBase
 
     public bool HasInvoice => Invoice != null;
 
+    // ---- Tam tinh theo du lieu HIEN TAI ------------------------------------------------
+    // Hoa don luu trong DB la anh chup luc bam lap. Khach goi them dich vu hay bi ghi phu
+    // thu sau do thi man hinh van hien so cu, le tan khong biet co chenh cho den khi bam
+    // tinh lai. Tinh song song o day tu du lieu vua tai de bao ngay.
+
+    private decimal LiveRoomCharge
+    {
+        get
+        {
+            if (SelectedStay?.Reservation?.Room?.RoomType == null) return 0;
+            var until = SelectedStay.ActualCheckOut ?? DateTime.Now;
+            var nights = Math.Max(1, (until.Date - SelectedStay.ActualCheckIn.Date).Days);
+            return nights * SelectedStay.Reservation.Room.RoomType.BasePrice;
+        }
+    }
+
+    private decimal LiveServiceCharge => SelectedStay?.ServiceOrders
+        .Where(o => o.Status == ServiceOrderStatus.Completed).Sum(o => o.TotalAmount) ?? 0;
+
+    private decimal LiveSurcharge => Surcharges.Sum(x => x.Subtotal);
+
+    /// <summary>Giam gia da chot tren hoa don; chua co hoa don thi chua biet, tinh 0.</summary>
+    private decimal LiveDiscount => Math.Clamp(Invoice?.DiscountAmount ?? 0, 0,
+        LiveRoomCharge + LiveServiceCharge + LiveSurcharge);
+
+    public decimal LiveTotal => LiveRoomCharge + LiveServiceCharge + LiveSurcharge - LiveDiscount;
+    public string LiveTotalText => $"{LiveTotal:N0} đ";
+
+    /// <summary>Chenh giua tam tinh hien tai va so da luu tren hoa don.</summary>
+    public decimal PendingDifference => Invoice == null ? 0 : LiveTotal - Invoice.TotalAmount;
+
+    public bool HasPendingCharges => Invoice != null && PendingDifference != 0;
+
+    public string PendingChargeText
+    {
+        get
+        {
+            var parts = new List<string>();
+            var service = LiveServiceCharge - Invoice?.ServiceCharge ?? 0;
+            var surcharge = LiveSurcharge - Invoice?.SurchargeAmount ?? 0;
+            var room = LiveRoomCharge - Invoice?.RoomCharge ?? 0;
+            if (service != 0) parts.Add($"dịch vụ {service:N0} đ");
+            if (surcharge != 0) parts.Add($"phụ thu {surcharge:N0} đ");
+            if (room != 0) parts.Add($"tiền phòng {room:N0} đ");
+            var detail = parts.Count > 0 ? $" ({string.Join(", ", parts)})" : string.Empty;
+            return $"Phát sinh {PendingDifference:N0} đ chưa vào hoá đơn{detail}. "
+                   + $"Tổng mới sẽ là {LiveTotalText}.";
+        }
+    }
+
     private decimal _paidAmount;
     public decimal PaidAmount
     {
@@ -113,9 +163,11 @@ public sealed class InvoicesViewModel : ViewModelBase
                                     && Invoice != null
                                     && Invoice.Status != InvoiceStatus.Cancelled
                                     && RemainingAmount > 0;
+    // Phu thu them duoc ca sau khi da thu tien - giong dich vu. Tinh lai hoa don se cong
+    // vao va le tan thu not phan chenh; khong con ly do khoa o day.
     public bool CanEditSurcharges => CanManageBilling
                                      && SelectedStay != null
-                                     && PaidAmount <= 0;
+                                     && Invoice?.Status != InvoiceStatus.Cancelled;
     public bool CanCancelInvoice => Invoice != null
                                     && Invoice.Status != InvoiceStatus.Cancelled
                                     && PaidAmount <= 0
@@ -303,13 +355,6 @@ public sealed class InvoicesViewModel : ViewModelBase
             Notify.Success(result.Message);
             await LoadPaymentSummaryAsync();
             RaiseInvoiceState();
-
-            // Buoc tiep theo luon la thu tien, ma nut do o tab khac - dua nguoi dung
-            // sang luon thay vi de ho tu mo tim.
-            if (RemainingAmount > 0)
-            {
-                SelectedTabIndex = 2;
-            }
         }
         catch (Exception)
         {
@@ -516,6 +561,11 @@ public sealed class InvoicesViewModel : ViewModelBase
         OnPropertyChanged(nameof(CanVoidPayment));
         OnPropertyChanged(nameof(CanPrepareInvoice));
         OnPropertyChanged(nameof(PrepareInvoiceText));
+        OnPropertyChanged(nameof(LiveTotal));
+        OnPropertyChanged(nameof(LiveTotalText));
+        OnPropertyChanged(nameof(PendingDifference));
+        OnPropertyChanged(nameof(HasPendingCharges));
+        OnPropertyChanged(nameof(PendingChargeText));
     }
 
     private static Window? ActiveWindow()
