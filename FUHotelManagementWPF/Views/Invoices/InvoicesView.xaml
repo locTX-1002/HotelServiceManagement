@@ -105,7 +105,11 @@
                                TextWrapping="Wrap" />
                 </Border>
 
-                <TabControl Grid.Row="2">
+                <!-- SelectedIndex binding de sau khi lap hoa don tu nhay sang tab
+                     Thanh toan: hai nut "Lap hoa don" va "Ghi nhan thanh toan" nam o
+                     hai tab khac nhau, lap xong dung yen tai tab Hoa don thi khong
+                     thay nut thu tien dau ca. -->
+                <TabControl Grid.Row="2" SelectedIndex="{Binding SelectedTabIndex}">
                     <TabItem Header="Hoá đơn">
                         <ScrollViewer VerticalScrollBarVisibility="Auto">
                             <StackPanel Margin="4,14,4,4">
