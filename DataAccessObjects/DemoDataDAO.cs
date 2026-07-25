@@ -184,5 +184,87 @@ public static class DemoDataDAO
             };
         }
         await context.SaveChangesAsync();
+
+        await SeedPromotionsAsync(context);
+    }
+
+    /// <summary>
+    /// Ma khuyen mai mau. Ngay tinh theo HOM NAY nen lan nao chay cung co du ba tinh
+    /// huong de xem giao dien: dang chay, chua toi ngay, va da het han.
+    /// </summary>
+    private static async Task SeedPromotionsAsync(HotelDbContext context)
+    {
+        if (await context.Promotions.AnyAsync())
+        {
+            return;
+        }
+
+        var today = DateTime.Today;
+        context.Promotions.AddRange(
+            new Promotion
+            {
+                Code = "HE2026",
+                Description = "Giảm 10% dịp hè cho mọi hạng phòng",
+                Type = PromotionType.Percentage,
+                Value = 10,
+                StartDate = today.AddDays(-15),
+                EndDate = today.AddDays(45),
+                IsActive = true,
+            },
+            new Promotion
+            {
+                Code = "CHAOBAN",
+                Description = "Giảm thẳng 200.000 đ cho khách lần đầu",
+                Type = PromotionType.FixedAmount,
+                Value = 200_000,
+                StartDate = today.AddDays(-30),
+                EndDate = today.AddDays(60),
+                IsActive = true,
+            },
+            new Promotion
+            {
+                Code = "CUOITUAN",
+                Description = "Giảm 5% cho đơn nhận phòng cuối tuần",
+                Type = PromotionType.Percentage,
+                Value = 5,
+                StartDate = today.AddDays(-5),
+                EndDate = today.AddDays(20),
+                IsActive = true,
+            },
+            // Chua toi ngay bat dau - de kiem tra man hinh phan biet duoc voi "dang chay"
+            new Promotion
+            {
+                Code = "TETMOI",
+                Description = "Ưu đãi Tết - chưa tới ngày áp dụng",
+                Type = PromotionType.Percentage,
+                Value = 15,
+                StartDate = today.AddDays(30),
+                EndDate = today.AddDays(75),
+                IsActive = true,
+            },
+            // Da het han - de kiem tra chip loc "Het han"
+            new Promotion
+            {
+                Code = "KHAITRUONG",
+                Description = "Khuyến mãi khai trương - đã kết thúc",
+                Type = PromotionType.FixedAmount,
+                Value = 500_000,
+                StartDate = today.AddDays(-90),
+                EndDate = today.AddDays(-30),
+                IsActive = true,
+            },
+            // Da tat thu cong - khac voi het han
+            new Promotion
+            {
+                Code = "NGUNGAP",
+                Description = "Mã đã tắt, không áp dụng được nữa",
+                Type = PromotionType.Percentage,
+                Value = 20,
+                StartDate = today.AddDays(-10),
+                EndDate = today.AddDays(30),
+                IsActive = false,
+            });
+
+        await context.SaveChangesAsync();
     }
 }
