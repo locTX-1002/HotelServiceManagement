@@ -17,6 +17,17 @@ public sealed class ReservationDAO
         return await Query(context).OrderByDescending(r => r.CheckInDate).ToListAsync();
     }
 
+    /// <summary>
+    /// Don dat phong cua DUNG mot khach. Loc ngay tren DB thay vi tai het roi loc o may
+    /// khach - khach tu dang nhap chi duoc phep thay du lieu cua chinh minh.
+    /// </summary>
+    public async Task<List<Reservation>> GetByGuestAsync(int guestId)
+    {
+        await using var context = HotelDbContextFactory.Create();
+        return await Query(context).Where(r => r.GuestId == guestId)
+            .OrderByDescending(r => r.CheckInDate).ToListAsync();
+    }
+
     public async Task<Reservation?> GetByIdAsync(int id)
     {
         await using var context = HotelDbContextFactory.Create();

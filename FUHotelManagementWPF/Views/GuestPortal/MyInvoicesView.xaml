@@ -1,0 +1,180 @@
+<UserControl x:Class="FUHotelManagementWPF.Views.GuestPortal.MyInvoicesView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:hc="https://handyorg.github.io/handycontrol">
+    <UserControl.Resources>
+        <!-- Nhan cua tung dong tien trong bang chi tiet -->
+        <Style x:Key="MoneyLabel" TargetType="TextBlock" BasedOn="{StaticResource BodyText}">
+            <Setter Property="Foreground" Value="{StaticResource InkSoftBrush}" />
+            <Setter Property="Margin" Value="0,0,0,6" />
+        </Style>
+        <Style x:Key="MoneyValue" TargetType="TextBlock" BasedOn="{StaticResource BodyText}">
+            <Setter Property="HorizontalAlignment" Value="Right" />
+            <Setter Property="Margin" Value="0,0,0,6" />
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Margin="24,18,24,24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Margin="0,0,0,14">
+            <TextBlock Text="Hoá đơn của tôi" Style="{StaticResource PageTitleText}" />
+            <TextBlock Text="Chi tiết tiền phòng, dịch vụ và ưu đãi của từng kỳ lưu trú."
+                       Style="{StaticResource CaptionText}" Margin="0,4,0,0" />
+        </StackPanel>
+
+        <!-- Trang thai LOI -->
+        <Border Grid.Row="1" Background="{StaticResource DangerSoftBrush}" CornerRadius="4"
+                Padding="12,9" Margin="0,0,0,12"
+                Visibility="{Binding HasError, Converter={StaticResource BoolToVis}}">
+            <TextBlock Text="{Binding ErrorMessage}" TextWrapping="Wrap"
+                       Foreground="{StaticResource DangerBrush}" />
+        </Border>
+
+        <!-- The tong: so hoa don + tong tien da chi -->
+        <Border Grid.Row="2" Style="{StaticResource Card}" Effect="{StaticResource SoftShadow}"
+                Margin="0,0,0,14"
+                Visibility="{Binding HasRows, Converter={StaticResource BoolToVis}}">
+            <DockPanel>
+                <Button DockPanel.Dock="Right" Content="Tải lại" Style="{StaticResource GhostButton}"
+                        Padding="16,7" VerticalAlignment="Center"
+                        Command="{Binding ReloadCommand}" />
+                <StackPanel Orientation="Horizontal">
+                    <StackPanel Margin="0,0,40,0">
+                        <TextBlock Text="SỐ HOÁ ĐƠN" Style="{StaticResource FieldLabel}" />
+                        <TextBlock Text="{Binding TotalCountText}"
+                                   Style="{StaticResource SectionTitleText}" />
+                    </StackPanel>
+                    <StackPanel>
+                        <TextBlock Text="TỔNG TIỀN ĐÃ CHI" Style="{StaticResource FieldLabel}" />
+                        <TextBlock Text="{Binding PaidTotal, StringFormat={}{0:N0} đ}"
+                                   Style="{StaticResource SectionTitleText}"
+                                   Foreground="{StaticResource BrandBrush}" />
+                    </StackPanel>
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <!-- Trang thai DANG TAI -->
+        <hc:LoadingCircle Grid.Row="3" Width="34" Height="34"
+                          VerticalAlignment="Center"
+                          Foreground="{StaticResource BrandBrush}"
+                          Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}" />
+
+        <!-- Trang thai RONG -->
+        <TextBlock Grid.Row="3" TextWrapping="Wrap" TextAlignment="Center" MaxWidth="420"
+                   Text="Bạn chưa có hoá đơn nào. Hoá đơn sẽ xuất hiện sau khi lễ tân lập cho kỳ lưu trú của bạn."
+                   Style="{StaticResource CaptionText}"
+                   HorizontalAlignment="Center" VerticalAlignment="Center"
+                   Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVis}}" />
+
+        <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled">
+            <ItemsControl ItemsSource="{Binding Rows}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Style="{StaticResource Card}" Effect="{StaticResource SoftShadow}"
+                                Margin="0,0,0,12">
+                            <StackPanel>
+                                <!-- Dong dau: ten ky luu tru + badge trang thai hoa don -->
+                                <DockPanel>
+                                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal"
+                                                VerticalAlignment="Center" Margin="12,0,0,0">
+                                        <Border Style="{StaticResource BadgeWarning}"
+                                                Visibility="{Binding IsUnpaid, Converter={StaticResource BoolToVis}}">
+                                            <TextBlock Text="{Binding StatusText}" />
+                                        </Border>
+                                        <Border Style="{StaticResource BadgeInfo}"
+                                                Visibility="{Binding IsPartiallyPaid, Converter={StaticResource BoolToVis}}">
+                                            <TextBlock Text="{Binding StatusText}" />
+                                        </Border>
+                                        <Border Style="{StaticResource BadgeSuccess}"
+                                                Visibility="{Binding IsPaid, Converter={StaticResource BoolToVis}}">
+                                            <TextBlock Text="{Binding StatusText}" />
+                                        </Border>
+                                        <Border Style="{StaticResource BadgeNeutral}"
+                                                Visibility="{Binding IsCancelled, Converter={StaticResource BoolToVis}}">
+                                            <TextBlock Text="{Binding StatusText}" />
+                                        </Border>
+                                    </StackPanel>
+                                    <TextBlock Text="{Binding Title}" Style="{StaticResource SectionTitleText}"
+                                               VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                                </DockPanel>
+
+                                <Border Height="1" Background="{StaticResource LineBrush}" Margin="0,12,0,12" />
+
+                                <!-- Bang chi tiet tien -->
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+
+                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Tiền phòng"
+                                               Style="{StaticResource MoneyLabel}" />
+                                    <TextBlock Grid.Row="0" Grid.Column="1" Style="{StaticResource MoneyValue}"
+                                               Text="{Binding Invoice.RoomCharge, StringFormat={}{0:N0} đ}" />
+
+                                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Tiền dịch vụ"
+                                               Style="{StaticResource MoneyLabel}" />
+                                    <TextBlock Grid.Row="1" Grid.Column="1" Style="{StaticResource MoneyValue}"
+                                               Text="{Binding Invoice.ServiceCharge, StringFormat={}{0:N0} đ}" />
+
+                                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Phụ thu"
+                                               Style="{StaticResource MoneyLabel}" />
+                                    <TextBlock Grid.Row="2" Grid.Column="1" Style="{StaticResource MoneyValue}"
+                                               Text="{Binding Invoice.SurchargeAmount, StringFormat={}{0:N0} đ}" />
+
+                                    <TextBlock Grid.Row="3" Grid.Column="0" Text="Giảm giá"
+                                               Style="{StaticResource MoneyLabel}" />
+                                    <TextBlock Grid.Row="3" Grid.Column="1" Style="{StaticResource MoneyValue}"
+                                               Text="{Binding Invoice.DiscountAmount, StringFormat={}{0:N0} đ}" />
+
+                                    <!-- Ly do giam gia: uu dai VIP la diem nhan nen de dang banner -->
+                                    <Border Grid.Row="4" Grid.ColumnSpan="2" CornerRadius="4"
+                                            Background="{StaticResource SuccessSoftBrush}"
+                                            Padding="10,7" Margin="0,2,0,8"
+                                            Visibility="{Binding HasVipDiscount, Converter={StaticResource BoolToVis}}">
+                                        <TextBlock Text="{Binding VipDiscountText}" TextWrapping="Wrap"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{StaticResource SuccessBrush}" />
+                                    </Border>
+
+                                    <TextBlock Grid.Row="5" Grid.ColumnSpan="2" Text="{Binding OtherPromotionText}"
+                                               Style="{StaticResource CaptionText}" Margin="0,0,0,8"
+                                               Visibility="{Binding HasOtherPromotion, Converter={StaticResource BoolToVis}}" />
+
+                                    <Border Grid.Row="6" Grid.ColumnSpan="2" Height="1"
+                                            Background="{StaticResource LineBrush}" Margin="0,4,0,10" />
+
+                                    <TextBlock Grid.Row="7" Grid.Column="0" Text="Tổng cộng"
+                                               Style="{StaticResource BodyText}" FontWeight="Bold"
+                                               Foreground="{StaticResource BrandBrush}" />
+                                    <TextBlock Grid.Row="7" Grid.Column="1" HorizontalAlignment="Right"
+                                               Style="{StaticResource BodyText}" FontWeight="Bold"
+                                               Foreground="{StaticResource BrandBrush}"
+                                               Text="{Binding Invoice.TotalAmount, StringFormat={}{0:N0} đ}" />
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

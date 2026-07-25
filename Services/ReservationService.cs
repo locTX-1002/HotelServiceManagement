@@ -20,6 +20,16 @@ public sealed class ReservationService : IReservationService
 
     public Task<List<Reservation>> GetAllAsync() => _reservations.GetAllAsync();
 
+    public async Task<ServiceResult<List<Reservation>>> GetMyReservationsAsync()
+    {
+        var guestId = AppSession.CurrentGuestId;
+        if (guestId == null)
+        {
+            return ServiceResult<List<Reservation>>.Failure("Chua dang nhap bang tai khoan khach hang.");
+        }
+        return ServiceResult<List<Reservation>>.Success(await _reservations.GetByGuestAsync(guestId.Value));
+    }
+
     public async Task<ServiceResult<Reservation>> CreateAsync(int guestId, int roomId,
         int numberOfGuests, DateTime checkInDate, DateTime checkOutDate, string? specialRequests,
         decimal? depositAmount, PaymentMethod? depositPaymentMethod)

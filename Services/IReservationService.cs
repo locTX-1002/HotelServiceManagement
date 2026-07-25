@@ -6,6 +6,12 @@ namespace Services;
 public interface IReservationService
 {
     Task<List<Reservation>> GetAllAsync();
+
+    /// <summary>
+    /// Don dat phong CUA CHINH khach dang dang nhap (man "Dat phong cua toi").
+    /// Khong nhan guestId tu ben ngoai - lay tu phien, de khong ai truyen id nguoi khac vao xem trom.
+    /// </summary>
+    Task<ServiceResult<List<Reservation>>> GetMyReservationsAsync();
     Task<ServiceResult<Reservation>> CreateAsync(int guestId, int roomId, int numberOfGuests,
         DateTime checkInDate, DateTime checkOutDate, string? specialRequests,
         decimal? depositAmount, PaymentMethod? depositPaymentMethod);
