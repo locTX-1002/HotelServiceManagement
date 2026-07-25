@@ -1,4 +1,6 @@
+using System;
 using HandyControl.Controls;
+using HandyControl.Data;
 
 namespace FUHotelManagementWPF.MvvmCore
 {
@@ -10,9 +12,47 @@ namespace FUHotelManagementWPF.MvvmCore
     /// </summary>
     public static class Notify
     {
-        public static void Success(string message) => Growl.Success(message);
-        public static void Info(string message) => Growl.Info(message);
-        public static void Warning(string message) => Growl.Warning(message);
-        public static void Error(string message) => Growl.Error(message);
+        /// <summary>
+        /// Bam mot nut hai lan lien tiep thi ra hai thong bao y het nhau, chong len nhau che
+        /// mat noi dung ben duoi. Bo qua neu vua bao dung cau nay trong vong hai giay.
+        /// </summary>
+        private static readonly TimeSpan RepeatWindow = TimeSpan.FromSeconds(2);
+        private static string _lastMessage = string.Empty;
+        private static DateTime _lastShownAt = DateTime.MinValue;
+
+        private static bool IsRepeat(string message)
+        {
+            var now = DateTime.Now;
+            if (message == _lastMessage && now - _lastShownAt < RepeatWindow)
+            {
+                return true;
+            }
+            _lastMessage = message;
+            _lastShownAt = now;
+            return false;
+        }
+
+        /// <summary>Bao thanh cong tu tat sau 3 giay - khong bat nguoi dung bam dong.</summary>
+        private static void Show(string message, Action<GrowlInfo> show, int waitSeconds)
+        {
+            if (IsRepeat(message))
+            {
+                return;
+            }
+
+            show(new GrowlInfo
+            {
+                Message = message,
+                WaitTime = waitSeconds,
+                ShowDateTime = true,
+            });
+        }
+
+        public static void Success(string message) => Show(message, Growl.Success, 3);
+        public static void Info(string message) => Show(message, Growl.Info, 3);
+        public static void Warning(string message) => Show(message, Growl.Warning, 5);
+
+        // Loi thi de lau hon, va van cho hien lai neu nguoi dung thu lai roi hong tiep.
+        public static void Error(string message) => Show(message, Growl.Error, 8);
     }
 }
