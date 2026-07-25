@@ -175,9 +175,13 @@
                                             </ItemsControl.ItemsPanel>
                                             <ItemsControl.ItemTemplate>
                                                 <DataTemplate>
+                                                    <!-- O day la DataTemplate long trong DataTemplate; ElementName
+                                                         phai di qua hai namescope nen khong chac an. Tro thang tu
+                                                         UserControl xuong Orders cho khoi hut binding am tham. -->
                                                     <Button Style="{StaticResource MenuTileButton}"
                                                             ToolTip="Bấm để thêm vào giỏ"
-                                                            Command="{Binding DataContext.AddTileCommand, ElementName=OrdersRoot}"
+                                                            Command="{Binding DataContext.Orders.AddTileCommand,
+                                                                      RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                             CommandParameter="{Binding}">
                                                         <Grid>
                                                             <TextBlock Text="{Binding Name}" TextWrapping="Wrap"
