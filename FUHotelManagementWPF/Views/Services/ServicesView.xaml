@@ -72,6 +72,13 @@
 
         <TextBlock Grid.Row="0" Text="Dịch vụ" Style="{StaticResource PageTitleText}" Margin="0,0,0,12" />
 
+        <!-- Man hinh nay truoc day khong bao gi luc dang tai: bam vao menu la thay mot
+             khung trang roi du lieu bung ra, cam giac nhu app dung hinh. -->
+        <hc:LoadingCircle Grid.Row="1" Width="34" Height="34" Panel.ZIndex="10"
+                          HorizontalAlignment="Center" VerticalAlignment="Center"
+                          Foreground="{StaticResource BrandBrush}"
+                          Visibility="{Binding Orders.IsLoading, Converter={StaticResource BoolToVis}}" />
+
         <TabControl Grid.Row="1">
             <!-- ============================ TAB GỌI DỊCH VỤ ============================ -->
             <TabItem Header="Gọi dịch vụ">
