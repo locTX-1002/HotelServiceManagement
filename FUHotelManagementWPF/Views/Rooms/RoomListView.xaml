@@ -16,7 +16,7 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="bd" Property="Background" Value="#F5F6F2" />
+                                <Setter TargetName="bd" Property="Background" Value="{StaticResource RowHoverBrush}" />
                             </Trigger>
                             <Trigger Property="IsSelected" Value="True">
                                 <Setter TargetName="bd" Property="Background" Value="{StaticResource BrandSoftBrush}" />
@@ -202,7 +202,7 @@
                                         HorizontalAlignment="Right" Margin="0,0,10,0"
                                         Command="{Binding DataContext.NextImageCommand,
                                                   RelativeSource={RelativeSource AncestorType=UserControl}}" />
-                                <Border CornerRadius="4" Background="#99000000" Padding="9,3"
+                                <Border CornerRadius="4" Background="{StaticResource ScrimBrush}" Padding="9,3"
                                         HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,10,9">
                                     <TextBlock Text="{Binding DataContext.GalleryCounter,
                                                RelativeSource={RelativeSource AncestorType=UserControl}}"

@@ -56,7 +56,7 @@
                                         <ImageBrush ImageSource="{Binding Thumbnail}" Stretch="UniformToFill" />
                                     </Border.Background>
                                     <Grid>
-                                        <Border CornerRadius="4" Background="#B3000000" Padding="9,4"
+                                        <Border CornerRadius="4" Background="{StaticResource ScrimBrush}" Padding="9,4"
                                                 HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10">
                                             <TextBlock Text="{Binding RoomCountText}" Foreground="White" FontSize="11" />
                                         </Border>

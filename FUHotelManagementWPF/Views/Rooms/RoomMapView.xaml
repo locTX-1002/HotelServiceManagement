@@ -28,19 +28,19 @@
 
         <!-- Cham trang thai dat tren anh toi: dung ban mau sang hon de con nhin thay -->
         <Style x:Key="StatusDotOnImage" TargetType="Ellipse" BasedOn="{StaticResource StatusDot}">
-            <Setter Property="Fill" Value="#C9CFC4" />
+            <Setter Property="Fill" Value="{StaticResource RoomDotDefaultBrush}" />
             <Style.Triggers>
                 <DataTrigger Binding="{Binding Room.Status}" Value="{x:Static enums:RoomStatus.Available}">
-                    <Setter Property="Fill" Value="#7ED08A" />
+                    <Setter Property="Fill" Value="{StaticResource RoomDotAvailableBrush}" />
                 </DataTrigger>
                 <DataTrigger Binding="{Binding Room.Status}" Value="{x:Static enums:RoomStatus.Occupied}">
-                    <Setter Property="Fill" Value="#F0B15A" />
+                    <Setter Property="Fill" Value="{StaticResource RoomDotOccupiedBrush}" />
                 </DataTrigger>
                 <DataTrigger Binding="{Binding Room.Status}" Value="{x:Static enums:RoomStatus.Reserved}">
-                    <Setter Property="Fill" Value="#7FBEDD" />
+                    <Setter Property="Fill" Value="{StaticResource RoomDotReservedBrush}" />
                 </DataTrigger>
                 <DataTrigger Binding="{Binding Room.Status}" Value="{x:Static enums:RoomStatus.Maintenance}">
-                    <Setter Property="Fill" Value="#EE8A82" />
+                    <Setter Property="Fill" Value="{StaticResource RoomDotMaintenanceBrush}" />
                 </DataTrigger>
             </Style.Triggers>
         </Style>

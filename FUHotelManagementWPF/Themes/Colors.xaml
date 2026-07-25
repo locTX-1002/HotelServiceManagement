@@ -35,6 +35,22 @@
     <SolidColorBrush x:Key="InfoBrush" Color="#31708E" />
     <SolidColorBrush x:Key="InfoSoftBrush" Color="#E3EEF3" />
 
+    <!-- Nen dong danh sach khi ro chuot. Nhat hon SurfaceBrush mot chut de van tach
+         duoc voi nen trang, dung o Khach hang / Dat phong / Danh sach phong. -->
+    <SolidColorBrush x:Key="RowHoverBrush" Color="#F5F6F2" />
+
+    <!-- Nen mo cho nhan chu dat DE TREN ANH (tooltip, dem so, nhan gia). Khong phai
+         mau thuong hieu - chi la lop den trong suot cho chu doc duoc tren moi anh. -->
+    <SolidColorBrush x:Key="ScrimBrush" Color="#A6000000" />
+
+    <!-- Cham trang thai phong tren the co ANH NEN: ban mau chuan (Success/Warning...)
+         qua tram nen chim vao anh, day la ban sang hon dung rieng cho so do phong. -->
+    <SolidColorBrush x:Key="RoomDotDefaultBrush" Color="#C9CFC4" />
+    <SolidColorBrush x:Key="RoomDotAvailableBrush" Color="#7ED08A" />
+    <SolidColorBrush x:Key="RoomDotOccupiedBrush" Color="#F0B15A" />
+    <SolidColorBrush x:Key="RoomDotReservedBrush" Color="#7FBEDD" />
+    <SolidColorBrush x:Key="RoomDotMaintenanceBrush" Color="#EE8A82" />
+
     <!-- ============================================================
          GHI DE THEME HANDYCONTROL: cac control cua HandyControl
          (DataGrid, ComboBox, DatePicker, Growl...) tu doi sang mau
