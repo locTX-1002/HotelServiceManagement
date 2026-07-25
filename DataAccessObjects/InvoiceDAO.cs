@@ -10,7 +10,8 @@ public sealed class InvoiceDAO
     public static InvoiceDAO Instance => LazyInstance.Value;
     public async Task<Invoice?> GetByIdAsync(int id) { await using var c = HotelDbContextFactory.Create(); return await InvoiceQuery(c).FirstOrDefaultAsync(x => x.Id == id); }
     public async Task<Invoice?> GetByStayAsync(int id) { await using var c = HotelDbContextFactory.Create(); return await InvoiceQuery(c).FirstOrDefaultAsync(x => x.StayId == id); }
-    public async Task<Stay?> GetStayForBillingAsync(int id) { await using var c = HotelDbContextFactory.Create(); return await c.Stays.AsNoTracking().AsSplitQuery().Include(s => s.Reservation).ThenInclude(r => r.Room).ThenInclude(r => r.RoomType).Include(s => s.ServiceOrders).Include(s => s.Surcharges).Include(s => s.Invoice).ThenInclude(i => i!.Payments).FirstOrDefaultAsync(s => s.Id == id); }
+    // Include ca Guest vi hoa don can biet khach co phai VIP khong (VIP duoc giam 10%).
+    public async Task<Stay?> GetStayForBillingAsync(int id) { await using var c = HotelDbContextFactory.Create(); return await c.Stays.AsNoTracking().AsSplitQuery().Include(s => s.Reservation).ThenInclude(r => r.Room).ThenInclude(r => r.RoomType).Include(s => s.Reservation).ThenInclude(r => r.Guest).Include(s => s.ServiceOrders).Include(s => s.Surcharges).Include(s => s.Invoice).ThenInclude(i => i!.Payments).FirstOrDefaultAsync(s => s.Id == id); }
     public async Task<bool> SaveAsync(Invoice invoice, bool add)
     {
         await using var c = HotelDbContextFactory.Create();
