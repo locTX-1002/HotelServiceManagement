@@ -150,7 +150,7 @@
                                             Padding="14,7" Command="{Binding AddToCartCommand}" />
                                 </Grid>
 
-                                <TextBlock Text="Chưa chọn món nào. Chọn ở ô trên rồi bấm Thêm vào giỏ."
+                                <TextBlock Text="Giỏ đang trống — chọn món ở ô trên rồi bấm Thêm vào giỏ."
                                            Style="{StaticResource CaptionText}" FontSize="12"
                                            Visibility="{Binding CartIsEmpty, Converter={StaticResource BoolToVis}}" />
 
@@ -242,12 +242,6 @@
 
                                                     <StackPanel Grid.Column="2" Orientation="Horizontal"
                                                                 VerticalAlignment="Center">
-                                                        <Button Content="Bắt đầu làm" Style="{StaticResource GhostButton}"
-                                                                Padding="11,6" FontSize="12" Margin="0,0,6,0"
-                                                                ToolTip="Bếp/nhân viên đã nhận và đang chuẩn bị đơn này"
-                                                                Visibility="{Binding ShowStart, Converter={StaticResource BoolToVis}}"
-                                                                Command="{Binding DataContext.StartCommand, ElementName=OrdersRoot}"
-                                                                CommandParameter="{Binding}" />
                                                         <Button Content="Hoàn tất" Style="{StaticResource PrimaryButton}"
                                                                 Padding="13,6" FontSize="12" Margin="0,0,6,0"
                                                                 ToolTip="Chỉ đơn Hoàn tất mới được tính tiền vào hoá đơn"

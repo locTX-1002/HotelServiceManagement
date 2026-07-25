@@ -64,8 +64,7 @@ namespace FUHotelManagementWPF.ViewModels.Services
 
         public string StatusText => Order.Status switch
         {
-            ServiceOrderStatus.Pending => "Chờ làm",
-            ServiceOrderStatus.Processing => "Đang làm",
+            ServiceOrderStatus.Pending or ServiceOrderStatus.Processing => "Chờ làm",
             ServiceOrderStatus.Completed => "Hoàn tất",
             _ => "Đã huỷ",
         };
@@ -73,10 +72,10 @@ namespace FUHotelManagementWPF.ViewModels.Services
         public string StatusKey => Order.Status.ToString();
 
         // Chi don Hoan tat moi duoc tinh tien vao hoa don; don con mo se CHAN tra phong.
-        public bool ShowStart => Order.Status == ServiceOrderStatus.Pending;
-        public bool ShowComplete => Order.Status == ServiceOrderStatus.Processing;
-        public bool ShowCancel => Order.Status is ServiceOrderStatus.Pending or ServiceOrderStatus.Processing;
-        public bool IsOpen => ShowCancel;
+        // Don dang cho van bam Hoan tat thang duoc - khong bat qua buoc "Dang lam".
+        public bool ShowComplete => Order.Status is ServiceOrderStatus.Pending or ServiceOrderStatus.Processing;
+        public bool ShowCancel => ShowComplete;
+        public bool IsOpen => ShowComplete;
     }
 
     /// <summary>
@@ -162,7 +161,6 @@ namespace FUHotelManagementWPF.ViewModels.Services
         public AsyncRelayCommand AddToCartCommand { get; }
         public RelayCommand RemoveFromCartCommand { get; }
         public AsyncRelayCommand SubmitCommand { get; }
-        public AsyncRelayCommand StartCommand { get; }
         public AsyncRelayCommand CompleteCommand { get; }
         public AsyncRelayCommand CancelOrderCommand { get; }
         public AsyncRelayCommand ReloadCommand { get; }
@@ -172,7 +170,6 @@ namespace FUHotelManagementWPF.ViewModels.Services
             AddToCartCommand = new AsyncRelayCommand(_ => { AddToCart(); return Task.CompletedTask; });
             RemoveFromCartCommand = new RelayCommand(RemoveFromCart);
             SubmitCommand = new AsyncRelayCommand(_ => SubmitAsync());
-            StartCommand = new AsyncRelayCommand(p => ChangeStatusAsync(p, ServiceOrderStatus.Processing));
             CompleteCommand = new AsyncRelayCommand(p => ChangeStatusAsync(p, ServiceOrderStatus.Completed));
             CancelOrderCommand = new AsyncRelayCommand(CancelAsync);
             ReloadCommand = new AsyncRelayCommand(_ => LoadAsync());
