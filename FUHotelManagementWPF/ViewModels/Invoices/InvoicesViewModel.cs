@@ -44,6 +44,14 @@ public sealed class InvoicesViewModel : ViewModelBase
 
     public bool HasSelectedStay => SelectedStay != null;
 
+    /// <summary>0 = Hoa don, 1 = Phu thu, 2 = Thanh toan.</summary>
+    private int _selectedTabIndex;
+    public int SelectedTabIndex
+    {
+        get => _selectedTabIndex;
+        set => SetProperty(ref _selectedTabIndex, value);
+    }
+
     private Promotion? _selectedPromotion;
     public Promotion? SelectedPromotion
     {
@@ -166,8 +174,12 @@ public sealed class InvoicesViewModel : ViewModelBase
         ErrorMessage = null;
         try
         {
-            var selectedId = SelectedStay?.Id;
-            var staysTask = _stayService.GetActiveAsync();
+            // Man khac co the ban giao san mot luot can xu ly (vi du check-out bi chan
+            // vi chua thanh toan) - uu tien chon dung luot do.
+            var selectedId = NavigationService.TakePendingStayId() ?? SelectedStay?.Id;
+            // GetBillable thay cho GetActive: gom ca luot da tra phong ma con no tien,
+            // truoc day nhung luot do bien mat khoi man nay nen khong con cho nao thu.
+            var staysTask = _stayService.GetBillableAsync();
             var promotionsTask = _promotionService.GetAllAsync();
             await Task.WhenAll(staysTask, promotionsTask);
             var stays = await staysTask;
@@ -285,6 +297,13 @@ public sealed class InvoicesViewModel : ViewModelBase
             Notify.Success(result.Message);
             await LoadPaymentSummaryAsync();
             RaiseInvoiceState();
+
+            // Buoc tiep theo luon la thu tien, ma nut do o tab khac - dua nguoi dung
+            // sang luon thay vi de ho tu mo tim.
+            if (RemainingAmount > 0)
+            {
+                SelectedTabIndex = 2;
+            }
         }
         catch (Exception)
         {

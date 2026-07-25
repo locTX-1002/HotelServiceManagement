@@ -19,6 +19,26 @@ public sealed class StayDAO
             .OrderBy(s => s.Reservation.Room.RoomNumber).ToListAsync();
     }
 
+    /// <summary>
+    /// Luot can xu ly tien: dang o, HOAC da tra phong ma hoa don chua thanh toan xong.
+    ///
+    /// Ve nhom thu hai: man Hoa don truoc day chi nap luot dang o, nen luot nao da tra
+    /// phong ma con no tien la bien mat khoi giao dien - khong con cho nao thu duoc nua.
+    /// Tien khach no nam lai trong database ma khong ai nhin thay.
+    /// </summary>
+    public async Task<List<Stay>> GetBillableAsync()
+    {
+        await using var context = HotelDbContextFactory.Create();
+        return await Query(context)
+            .Where(s => s.Status == StayStatus.Active
+                        || s.Invoice == null
+                        || (s.Invoice.Status != InvoiceStatus.Paid
+                            && s.Invoice.Status != InvoiceStatus.Cancelled))
+            .OrderBy(s => s.Status == StayStatus.Active ? 0 : 1)
+            .ThenBy(s => s.Reservation.Room.RoomNumber)
+            .ToListAsync();
+    }
+
     public async Task<Stay?> GetByIdAsync(int id)
     {
         await using var context = HotelDbContextFactory.Create();

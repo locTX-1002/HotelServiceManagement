@@ -50,6 +50,8 @@ public sealed class StayService : IStayService
 
     private static bool CanOperate() => AppSession.RoleName is "Admin" or "Manager" or "Receptionist";
 
+    public Task<List<Stay>> GetBillableAsync() => _stays.GetBillableAsync();
+
     public Task<List<Reservation>> GetArrivalsAsync() => _stays.GetArrivalsAsync();
 
     public async Task<ServiceResult> ExtendAsync(int stayId, DateTime newCheckOut)
