@@ -109,10 +109,13 @@
                    Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVis}}" />
 
         <Grid Grid.Row="2">
+            <!-- Bang chi tiet ben phai de BE RONG CO DINH: de "1*" thi no giu gianh cho
+                 theo ti le, cua so hep di la cot danh sach bi bop lai va ten khach bi cat.
+                 Bang chi tiet khong can rong them, nen danh phan co gian cho danh sach. -->
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="1.5*" />
+                <ColumnDefinition Width="*" MinWidth="520" />
                 <ColumnDefinition Width="16" />
-                <ColumnDefinition Width="1*" />
+                <ColumnDefinition Width="340" />
             </Grid.ColumnDefinitions>
 
             <!-- CỘT TRÁI: dòng thời gian việc cần làm, quá hạn lên đầu và có vạch đỏ -->
@@ -148,9 +151,9 @@
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="132" />
-                                    <ColumnDefinition Width="Auto" MinWidth="252" />
+                                    <ColumnDefinition Width="*" MinWidth="150" />
+                                    <ColumnDefinition Width="118" />
+                                    <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
 
                                 <Border Grid.Column="0" Width="64" Height="46" CornerRadius="4">
