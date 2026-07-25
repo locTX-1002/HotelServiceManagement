@@ -83,8 +83,9 @@ namespace FUHotelManagementWPF.ViewModels
                 new("", "Khách hàng", peopleGroup, () => new Guests.GuestsViewModel()),
                 new("", "Dịch vụ", peopleGroup, () => new PlaceholderViewModel("Dịch vụ")),
                 new("", "Hoá đơn", moneyGroup, () => new Invoices.InvoicesViewModel()),
-                new("", "Báo cáo", moneyGroup, () => new PlaceholderViewModel("Báo cáo")),
-                new("", "Người dùng", systemGroup, () => new PlaceholderViewModel("Người dùng")),
+                new("", "Khuyến mãi", moneyGroup, () => new Promotions.PromotionListViewModel()),
+                new("", "Báo cáo", moneyGroup, () => new Reports.ReportViewModel()),
+                new("", "Người dùng", systemGroup, () => new Users.UserListViewModel()),
             ];
 
             ModulesView = new ListCollectionView(Modules);

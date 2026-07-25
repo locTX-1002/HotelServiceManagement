@@ -13,7 +13,13 @@
                     xmlns:views="clr-namespace:FUHotelManagementWPF.Views"
                     xmlns:viewsRooms="clr-namespace:FUHotelManagementWPF.Views.Rooms"
                     xmlns:viewsRes="clr-namespace:FUHotelManagementWPF.Views.Reservations"
-                    xmlns:viewsInvoices="clr-namespace:FUHotelManagementWPF.Views.Invoices">
+                    xmlns:viewsInvoices="clr-namespace:FUHotelManagementWPF.Views.Invoices"
+                    xmlns:vmPromo="clr-namespace:FUHotelManagementWPF.ViewModels.Promotions"
+                    xmlns:viewsPromo="clr-namespace:FUHotelManagementWPF.Views.Promotions"
+                    xmlns:vmReports="clr-namespace:FUHotelManagementWPF.ViewModels.Reports"
+                    xmlns:viewsReports="clr-namespace:FUHotelManagementWPF.Views.Reports"
+                    xmlns:vmUsers="clr-namespace:FUHotelManagementWPF.ViewModels.Users"
+                    xmlns:viewsUsers="clr-namespace:FUHotelManagementWPF.Views.Users">
 
     <!-- ============================================================
          DANG KY VIEW CHO VIEWMODEL (dieu huong ViewModel-first).
@@ -51,6 +57,18 @@
 
     <DataTemplate DataType="{x:Type vmInvoices:InvoicesViewModel}">
         <viewsInvoices:InvoicesView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vmPromo:PromotionListViewModel}">
+        <viewsPromo:PromotionListView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vmReports:ReportViewModel}">
+        <viewsReports:ReportView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vmUsers:UserListViewModel}">
+        <viewsUsers:UserListView />
     </DataTemplate>
 
 </ResourceDictionary>
