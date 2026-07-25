@@ -408,6 +408,39 @@ public class EndToEndFlowTests
         finally { AppSession.SignOut(); }
     }
 
+    // --------------------------------- 4e. Khach di som van tra du so dem da dat
+
+    /// <summary>
+    /// Khach dat 3 dem ma tra phong ngay hom sau thi van thu 3 dem. Truoc day hoa don chi
+    /// tinh dem o that (1 dem) trong khi man Check-in/out bao 3 dem - le tan doc mot dang,
+    /// hoa don in ra mot dang.
+    /// </summary>
+    [DbFact]
+    public async Task KhachTraSom_VanThuDuSoDemDaDat()
+    {
+        await using var sandbox = await Sandbox.CreateAsync();
+        try
+        {
+            await SignInAsync("Receptionist");
+            var guest = await sandbox.CreateGuestAsync(withIdentity: true);
+            var booking = await new ReservationService().CreateAsync(
+                guest.Id, sandbox.RoomId, 1, DateTime.Today, DateTime.Today.AddDays(3),
+                null, null, null);
+            Assert.True(booking.Ok, booking.Message);
+            Assert.True((await new ReservationService().ConfirmAsync(booking.Data!.Id)).Ok);
+            var checkIn = await new StayService().CheckInAsync(booking.Data.Id, DateTime.Today.AddHours(14));
+            Assert.True(checkIn.Ok, checkIn.Message);
+
+            // Tra phong sau 1 dem, con 2 dem chua o
+            var invoice = await new InvoiceService().PrepareAsync(
+                checkIn.Data!.Id, null, DateTime.Today.AddDays(1).AddHours(11));
+
+            Assert.True(invoice.Ok, invoice.Message);
+            Assert.Equal(3 * BasePrice, invoice.Data!.RoomCharge);
+        }
+        finally { AppSession.SignOut(); }
+    }
+
     // ---------------------------------------------------------- 5. Chan dat phong trung lich
 
     [DbFact]
