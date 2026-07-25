@@ -18,7 +18,9 @@ namespace FUHotelManagementWPF.ViewModels.Guests
 
         public event Action<bool>? RequestClose;
 
-        public string Title => $"Kích hoạt tài khoản: {_guest.FullName}";
+        // "Kich hoat" gay hieu nham la mo lai cai da co san; thuc chat day la TAO MOI
+        // tai khoan de khach tu dang nhap xem don cua minh.
+        public string Title => $"Cấp tài khoản đặt phòng cho {_guest.FullName}";
         public string PhoneNumber => _guest.PhoneNumber;
 
         private string? _errorMessage;

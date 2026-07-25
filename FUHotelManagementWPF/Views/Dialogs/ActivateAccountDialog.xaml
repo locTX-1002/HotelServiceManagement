@@ -41,7 +41,7 @@
 
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
                 <Button Content="Huỷ" Style="{StaticResource GhostButton}" IsCancel="True" />
-                <Button Content="Kích hoạt" Style="{StaticResource PrimaryButton}" Margin="10,0,0,0"
+                <Button Content="Cấp tài khoản" Style="{StaticResource PrimaryButton}" Margin="10,0,0,0"
                         MinWidth="110" IsDefault="True"
                         IsEnabled="{Binding CanSave}" Click="Activate_Click" />
             </StackPanel>
