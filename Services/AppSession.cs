@@ -10,10 +10,43 @@ namespace Services
     {
         public static User? CurrentUser { get; private set; }
 
+        /// <summary>
+        /// Phien cua KHACH tu dang nhap (dang nhap bang so dien thoai). Tach hoan toan khoi
+        /// CurrentUser vi khach khong phai nhan vien: RoleName cua khach luon rong nen moi
+        /// service kiem quyen theo vai tro deu tu dong chan khach lai - dung nhu mong muon.
+        /// </summary>
+        public static GuestAccount? CurrentGuest { get; private set; }
+
         public static bool IsLoggedIn => CurrentUser != null;
+
+        /// <summary>Dang co khach dang nhap (khong phai nhan vien).</summary>
+        public static bool IsGuestLoggedIn => CurrentGuest != null;
+
+        /// <summary>Id ho so khach dang dang nhap - dung de chi lay du lieu cua chinh khach do.</summary>
+        public static int? CurrentGuestId => CurrentGuest?.GuestId;
+
         public static string RoleName => CurrentUser?.Role?.RoleName ?? string.Empty;
 
-        public static void SignIn(User user) => CurrentUser = user;
-        public static void SignOut() => CurrentUser = null;
+        /// <summary>Ten hien thi cua nguoi dang dung app (nhan vien hoac khach).</summary>
+        public static string DisplayName
+            => CurrentUser?.FullName ?? CurrentGuest?.Guest?.FullName ?? string.Empty;
+
+        public static void SignIn(User user)
+        {
+            CurrentUser = user;
+            CurrentGuest = null; // hai loai phien khong bao gio ton tai cung luc
+        }
+
+        public static void SignInGuest(GuestAccount account)
+        {
+            CurrentGuest = account;
+            CurrentUser = null;
+        }
+
+        public static void SignOut()
+        {
+            CurrentUser = null;
+            CurrentGuest = null;
+        }
     }
 }

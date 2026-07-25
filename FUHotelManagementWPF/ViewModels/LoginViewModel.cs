@@ -13,6 +13,10 @@ namespace FUHotelManagementWPF.ViewModels
     public class LoginViewModel : ValidatableViewModelBase
     {
         private readonly IAuthService _authService = new AuthService();
+        private readonly IGuestAccountService _guestAccounts = new GuestAccountService();
+
+        /// <summary>View lang nghe de mo khu "Phong cua toi" khi nguoi dang nhap la KHACH.</summary>
+        public event Action? GuestLoginSucceeded;
 
         private string _email = string.Empty;
         private string _password = string.Empty;
@@ -88,13 +92,17 @@ namespace FUHotelManagementWPF.ViewModels
             ErrorMessage = null;
 
             var email = Email.Trim();
+            // Mot o duy nhat nhan CA email (nhan vien) LAN so dien thoai (khach): co '@' thi
+            // hieu la email, toan chu so thi hieu la SDT. Nguoi dung khong phai chon tab.
+            var isPhone = email.Length > 0 && email.All(char.IsDigit);
+
             if (string.IsNullOrEmpty(email))
             {
-                AddError(nameof(Email), "Chưa nhập email.");
+                AddError(nameof(Email), "Chưa nhập email hoặc số điện thoại.");
             }
-            else if (!email.Contains('@'))
+            else if (!isPhone && !email.Contains('@'))
             {
-                AddError(nameof(Email), "Email không đúng định dạng.");
+                AddError(nameof(Email), "Nhập email (nhân viên) hoặc số điện thoại (khách hàng).");
             }
             if (string.IsNullOrEmpty(Password))
             {
@@ -110,6 +118,21 @@ namespace FUHotelManagementWPF.ViewModels
             IsBusy = true;
             try
             {
+                if (isPhone)
+                {
+                    // ----- Khach tu dang nhap bang so dien thoai -----
+                    var guest = await _guestAccounts.LoginAsync(email, Password);
+                    if (!guest.Ok)
+                    {
+                        ErrorMessage = guest.Message;
+                        return;
+                    }
+                    RememberIfNeeded(email);
+                    AppSession.SignInGuest(guest.Data!);
+                    GuestLoginSucceeded?.Invoke();
+                    return;
+                }
+
                 var user = await _authService.LoginAsync(email, Password);
                 if (user == null)
                 {
@@ -117,16 +140,7 @@ namespace FUHotelManagementWPF.ViewModels
                     return;
                 }
 
-                // Chi nho sau khi dang nhap THANH CONG, de khong luu lai mat khau sai.
-                if (RememberMe)
-                {
-                    RememberedLogin.Save(email, Password);
-                }
-                else
-                {
-                    RememberedLogin.Clear();
-                }
-
+                RememberIfNeeded(email);
                 AppSession.SignIn(user);
                 LoginSucceeded?.Invoke();
             }
@@ -137,6 +151,19 @@ namespace FUHotelManagementWPF.ViewModels
             finally
             {
                 IsBusy = false;
+            }
+        }
+
+        /// <summary>Chi nho sau khi dang nhap THANH CONG, de khong luu lai mat khau sai.</summary>
+        private void RememberIfNeeded(string account)
+        {
+            if (RememberMe)
+            {
+                RememberedLogin.Save(account, Password);
+            }
+            else
+            {
+                RememberedLogin.Clear();
             }
         }
     }

@@ -52,7 +52,8 @@
                            Style="{StaticResource CaptionText}" FontSize="12.5"
                            Margin="0,7,0,26" />
 
-                <TextBlock Text="EMAIL" Style="{StaticResource FieldLabel}" />
+                <!-- Mot o cho ca 2 loai tai khoan: nhan vien go email, khach go so dien thoai -->
+                <TextBlock Text="EMAIL HOẶC SỐ ĐIỆN THOẠI" Style="{StaticResource FieldLabel}" />
                 <TextBox Style="{StaticResource InputBox}"
                          Text="{Binding Email, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}" />
 

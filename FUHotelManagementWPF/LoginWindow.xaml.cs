@@ -23,6 +23,12 @@ public partial class LoginWindow : Window
             new MainWindow().Show();
             Close();
         };
+        // Khach tu dang nhap thi vao khu "Phong cua toi", khong vao man quan tri
+        _viewModel.GuestLoginSucceeded += () =>
+        {
+            new GuestWindow().Show();
+            Close();
+        };
         _viewModel.PropertyChanged += OnViewModelPropertyChanged;
 
         DataContext = _viewModel;
