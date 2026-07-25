@@ -1,6 +1,6 @@
-using BusinessObjects;
 using System.Collections.ObjectModel;
 using System.Windows;
+using BusinessObjects;
 using BusinessObjects.Entities;
 using BusinessObjects.Enums;
 using FUHotelManagementWPF.MvvmCore;
@@ -99,8 +99,10 @@ public sealed class InvoicesViewModel : ViewModelBase
         get
         {
             if (SelectedStay?.Reservation?.Room?.RoomType == null) return 0;
-            var until = SelectedStay.ActualCheckOut ?? DateTime.Now;
-            var nights = Math.Max(1, (until.Date - SelectedStay.ActualCheckIn.Date).Days);
+
+            var nights = BillingRules.ChargeableNights(
+                SelectedStay.ActualCheckIn, SelectedStay.Reservation.CheckOutDate,
+                SelectedStay.ActualCheckOut ?? DateTime.Now);
             return nights * SelectedStay.Reservation.Room.RoomType.BasePrice;
         }
     }

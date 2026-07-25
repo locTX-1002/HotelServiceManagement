@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Data;
+using BusinessObjects;
 using BusinessObjects.Entities;
 using BusinessObjects.Enums;
 using FUHotelManagementWPF.MvvmCore;
@@ -115,16 +116,14 @@ namespace FUHotelManagementWPF.ViewModels.CheckInOut
                 {
                     return Math.Max(1, (Reservation.CheckOutDate.Date - Reservation.CheckInDate.Date).Days);
                 }
-                var until = Reservation.CheckOutDate.Date > DateTime.Today
-                    ? Reservation.CheckOutDate.Date
-                    : DateTime.Today;
-                return Math.Max(1, (until - Stay!.ActualCheckIn.Date).Days);
+                return BillingRules.ChargeableNights(
+                    Stay!.ActualCheckIn, Reservation.CheckOutDate, DateTime.Today);
             }
         }
 
         /// <summary>So dem o qua so voi don - hien rieng de le tan giai thich duoc voi khach.</summary>
         public int ExtraNights => Kind == FlowKind.Stay && IsOverdue
-            ? (DateTime.Today - Reservation.CheckOutDate.Date).Days
+            ? BillingRules.OverdueNights(Reservation.CheckOutDate, DateTime.Today)
             : 0;
 
         public bool HasExtraNights => ExtraNights > 0;
