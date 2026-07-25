@@ -20,6 +20,8 @@
                     xmlns:viewsReports="clr-namespace:FUHotelManagementWPF.Views.Reports"
                     xmlns:vmUsers="clr-namespace:FUHotelManagementWPF.ViewModels.Users"
                     xmlns:viewsUsers="clr-namespace:FUHotelManagementWPF.Views.Users"
+                    xmlns:vmServices="clr-namespace:FUHotelManagementWPF.ViewModels.Services"
+                    xmlns:viewsServices="clr-namespace:FUHotelManagementWPF.Views.Services"
                     xmlns:vmGuestPortal="clr-namespace:FUHotelManagementWPF.ViewModels.GuestPortal"
                     xmlns:viewsGuestPortal="clr-namespace:FUHotelManagementWPF.Views.GuestPortal">
 
@@ -71,6 +73,10 @@
 
     <DataTemplate DataType="{x:Type vmUsers:UserListViewModel}">
         <viewsUsers:UserListView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vmServices:ServicesViewModel}">
+        <viewsServices:ServicesView />
     </DataTemplate>
 
     <!-- Khu "Phong cua toi" - danh cho KHACH tu dang nhap (GuestWindow) -->
