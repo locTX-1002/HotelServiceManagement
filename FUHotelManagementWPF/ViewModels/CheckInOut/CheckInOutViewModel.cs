@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Data;
 using BusinessObjects.Entities;
+using BusinessObjects.Enums;
 using FUHotelManagementWPF.MvvmCore;
 using FUHotelManagementWPF.ViewModels.Rooms;
 using FUHotelManagementWPF.Views.Dialogs;
@@ -261,6 +262,7 @@ namespace FUHotelManagementWPF.ViewModels.CheckInOut
 
         private readonly ISurchargeService _surchargeService = new SurchargeService();
         private readonly IReservationService _reservationService = new ReservationService();
+        private readonly IInvoiceService _invoiceService = new InvoiceService();
 
         /// <summary>Khach qua han den ma khong toi: giai phong phong de con ban cho nguoi khac.</summary>
         private async Task MarkNoShowAsync(object? parameter)
@@ -454,12 +456,19 @@ namespace FUHotelManagementWPF.ViewModels.CheckInOut
             }
             else
             {
+                // Kiem hoa don TRUOC khi hoi xac nhan. Truoc day bam xong moi bao
+                // "hoa don phai duoc thanh toan day du" roi dung im tai cho - le tan
+                // phai tu doan la con phai qua man Hoa don.
+                if (!await EnsureInvoicePaidAsync(item))
+                {
+                    return;
+                }
+
                 var confirmed = ConfirmDialog.Ask(
                     $"Cho {item.GuestName} trả phòng {item.RoomNumber}?",
                     $"Khách đã ở {item.ChargeableNights} đêm, tạm tính {item.TotalChargeText}. "
                     + "Phòng sẽ chuyển sang Đang dọn.",
-                    "Kiểm đồ trong phòng và ghi phụ thu trước khi trả — trả rồi không ghi thêm được. "
-                    + "Hoá đơn chính thức lập ở màn Hoá đơn.",
+                    "Kiểm đồ trong phòng và ghi phụ thu trước khi trả — trả rồi không ghi thêm được.",
                     "Cho trả phòng");
                 if (!confirmed)
                 {
@@ -482,6 +491,38 @@ namespace FUHotelManagementWPF.ViewModels.CheckInOut
             {
                 Notify.Error(result.Message);
             }
+        }
+
+        /// <summary>
+        /// Tra phong chi duoc phep khi hoa don da thanh toan du. Neu chua thi dua thang
+        /// le tan sang man Hoa don kem theo dung luot dang lam do, thay vi bao loi roi
+        /// de nguoi dung tu mo tim.
+        /// Tra ve true khi da thanh toan xong, duoc di tiep.
+        /// </summary>
+        private async Task<bool> EnsureInvoicePaidAsync(FlowItem item)
+        {
+            var invoice = await _invoiceService.GetByStayAsync(item.Stay!.Id);
+            if (invoice is { Status: InvoiceStatus.Paid })
+            {
+                return true;
+            }
+
+            var chuaLap = invoice == null;
+            var goNow = ConfirmDialog.Ask(
+                chuaLap ? "Chưa lập hoá đơn cho khách này" : "Hoá đơn chưa thanh toán xong",
+                $"Phòng {item.RoomNumber} · {item.GuestName} — tạm tính {item.TotalChargeText}. "
+                + "Khách phải thanh toán đủ rồi mới trả phòng được.",
+                chuaLap
+                    ? "Sang màn Hoá đơn để lập hoá đơn và thu tiền, xong quay lại đây trả phòng."
+                    : "Sang màn Hoá đơn để ghi nhận nốt phần còn thiếu.",
+                "Sang màn Hoá đơn");
+            if (goNow)
+            {
+                // Chon san dung luot nay ben man Hoa don
+                NavigationService.PendingStayId = item.Stay.Id;
+                NavigationService.NavigateTo("Hoá đơn");
+            }
+            return false;
         }
     }
 }
