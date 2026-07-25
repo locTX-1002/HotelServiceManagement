@@ -34,30 +34,27 @@
             </Style.Triggers>
         </Style>
 
-        <!-- O mon tren luoi thuc don: bam mot phat la vao gio, khong phai mo dropdown
-             roi bam them nua. Vien sang len khi ro chuot de biet la bam duoc. -->
-        <Style x:Key="MenuTileButton" TargetType="Button">
-            <Setter Property="Width" Value="132" />
-            <Setter Property="Height" Value="74" />
-            <Setter Property="Margin" Value="0,0,8,8" />
+        <!-- Mot mon tren thuc don la MOT HANG, khong phai o vuong. The vuong xuong dong
+             theo be ngang cot nen luon con mot cai le loi o hang cuoi, va gia moi the moi
+             cho. Hang thi gia thang cot, doc luot mat la ra, va them bao nhieu mon cung
+             khong bao gio le. Ca hang bam duoc chu khong phai nham vao dau nut. -->
+        <Style x:Key="MenuRowButton" TargetType="Button">
             <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="tile" CornerRadius="6" Padding="10,8"
-                                Background="{StaticResource CardBrush}"
-                                BorderBrush="{StaticResource LineBrush}" BorderThickness="1">
+                        <Border x:Name="row" CornerRadius="5" Padding="10,7"
+                                Background="Transparent">
                             <ContentPresenter />
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="tile" Property="Background"
+                                <Setter TargetName="row" Property="Background"
                                         Value="{StaticResource BrandSoftBrush}" />
-                                <Setter TargetName="tile" Property="BorderBrush"
-                                        Value="{StaticResource BrandBrush}" />
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="tile" Property="Background"
+                                <Setter TargetName="row" Property="Background"
                                         Value="{StaticResource SurfaceAltBrush}" />
                             </Trigger>
                         </ControlTemplate.Triggers>
@@ -160,47 +157,53 @@
                         <TextBlock Grid.Row="0" Text="{Binding SelectedStayTitle}"
                                    Style="{StaticResource SectionTitleText}" Margin="0,0,0,10" />
 
-                        <ItemsControl Grid.Row="1" ItemsSource="{Binding Menu}"
-                                      Visibility="{Binding CanCreate, Converter={StaticResource BoolToVis}}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <StackPanel Margin="0,0,0,10">
-                                        <TextBlock Text="{Binding Name}" Style="{StaticResource FieldLabel}"
-                                                   Margin="0,0,0,6" />
-                                        <ItemsControl ItemsSource="{Binding Tiles}">
-                                            <ItemsControl.ItemsPanel>
-                                                <ItemsPanelTemplate>
-                                                    <WrapPanel />
-                                                </ItemsPanelTemplate>
-                                            </ItemsControl.ItemsPanel>
-                                            <ItemsControl.ItemTemplate>
-                                                <DataTemplate>
-                                                    <!-- O day la DataTemplate long trong DataTemplate; ElementName
-                                                         phai di qua hai namescope nen khong chac an. Tro thang tu
-                                                         UserControl xuong Orders cho khoi hut binding am tham. -->
-                                                    <Button Style="{StaticResource MenuTileButton}"
-                                                            ToolTip="Bấm để thêm vào giỏ"
-                                                            Command="{Binding DataContext.Orders.AddTileCommand,
-                                                                      RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                            CommandParameter="{Binding}">
-                                                        <Grid>
-                                                            <TextBlock Text="{Binding Name}" TextWrapping="Wrap"
-                                                                       VerticalAlignment="Top" FontSize="12.5"
-                                                                       LineHeight="16" MaxHeight="34"
-                                                                       TextTrimming="CharacterEllipsis" />
-                                                            <TextBlock Text="{Binding PriceText}" FontSize="13"
-                                                                       FontWeight="SemiBold" VerticalAlignment="Bottom"
-                                                                       Typography.NumeralAlignment="Tabular"
-                                                                       Foreground="{StaticResource BrandBrush}" />
-                                                        </Grid>
-                                                    </Button>
-                                                </DataTemplate>
-                                            </ItemsControl.ItemTemplate>
-                                        </ItemsControl>
-                                    </StackPanel>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
+                        <Border Grid.Row="1" Style="{StaticResource Card}" Padding="6,10" Margin="0,0,0,14"
+                                Visibility="{Binding CanCreate, Converter={StaticResource BoolToVis}}">
+                            <ItemsControl ItemsSource="{Binding Menu}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Margin="0,0,0,4">
+                                            <TextBlock Text="{Binding Heading}" Style="{StaticResource FieldLabel}"
+                                                       Margin="10,4,0,4" />
+                                            <ItemsControl ItemsSource="{Binding Tiles}">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <!-- DataTemplate long trong DataTemplate: ElementName phai di
+                                                             qua hai namescope nen khong chac an. Tro thang tu
+                                                             UserControl xuong Orders cho khoi hut binding am tham. -->
+                                                        <Button Style="{StaticResource MenuRowButton}"
+                                                                ToolTip="Bấm để thêm vào giỏ"
+                                                                Command="{Binding DataContext.Orders.AddTileCommand,
+                                                                          RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                                CommandParameter="{Binding}">
+                                                            <Grid>
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="*" />
+                                                                    <ColumnDefinition Width="110" />
+                                                                    <ColumnDefinition Width="26" />
+                                                                </Grid.ColumnDefinitions>
+                                                                <TextBlock Grid.Column="0" Text="{Binding Name}"
+                                                                           FontSize="13" VerticalAlignment="Center"
+                                                                           TextTrimming="CharacterEllipsis" />
+                                                                <TextBlock Grid.Column="1" Text="{Binding PriceText}"
+                                                                           FontSize="13" FontWeight="SemiBold"
+                                                                           HorizontalAlignment="Right"
+                                                                           VerticalAlignment="Center"
+                                                                           Typography.NumeralAlignment="Tabular" />
+                                                                <TextBlock Grid.Column="2" Text="+" FontSize="16"
+                                                                           HorizontalAlignment="Right"
+                                                                           VerticalAlignment="Center"
+                                                                           Foreground="{StaticResource BrandBrush}" />
+                                                            </Grid>
+                                                        </Button>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Border>
 
                         <Border Grid.Row="2" Margin="0,0,0,12" CornerRadius="6" Padding="10,8"
                                 Background="{StaticResource DangerSoftBrush}"
@@ -273,16 +276,41 @@
 
                     <!-- CỘT 3: giỏ hàng ghim cố định - tổng tiền và nút Tạo đơn luôn ở một chỗ -->
                     <Grid Grid.Column="4" Visibility="{Binding HasSelectedStay, Converter={StaticResource BoolToVis}}">
-                        <Border Style="{StaticResource Card}" Padding="14,12" VerticalAlignment="Top"
+                        <!-- Gio cao het cot: tong tien va nut Tao don ghim day, danh sach mon
+                             cuon o giua. De VerticalAlignment=Top thi gio treo lung lung tren
+                             dinh, duoi bo trong ca man. -->
+                        <Border Style="{StaticResource Card}" Padding="14,12"
                                 Visibility="{Binding CanCreate, Converter={StaticResource BoolToVis}}">
-                            <StackPanel>
-                                <TextBlock Text="GIỎ HÀNG" Style="{StaticResource FieldLabel}" Margin="0,0,0,8" />
+                            <DockPanel>
+                                <TextBlock DockPanel.Dock="Top" Text="GIỎ HÀNG"
+                                           Style="{StaticResource FieldLabel}" Margin="0,0,0,10" />
 
-                                <TextBlock TextWrapping="Wrap"
-                                           Text="Bấm một món bên trái để thêm vào giỏ."
+                                <Border DockPanel.Dock="Bottom"
+                                        Visibility="{Binding CartIsEmpty, Converter={StaticResource InverseBoolToVis}}">
+                                    <StackPanel>
+                                        <Border Height="1" Background="{StaticResource LineBrush}" Margin="0,8,0,10" />
+                                        <DockPanel Margin="0,0,0,12">
+                                            <TextBlock DockPanel.Dock="Right" Text="{Binding CartTotalText}"
+                                                       FontWeight="SemiBold" FontSize="16"
+                                                       Typography.NumeralAlignment="Tabular"
+                                                       Foreground="{StaticResource BrandBrush}" />
+                                            <TextBlock Text="Tổng" Foreground="{StaticResource InkSoftBrush}"
+                                                       VerticalAlignment="Center" />
+                                        </DockPanel>
+                                        <Button Content="Tạo đơn" Style="{StaticResource PrimaryButton}"
+                                                Padding="18,9" HorizontalAlignment="Stretch"
+                                                IsEnabled="{Binding CanSubmit}" Command="{Binding SubmitCommand}" />
+                                    </StackPanel>
+                                </Border>
+
+                                <TextBlock TextWrapping="Wrap" VerticalAlignment="Center"
+                                           TextAlignment="Center" Margin="8,0"
+                                           Text="Giỏ đang trống. Bấm một món ở thực đơn bên trái để thêm."
                                            Style="{StaticResource CaptionText}" FontSize="12"
                                            Visibility="{Binding CartIsEmpty, Converter={StaticResource BoolToVis}}" />
 
+                                <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                              Visibility="{Binding CartIsEmpty, Converter={StaticResource InverseBoolToVis}}">
                                 <ItemsControl ItemsSource="{Binding Cart}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
@@ -317,25 +345,8 @@
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
-
-                                <Border Height="1" Background="{StaticResource LineBrush}" Margin="0,4,0,10"
-                                        Visibility="{Binding CartIsEmpty, Converter={StaticResource InverseBoolToVis}}" />
-
-                                <DockPanel Margin="0,0,0,12"
-                                           Visibility="{Binding CartIsEmpty, Converter={StaticResource InverseBoolToVis}}">
-                                    <TextBlock DockPanel.Dock="Right" Text="{Binding CartTotalText}"
-                                               FontWeight="SemiBold" FontSize="15"
-                                               Typography.NumeralAlignment="Tabular"
-                                               Foreground="{StaticResource BrandBrush}" />
-                                    <TextBlock Text="Tổng" Foreground="{StaticResource InkSoftBrush}"
-                                               VerticalAlignment="Center" />
-                                </DockPanel>
-
-                                <Button Content="Tạo đơn" Style="{StaticResource PrimaryButton}"
-                                        Padding="18,9" HorizontalAlignment="Stretch"
-                                        Visibility="{Binding CartIsEmpty, Converter={StaticResource InverseBoolToVis}}"
-                                        IsEnabled="{Binding CanSubmit}" Command="{Binding SubmitCommand}" />
-                            </StackPanel>
+                                </ScrollViewer>
+                            </DockPanel>
                         </Border>
                     </Grid>
 

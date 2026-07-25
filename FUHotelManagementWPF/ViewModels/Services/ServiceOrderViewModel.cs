@@ -39,6 +39,9 @@ namespace FUHotelManagementWPF.ViewModels.Services
         public string Name { get; }
         public ObservableCollection<MenuTile> Tiles { get; } = [];
         public MenuGroup(string name) => Name = name;
+
+        /// <summary>Tieu de nhom viet hoa cho khop cac nhan khac tren man hinh.</summary>
+        public string Heading => Name.ToUpperInvariant();
     }
 
     /// <summary>Mot dong trong gio hang truoc khi bam Tao don.</summary>
