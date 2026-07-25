@@ -19,8 +19,8 @@ public static class InputPolicy
     // So Viet Nam: 10 chu so, bat dau bang 0.
     private static readonly Regex PhonePattern = new(@"^0\d{9}$", RegexOptions.Compiled);
 
-    // CCCD 12 so hoac CMND 9 so.
-    private static readonly Regex IdentityPattern = new(@"^(\d{9}|\d{12})$", RegexOptions.Compiled);
+    // CCCD: dung 12 chu so, bat dau bang 0 (3 so dau la ma tinh, deu nam trong 001-096).
+    private static readonly Regex IdentityPattern = new(@"^0\d{11}$", RegexOptions.Compiled);
 
     /// <summary>Tra ve null neu hop le, nguoc lai tra ve cau loi tieng Viet.</summary>
     public static string? ValidateEmail(string? email, bool required)
@@ -54,7 +54,7 @@ public static class InputPolicy
         }
         return IdentityPattern.IsMatch(identity.Trim())
             ? null
-            : "CCCD phải 12 số hoặc CMND phải 9 số.";
+            : "CCCD phải gồm 12 chữ số và bắt đầu bằng 0.";
     }
 
     /// <summary>Yeu cau mat khau, viet ra de hien SAN tren form thay vi doi bam Luu moi bao.</summary>

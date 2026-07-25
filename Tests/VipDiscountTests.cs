@@ -131,7 +131,7 @@ public class VipDiscountTests
             var suffix = $"vip{Guid.NewGuid():N}"[..12];
             var guest = await new GuestService().CreateAsync(
                 $"Khach {suffix}", $"{suffix}@test.local", $"0{Random.Shared.NextInt64(900_000_000, 999_999_999)}",
-                $"{Random.Shared.NextInt64(100_000_000_000, 999_999_999_999)}", tag, tag == GuestTag.Vip ? "Khach than thiet" : null);
+                $"0{Random.Shared.NextInt64(10_000_000_000, 99_999_999_999)}", tag, tag == GuestTag.Vip ? "Khach than thiet" : null);
             Assert.True(guest.Ok, guest.Message);
             _guestIds.Add(guest.Data!.Id);
 
