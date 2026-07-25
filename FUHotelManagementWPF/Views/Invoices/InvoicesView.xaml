@@ -174,7 +174,7 @@
                                             <TextBlock Text="{Binding Invoice.TotalAmount, StringFormat={}{0:N0} đ}"
                                                        Style="{StaticResource PageTitleText}"
                                                        Foreground="{StaticResource BrandBrush}" />
-                                            <Button Content="Lập / tính lại hoá đơn"
+                                            <Button Content="{Binding PrepareInvoiceText}"
                                                     Style="{StaticResource PrimaryButton}"
                                                     Margin="0,18,0,0"
                                                     IsEnabled="{Binding CanPrepareInvoice}"

@@ -30,7 +30,11 @@ public sealed class InvoiceDAO
         {
             var current = await c.Invoices.Include(i => i.Payments)
                 .FirstOrDefaultAsync(i => i.Id == invoice.Id && i.StayId == invoice.StayId);
-            if (current == null || current.Payments.Any(p => p.Status == PaymentStatus.Completed)) return false;
+            if (current == null) return false;
+            // Hoa don da thu tien van cho sua, mien la tong moi khong tut xuong duoi
+            // so da thu (truong hop do phai hoan tien, khong lam trong app). Nho vay
+            // dich vu khach goi them sau khi lap hoa don moi vao duoc bill.
+            if (invoice.TotalAmount < current.Payments.Where(p => p.Status == PaymentStatus.Completed).Sum(p => p.Amount)) return false;
             current.InvoiceDate = invoice.InvoiceDate;
             current.RoomCharge = invoice.RoomCharge;
             current.ServiceCharge = invoice.ServiceCharge;

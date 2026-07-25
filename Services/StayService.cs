@@ -41,6 +41,16 @@ public sealed class StayService : IStayService
             return ServiceResult<Stay>.Failure("Phải hoàn tất hoặc huỷ tất cả đơn dịch vụ trước khi trả phòng.");
         if (stay.Invoice == null || stay.Invoice.Status != InvoiceStatus.Paid)
             return ServiceResult<Stay>.Failure("Hoá đơn phải được thanh toán đầy đủ trước khi trả phòng.");
+
+        // Luoi an toan cuoi: hoa don lap xong roi khach van goi them dich vu duoc.
+        // Neu le tan quen bam tinh lai thi hoa don "da tra du" nhung thieu tien dich vu,
+        // va khach ra khoi khach san voi khoan chua thanh toan. Doi chieu truoc khi cho di.
+        var completedServices = stay.ServiceOrders
+            .Where(o => o.Status == ServiceOrderStatus.Completed).Sum(o => o.TotalAmount);
+        var surcharges = stay.Surcharges.Sum(x => x.Subtotal);
+        if (stay.Invoice.ServiceCharge != completedServices || stay.Invoice.SurchargeAmount != surcharges)
+            return ServiceResult<Stay>.Failure(
+                "Có dịch vụ hoặc phụ thu phát sinh sau khi lập hoá đơn. Hãy tính lại hoá đơn và thu nốt phần chênh trước khi trả phòng.");
         var result = await _stays.CheckOutAsync(stayId, AppSession.CurrentUser?.Id,
             actualCheckOut ?? DateTime.Now);
         return result == null

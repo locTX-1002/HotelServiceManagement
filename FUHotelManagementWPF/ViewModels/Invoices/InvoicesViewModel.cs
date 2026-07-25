@@ -121,7 +121,13 @@ public sealed class InvoicesViewModel : ViewModelBase
                                     && PaidAmount <= 0
                                     && AppSession.RoleName is "Admin" or "Manager";
     public bool CanVoidPayment => AppSession.RoleName is "Admin" or "Manager";
-    public bool CanPrepareInvoice => CanManageBilling && SelectedStay != null && PaidAmount <= 0;
+    // Hoa don da thu tien van cho tinh lai - khach goi them dich vu sau khi lap hoa don
+    // la chuyen binh thuong. Chi chan khi hoa don da huy.
+    public bool CanPrepareInvoice => CanManageBilling && SelectedStay != null
+                                     && Invoice?.Status != InvoiceStatus.Cancelled;
+
+    /// <summary>Lap lan dau thi ghi "Lap hoa don", da co roi thi la "Tinh lai hoa don".</summary>
+    public string PrepareInvoiceText => Invoice == null ? "Lập hoá đơn" : "Tính lại hoá đơn";
 
     public string InvoiceStatusText => Invoice?.Status switch
     {
@@ -509,6 +515,7 @@ public sealed class InvoicesViewModel : ViewModelBase
         OnPropertyChanged(nameof(CanCancelInvoice));
         OnPropertyChanged(nameof(CanVoidPayment));
         OnPropertyChanged(nameof(CanPrepareInvoice));
+        OnPropertyChanged(nameof(PrepareInvoiceText));
     }
 
     private static Window? ActiveWindow()

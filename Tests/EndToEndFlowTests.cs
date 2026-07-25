@@ -255,6 +255,66 @@ public class EndToEndFlowTests
         finally { AppSession.SignOut(); }
     }
 
+    // ------------------------------ 4b. Dich vu goi SAU khi lap hoa don van phai vao bill
+
+    /// <summary>
+    /// Kich ban that da lam mat tien: le tan lap hoa don va thu du, sau do khach moi goi
+    /// dich vu. Truoc day hoa don khong tinh lai duoc nen 35k dich vu bay mat, ma check-out
+    /// van thong vi hoa don dang "Paid". Gio phai chan check-out va cho tinh lai.
+    /// </summary>
+    [DbFact]
+    public async Task DichVuGoiSauKhiLapHoaDon_VanPhaiVaoBill()
+    {
+        await using var sandbox = await Sandbox.CreateAsync();
+        try
+        {
+            await SignInAsync("Receptionist");
+            var stay = await sandbox.CheckInNewGuestAsync();
+
+            // 1) Lap hoa don va thu du ngay - luc nay chua co dich vu nao
+            var asOf = DateTime.Today.AddDays(1).AddHours(11);
+            var first = await new InvoiceService().PrepareAsync(stay.StayId, null, asOf);
+            Assert.True(first.Ok, first.Message);
+            Assert.Equal(0m, first.Data!.ServiceCharge);
+            var roomOnly = first.Data.TotalAmount;
+
+            var payAll = await new PaymentService().RecordAsync(
+                first.Data.Id, roomOnly, PaymentMethod.Cash, null);
+            Assert.True(payAll.Ok, payAll.Message);
+
+            // 2) Khach goi dich vu sau do, bep chot Hoan tat
+            var item = await FirstServiceItemAsync();
+            var order = await new ServiceOrderService().CreateAsync(
+                stay.StayId, [new ServiceOrderLine(item.Id, 1)]);
+            Assert.True(order.Ok, order.Message);
+            await SignInAsync("ServiceStaff");
+            var done = await new ServiceOrderService()
+                .ChangeStatusAsync(order.Data!.Id, ServiceOrderStatus.Completed);
+            Assert.True(done.Ok, done.Message);
+
+            // 3) Hoa don dang "Paid" nhung thieu tien dich vu -> khong duoc cho tra phong
+            await SignInAsync("Receptionist");
+            var blocked = await new StayService().CheckOutAsync(stay.StayId, asOf);
+            Assert.False(blocked.Ok);
+            Assert.Contains("tính lại hoá đơn", blocked.Message);
+
+            // 4) Tinh lai: dich vu vao bill, hoa don mo lai thanh tra mot phan
+            var again = await new InvoiceService().PrepareAsync(stay.StayId, null, asOf);
+            Assert.True(again.Ok, again.Message);
+            Assert.Equal(item.UnitPrice, again.Data!.ServiceCharge);
+            Assert.Equal(roomOnly + item.UnitPrice, again.Data.TotalAmount);
+            Assert.Equal(InvoiceStatus.PartiallyPaid, again.Data.Status);
+
+            // 5) Thu not phan chenh roi tra phong binh thuong
+            var rest = await new PaymentService().RecordAsync(
+                again.Data.Id, item.UnitPrice, PaymentMethod.Cash, null);
+            Assert.True(rest.Ok, rest.Message);
+            var ok = await new StayService().CheckOutAsync(stay.StayId, asOf);
+            Assert.True(ok.Ok, ok.Message);
+        }
+        finally { AppSession.SignOut(); }
+    }
+
     // ---------------------------------------------------------- 5. Chan dat phong trung lich
 
     [DbFact]
