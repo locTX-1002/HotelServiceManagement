@@ -125,14 +125,23 @@ namespace FUHotelManagementWPF.ViewModels.CheckInOut
                 return;
             }
 
-            var result = await _service.AddToStayAsync(_stayId, SelectedItem.Id, Quantity);
+            // Mon da ghi roi thi CONG DON so luong, khong de ra dong thu hai giong het.
+            // Hai dong "Am sieu toc 1 cai" doc kho hon mot dong "Am sieu toc 2 cai",
+            // va luc doi chieu voi khach rat de dem nham.
+            var existing = Lines.FirstOrDefault(l => l.Surcharge.SurchargeItemId == SelectedItem.Id);
+            var result = existing != null
+                ? await _service.UpdateAsync(existing.Surcharge.Id, existing.Surcharge.Quantity + Quantity)
+                : await _service.AddToStayAsync(_stayId, SelectedItem.Id, Quantity);
+
             if (!result.Ok)
             {
                 ErrorMessage = result.Message;
                 return;
             }
 
-            Notify.Success(result.Message);
+            Notify.Success(existing != null
+                ? $"Đã cộng thêm {Quantity} {SelectedItem.Unit} {SelectedItem.Name}."
+                : $"Đã ghi {Quantity} {SelectedItem.Unit} {SelectedItem.Name}.");
             Quantity = 1;
             await ReloadLinesAsync();
         }
