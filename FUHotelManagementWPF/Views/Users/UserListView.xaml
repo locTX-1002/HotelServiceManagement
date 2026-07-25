@@ -263,30 +263,39 @@
 
                             <Border Height="1" Background="{StaticResource LineBrush}" Margin="0,16,0,14" />
 
-                            <StackPanel Orientation="Horizontal">
+                            <!-- Ca ba nut cung mot khoi WrapPanel, chieu rong bang nhau. De hai
+                                 nut o StackPanel ngang roi nut Khoa nam rieng ben duoi thi no
+                                 rot xuong mot minh mot dong, nhin nhu bi vang ra ngoai. -->
+                            <WrapPanel>
+                                <WrapPanel.Resources>
+                                    <Style TargetType="Button" BasedOn="{StaticResource GhostButton}">
+                                        <Setter Property="Padding" Value="16,7" />
+                                        <Setter Property="MinWidth" Value="148" />
+                                        <Setter Property="Margin" Value="0,0,10,10" />
+                                    </Style>
+                                </WrapPanel.Resources>
+
                                 <Button Content="Sửa thông tin" Style="{StaticResource PrimaryButton}"
-                                        Padding="16,7"
+                                        Padding="16,7" MinWidth="148" Margin="0,0,10,10"
                                         Visibility="{Binding CanEdit, Converter={StaticResource BoolToVis}}"
                                         Command="{Binding DataContext.EditCommand,
                                                   RelativeSource={RelativeSource AncestorType=UserControl}}" />
-                                <Button Content="Đặt lại mật khẩu" Style="{StaticResource GhostButton}"
-                                        Padding="16,7" Margin="10,0,0,0"
+                                <Button Content="Đặt lại mật khẩu"
                                         ToolTip="Đặt mật khẩu mới cho nhân viên này"
                                         Visibility="{Binding CanResetPassword, Converter={StaticResource BoolToVis}}"
                                         Command="{Binding DataContext.ResetPasswordCommand,
                                                   RelativeSource={RelativeSource AncestorType=UserControl}}" />
-                            </StackPanel>
 
-                            <!-- Nut khoa tat khi dang chon chinh minh - tu khoa thi khong con ai
-                                 vao duoc bang Admin nua (service cung chan them mot lop). -->
-                            <Button Content="{Binding ToggleActiveText}" Style="{StaticResource GhostButton}"
-                                    Padding="16,7" Margin="0,10,0,0" HorizontalAlignment="Left"
-                                    Foreground="{StaticResource DangerBrush}"
-                                    IsEnabled="{Binding CanToggleActive}"
-                                    Visibility="{Binding CanToggleActive, Converter={StaticResource BoolToVis}}"
-                                    ToolTip="{Binding ToggleActiveToolTip}"
-                                    Command="{Binding DataContext.ToggleActiveCommand,
-                                              RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                                <!-- Nut khoa tat khi dang chon chinh minh - tu khoa thi khong con ai
+                                     vao duoc bang Admin nua (service cung chan them mot lop). -->
+                                <Button Content="{Binding ToggleActiveText}"
+                                        Foreground="{StaticResource DangerBrush}"
+                                        IsEnabled="{Binding CanToggleActive}"
+                                        Visibility="{Binding CanToggleActive, Converter={StaticResource BoolToVis}}"
+                                        ToolTip="{Binding ToggleActiveToolTip}"
+                                        Command="{Binding DataContext.ToggleActiveCommand,
+                                                  RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                            </WrapPanel>
 
                             <!-- Tai khoan Admin: khong co nut nao, thay bang dong giai thich -->
                             <Border Background="{StaticResource SurfaceAltBrush}" CornerRadius="4"
