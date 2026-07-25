@@ -381,8 +381,40 @@ namespace FUHotelManagementWPF.ViewModels.CheckInOut
             _ = LoadAsync();
         }
 
+        private string _searchText = string.Empty;
+        /// <summary>Tim theo so phong hoac ten khach - hai thu le tan doc duoc tu mieng khach.</summary>
+        public string SearchText
+        {
+            get => _searchText;
+            set
+            {
+                if (SetProperty(ref _searchText, value))
+                {
+                    ItemsView.Refresh();
+                    // Loc xong co the khong con dong nao - phai bao lai de hien dong "khong co viec nao"
+                    OnPropertyChanged(nameof(IsEmpty));
+                }
+            }
+        }
+
         private bool Filter(object item)
-            => item is FlowItem flow && (SelectedFilter.Predicate?.Invoke(flow) ?? true);
+        {
+            if (item is not FlowItem flow)
+            {
+                return false;
+            }
+            if (SelectedFilter.Predicate?.Invoke(flow) == false)
+            {
+                return false;
+            }
+            if (string.IsNullOrWhiteSpace(SearchText))
+            {
+                return true;
+            }
+            var keyword = SearchText.Trim();
+            return flow.RoomNumber.Contains(keyword, StringComparison.OrdinalIgnoreCase)
+                   || flow.GuestName.Contains(keyword, StringComparison.OrdinalIgnoreCase);
+        }
 
         public async Task LoadAsync()
         {

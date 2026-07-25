@@ -471,6 +471,44 @@
         <Setter Property="Tag" Value="0,4,4,0" />
     </Style>
 
+    <!-- O tim kiem dung chung: kinh lup nam SAN trong o nen nhin la biet de tim,
+         khong can nut rieng. Nho hon o nhap thuong (cao 30, chu 12.5) vi day la
+         cong cu loc chu khong phai o nhap du lieu. -->
+    <Style x:Key="SearchBox" TargetType="TextBox">
+        <Setter Property="Height" Value="30" />
+        <Setter Property="Width" Value="220" />
+        <Setter Property="FontSize" Value="12.5" />
+        <Setter Property="Background" Value="White" />
+        <Setter Property="Foreground" Value="{StaticResource InkBrush}" />
+        <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="TextBox">
+                    <Border Background="{TemplateBinding Background}" CornerRadius="4"
+                            BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="&#xE721;" FontFamily="Segoe MDL2 Assets"
+                                       FontSize="13" VerticalAlignment="Center" Margin="9,0,6,0"
+                                       Foreground="{StaticResource InkSoftBrush}" />
+                            <ScrollViewer Grid.Column="1" x:Name="PART_ContentHost"
+                                          VerticalAlignment="Center" Margin="0,0,9,0" />
+                        </Grid>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsKeyboardFocused" Value="True">
+                            <Setter Property="BorderBrush" Value="{StaticResource BrandBrush}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <!-- Lich DatePicker mac dinh bi HandyControl doi sang tieng Trung (年/月). Dat
          Language thang tren o - uu tien cao hon override o App.xaml.cs - de ten thu
          va thang ra tieng Viet ke ca khi thu vien chan override. Language ke thua
