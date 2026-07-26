@@ -10,7 +10,7 @@ public class SurchargeServiceTests
     [Fact]
     public async Task CannotDeleteSurchargeAfterPayment()
     {
-        AppSession.SignIn(new User { Role = new Role { RoleName = RoleNames.Manager } });
+        TestUsers.SignInWithPermissions(PermissionCodes.SurchargeAdd);
         var repository = new FakeRepository { DeleteSucceeds = false };
 
         var result = await new SurchargeService(repository).DeleteAsync(1);

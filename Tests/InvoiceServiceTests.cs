@@ -113,7 +113,14 @@ public class InvoiceServiceTests
         Assert.Contains("hoàn tiền", result.Message);
     }
 
-    private static User Admin() => new() { Id = 1, Role = new Role { RoleName = RoleNames.Admin } };
+    private static User Admin()
+    {
+        TestUsers.SignInWithPermissions(
+            PermissionCodes.InvoicePrepare,
+            PermissionCodes.InvoiceDiscountApprove,
+            PermissionCodes.InvoiceCancelApprove);
+        return AppSession.CurrentUser!;
+    }
 
     private sealed class FakeInvoiceRepository(Stay stay) : IInvoiceRepository
     {

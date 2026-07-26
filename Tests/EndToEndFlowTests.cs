@@ -490,17 +490,20 @@ public class EndToEndFlowTests
                 guest.Id, sandbox.RoomId, 1,
                 DateTime.Today.AddDays(20), DateTime.Today.AddDays(21), null, null, null);
             Assert.True(pending.Ok, pending.Message);
+            await SignInAsync(RoleNames.Manager);
             var cancelPending = await new ReservationService().CancelAsync(pending.Data!.Id);
             Assert.True(cancelPending.Ok, cancelPending.Message);
             Assert.Equal(ReservationStatus.Cancelled, await ReservationStatusAsync(pending.Data.Id));
 
             // Huy don da xac nhan (phong duoc tra lai lich nen dat trung khoang cu van duoc)
+            await SignInAsync(RoleNames.Receptionist);
             var confirmed = await new ReservationService().CreateAsync(
                 guest.Id, sandbox.RoomId, 1,
                 DateTime.Today.AddDays(20), DateTime.Today.AddDays(21), null, null, null);
             Assert.True(confirmed.Ok, confirmed.Message);
             var confirm = await new ReservationService().ConfirmAsync(confirmed.Data!.Id);
             Assert.True(confirm.Ok, confirm.Message);
+            await SignInAsync(RoleNames.Manager);
             var cancelConfirmed = await new ReservationService().CancelAsync(confirmed.Data.Id);
             Assert.True(cancelConfirmed.Ok, cancelConfirmed.Message);
 

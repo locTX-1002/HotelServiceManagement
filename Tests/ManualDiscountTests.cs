@@ -29,9 +29,9 @@ public class ManualDiscountTests
         {
             await TestUsers.SignInAsync(RoleNames.Manager);
             var stayId = await box.CheckInAsync();
+            await TestUsers.SignInAsync(RoleNames.Manager);
 
-            var invoice = await new InvoiceService().PrepareAsync(
-                stayId, null, DateTime.Today.AddDays(1).AddHours(11), manualDiscount: 150_000m);
+            var invoice = await new InvoiceService().ApplyApprovedDiscountAsync(stayId, 150_000m);
 
             Assert.True(invoice.Ok, invoice.Message);
             Assert.Equal(150_000m, invoice.Data!.DiscountAmount);
@@ -48,8 +48,7 @@ public class ManualDiscountTests
         await using var box = await Box.CreateAsync(BasePrice);
         try
         {
-            // Dung quan ly de dung du lieu, roi ha quyen xuong le tan moi goi giam tay
-            await TestUsers.SignInAsync(RoleNames.Manager);
+            await TestUsers.SignInAsync(RoleNames.Receptionist);
             var stayId = await box.CheckInAsync();
 
             await TestUsers.SignInAsync(RoleNames.Receptionist);
@@ -74,9 +73,9 @@ public class ManualDiscountTests
         {
             await TestUsers.SignInAsync(RoleNames.Manager);
             var stayId = await box.CheckInAsync();
+            await TestUsers.SignInAsync(RoleNames.Manager);
 
-            var invoice = await new InvoiceService().PrepareAsync(
-                stayId, null, DateTime.Today.AddDays(1).AddHours(11), manualDiscount: 9_000_000m);
+            var invoice = await new InvoiceService().ApplyApprovedDiscountAsync(stayId, 9_000_000m);
 
             Assert.True(invoice.Ok, invoice.Message);
             // Tru toi da bang tong, khong bao gio ra so am
@@ -95,10 +94,10 @@ public class ManualDiscountTests
         {
             await TestUsers.SignInAsync(RoleNames.Manager);
             var stayId = await box.CheckInAsync();
+            await TestUsers.SignInAsync(RoleNames.Manager);
 
             // So am se lam TANG tien phai tra - phai chan tu dau
-            var invoice = await new InvoiceService().PrepareAsync(
-                stayId, null, DateTime.Today.AddDays(1).AddHours(11), manualDiscount: -500_000m);
+            var invoice = await new InvoiceService().ApplyApprovedDiscountAsync(stayId, -500_000m);
 
             Assert.False(invoice.Ok);
         }
@@ -170,6 +169,7 @@ public class ManualDiscountTests
         /// <summary>Khach thuong (khong VIP, de so tien giam chi den tu giam tay) -> dat 1 dem -> check-in.</summary>
         public async Task<int> CheckInAsync()
         {
+            await TestUsers.SignInAsync(RoleNames.Receptionist);
             var suffix = $"tay{Guid.NewGuid():N}"[..12];
             var guest = await new GuestService().CreateAsync(
                 $"Khach {suffix}", $"{suffix}@test.local",
