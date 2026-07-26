@@ -18,6 +18,20 @@ public static class DemoDataDAO
     {
         await using var context = HotelDbContextFactory.Create();
 
+        // Moi buoc tu kiem tra BANG CUA CHINH NO. Truoc day ca ham chung mot chot chan
+        // "da co khach thi thoat" dat o dau, nen buoc seed khuyen mai them sau nay (nam
+        // cuoi ham) khong bao gio chay tren may da co du lieu - va do la ly do that su
+        // khien o Khuyen mai ben man Hoa don xo ra rong tron. Tach ra thi buoc moi
+        // khong con bi buoc cu chan, va sau nay them buoc nua cung the.
+        await SeedPromotionsAsync(context);
+        await SeedOperationsAsync(context);
+    }
+
+    /// <summary>
+    /// Khach, phong, dat phong, luot o. Da co khach roi thi khong dung vao nua.
+    /// </summary>
+    private static async Task SeedOperationsAsync(HotelDbContext context)
+    {
         if (await context.Guests.AnyAsync())
         {
             return;
@@ -184,8 +198,6 @@ public static class DemoDataDAO
             };
         }
         await context.SaveChangesAsync();
-
-        await SeedPromotionsAsync(context);
     }
 
     /// <summary>

@@ -54,6 +54,15 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
 
         public RelayCommand ChangeStatusCommand { get; }
 
+        /// <summary>
+        /// Khong the an the phong (an het thi so do trong tron), nen van cho bam - dialog se noi ro
+        /// vi sao khong doi duoc va con loi tat sang man Check-in/out, Dat phong (Le tan dung duoc).
+        /// Chi sua tooltip de khong hua truoc mot viec vai tro do khong lam duoc.
+        /// </summary>
+        public string CardHint => AuthorizationPolicy.CanManageRooms
+            ? "Bấm để đổi trạng thái vận hành"
+            : "Bấm để xem chi tiết phòng";
+
         public RoomMapViewModel(Func<Task> refreshAll)
         {
             _refreshAll = refreshAll;

@@ -97,8 +97,10 @@
             </Border>
 
             <!-- Vung noi dung ViewModel-first: WPF tu chon View theo ViewMappings.xaml.
-                 Quy uoc PageHeader: hang dau moi View = PageTitleText + nut hanh dong ben phai -->
+                 Quy uoc PageHeader: hang dau moi View = PageTitleText + nut hanh dong ben phai.
+                 BackdropHost: nen anh lam mo phia sau noi dung (dinh nghia o Controls.xaml) -->
             <ContentControl Grid.Column="1" Content="{Binding CurrentViewModel}"
+                            Style="{StaticResource BackdropHost}"
                             Focusable="False" />
         </Grid>
 

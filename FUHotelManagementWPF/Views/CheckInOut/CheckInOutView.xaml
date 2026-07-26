@@ -119,10 +119,15 @@
             </Grid.ColumnDefinitions>
 
             <!-- CỘT TRÁI: dòng thời gian việc cần làm, quá hạn lên đầu và có vạch đỏ -->
+            <!-- IsSharedSizeScope: cho phep cac cot cung SharedSizeGroup o MOI dong tu do
+                 theo noi dung roi lay be rong LON NHAT ap cho tat ca - chip va nut van
+                 thang hang tuyet doi (dieu ma so cung 118/212 truoc day dang co mua) ma
+                 khong bao gio cat chu. Khuon nay nhom da dung o Views/Dialogs/ExtendStayDialog.xaml. -->
             <ListBox Grid.Column="0" ItemsSource="{Binding ItemsView}"
                      SelectedItem="{Binding SelectedItem}"
                      ItemContainerStyle="{StaticResource FlowItemContainer}"
                      Background="Transparent" BorderThickness="0"
+                     Grid.IsSharedSizeScope="True"
                      ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                 <ListBox.ItemTemplate>
                     <DataTemplate>
@@ -145,17 +150,21 @@
                                     </Style.Triggers>
                                 </Style>
                             </Border.Style>
-                            <!-- Cot chip va cot nut deu CO DINH be rong: de Auto thi moi dong
-                                 co ro theo noi dung cua chinh no (dong 1 nut, dong 3 nut), nen
-                                 chip va nut nhay qua nhay lai giua cac dong - nhin rat so le. -->
+                            <!-- Cot chip va cot nut dung SharedSizeGroup chu KHONG phai so cung.
+                                 Truoc day de cung 118 va 212 de cac dong thang hang, nhung dong
+                                 QUA HAN co them nut thu ba (Khong den / Gia han) doi toi ~244px,
+                                 vuot 212 - StackPanel lai neo phai nen phan du tran nguoc sang
+                                 TRAI va bi WPF tu cat, thanh ra chu dau bi mat ("ng den", "a han").
+                                 Nut thi bam duoc nhung khong doc duoc la nut gi.
+                                 Auto + SharedSizeGroup: moi dong do theo noi dung cua chinh no roi
+                                 CA DANH SACH lay be rong lon nhat - van thang hang, ma doi nhan nut
+                                 hay doi font sau nay khong phai ngoi tinh lai px. -->
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="*" MinWidth="150" />
-                                    <ColumnDefinition Width="118" />
-                                    <!-- Co dinh du cho 2 nut: de Auto thi dong 1 nut va dong 2 nut
-                                         co ro khac nhau, day chip lech nhau giua cac dong. -->
-                                    <ColumnDefinition Width="212" />
+                                    <ColumnDefinition Width="Auto" SharedSizeGroup="FlowBadge" />
+                                    <ColumnDefinition Width="Auto" SharedSizeGroup="FlowActions" />
                                 </Grid.ColumnDefinitions>
 
                                 <Border Grid.Column="0" Width="64" Height="46" CornerRadius="4">
@@ -165,11 +174,22 @@
                                 </Border>
 
                                 <StackPanel Grid.Column="1" Margin="13,0,10,0" VerticalAlignment="Center">
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="{Binding RoomNumber}" FontSize="14.5" FontWeight="SemiBold" />
-                                        <TextBlock Text=" · " Foreground="{StaticResource InkSoftBrush}" VerticalAlignment="Center" />
-                                        <TextBlock Text="{Binding GuestName}" FontSize="14" VerticalAlignment="Center" />
-                                    </StackPanel>
+                                    <!-- Mot TextBlock voi ba Run chu khong phai ba TextBlock trong
+                                         StackPanel ngang: trong StackPanel ngang moi TextBlock duoc
+                                         cap be rong vo han nen TextTrimming khong bao gio an, ten
+                                         khach dai la bi cat cut giua chu. Gop lai thi cat o ten
+                                         thanh dau ba cham dang hoang. -->
+                                    <!-- Mode=OneWay BAT BUOC: Run.Text la mot trong so it thuoc tinh
+                                         cua WPF mac dinh bind HAI CHIEU, ma RoomNumber/GuestName ben
+                                         FlowItem chi co getter - de mac dinh la nem XamlParseException
+                                         lam SAP ca app ngay khi mo man nay (da dinh that). -->
+                                    <TextBlock TextTrimming="CharacterEllipsis"
+                                               ToolTip="{Binding GuestName, Mode=OneWay}">
+                                        <Run Text="{Binding RoomNumber, Mode=OneWay}"
+                                             FontSize="14.5" FontWeight="SemiBold" />
+                                        <Run Text=" · " Foreground="{StaticResource InkSoftBrush}" />
+                                        <Run Text="{Binding GuestName, Mode=OneWay}" FontSize="14" />
+                                    </TextBlock>
                                     <TextBlock Text="{Binding SubText}" Style="{StaticResource CaptionText}"
                                                FontSize="11.5" TextTrimming="CharacterEllipsis" Margin="0,2,0,0" />
                                 </StackPanel>
@@ -230,6 +250,9 @@
                                                       RelativeSource={RelativeSource AncestorType=UserControl}}" />
                                     <Button Content="{Binding ActionLabel}"
                                             Style="{StaticResource PrimaryButton}" Padding="14,7"
+                                            Visibility="{Binding DataContext.CanOperate,
+                                                         RelativeSource={RelativeSource AncestorType=UserControl},
+                                                         Converter={StaticResource BoolToVis}}"
                                             Command="{Binding DataContext.ActionCommand,
                                                       RelativeSource={RelativeSource AncestorType=UserControl}}"
                                             CommandParameter="{Binding}" />
@@ -393,6 +416,9 @@
 
                             <Button Content="{Binding ActionLabel}" Style="{StaticResource PrimaryButton}"
                                     Padding="0,10" Margin="0,8,0,0" FontSize="13.5"
+                                    Visibility="{Binding DataContext.CanOperate,
+                                                 RelativeSource={RelativeSource AncestorType=UserControl},
+                                                 Converter={StaticResource BoolToVis}}"
                                     Command="{Binding DataContext.ActionCommand,
                                               RelativeSource={RelativeSource AncestorType=UserControl}}"
                                     CommandParameter="{Binding}" />

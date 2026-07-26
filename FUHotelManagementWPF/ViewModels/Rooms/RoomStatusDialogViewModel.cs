@@ -28,6 +28,13 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
         public List<StatusOption> Options { get; }
         public bool HasOptions => Options.Count > 0;
 
+        /// <summary>
+        /// An het lua chon doi trang thai voi vai tro khong duoc phep - service van la lop chan cuoi.
+        /// RoomService.UpdateStatusAsync chan MOI thay doi trang thai neu thieu CanManageRooms,
+        /// khong rieng gi Bao tri, nen Le tan / NV dich vu chon gi cung bi tu choi.
+        /// </summary>
+        public bool CanChangeRoomStatus => AuthorizationPolicy.CanManageRooms;
+
         // Khong chi noi "khong doi duoc" ma noi luon phai lam gi va o dau,
         // vi hai truong hop nay cach xu ly khac han nhau.
         public string NoOptionMessage => _room.Status switch
@@ -41,6 +48,9 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
             RoomStatus.Maintenance =>
                 "Phòng đang bảo trì. Chỉ Quản trị viên hoặc Quản lý mới đưa phòng ra khỏi bảo trì được — "
                 + "nhờ họ mở lại giúp.",
+            // Trong / Dang don von co buoc chuyen hop le -> het lua chon o day chi con mot ly do la vai tro.
+            _ when !CanChangeRoomStatus =>
+                "Chỉ Quản trị viên hoặc Quản lý đổi được trạng thái phòng.",
             _ => "Từ trạng thái hiện tại không chuyển sang trạng thái nào khác được.",
         };
 
@@ -81,17 +91,19 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
         public RoomStatusDialogViewModel(Room room)
         {
             _room = room;
-            _canManageMaintenance = AppSession.RoleName is RoleNames.Admin or RoleNames.Manager;
+            // Dung thang AuthorizationPolicy (nguon su that duy nhat), khong chep lai dieu kien vai tro.
+            _canManageMaintenance = CanChangeRoomStatus;
 
+            // Moi buoc chuyen deu can CanManageRooms -> khong co quyen thi khong bay ra lua chon nao.
+            // Truoc day hai nhanh "Trong -> Dang don" va "Dang don -> Trong" khong kiem quyen,
+            // nen Le tan / NV dich vu van thay lua chon roi bam Xac nhan moi bi service tu choi.
             Options = _room.Status switch
             {
-                RoomStatus.Available when _canManageMaintenance =>
+                RoomStatus.Available when CanChangeRoomStatus =>
                     [new(RoomStatus.Cleaning, "Chuyển sang Đang dọn"), new(RoomStatus.Maintenance, "Đưa vào Bảo trì")],
-                RoomStatus.Available =>
-                    [new(RoomStatus.Cleaning, "Chuyển sang Đang dọn")],
-                RoomStatus.Cleaning =>
+                RoomStatus.Cleaning when CanChangeRoomStatus =>
                     [new(RoomStatus.Available, "Dọn xong — trả phòng về Trống")],
-                RoomStatus.Maintenance when _canManageMaintenance =>
+                RoomStatus.Maintenance when CanChangeRoomStatus =>
                     [new(RoomStatus.Available, "Bảo trì xong — trả phòng về Trống")],
                 _ => [],
             };

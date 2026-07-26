@@ -268,7 +268,8 @@ namespace FUHotelManagementWPF.ViewModels.Reports
 
             Rows.Clear();
             // Sap xep lai o VM cho chac: bang luon phai ngay moi nhat len dau
-            foreach (var day in report.ByDay.OrderByDescending(d => d.Date))
+            // Giu nguyen thu tu service tra ve (da sap giam dan theo doanh thu theo dung de bai)
+            foreach (var day in report.ByDay)
             {
                 Rows.Add(day);
             }

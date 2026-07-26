@@ -128,7 +128,9 @@
                         <!-- The anh giong luoi hang phong o trang chu: anh phu kin o,
                              so phong va trang thai de len day anh -->
                         <Border x:Name="tile" Height="112" CornerRadius="4" Margin="0,0,10,10"
-                                Cursor="Hand" ToolTip="Bấm để đổi trạng thái vận hành">
+                                Cursor="Hand"
+                                ToolTip="{Binding DataContext.CardHint,
+                                          RelativeSource={RelativeSource AncestorType=UserControl}}">
                             <Border.InputBindings>
                                 <MouseBinding Gesture="LeftClick"
                                               Command="{Binding DataContext.ChangeStatusCommand,

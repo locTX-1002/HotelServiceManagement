@@ -115,11 +115,14 @@ namespace FUHotelManagementWPF.ViewModels.Services
         public ObservableCollection<CartLine> Cart { get; } = [];
         public ObservableCollection<OrderRow> Orders { get; } = [];
 
-        // AuthorizationPolicy la internal cua tang Services nen man hinh khong goi duoc.
-        // Chep lai dung dieu kien o day de AN nut; service van kiem doc lap - day chi la
-        // lop cho do bam vao roi bi tu choi.
-        public bool CanCreate => AppSession.RoleName is RoleNames.Admin or RoleNames.Manager or RoleNames.Receptionist;
-        public bool CanProcess => AppSession.RoleName is RoleNames.Admin or RoleNames.Manager or RoleNames.ServiceStaff;
+        // AuthorizationPolicy da mo public nen KHONG chep lai dieu kien vai tro o day nua -
+        // chep lai roi lech nhau chinh la nguon goc bug. An nut chi la trai nghiem,
+        // service van kiem doc lap va la lop chan cuoi.
+        /// <summary>An thuc don + gio hang voi vai tro khong duoc tao don dich vu.</summary>
+        public bool CanCreate => AuthorizationPolicy.CanCreateServiceOrder;
+
+        /// <summary>An nut Hoan tat/Huy don voi vai tro khong duoc xu ly don dich vu.</summary>
+        public bool CanProcess => AuthorizationPolicy.CanProcessServiceOrder;
 
         private StayOption? _selectedStay;
         public StayOption? SelectedStay

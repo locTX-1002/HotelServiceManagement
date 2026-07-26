@@ -41,6 +41,12 @@ namespace FUHotelManagementWPF.ViewModels.CheckInOut
         /// <summary>Dong nay la khach dang o (co nut Hoa don / Gia han).</summary>
         public bool IsStay => Kind == FlowKind.Stay;
 
+        /// <summary>
+        /// An nut thao tac le tan (nhan/tra phong, gia han, phu thu, khong den, huy) voi vai tro
+        /// khong duoc phep - service van la lop chan cuoi.
+        /// </summary>
+        public bool CanOperate => AuthorizationPolicy.CanOperateFrontDesk;
+
         /// <summary>Khach chua co giay to - service se chan check-in, bao truoc de le tan bo sung som.</summary>
         public bool MissingIdentity => Kind == FlowKind.Arrival
             && string.IsNullOrWhiteSpace(Reservation.Guest?.IdentityNumber);
@@ -144,17 +150,17 @@ namespace FUHotelManagementWPF.ViewModels.CheckInOut
         public string TotalChargeText => $"{TotalCharge:N0} đ";
         public string EstimateLabel => Kind == FlowKind.Arrival ? "Dự kiến cả kỳ" : "Tạm tính";
 
-        /// <summary>Chi khach dang o moi gia han va ghi phu thu duoc.</summary>
-        public bool CanExtend => Kind == FlowKind.Stay;
+        /// <summary>Chi khach dang o moi gia han va ghi phu thu duoc, va phai co quyen le tan.</summary>
+        public bool CanExtend => CanOperate && Kind == FlowKind.Stay;
 
         // ---- Nut phu tren dong, chi hien voi viec qua han ----
         // Khach qua han den thi le tan con phai danh dau khong den hoac huy don,
         // truoc day phai roi man nay sang Dat phong tim lai don moi lam duoc.
-        public bool ShowNoShow => Kind == FlowKind.Arrival && IsOverdue;
-        public bool ShowCancel => Kind == FlowKind.Arrival && IsOverdue;
+        public bool ShowNoShow => CanOperate && Kind == FlowKind.Arrival && IsOverdue;
+        public bool ShowCancel => CanOperate && Kind == FlowKind.Arrival && IsOverdue;
 
         /// <summary>Khach qua han tra thi gia han la viec hay lam nhat - dua thang len dong.</summary>
-        public bool ShowExtendOnRow => Kind == FlowKind.Stay && IsOverdue;
+        public bool ShowExtendOnRow => CanOperate && Kind == FlowKind.Stay && IsOverdue;
 
         /// <summary>Thứ tự ưu tiên: quá hạn → việc hôm nay → còn lại (theo ngày gần nhất).</summary>
         public int SortRank => IsOverdue ? 0 : IsToday ? 1 : 2;
@@ -250,6 +256,11 @@ namespace FUHotelManagementWPF.ViewModels.CheckInOut
         }
 
         public bool IsEmpty => !IsLoading && ItemsView.Cast<object>().Any() == false;
+
+        /// <summary>
+        /// An nut Nhan phong / Tra phong voi vai tro khong duoc phep - service van la lop chan cuoi.
+        /// </summary>
+        public bool CanOperate => AuthorizationPolicy.CanOperateFrontDesk;
 
         public string TodayText => $"Hôm nay {DateTime.Today:dd/MM/yyyy}";
 

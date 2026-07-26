@@ -73,6 +73,21 @@ public sealed class InvoicesViewModel : ViewModelBase
         set => SetProperty(ref _promotionCode, value);
     }
 
+    private decimal _manualDiscount;
+    /// <summary>
+    /// So tien giam quan ly go THANG vao, khong qua ma khuyen mai. Co o day vi khong
+    /// phai luc nao cung kip tao ma: khach phan nan, quan ly bot cho ho mot khoan roi
+    /// chot bill ngay tai quay. Service van la lop chan cuoi (kiem tra lai quyen).
+    /// </summary>
+    public decimal ManualDiscount
+    {
+        get => _manualDiscount;
+        set => SetProperty(ref _manualDiscount, value);
+    }
+
+    /// <summary>Chi quan ly moi thay o "Giam tay" - dung chung luat voi service.</summary>
+    public bool CanGiveManualDiscount => AuthorizationPolicy.CanGiveManualDiscount;
+
     private Invoice? _invoice;
     public Invoice? Invoice
     {
@@ -346,7 +361,8 @@ public sealed class InvoicesViewModel : ViewModelBase
         {
             var result = await _invoiceService.PrepareAsync(
                 SelectedStay.Id,
-                string.IsNullOrWhiteSpace(PromotionCode) ? null : PromotionCode);
+                string.IsNullOrWhiteSpace(PromotionCode) ? null : PromotionCode,
+                manualDiscount: ManualDiscount);
             if (!result.Ok || result.Data == null)
             {
                 ErrorMessage = result.Message;
@@ -551,6 +567,8 @@ public sealed class InvoicesViewModel : ViewModelBase
         RemainingAmount = 0;
         SelectedPromotion = null;
         PromotionCode = string.Empty;
+        // Xoa luon so giam tay: doi sang khach khac ma con giu so cu la giam nham nguoi
+        ManualDiscount = 0;
         RaiseInvoiceState();
     }
 

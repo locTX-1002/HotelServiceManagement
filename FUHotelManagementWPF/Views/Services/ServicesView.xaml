@@ -257,8 +257,12 @@
                                                         <TextBlock Text="{Binding StatusText}" />
                                                     </Border>
 
+                                                    <!-- Ca cum Hoan tat/Huy an voi vai tro khong duoc xu ly don;
+                                                         tung nut van tu an theo trang thai don (ShowComplete/ShowCancel). -->
                                                     <StackPanel Grid.Column="2" Orientation="Horizontal"
-                                                                VerticalAlignment="Center">
+                                                                VerticalAlignment="Center"
+                                                                Visibility="{Binding DataContext.CanProcess, ElementName=OrdersRoot,
+                                                                             Converter={StaticResource BoolToVis}}">
                                                         <Button Content="Hoàn tất" Style="{StaticResource PrimaryButton}"
                                                                 Padding="13,6" FontSize="12" Margin="0,0,6,0"
                                                                 ToolTip="Chỉ đơn Hoàn tất mới được tính tiền vào hoá đơn"
@@ -454,7 +458,8 @@
                                                                  Converter={StaticResource BoolToVis}}">
                                             <Button Content="Sửa" Style="{StaticResource GhostButton}"
                                                     Padding="13,6" FontSize="12" Margin="0,0,6,0" MinWidth="70"
-                                                    Command="{Binding DataContext.EditItemCommand, ElementName=CatalogRoot}" />
+                                                    Command="{Binding DataContext.EditItemCommand, ElementName=CatalogRoot}"
+                                                    CommandParameter="{Binding}" />
                                             <Button Content="{Binding ToggleText}" Style="{StaticResource GhostButton}"
                                                     Padding="13,6" FontSize="12" MinWidth="106"
                                                     Command="{Binding DataContext.ToggleItemCommand, ElementName=CatalogRoot}"
