@@ -444,6 +444,48 @@ public class EndToEndFlowTests
         finally { AppSession.SignOut(); }
     }
 
+    // ------------------- 4f. Chan nhan phong som khi dem do phong da co nguoi dat
+
+    /// <summary>
+    /// Khach den som mot dem, nhung dem do phong da co khach khac dat. Truoc day chi nhin
+    /// Room.Status, ma don dat chua den nhan thi trang thai phong van la Trong - cho nhan
+    /// phong la thanh hai khach mot phong.
+    /// </summary>
+    [DbFact]
+    public async Task NhanPhongSom_KhiDemDoDaCoNguoiDat_BiChan()
+    {
+        await using var sandbox = await Sandbox.CreateAsync();
+        try
+        {
+            await SignInAsync(RoleNames.Receptionist);
+
+            // Khach A giu phong dem nay, chua den nhan -> phong van dang Trong
+            var guestA = await sandbox.CreateGuestAsync(withIdentity: true);
+            var bookingA = await new ReservationService().CreateAsync(
+                guestA.Id, sandbox.RoomId, 1, DateTime.Today, DateTime.Today.AddDays(1),
+                null, null, null);
+            Assert.True(bookingA.Ok, bookingA.Message);
+            Assert.True((await new ReservationService().ConfirmAsync(bookingA.Data!.Id)).Ok);
+
+            // Khach B dat tu ngay mai, nhung den som ngay hom nay
+            var guestB = await sandbox.CreateGuestAsync(withIdentity: true);
+            var bookingB = await new ReservationService().CreateAsync(
+                guestB.Id, sandbox.RoomId, 1, DateTime.Today.AddDays(1), DateTime.Today.AddDays(3),
+                null, null, null);
+            Assert.True(bookingB.Ok, bookingB.Message);
+            Assert.True((await new ReservationService().ConfirmAsync(bookingB.Data!.Id)).Ok);
+
+            var som = await new StayService().CheckInAsync(bookingB.Data.Id, DateTime.Today.AddHours(14));
+            Assert.False(som.Ok);
+
+            // Dung ngay tren don thi khong dam vao ai -> nhan phong duoc
+            var dungNgay = await new StayService().CheckInAsync(
+                bookingB.Data.Id, DateTime.Today.AddDays(1).AddHours(14));
+            Assert.True(dungNgay.Ok, dungNgay.Message);
+        }
+        finally { AppSession.SignOut(); }
+    }
+
     // ---------------------------------------------------------- 5. Chan dat phong trung lich
 
     [DbFact]

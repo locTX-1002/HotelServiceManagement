@@ -63,6 +63,26 @@ public sealed class StayDAO
             Status = StayStatus.Active,
             CheckedInByUserId = userId,
         };
+        // Nhan phong SOM hon don thi khoang o that su dai ra ve phia truoc - phai kiem
+        // nhung dem them do co con trong khong. Truoc day khong kiem: chi nhin Room.Status,
+        // ma phong co nguoi DAT cho dem nay nhung chua den nhan thi trang thai van la Trong.
+        // Cho nhan phong la thanh hai khach mot phong.
+        var stayFrom = actualCheckIn.Date < reservation.CheckInDate.Date
+            ? actualCheckIn.Date
+            : reservation.CheckInDate.Date;
+        var clash = await context.Reservations.AnyAsync(r =>
+            r.Id != reservation.Id
+            && r.RoomId == reservation.RoomId
+            && (r.Status == ReservationStatus.Pending
+                || r.Status == ReservationStatus.Confirmed
+                || r.Status == ReservationStatus.CheckedIn)
+            && r.CheckInDate < reservation.CheckOutDate
+            && r.CheckOutDate > stayFrom);
+        if (clash)
+        {
+            return null;
+        }
+
         // Nhan phong SOM hon ngay tren don thi keo luon ngay nhan cua don ve ngay vao that.
         // Truoc day de nguyen, thanh ra don mang mot ngay ma luot o mang ngay khac: lich
         // phong, danh sach dat phong, bang chi tiet va hoa don moi cho doc mot moc, doc ra
