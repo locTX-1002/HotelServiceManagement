@@ -11,7 +11,7 @@ public class InvoiceServiceTests
     [Fact]
     public async Task PrepareAsync_CalculatesRoomServiceSurchargeDiscountAndDeposit()
     {
-        AppSession.SignIn(Admin());
+        AppSession.SignIn(Receptionist());
         var stay = new Stay
         {
             Id = 1,
@@ -56,7 +56,7 @@ public class InvoiceServiceTests
     [Fact]
     public async Task PrepareAsync_WhenInvoiceChangesConcurrently_AsksCallerToReload()
     {
-        AppSession.SignIn(Admin());
+        AppSession.SignIn(Receptionist());
         var stay = new Stay
         {
             Id = 1,
@@ -84,7 +84,7 @@ public class InvoiceServiceTests
     [Fact]
     public async Task PrepareAsync_KhiTongMoiThapHonSoDaThu_ChanVaBaoHoanTien()
     {
-        AppSession.SignIn(Admin());
+        AppSession.SignIn(Receptionist());
         var stay = new Stay
         {
             Id = 1,
@@ -113,7 +113,7 @@ public class InvoiceServiceTests
         Assert.Contains("hoàn tiền", result.Message);
     }
 
-    private static User Admin() => new() { Id = 1, Role = new Role { RoleName = RoleNames.Admin } };
+    private static User Receptionist() => new() { Id = 3, Role = new Role { RoleName = RoleNames.Receptionist } };
 
     private sealed class FakeInvoiceRepository(Stay stay) : IInvoiceRepository
     {

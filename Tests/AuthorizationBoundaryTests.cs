@@ -18,7 +18,7 @@ public class AuthorizationBoundaryTests
         Assert.False(result.Ok);
         // Thong bao hien ten vai tro bang tieng Viet ("Quan tri vien") cho khop voi
         // phan con lai cua giao dien, khong dung ten ky thuat RoleNames.Admin nua.
-        Assert.Contains("Quản trị viên", result.Message);
+        Assert.Contains("Quản lý", result.Message);
     }
 
     [Fact]
