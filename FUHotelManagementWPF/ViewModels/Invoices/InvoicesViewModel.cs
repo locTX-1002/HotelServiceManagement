@@ -44,6 +44,26 @@ public sealed class InvoicesViewModel : ViewModelBase
     }
 
     public bool HasSelectedStay => SelectedStay != null;
+    public string InvoiceNumber => Invoice == null ? "CHƯA LẬP HOÁ ĐƠN" : $"HD-{Invoice.Id:000000}";
+    public string SelectedRoomText => SelectedStay?.Reservation?.Room == null
+        ? "Chưa chọn phòng"
+        : $"Phòng {SelectedStay.Reservation.Room.RoomNumber}";
+    public string SelectedGuestText => SelectedStay?.Reservation?.Guest?.FullName ?? "Chưa chọn khách";
+    public string StayPeriodText
+    {
+        get
+        {
+            if (SelectedStay == null) return "—";
+            var checkOut = SelectedStay.ActualCheckOut?.ToString("dd/MM/yyyy HH:mm")
+                           ?? $"Dự kiến {SelectedStay.Reservation.CheckOutDate:dd/MM/yyyy}";
+            return $"{SelectedStay.ActualCheckIn:dd/MM/yyyy HH:mm} → {checkOut}";
+        }
+    }
+    public string InvoiceDateText => Invoice == null
+        ? "Chưa lập"
+        : Invoice.InvoiceDate.ToString("dd/MM/yyyy HH:mm");
+    public string InvoiceCreatorText => Invoice?.CreatedByUser?.FullName
+                                        ?? (Invoice == null ? "—" : "Không xác định");
 
     /// <summary>0 = Hoa don, 1 = Phu thu, 2 = Thanh toan.</summary>
     private int _selectedTabIndex;
@@ -98,6 +118,9 @@ public sealed class InvoicesViewModel : ViewModelBase
             {
                 OnPropertyChanged(nameof(HasInvoice));
                 OnPropertyChanged(nameof(InvoiceStatusText));
+                OnPropertyChanged(nameof(InvoiceNumber));
+                OnPropertyChanged(nameof(InvoiceDateText));
+                OnPropertyChanged(nameof(InvoiceCreatorText));
             }
         }
     }
@@ -575,6 +598,12 @@ public sealed class InvoicesViewModel : ViewModelBase
     private void RaiseInvoiceState()
     {
         OnPropertyChanged(nameof(HasInvoice));
+        OnPropertyChanged(nameof(InvoiceNumber));
+        OnPropertyChanged(nameof(SelectedRoomText));
+        OnPropertyChanged(nameof(SelectedGuestText));
+        OnPropertyChanged(nameof(StayPeriodText));
+        OnPropertyChanged(nameof(InvoiceDateText));
+        OnPropertyChanged(nameof(InvoiceCreatorText));
         OnPropertyChanged(nameof(InvoiceStatusText));
         OnPropertyChanged(nameof(CanRecordPayment));
         OnPropertyChanged(nameof(CanEditSurcharges));

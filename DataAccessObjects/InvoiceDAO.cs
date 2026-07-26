@@ -50,5 +50,5 @@ public sealed class InvoiceDAO
         return true;
     }
     public async Task<bool> CancelAsync(int id) { await using var c = HotelDbContextFactory.Create(); var x = await c.Invoices.Include(i => i.Payments).FirstOrDefaultAsync(i => i.Id == id); if (x == null || x.Payments.Any(p => p.Status == PaymentStatus.Completed)) return false; x.Status = InvoiceStatus.Cancelled; await c.SaveChangesAsync(); return true; }
-    private static IQueryable<Invoice> InvoiceQuery(HotelDbContext c) => c.Invoices.AsNoTracking().AsSplitQuery().Include(i => i.Payments).Include(i => i.Stay).ThenInclude(s => s.Reservation).ThenInclude(r => r.Guest).Include(i => i.Stay).ThenInclude(s => s.Reservation).ThenInclude(r => r.Room).ThenInclude(r => r.RoomType).Include(i => i.Stay).ThenInclude(s => s.Surcharges).ThenInclude(s => s.SurchargeItem);
+    private static IQueryable<Invoice> InvoiceQuery(HotelDbContext c) => c.Invoices.AsNoTracking().AsSplitQuery().Include(i => i.Payments).Include(i => i.CreatedByUser).Include(i => i.Stay).ThenInclude(s => s.Reservation).ThenInclude(r => r.Guest).Include(i => i.Stay).ThenInclude(s => s.Reservation).ThenInclude(r => r.Room).ThenInclude(r => r.RoomType).Include(i => i.Stay).ThenInclude(s => s.Surcharges).ThenInclude(s => s.SurchargeItem);
 }

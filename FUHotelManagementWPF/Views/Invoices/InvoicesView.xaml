@@ -86,6 +86,9 @@
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="12" />
                     <RowDefinition Height="Auto" />
+                    <RowDefinition Height="12" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="12" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
 
@@ -108,10 +111,57 @@
                                TextWrapping="Wrap" />
                 </Border>
 
+                <Border Grid.Row="2" Style="{StaticResource Card}"
+                        Visibility="{Binding HasSelectedStay, Converter={StaticResource BoolToVis}}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="28" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="24" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel>
+                            <TextBlock Text="{Binding InvoiceNumber}"
+                                       Style="{StaticResource SectionTitleText}" />
+                            <Border Margin="0,7,0,0" Padding="9,4"
+                                    HorizontalAlignment="Left"
+                                    Background="{StaticResource BrandSoftBrush}"
+                                    CornerRadius="10">
+                                <TextBlock Text="{Binding InvoiceStatusText}"
+                                           Foreground="{StaticResource BrandBrush}"
+                                           FontWeight="SemiBold" FontSize="12" />
+                            </Border>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="LƯỢT Ở" Style="{StaticResource FieldLabel}" />
+                            <TextBlock Text="{Binding SelectedRoomText}" FontWeight="SemiBold"
+                                       Margin="0,5,0,0" />
+                            <TextBlock Text="{Binding SelectedGuestText}" Margin="0,3,0,0" />
+                            <TextBlock Text="{Binding StayPeriodText}" Style="{StaticResource CaptionText}"
+                                       Margin="0,3,0,0" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="4">
+                            <TextBlock Text="THÔNG TIN LẬP HOÁ ĐƠN" Style="{StaticResource FieldLabel}" />
+                            <TextBlock Margin="0,5,0,0">
+                                <Run Text="Ngày lập: " />
+                                <Run Text="{Binding InvoiceDateText}" FontWeight="SemiBold" />
+                            </TextBlock>
+                            <TextBlock Margin="0,3,0,0">
+                                <Run Text="Nhân viên: " />
+                                <Run Text="{Binding InvoiceCreatorText}" FontWeight="SemiBold" />
+                            </TextBlock>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
                 <!-- Dai canh bao: hoa don trong DB la anh chup luc bam lap, khach goi them
                      dich vu hay bi ghi phu thu sau do thi so tren man hinh van la so cu.
                      Bao ngay tai day thay vi de le tan bam "Tinh lai" moi biet co chenh. -->
-                <Border Grid.Row="2" Padding="12,9" CornerRadius="8" Margin="0,0,0,12"
+                <Border Grid.Row="4" Padding="12,9" CornerRadius="8"
                         Background="{StaticResource WarningSoftBrush}"
                         Visibility="{Binding HasPendingCharges, Converter={StaticResource BoolToVis}}">
                     <DockPanel>
@@ -126,7 +176,7 @@
                     </DockPanel>
                 </Border>
 
-                <TabControl Grid.Row="3" SelectedIndex="{Binding SelectedTabIndex}">
+                <TabControl Grid.Row="6" SelectedIndex="{Binding SelectedTabIndex}">
                     <TabItem Header="Hoá đơn">
                         <ScrollViewer VerticalScrollBarVisibility="Auto">
                             <StackPanel Margin="4,14,4,4">
