@@ -1,10 +1,13 @@
 using System.Collections.ObjectModel;
+using System.IO;
+using System.Text;
 using System.Windows;
 using BusinessObjects;
 using BusinessObjects.Entities;
 using BusinessObjects.Enums;
 using FUHotelManagementWPF.MvvmCore;
 using FUHotelManagementWPF.Views.Dialogs;
+using Microsoft.Win32;
 using Services;
 
 namespace FUHotelManagementWPF.ViewModels.Invoices;
@@ -305,6 +308,7 @@ public sealed class InvoicesViewModel : ViewModelBase
     public AsyncRelayCommand DeleteSurchargeCommand { get; }
     public AsyncRelayCommand RecordPaymentCommand { get; }
     public AsyncRelayCommand VoidPaymentCommand { get; }
+    public AsyncRelayCommand ExportInvoiceCommand { get; }
 
     public InvoicesViewModel()
     {
@@ -316,6 +320,7 @@ public sealed class InvoicesViewModel : ViewModelBase
         DeleteSurchargeCommand = new AsyncRelayCommand(DeleteSurchargeAsync);
         RecordPaymentCommand = new AsyncRelayCommand(_ => OpenPaymentDialogAsync());
         VoidPaymentCommand = new AsyncRelayCommand(VoidPaymentAsync);
+        ExportInvoiceCommand = new AsyncRelayCommand(ExportInvoiceAsync);
         _ = LoadAsync();
     }
 
@@ -596,6 +601,52 @@ public sealed class InvoicesViewModel : ViewModelBase
         catch (Exception)
         {
             Notify.Error("Không huỷ được giao dịch. Vui lòng kiểm tra kết nối rồi thử lại.");
+        }
+    }
+
+    private async Task ExportInvoiceAsync(object? _)
+    {
+        if (Invoice == null || SelectedStay == null)
+        {
+            Notify.Warning("Chưa có hoá đơn để xuất.");
+            return;
+        }
+
+        var dialog = new SaveFileDialog
+        {
+            Title = "Xuất hoá đơn",
+            Filter = "Tệp văn bản (*.txt)|*.txt",
+            FileName = $"{InvoiceNumber}.txt",
+            AddExtension = true,
+        };
+        if (dialog.ShowDialog(ActiveWindow()) != true) return;
+
+        var lines = new StringBuilder()
+            .AppendLine(InvoiceNumber)
+            .AppendLine($"Trạng thái: {InvoiceStatusText}")
+            .AppendLine($"Phòng: {SelectedRoomText}")
+            .AppendLine($"Khách hàng: {SelectedGuestText}")
+            .AppendLine($"Lượt ở: {StayPeriodText}")
+            .AppendLine($"Ngày lập: {InvoiceDateText}")
+            .AppendLine($"Nhân viên: {InvoiceCreatorText}")
+            .AppendLine(new string('-', 48))
+            .AppendLine($"Tiền phòng ({RoomChargeDetailText}): {Invoice.RoomCharge:N0} đ")
+            .AppendLine($"Dịch vụ ({ServiceChargeDetailText}): {Invoice.ServiceCharge:N0} đ")
+            .AppendLine($"Phụ thu ({SurchargeDetailText}): {Invoice.SurchargeAmount:N0} đ")
+            .AppendLine($"Giảm giá ({DiscountDetailText}): -{Invoice.DiscountAmount:N0} đ")
+            .AppendLine(new string('-', 48))
+            .AppendLine($"Tổng hoá đơn: {Invoice.TotalAmount:N0} đ")
+            .AppendLine($"Đã thanh toán: {PaidAmount:N0} đ")
+            .AppendLine($"Còn phải thu: {RemainingAmount:N0} đ");
+
+        try
+        {
+            await File.WriteAllTextAsync(dialog.FileName, lines.ToString(), Encoding.UTF8);
+            Notify.Success("Đã xuất hoá đơn.");
+        }
+        catch (Exception)
+        {
+            Notify.Error("Không xuất được hoá đơn. Hãy kiểm tra quyền ghi tệp rồi thử lại.");
         }
     }
 

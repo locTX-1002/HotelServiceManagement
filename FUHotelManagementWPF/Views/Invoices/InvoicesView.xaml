@@ -391,11 +391,27 @@
                                                     Margin="0,18,0,0"
                                                     IsEnabled="{Binding CanPrepareInvoice}"
                                                     Command="{Binding PrepareInvoiceCommand}" />
-                                            <Button Content="Huỷ hoá đơn"
+                                            <Button Content="Ghi nhận thanh toán"
                                                     Style="{StaticResource GhostButton}"
                                                     Margin="0,8,0,0"
+                                                    Visibility="{Binding HasInvoice, Converter={StaticResource BoolToVis}}"
+                                                    IsEnabled="{Binding CanRecordPayment}"
+                                                    Command="{Binding RecordPaymentCommand}" />
+                                            <Button Content="Xuất hoá đơn"
+                                                    Style="{StaticResource GhostButton}"
+                                                    Margin="0,8,0,0"
+                                                    Visibility="{Binding HasInvoice, Converter={StaticResource BoolToVis}}"
+                                                    Command="{Binding ExportInvoiceCommand}" />
+                                            <Button Content="Huỷ hoá đơn"
+                                                    Margin="0,8,0,0"
                                                     IsEnabled="{Binding CanCancelInvoice}"
-                                                    Command="{Binding CancelInvoiceCommand}" />
+                                                    Command="{Binding CancelInvoiceCommand}">
+                                                <Button.Style>
+                                                    <Style TargetType="Button" BasedOn="{StaticResource GhostButton}">
+                                                        <Setter Property="Foreground" Value="{StaticResource DangerBrush}" />
+                                                    </Style>
+                                                </Button.Style>
+                                            </Button>
                                         </StackPanel>
                                     </Grid>
                                 </Border>
