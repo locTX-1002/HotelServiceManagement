@@ -12,12 +12,21 @@ public sealed class InvoiceService : IInvoiceService
     /// <summary>Nhan ghi vao Invoice.PromotionCode khi hoa don duoc giam vi khach la VIP.</summary>
     public const string VipDiscountLabel = "VIP10";
 
+    /// <summary>
+    /// Nhan ghi vao Invoice.PromotionCode khi quan ly tu go so tien giam, khong qua ma
+    /// khuyen mai nao. De nhan NGAN vi cot chi 30 ky tu va con phai cho ma + VIP10 dung
+    /// chung o cung o (vi du "HE2026+VIP10+TUNHAP" = 19 ky tu).
+    /// </summary>
+    public const string ManualDiscountLabel = "TUNHAP";
+
     private readonly IInvoiceRepository _invoices; private readonly IPromotionRepository _promotions;
     public InvoiceService() : this(new InvoiceRepository(), new PromotionRepository()) { }
     public InvoiceService(IInvoiceRepository i, IPromotionRepository p) { _invoices = i; _promotions = p; }
     public Task<Invoice?> GetByIdAsync(int id) => _invoices.GetByIdAsync(id); public Task<Invoice?> GetByStayAsync(int id) => _invoices.GetByStayAsync(id);
-    public async Task<ServiceResult<Invoice>> PrepareAsync(int stayId, string? promotionCode = null, DateTime? asOf = null)
+    public async Task<ServiceResult<Invoice>> PrepareAsync(int stayId, string? promotionCode = null, DateTime? asOf = null, decimal manualDiscount = 0)
     {
+        if (manualDiscount < 0) return ServiceResult<Invoice>.Failure("Số tiền giảm tay không được âm.");
+        if (manualDiscount > 0 && !AuthorizationPolicy.CanGiveManualDiscount) return ServiceResult<Invoice>.Failure("Chỉ Quản trị viên hoặc Quản lý mới được giảm giá tay.");
         if (AppSession.RoleName is not (RoleNames.Admin or RoleNames.Manager or RoleNames.Receptionist)) return ServiceResult<Invoice>.Failure("Bạn không có quyền lập hoá đơn.");
         var stay = await _invoices.GetStayForBillingAsync(stayId); if (stay == null || stay.Status is not (StayStatus.Active or StayStatus.Completed)) return ServiceResult<Invoice>.Failure("Không tìm thấy lượt lưu trú hợp lệ.");
         var invoice = stay.Invoice; var isNew = invoice == null; var paid = invoice?.Payments.Where(p => p.Status == PaymentStatus.Completed).Sum(p => p.Amount) ?? 0;
@@ -42,11 +51,16 @@ public sealed class InvoiceService : IInvoiceService
             // Cong DON voi ma khuyen mai (neu co) roi moi clamp mot lan o duoi, nen tong giam
             // khong bao gio vuot qua so tien phai tra.
             var vipDiscount = stay.Reservation.Guest?.Tag == GuestTag.Vip ? subtotal * VipDiscountRate : 0m;
-            discount = Math.Clamp(discount + vipDiscount, 0, subtotal);
+
+            // Giam TU NHAP: quan ly go thang so tien, khong qua ma nao. Cong don cung
+            // ma khuyen mai va uu dai VIP roi clamp mot lan o duoi, nen du go so to hon
+            // ca hoa don cung chi giam toi 0 chu khong ra tong am.
+            discount = Math.Clamp(discount + vipDiscount + manualDiscount, 0, subtotal);
 
             // Ghi ro ly do giam vao PromotionCode de le tan/khach doc duoc tren hoa don.
             // Dung lai cot san co thay vi them cot moi - nhom cam tu tao migration.
             if (vipDiscount > 0) { applied = applied == null ? VipDiscountLabel : $"{applied}+{VipDiscountLabel}"; }
+            if (manualDiscount > 0) { applied = applied == null ? ManualDiscountLabel : $"{applied}+{ManualDiscountLabel}"; }
         }
         // Truoc day he chan thang moi hoa don da co thanh toan la khong tinh lai duoc.
         // Chan nhu vay lam mat tien: khach goi dich vu SAU khi le tan lap hoa don thi

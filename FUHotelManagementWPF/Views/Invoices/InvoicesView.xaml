@@ -186,6 +186,21 @@
                                                       DisplayMemberPath="Code"
                                                       IsEditable="True"
                                                       Text="{Binding PromotionCode, UpdateSourceTrigger=PropertyChanged}" />
+
+                                            <!-- GIAM TAY: chi quan ly moi thay o nay. Dung khi khach can bot
+                                                 ma chua kip tao ma khuyen mai - go thang so tien roi tinh lai.
+                                                 Cong don voi ma khuyen mai va uu dai VIP; tren hoa don se hien
+                                                 nhan "TUNHAP" o dong ly do giam. Le tan khong thay o nay, va
+                                                 service van chan lai mot lan nua neu co ai goi thang. -->
+                                            <StackPanel Visibility="{Binding CanGiveManualDiscount,
+                                                                     Converter={StaticResource BoolToVis}}">
+                                                <TextBlock Text="GIẢM TAY (Đ)" Style="{StaticResource FieldLabel}"
+                                                           Margin="0,14,0,0" />
+                                                <hc:NumericUpDown Minimum="0" Maximum="500000000" Increment="50000"
+                                                                  Value="{Binding ManualDiscount}"
+                                                                  ToolTip="Giảm thẳng một số tiền, không cần mã khuyến mãi. Cộng dồn với mã và ưu đãi VIP, tối đa bằng tổng hoá đơn." />
+                                            </StackPanel>
+
                                             <TextBlock Text="Tổng phải trả" Style="{StaticResource CaptionText}"
                                                        Margin="0,20,0,3" />
                                             <TextBlock Text="{Binding Invoice.TotalAmount, Converter={StaticResource Money}}"
