@@ -15,26 +15,30 @@ namespace BusinessObjects
     public static class BillingRules
     {
         /// <summary>
-        /// So dem tinh tien cua mot luot luu tru.
+        /// So dem THU TIEN: dem tu luc khach nhan phong that den luc roi di that, it nhat
+        /// mot dem.
         ///
-        /// Thu TOI THIEU so dem khach da dat: di som khong duoc tra lai tien nhung dem chua
-        /// o (thong le khach san). O qua han thi tinh theo ngay roi di that. Tuc la lay moc
-        /// xa hon trong hai moc, va it nhat luon la mot dem.
+        /// Truoc day quy tac la "thu toi thieu so dem da dat, di som khong hoan tien" - phong
+        /// bi giu cho thi khach chiu. Nghe xuoi tren giay, nhung ra con so that thi khong cai
+        /// duoc voi khach: dat 4 dem roi o mot dem van phai tra 4.800.000 d. Gio khach o bao
+        /// nhieu dem tra bay nhieu.
+        ///
+        /// O QUA HAN tu dong dung vi ngay roi di that xa hon ngay tra tren don.
         /// </summary>
         /// <param name="actualCheckIn">Luc khach nhan phong that.</param>
-        /// <param name="plannedCheckIn">Ngay nhan phong ghi tren don dat.</param>
-        /// <param name="plannedCheckOut">Ngay tra phong ghi tren don dat.</param>
-        /// <param name="leavingAt">Luc tinh tien: ngay tra thuc te, hoac hom nay neu con o.</param>
-        public static int ChargeableNights(DateTime actualCheckIn, DateTime plannedCheckIn,
-            DateTime plannedCheckOut, DateTime leavingAt)
+        /// <param name="leavingAt">Luc roi di that; con dang o thi la hom nay.</param>
+        public static int ChargeableNights(DateTime actualCheckIn, DateTime leavingAt)
+            => Math.Max(1, (leavingAt.Date - actualCheckIn.Date).Days);
+
+        /// <summary>
+        /// So dem DU KIEN cho ca ky - dung de bao truoc cho le tan va khach, KHONG phai so
+        /// len hoa don. Gia dinh khach o het don: lay moc xa hon giua ngay tra tren don va
+        /// hom nay (o qua han thi du kien phai tang theo).
+        /// </summary>
+        public static int EstimatedNights(DateTime actualCheckIn, DateTime plannedCheckOut, DateTime today)
         {
-            // Moc DAU lay ngay som hon: khach den muon van tra du so dem da giu cho, vi tu
-            // ngay dat la phong do khong ban cho ai duoc nua. Neu do tu ngay den THAT thi di
-            // som mat tien ma den muon lai duoc giam - hai chieu xu khac nhau.
-            var from = actualCheckIn.Date < plannedCheckIn.Date ? actualCheckIn.Date : plannedCheckIn.Date;
-            // Moc CUOI lay ngay muon hon: o qua han thi tinh theo ngay roi di that.
-            var until = leavingAt.Date > plannedCheckOut.Date ? leavingAt.Date : plannedCheckOut.Date;
-            return Math.Max(1, (until - from).Days);
+            var until = today.Date > plannedCheckOut.Date ? today.Date : plannedCheckOut.Date;
+            return Math.Max(1, (until - actualCheckIn.Date).Days);
         }
 
         /// <summary>So dem o qua so voi don - hien rieng de le tan giai thich duoc voi khach.</summary>

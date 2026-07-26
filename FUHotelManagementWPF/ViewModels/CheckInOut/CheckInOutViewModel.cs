@@ -89,7 +89,7 @@ namespace FUHotelManagementWPF.ViewModels.CheckInOut
             // Bo GIO o dong phu: khi bang lam viec ben phai mo ra, cot chu hep lai va
             // dong nay bi cat cut thanh "vao 24/07 1...". Gio chinh xac van co day du
             // trong bang ben phai khi chon dong.
-            : $"{Reservation.Room?.RoomType?.TypeName} · vào {BillingStart:dd/MM} · {ChargeableNights} đêm";
+            : $"{Reservation.Room?.RoomType?.TypeName} · vào {BillingStart:dd/MM} · dự kiến {ChargeableNights} đêm";
 
         /// <summary>
         /// Ngay BAT DAU TINH TIEN - moc som hon giua ngay vao that va ngay tren don, dung
@@ -141,8 +141,8 @@ namespace FUHotelManagementWPF.ViewModels.CheckInOut
                 {
                     return Math.Max(1, (Reservation.CheckOutDate.Date - Reservation.CheckInDate.Date).Days);
                 }
-                return BillingRules.ChargeableNights(Stay!.ActualCheckIn,
-                    Reservation.CheckInDate, Reservation.CheckOutDate, DateTime.Today);
+                return BillingRules.EstimatedNights(
+                    Stay!.ActualCheckIn, Reservation.CheckOutDate, DateTime.Today);
             }
         }
 

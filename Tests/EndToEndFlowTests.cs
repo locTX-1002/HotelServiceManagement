@@ -411,12 +411,15 @@ public class EndToEndFlowTests
     // --------------------------------- 4e. Khach di som van tra du so dem da dat
 
     /// <summary>
-    /// Khach dat 3 dem ma tra phong ngay hom sau thi van thu 3 dem. Truoc day hoa don chi
-    /// tinh dem o that (1 dem) trong khi man Check-in/out bao 3 dem - le tan doc mot dang,
-    /// hoa don in ra mot dang.
+    /// Khach dat 3 dem ma tra phong ngay hom sau thi chi thu MOT dem.
+    ///
+    /// Quy tac nay tung nguoc lai ("thu du so dem da dat, di som khong hoan tien") va test
+    /// nay tung khang dinh dieu do. Doi lai vi ra con so that thi khong cai duoc voi khach:
+    /// dat 4 dem, o mot dem, van phai tra 4.800.000 d. Day la doi QUY TAC nghiep vu, khong
+    /// phai noi long test.
     /// </summary>
     [DbFact]
-    public async Task KhachTraSom_VanThuDuSoDemDaDat()
+    public async Task KhachTraSom_ChiThuSoDemODuoc()
     {
         await using var sandbox = await Sandbox.CreateAsync();
         try
@@ -431,12 +434,12 @@ public class EndToEndFlowTests
             var checkIn = await new StayService().CheckInAsync(booking.Data.Id, DateTime.Today.AddHours(14));
             Assert.True(checkIn.Ok, checkIn.Message);
 
-            // Tra phong sau 1 dem, con 2 dem chua o
+            // Tra phong sau 1 dem, con 2 dem chua o -> chi thu 1 dem
             var invoice = await new InvoiceService().PrepareAsync(
                 checkIn.Data!.Id, null, DateTime.Today.AddDays(1).AddHours(11));
 
             Assert.True(invoice.Ok, invoice.Message);
-            Assert.Equal(3 * BasePrice, invoice.Data!.RoomCharge);
+            Assert.Equal(1 * BasePrice, invoice.Data!.RoomCharge);
         }
         finally { AppSession.SignOut(); }
     }
