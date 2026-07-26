@@ -392,8 +392,8 @@ public class OperationsFlowTests
 
         // Chi dung 1 yeu cau hop le duoc ghi xuong DB
         var all = await housekeeping.GetAllAsync();
-        Assert.Single(all.Where(x => x.StayId == active.StayId));
-        Assert.Empty(all.Where(x => x.StayId == closed.StayId));
+        Assert.Single(all, x => x.StayId == active.StayId);
+        Assert.DoesNotContain(all, x => x.StayId == closed.StayId);
     }
 
     [DbFact]
@@ -482,10 +482,10 @@ public class OperationsFlowTests
         // Loc tren stay cua rieng test nay de khong bi du lieu khac lam nhieu so lieu
         var mine = (await housekeeping.GetAllAsync()).Where(x => x.StayId == fixture.StayId).ToList();
         Assert.Equal(4, mine.Count);
-        Assert.Single(mine.Where(x => x.Status == HousekeepingRequestStatus.Pending));
-        Assert.Single(mine.Where(x => x.Status == HousekeepingRequestStatus.Acknowledged));
-        Assert.Single(mine.Where(x => x.Status == HousekeepingRequestStatus.Completed));
-        Assert.Single(mine.Where(x => x.Status == HousekeepingRequestStatus.Cancelled));
+        Assert.Single(mine, x => x.Status == HousekeepingRequestStatus.Pending);
+        Assert.Single(mine, x => x.Status == HousekeepingRequestStatus.Acknowledged);
+        Assert.Single(mine, x => x.Status == HousekeepingRequestStatus.Completed);
+        Assert.Single(mine, x => x.Status == HousekeepingRequestStatus.Cancelled);
     }
 
     [DbFact]
@@ -557,10 +557,12 @@ public class OperationsFlowTests
         Assert.Equal(data.InvoiceRevenue, data.ByDay.Sum(x => x.InvoiceRevenue));
         Assert.Equal(data.CollectedAmount, data.ByDay.Sum(x => x.CollectedAmount));
 
-        // Ngay moi nhat dung dau danh sach
-        Assert.Equal(dayTwo.Date, data.ByDay[0].Date);
-        Assert.Equal(dayOne.Date, data.ByDay[1].Date);
-        Assert.True(data.ByDay[0].Date > data.ByDay[1].Date, "Danh sach theo ngay phai sap xep giam dan.");
+        // De bai doi sap xep giam dan theo DOANH THU (docs/PHAN_CONG.md), khong phai theo ngay
+        Assert.True(data.ByDay[0].InvoiceRevenue >= data.ByDay[1].InvoiceRevenue,
+            "Bang phai sap xep giam dan theo doanh thu.");
+        // Van du ca hai ngay trong khoang, khong bo ngay nao
+        Assert.Contains(data.ByDay, x => x.Date == dayOne.Date);
+        Assert.Contains(data.ByDay, x => x.Date == dayTwo.Date);
     }
 
     [DbFact]

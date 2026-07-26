@@ -90,7 +90,9 @@
                 </StackPanel>
             </Border>
 
-            <ContentControl Grid.Column="1" Content="{Binding Current}" Focusable="False" />
+            <!-- BackdropHost: nen anh lam mo phia sau noi dung, dung chung voi MainWindow -->
+            <ContentControl Grid.Column="1" Content="{Binding Current}"
+                            Style="{StaticResource BackdropHost}" Focusable="False" />
         </Grid>
 
         <!-- Panel nhan thong bao Notify.* (Growl) -->

@@ -127,6 +127,49 @@ public class GuestPortalTests
         finally { AppSession.SignOut(); }
     }
 
+    /// <summary>
+    /// Man "Hoa don cua toi" di tu don -> luot o -> hoa don. Neu truy van khong tai kem Stay
+    /// thi man do LUON rong du le tan da lap hoa don - loi that da tung xay ra.
+    /// </summary>
+    [DbFact]
+    public async Task Khach_XemDuocHoaDon_DonPhaiKemLuotO()
+    {
+        await using var box = await Box.CreateAsync();
+        try
+        {
+            await TestUsers.SignInAsync(RoleNames.Receptionist);
+            var (guest, reservation) = await box.CreateGuestWithBookingAsync();
+
+            // Duyet don roi cho khach nhan phong -> phat sinh luot o
+            Assert.True((await new ReservationService().ConfirmAsync(reservation.Id)).Ok);
+            var checkIn = await new StayService().CheckInAsync(reservation.Id, DateTime.Now);
+            Assert.True(checkIn.Ok, checkIn.Message);
+
+            // Le tan lap hoa don cho luot o do
+            var invoice = await new InvoiceService().PrepareAsync(checkIn.Data!.Id, null, DateTime.Now.AddDays(1));
+            Assert.True(invoice.Ok, invoice.Message);
+
+            Assert.True((await new GuestAccountService().ActivateAsync(guest.Id, Password)).Ok);
+            AppSession.SignOut();
+
+            // Khach dang nhap va tim hoa don cua minh
+            var login = await new GuestAccountService().LoginAsync(guest.PhoneNumber, Password);
+            Assert.True(login.Ok, login.Message);
+            AppSession.SignInGuest(login.Data!);
+
+            var mine = await new ReservationService().GetMyReservationsAsync();
+            Assert.True(mine.Ok, mine.Message);
+            var don = Assert.Single(mine.Data!);
+
+            // Day la mau chot: thieu Include(Stay) thi Stay == null va man hoa don rong
+            Assert.NotNull(don.Stay);
+            var hoaDon = await new InvoiceService().GetByStayAsync(don.Stay!.Id);
+            Assert.NotNull(hoaDon);
+            Assert.True(hoaDon!.TotalAmount > 0, "Hoa don phai co tien phong.");
+        }
+        finally { AppSession.SignOut(); }
+    }
+
     // ---------------------------------------------------------------- Tien ich
 
     private sealed class Box : IAsyncDisposable
@@ -188,6 +231,23 @@ public class GuestPortalTests
 
             await using var db = HotelDbContextFactory.Create();
             await db.GuestAccounts.Where(a => guestIds.Contains(a.GuestId)).ExecuteDeleteAsync();
+
+            // Xoa nguoc theo khoa ngoai: thanh toan -> hoa don -> luot o -> dat phong
+            var stayIds = await db.Stays.Where(s => guestIds.Contains(s.Reservation.GuestId))
+                .Select(s => s.Id).ToListAsync();
+            if (stayIds.Count > 0)
+            {
+                var invoiceIds = await db.Invoices.Where(i => stayIds.Contains(i.StayId))
+                    .Select(i => i.Id).ToListAsync();
+                if (invoiceIds.Count > 0)
+                {
+                    await db.Payments.Where(p => invoiceIds.Contains(p.InvoiceId)).ExecuteDeleteAsync();
+                    await db.Invoices.Where(i => invoiceIds.Contains(i.Id)).ExecuteDeleteAsync();
+                }
+                await db.Surcharges.Where(s => stayIds.Contains(s.StayId)).ExecuteDeleteAsync();
+                await db.Stays.Where(s => stayIds.Contains(s.Id)).ExecuteDeleteAsync();
+            }
+
             await db.Reservations.Where(r => guestIds.Contains(r.GuestId)).ExecuteDeleteAsync();
             await db.Guests.Where(g => guestIds.Contains(g.Id)).ExecuteDeleteAsync();
             await db.Rooms.Where(r => r.Id == roomId).ExecuteDeleteAsync();

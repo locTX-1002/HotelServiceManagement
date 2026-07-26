@@ -24,7 +24,11 @@ public sealed class ReservationDAO
     public async Task<List<Reservation>> GetByGuestAsync(int guestId)
     {
         await using var context = HotelDbContextFactory.Create();
-        return await Query(context).Where(r => r.GuestId == guestId)
+        // Include Stay RIENG o day (Query() chung khong lay) vi man "Hoa don cua toi" phai
+        // di tu don -> luot o -> hoa don; thieu Stay thi khach khong bao gio thay hoa don nao.
+        // Chi hàm nay tai them, cac man khac giu nguyen truy van nhe nhu cu.
+        return await Query(context).Include(r => r.Stay)
+            .Where(r => r.GuestId == guestId)
             .OrderByDescending(r => r.CheckInDate).ToListAsync();
     }
 
