@@ -784,6 +784,10 @@ public sealed class InvoicesViewModel : ViewModelBase
         }
 
         Payments.Clear();
+        // PaymentDAO tra ve mot ban Invoice moi. Giu lai navigation nguoi lap neu
+        // repository tuy bien/test double khong nap CreatedByUser.
+        var knownCreator = Invoice?.CreatedByUser;
+        result.Data.Invoice.CreatedByUser ??= knownCreator;
         Invoice = result.Data.Invoice;
         if (SelectedStay != null)
         {
