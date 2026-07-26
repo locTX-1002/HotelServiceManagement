@@ -36,11 +36,13 @@ namespace DataAccessObjects
             return await context.Users
                 .AsNoTracking()
                 .Include(u => u.Role)
+                    .ThenInclude(r => r.RolePermissions)
+                    .ThenInclude(rp => rp.Permission)
                 .FirstOrDefaultAsync(u => u.IsActive && u.Email.ToLower() == normalized);
         }
 
-        public async Task<List<User>> GetAllAsync() { await using var c = HotelDbContextFactory.Create(); return await c.Users.AsNoTracking().Include(x => x.Role).OrderBy(x => x.Id).ToListAsync(); }
-        public async Task<User?> GetByIdAsync(int id) { await using var c = HotelDbContextFactory.Create(); return await c.Users.AsNoTracking().Include(x => x.Role).FirstOrDefaultAsync(x => x.Id == id); }
+        public async Task<List<User>> GetAllAsync() { await using var c = HotelDbContextFactory.Create(); return await c.Users.AsNoTracking().Include(x => x.Role).ThenInclude(r => r.RolePermissions).ThenInclude(rp => rp.Permission).OrderBy(x => x.Id).ToListAsync(); }
+        public async Task<User?> GetByIdAsync(int id) { await using var c = HotelDbContextFactory.Create(); return await c.Users.AsNoTracking().Include(x => x.Role).ThenInclude(r => r.RolePermissions).ThenInclude(rp => rp.Permission).FirstOrDefaultAsync(x => x.Id == id); }
         public async Task<Role?> GetRoleAsync(int id) { await using var c = HotelDbContextFactory.Create(); return await c.Roles.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id); }
 
         /// <summary>
