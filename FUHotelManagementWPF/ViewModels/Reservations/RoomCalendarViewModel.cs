@@ -64,8 +64,15 @@ namespace FUHotelManagementWPF.ViewModels.Reservations
         public ReservationStatus Status => Reservation.Status;
         public string GuestName => Reservation.Guest?.FullName ?? string.Empty;
 
-        /// <summary>Thanh hep qua thi chi hien so khach, khoi bi cat chu giua chung.</summary>
-        public string Label => Span >= 2 ? GuestName : $"{Reservation.NumberOfGuests}k";
+        /// <summary>
+        /// Luon hien ten khach, hep qua thi de no tu cat bot (TextTrimming ben XAML).
+        ///
+        /// Truoc day thanh hep chi hien so khach kieu "2k" cho khoi cat chu. Nhung mot don
+        /// trai qua hai tuan se hien "2k" o tuan bi cat con lai mot ngay va hien ten o tuan
+        /// kia - nhin ra thanh HAI don khac nhau cua hai khach khac nhau. Ten bi cat cut
+        /// van doc ra la ten; "2k" thi khong.
+        /// </summary>
+        public string Label => GuestName;
 
         public string Tooltip =>
             $"{Reservation.BookingCode} · {GuestName}\n"
