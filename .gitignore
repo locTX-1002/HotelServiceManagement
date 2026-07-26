@@ -488,3 +488,5 @@ appsettings.Local.json.bak
 # Thu muc con sot lai tu kien truc cu, khong con thuoc solution WPF
 /backend/
 /frontend/
+
+/net-commander
