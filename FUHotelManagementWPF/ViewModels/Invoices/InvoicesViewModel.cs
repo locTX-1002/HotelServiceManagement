@@ -96,7 +96,11 @@ public sealed class InvoicesViewModel : ViewModelBase
         ? "Chưa lập"
         : Invoice.InvoiceDate.ToString("dd/MM/yyyy HH:mm");
     public string InvoiceCreatorText => Invoice?.CreatedByUser?.FullName
-                                        ?? (Invoice == null ? "—" : "Không xác định");
+                                        ?? (Invoice == null
+                                            ? "—"
+                                            : Invoice.CreatedByUserId.HasValue
+                                                ? $"Người dùng #{Invoice.CreatedByUserId.Value}"
+                                                : "Dữ liệu cũ — không lưu người lập");
 
     /// <summary>0 = Hoa don, 1 = Phu thu, 2 = Thanh toan.</summary>
     private int _selectedTabIndex;
