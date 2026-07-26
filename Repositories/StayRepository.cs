@@ -6,6 +6,7 @@ namespace Repositories;
 public sealed class StayRepository : IStayRepository
 {
     public Task<List<Stay>> GetActiveAsync() => StayDAO.Instance.GetActiveAsync();
+    public Task<List<Stay>> GetBillableAsync() => StayDAO.Instance.GetBillableAsync();
     public Task<Stay?> GetByIdAsync(int id) => StayDAO.Instance.GetByIdAsync(id);
     public Task<Stay?> CheckInAsync(int reservationId, int? userId, DateTime actualCheckIn)
         => StayDAO.Instance.CheckInAsync(reservationId, userId, actualCheckIn);

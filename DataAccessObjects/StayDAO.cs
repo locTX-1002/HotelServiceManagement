@@ -19,6 +19,26 @@ public sealed class StayDAO
             .OrderBy(s => s.Reservation.Room.RoomNumber).ToListAsync();
     }
 
+    /// <summary>
+    /// Luot can xu ly tien: dang o, HOAC da tra phong ma hoa don chua thanh toan xong.
+    ///
+    /// Ve nhom thu hai: man Hoa don truoc day chi nap luot dang o, nen luot nao da tra
+    /// phong ma con no tien la bien mat khoi giao dien - khong con cho nao thu duoc nua.
+    /// Tien khach no nam lai trong database ma khong ai nhin thay.
+    /// </summary>
+    public async Task<List<Stay>> GetBillableAsync()
+    {
+        await using var context = HotelDbContextFactory.Create();
+        return await Query(context)
+            .Where(s => s.Status == StayStatus.Active
+                        || s.Invoice == null
+                        || (s.Invoice.Status != InvoiceStatus.Paid
+                            && s.Invoice.Status != InvoiceStatus.Cancelled))
+            .OrderBy(s => s.Status == StayStatus.Active ? 0 : 1)
+            .ThenBy(s => s.Reservation.Room.RoomNumber)
+            .ToListAsync();
+    }
+
     public async Task<Stay?> GetByIdAsync(int id)
     {
         await using var context = HotelDbContextFactory.Create();
@@ -43,6 +63,38 @@ public sealed class StayDAO
             Status = StayStatus.Active,
             CheckedInByUserId = userId,
         };
+        // Nhan phong SOM hon don thi khoang o that su dai ra ve phia truoc - phai kiem
+        // nhung dem them do co con trong khong. Truoc day khong kiem: chi nhin Room.Status,
+        // ma phong co nguoi DAT cho dem nay nhung chua den nhan thi trang thai van la Trong.
+        // Cho nhan phong la thanh hai khach mot phong.
+        var stayFrom = actualCheckIn.Date < reservation.CheckInDate.Date
+            ? actualCheckIn.Date
+            : reservation.CheckInDate.Date;
+        var clash = await context.Reservations.AnyAsync(r =>
+            r.Id != reservation.Id
+            && r.RoomId == reservation.RoomId
+            && (r.Status == ReservationStatus.Pending
+                || r.Status == ReservationStatus.Confirmed
+                || r.Status == ReservationStatus.CheckedIn)
+            && r.CheckInDate < reservation.CheckOutDate
+            && r.CheckOutDate > stayFrom);
+        if (clash)
+        {
+            return null;
+        }
+
+        // Nhan phong SOM hon ngay tren don thi keo luon ngay nhan cua don ve ngay vao that.
+        // Truoc day de nguyen, thanh ra don mang mot ngay ma luot o mang ngay khac: lich
+        // phong, danh sach dat phong, bang chi tiet va hoa don moi cho doc mot moc, doc ra
+        // bon ngay khac nhau cho cung mot khach. Ghi ve mot cho thi khong con gi de lech.
+        //
+        // Chi keo khi den SOM. Den MUON thi giu nguyen ngay dat, vi nhung dem da giu cho
+        // van phai tra tien - do la quy tac "di som khong hoan tien" ap cho ca hai chieu.
+        if (actualCheckIn.Date < reservation.CheckInDate.Date)
+        {
+            reservation.CheckInDate = actualCheckIn.Date;
+        }
+
         reservation.Status = ReservationStatus.CheckedIn;
         reservation.Room.Status = RoomStatus.Occupied;
         context.Stays.Add(stay);
@@ -66,6 +118,18 @@ public sealed class StayDAO
             return null;
 
         stay.ActualCheckOut = actualCheckOut;
+
+        // Ve doi xung voi luc nhan phong: o QUA HAN thi keo ngay tra cua don ve ngay roi di
+        // that. Khong keo thi don van ghi ngay tra cu, trong khi khach o them may dem nua -
+        // danh sach dat phong, lich phong va bao cao deu doc ra ngay sai.
+        //
+        // Chi keo DAI ra, khong bao gio rut ngan: tra som thi giu nguyen ngay tren don vi
+        // nhung dem da giu cho van phai tra tien. Cua so cua don chi no ra cho vua thuc te.
+        if (actualCheckOut.Date > stay.Reservation.CheckOutDate.Date)
+        {
+            stay.Reservation.CheckOutDate = actualCheckOut.Date;
+        }
+
         stay.CheckedOutByUserId = userId;
         stay.Status = StayStatus.Completed;
         stay.Reservation.Status = ReservationStatus.Completed;
@@ -105,15 +169,15 @@ public sealed class StayDAO
             .Include(s => s.Reservation).ThenInclude(r => r.Room)
             .FirstOrDefaultAsync(s => s.Id == stayId);
 
-        if (stay == null) return (false, "Khong tim thay luot luu tru.");
-        if (stay.Status != StayStatus.Active) return (false, "Chi khach dang luu tru moi gia han duoc.");
+        if (stay == null) return (false, "Không tìm thấy lượt lưu trú.");
+        if (stay.Status != StayStatus.Active) return (false, "Chỉ khách đang lưu trú mới gia hạn được.");
 
         var reservation = stay.Reservation;
         var target = newCheckOut.Date;
 
-        if (target <= stay.ActualCheckIn.Date) return (false, "Ngay tra moi phai sau ngay khach nhan phong.");
-        if (target == reservation.CheckOutDate.Date) return (false, "Ngay tra moi trung ngay tra hien tai.");
-        if (target < DateTime.Today) return (false, "Ngay tra moi khong duoc o qua khu.");
+        if (target <= stay.ActualCheckIn.Date) return (false, "Ngày trả mới phải sau ngày khách nhận phòng.");
+        if (target == reservation.CheckOutDate.Date) return (false, "Ngày trả mới trùng ngày trả hiện tại.");
+        if (target < DateTime.Today) return (false, "Ngày trả mới không được ở quá khứ.");
 
         if (target > reservation.CheckOutDate.Date)
         {
@@ -125,7 +189,7 @@ public sealed class StayDAO
                     || other.Status == ReservationStatus.CheckedIn)
                 && other.CheckInDate < target
                 && other.CheckOutDate > reservation.CheckOutDate);
-            if (busy) return (false, "Phong da co khach khac dat trong khoang muon o them.");
+            if (busy) return (false, "Phòng đã có khách khác đặt trong khoảng muốn ở thêm.");
         }
 
         var oldDate = reservation.CheckOutDate;

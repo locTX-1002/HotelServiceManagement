@@ -1,6 +1,7 @@
 <UserControl x:Class="FUHotelManagementWPF.Views.Guests.GuestsView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mvvm="clr-namespace:FUHotelManagementWPF.MvvmCore"
              xmlns:hc="https://handyorg.github.io/handycontrol"
              xmlns:enums="clr-namespace:BusinessObjects.Enums;assembly=BusinessObjects">
     <UserControl.Resources>
@@ -32,7 +33,7 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="bd" Property="Background" Value="#F5F6F2" />
+                                <Setter TargetName="bd" Property="Background" Value="{StaticResource RowHoverBrush}" />
                             </Trigger>
                             <Trigger Property="IsSelected" Value="True">
                                 <Setter TargetName="bd" Property="Background" Value="{StaticResource BrandSoftBrush}" />
@@ -56,13 +57,14 @@
 
         <DockPanel Grid.Row="1" Margin="0,0,0,12">
             <Button DockPanel.Dock="Right" Content="+ Thêm khách" Style="{StaticResource PrimaryButton}"
-                    Padding="16,8" Command="{Binding AddCommand}" />
+                    Padding="16,8" Command="{Binding AddCommand}"
+                    Visibility="{Binding CanManageGuests, Converter={StaticResource BoolToVis}}" />
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                <TextBlock Text="Tìm:" Style="{StaticResource CaptionText}" FontSize="12.5"
-                           VerticalAlignment="Center" Margin="2,0,8,0" />
-                <TextBox Width="260" VerticalAlignment="Center"
+                <TextBox x:Name="guestSearch" Style="{StaticResource SearchBox}" VerticalAlignment="Center"
                          Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged, Delay=300}"
-                         ToolTip="Tìm theo tên, SĐT, CCCD hoặc email" />
+                         ToolTip="Tìm theo tên, số điện thoại, CCCD hoặc email" />
+                <Button Style="{StaticResource SearchButton}"
+                        mvvm:SearchBoxAssist.SubmitFor="{Binding ElementName=guestSearch}" />
                 <TextBlock Text="{Binding TotalText}" Style="{StaticResource CaptionText}"
                            FontSize="12.5" VerticalAlignment="Center" Margin="14,0,0,0" />
             </StackPanel>
@@ -195,25 +197,49 @@
                                    TextWrapping="Wrap"
                                    Visibility="{Binding HasTagNote, Converter={StaticResource BoolToVis}}" />
 
-                        <Border Height="1" Background="{StaticResource LineBrush}" Margin="0,16,0,14" />
-                        <StackPanel Orientation="Horizontal">
+                        <!-- Vach ngan cua vung hanh dong: an luon khi khong co nut nao hien -->
+                        <Border Height="1" Background="{StaticResource LineBrush}" Margin="0,16,0,14"
+                                Visibility="{Binding DataContext.CanManageGuests,
+                                             RelativeSource={RelativeSource AncestorType=UserControl},
+                                             Converter={StaticResource BoolToVis}}" />
+                        <!-- WrapPanel chu khong phai StackPanel ngang: ba nut nay cong lai rong
+                             hon the chi tiet ("Cấp tài khoản đặt phòng" mot minh da rat dai), ma
+                             StackPanel ngang thi khong xuong dong - phan du bi WPF cat cut, nut
+                             van bam duoc nhung khong doc duoc chu. Khuon lay tu UserListView.xaml
+                             va RoomListView.xaml de ca du an chi con mot cong thuc hang nut. -->
+                        <WrapPanel>
+                            <WrapPanel.Resources>
+                                <Style TargetType="Button" BasedOn="{StaticResource GhostButton}">
+                                    <Setter Property="Padding" Value="16,7" />
+                                    <Setter Property="MinWidth" Value="148" />
+                                    <Setter Property="Margin" Value="0,0,10,10" />
+                                </Style>
+                            </WrapPanel.Resources>
+
                             <Button Content="Sửa thông tin" Style="{StaticResource PrimaryButton}"
-                                    Padding="16,7"
+                                    Padding="16,7" MinWidth="148" Margin="0,0,10,10"
                                     Command="{Binding DataContext.EditCommand,
-                                              RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                                              RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                    Visibility="{Binding DataContext.CanManageGuests,
+                                                 RelativeSource={RelativeSource AncestorType=UserControl},
+                                                 Converter={StaticResource BoolToVis}}" />
                             <!-- Kich hoat tai khoan dat phong online cho khach (theo phan cong Phuc) -->
-                            <Button Content="Kích hoạt tài khoản" Style="{StaticResource GhostButton}"
-                                    Padding="16,7" Margin="10,0,0,0"
+                            <Button Content="Cấp tài khoản đặt phòng"
                                     ToolTip="Tạo tài khoản để khách tự đăng nhập bằng số điện thoại"
                                     Command="{Binding DataContext.ActivateAccountCommand,
-                                              RelativeSource={RelativeSource AncestorType=UserControl}}" />
-                            <Button Content="Xoá" Style="{StaticResource GhostButton}"
-                                    Padding="16,7" Margin="10,0,0,0"
+                                              RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                    Visibility="{Binding DataContext.CanManageGuests,
+                                                 RelativeSource={RelativeSource AncestorType=UserControl},
+                                                 Converter={StaticResource BoolToVis}}" />
+                            <Button Content="Xoá"
                                     Foreground="{StaticResource DangerBrush}"
                                     ToolTip="Xoá hồ sơ khách — khách đã có lịch sử đặt phòng sẽ không xoá được"
                                     Command="{Binding DataContext.DeleteCommand,
-                                              RelativeSource={RelativeSource AncestorType=UserControl}}" />
-                        </StackPanel>
+                                              RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                    Visibility="{Binding DataContext.CanManageGuests,
+                                                 RelativeSource={RelativeSource AncestorType=UserControl},
+                                                 Converter={StaticResource BoolToVis}}" />
+                        </WrapPanel>
                     </StackPanel>
                 </Grid>
             </Border>

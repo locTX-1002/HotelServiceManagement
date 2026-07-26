@@ -1,3 +1,4 @@
+using BusinessObjects;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -8,8 +9,17 @@ using Services;
 
 namespace FUHotelManagementWPF.ViewModels
 {
-    /// <summary>Mot muc dieu huong: icon Segoe MDL2 + ten module + nhom sidebar + ham tao ViewModel.</summary>
-    public record ModuleItem(string Icon, string Title, string Group, Func<ViewModelBase> CreateViewModel);
+    /// <summary>
+    /// Mot muc dieu huong: icon Segoe MDL2 + ten module + nhom sidebar + ham tao ViewModel.
+    /// Permissions = null nghia la moi nhan vien deu thay; co gia tri thi can it nhat mot quyen.
+    /// </summary>
+    public record ModuleItem(
+        string Icon, string Title, string Group, Func<ViewModelBase> CreateViewModel, string[]? Permissions = null)
+    {
+        /// <summary>Vai tro hien tai co duoc thay muc nay khong.</summary>
+        public bool VisibleForCurrentRole
+            => Permissions == null || Permissions.Any(AuthorizationPolicy.HasPermission);
+    }
 
     public class MainViewModel : ViewModelBase
     {
@@ -21,14 +31,7 @@ namespace FUHotelManagementWPF.ViewModels
         public string AvatarInitial
             => string.IsNullOrWhiteSpace(GreetingName) ? "?" : GreetingName.Trim()[..1].ToUpper();
 
-        public string RoleDisplay => AppSession.RoleName switch
-        {
-            "Admin" => "Quản trị viên",
-            "Manager" => "Quản lý",
-            "Receptionist" => "Lễ tân",
-            "ServiceStaff" => "Nhân viên dịch vụ",
-            _ => AppSession.RoleName,
-        };
+        public string RoleDisplay => AppSession.CurrentUser?.Role?.DisplayName ?? AppSession.RoleName;
 
         // Danh sach module: thanh vien lam xong module nao thi doi factory cua module do
         // sang ViewModel that va them 1 dong DataTemplate vao Views/ViewMappings.xaml.
@@ -68,24 +71,36 @@ namespace FUHotelManagementWPF.ViewModels
 
         public MainViewModel()
         {
+            _ = SweepStaleReservationsAsync();
+
             const string homeGroup = "TỔNG QUAN";
             const string opGroup = "VẬN HÀNH";
             const string peopleGroup = "ĐỐI TƯỢNG";
             const string moneyGroup = "TÀI CHÍNH";
             const string systemGroup = "HỆ THỐNG";
 
-            Modules =
-            [
+            var all = new List<ModuleItem>
+            {
                 new("", "Trang chủ", homeGroup, () => new Home.HomeViewModel()),
-                new("", "Sơ đồ phòng", opGroup, () => new Rooms.RoomsViewModel()),
-                new("", "Đặt phòng", opGroup, () => new Reservations.ReservationsViewModel()),
-                new("", "Check-in / Check-out", opGroup, () => new CheckInOut.CheckInOutViewModel()),
-                new("", "Khách hàng", peopleGroup, () => new Guests.GuestsViewModel()),
-                new("", "Dịch vụ", peopleGroup, () => new PlaceholderViewModel("Dịch vụ")),
-                new("", "Hoá đơn", moneyGroup, () => new Invoices.InvoicesViewModel()),
-                new("", "Báo cáo", moneyGroup, () => new PlaceholderViewModel("Báo cáo")),
-                new("", "Người dùng", systemGroup, () => new PlaceholderViewModel("Người dùng")),
-            ];
+                new("", "Sơ đồ phòng", opGroup, () => new Rooms.RoomsViewModel(), [PermissionCodes.RoomView]),
+                new("", "Đặt phòng", opGroup, () => new Reservations.ReservationsViewModel(), [PermissionCodes.ReservationView]),
+                new("", "Nhận / Trả phòng", opGroup, () => new CheckInOut.CheckInOutViewModel(), [PermissionCodes.StayCheckIn, PermissionCodes.StayCheckOut]),
+                new("", "Khách hàng", peopleGroup, () => new Guests.GuestsViewModel(), [PermissionCodes.GuestView]),
+                new("", "Dịch vụ", peopleGroup, () => new Services.ServicesViewModel(), [PermissionCodes.ServiceCatalogManage, PermissionCodes.ServiceOrderCreate, PermissionCodes.ServiceOrderProcess]),
+                new("", "Hoá đơn", moneyGroup, () => new Invoices.InvoicesViewModel(), [PermissionCodes.InvoiceView]),
+                new("", "Khuyến mãi", moneyGroup, () => new Promotions.PromotionListViewModel(), [PermissionCodes.PromotionManage]),
+                new("", "Báo cáo", moneyGroup, () => new Reports.ReportViewModel(), [PermissionCodes.ReportView]),
+                new("", "Phê duyệt", moneyGroup, () => new Approvals.ApprovalsViewModel(),
+                    [PermissionCodes.ReservationCancelApprove, PermissionCodes.InvoiceDiscountApprove,
+                     PermissionCodes.InvoiceCancelApprove, PermissionCodes.PaymentVoidApprove]),
+                new("", "Người dùng", systemGroup, () => new Users.UserListViewModel(), [PermissionCodes.UserView]),
+                new("", "Phân quyền", systemGroup, () => new Permissions.PermissionsViewModel(),
+                    [PermissionCodes.PermissionManage]),
+            };
+
+            // Loc NGAY luc dung danh sach thay vi dung Filter cua CollectionView: vai tro khong
+            // doi trong mot phien dang nhap nen loc mot lan la du, va SelectedModule chac chan hop le.
+            Modules = all.Where(m => m.VisibleForCurrentRole).ToList();
 
             ModulesView = new ListCollectionView(Modules);
             ModulesView.GroupDescriptions.Add(new PropertyGroupDescription(nameof(ModuleItem.Group)));
@@ -109,5 +124,29 @@ namespace FUHotelManagementWPF.ViewModels
                 LoggedOut?.Invoke();
             });
         }
+        /// <summary>
+        /// Don don treo ngay khi vao app: don da qua ngay nhan phong ma khach khong den thi
+        /// chuyen sang Khong den. Khong lam thi no giu cho mai - truy van phong trong van
+        /// tinh la ban nen phong khong ban lai duoc, con lich phong ve mot thanh cua ky nghi
+        /// da troi qua.
+        ///
+        /// Loi o buoc nay khong duoc lam hong man hinh: don dep hong thi lan sau quet lai.
+        /// </summary>
+        private static async Task SweepStaleReservationsAsync()
+        {
+            try
+            {
+                var swept = await new ReservationService().SweepNoShowAsync();
+                if (swept > 0)
+                {
+                    Notify.Info($"Đã tự chuyển {swept} đơn quá hạn sang Không đến.");
+                }
+            }
+            catch (Exception)
+            {
+                // Co y nuot: khong the vi don dep that bai ma chan nguoi dung vao app.
+            }
+        }
+
     }
 }

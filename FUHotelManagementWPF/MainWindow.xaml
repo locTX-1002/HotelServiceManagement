@@ -4,10 +4,17 @@
         xmlns:hc="https://handyorg.github.io/handycontrol"
         xmlns:vm="clr-namespace:FUHotelManagementWPF.ViewModels"
         Title="FU Hotel Management"
-        Height="760" Width="1220"
-        MinHeight="680" MinWidth="1100"
+        Height="820" Width="1400"
+        MinHeight="700" MinWidth="1280"
         WindowStartupLocation="CenterScreen"
         Style="{StaticResource BaseWindow}">
+    <!-- BE RONG TOI THIEU phai chua duoc TRANG RONG NHAT, khong thi thu nho cua so la chu
+         bi cat cut va nut mat mot nua chu.
+             menu trai 238 + le trang 24x2 + trang rong nhat
+             (Dich vu: 240 phong + 16 + 360 thuc don + 16 + 300 gio hang = 932)
+             = 1218
+         Lay 1280 de con cho cho thanh cuon doc va vien cua so. Them trang moi ma cot co
+         dinh cong lai vuot 932 thi phai nang so nay len theo. -->
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -97,14 +104,18 @@
             </Border>
 
             <!-- Vung noi dung ViewModel-first: WPF tu chon View theo ViewMappings.xaml.
-                 Quy uoc PageHeader: hang dau moi View = PageTitleText + nut hanh dong ben phai -->
+                 Quy uoc PageHeader: hang dau moi View = PageTitleText + nut hanh dong ben phai.
+                 BackdropHost: nen anh lam mo phia sau noi dung (dinh nghia o Controls.xaml) -->
             <ContentControl Grid.Column="1" Content="{Binding CurrentViewModel}"
+                            Style="{StaticResource BackdropHost}"
                             Focusable="False" />
         </Grid>
 
-        <!-- Panel nhan thong bao Notify.* (Growl) - goc phai tren, khong che nut -->
+        <!-- Panel nhan thong bao Notify.* (Growl). De o goc phai DUOI: goc phai tren la cho
+             cua cot tien / nut hanh dong o man Hoa don, thong bao nhay ra la che mat so tien
+             dung luc le tan can doc. Duoi cung thi khong dam vao noi dung nao. -->
         <StackPanel Grid.Row="1" hc:Growl.GrowlParent="True"
-                    VerticalAlignment="Top" HorizontalAlignment="Right"
-                    Margin="0,10,10,0" Panel.ZIndex="999" />
+                    VerticalAlignment="Bottom" HorizontalAlignment="Right"
+                    Margin="0,0,14,14" Panel.ZIndex="999" />
     </Grid>
 </Window>

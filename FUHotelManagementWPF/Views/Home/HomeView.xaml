@@ -81,7 +81,7 @@
                 <Button Style="{StaticResource GalleryArrow}" Content="&#xE76C;"
                         HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,16,0"
                         Command="{Binding NextHeroCommand}" />
-                <Border CornerRadius="4" Background="#59000000" Padding="9,3"
+                <Border CornerRadius="4" Background="{StaticResource ScrimBrush}" Padding="9,3"
                         HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,16,14">
                     <TextBlock Text="{Binding HeroCounter}" Foreground="#D9FFFFFF" FontSize="11" />
                 </Border>

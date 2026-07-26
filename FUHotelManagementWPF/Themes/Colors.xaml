@@ -35,6 +35,50 @@
     <SolidColorBrush x:Key="InfoBrush" Color="#31708E" />
     <SolidColorBrush x:Key="InfoSoftBrush" Color="#E3EEF3" />
 
+    <!-- Nen dong danh sach khi ro chuot. Nhat hon SurfaceBrush mot chut de van tach
+         duoc voi nen trang, dung o Khach hang / Dat phong / Danh sach phong. -->
+    <SolidColorBrush x:Key="RowHoverBrush" Color="#F5F6F2" />
+
+    <!-- Nen mo cho nhan chu dat DE TREN ANH (tooltip, dem so, nhan gia). Khong phai
+         mau thuong hieu - chi la lop den trong suot cho chu doc duoc tren moi anh. -->
+    <SolidColorBrush x:Key="ScrimBrush" Color="#A6000000" />
+
+    <!-- ============================================================
+         NEN APP: hai lop phu dat DE TREN anh nen da lam mo (xem BackdropHost
+         trong Controls.xaml). Tinh than Amanoi la TIET CHE: nen chi duoc la
+         vet sang toi diu, khong duoc ra hinh thu gi - nhin ra "cai bon rua"
+         la hong. Nen alpha phai cao, anh chi con lo mo khoang 15%.
+         Doi anh nen thi chinh o day, khong dung tay vao tung man hinh. -->
+
+    <!-- Lop phu chinh: mau xuong nhu SurfaceBrush nhung co alpha, nen anh xuyen
+         qua duoc mot chut. Doc dan tu tren xuong cho co chieu sau: dinh sang
+         (tran nha), day tham va hoi nga reu (san da).
+         Tong AM (F6F4EE) chu khong lay thang SurfaceBrush: SurfaceBrush hoi ngA
+         lanh, phu len anh go teak thi ra mau xam duc trong nhu vet o - da thu roi.
+         Alpha giua chi 78%: thap hon nua thi anh noi len tranh voi noi dung,
+         cao hon nua thi nen bien mat, cong lam ma khong ai thay. -->
+    <LinearGradientBrush x:Key="BackdropVeilBrush" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Offset="0" Color="#E6F6F4EE" />
+        <GradientStop Offset="0.5" Color="#C8F2EFE6" />
+        <GradientStop Offset="1" Color="#D6E9E7DB" />
+    </LinearGradientBrush>
+
+    <!-- Vien toi rat nhe o bon goc (vignette) - meo cu cua anh nghi duong: mat
+         nguoi tu bi keo vao giua man hinh. Dam hon 8% la thanh ra u am. -->
+    <RadialGradientBrush x:Key="BackdropVignetteBrush" Center="0.5,0.42"
+                         GradientOrigin="0.5,0.42" RadiusX="0.78" RadiusY="0.78">
+        <GradientStop Offset="0.6" Color="#00000000" />
+        <GradientStop Offset="1" Color="#14000000" />
+    </RadialGradientBrush>
+
+    <!-- Cham trang thai phong tren the co ANH NEN: ban mau chuan (Success/Warning...)
+         qua tram nen chim vao anh, day la ban sang hon dung rieng cho so do phong. -->
+    <SolidColorBrush x:Key="RoomDotDefaultBrush" Color="#C9CFC4" />
+    <SolidColorBrush x:Key="RoomDotAvailableBrush" Color="#7ED08A" />
+    <SolidColorBrush x:Key="RoomDotOccupiedBrush" Color="#F0B15A" />
+    <SolidColorBrush x:Key="RoomDotReservedBrush" Color="#7FBEDD" />
+    <SolidColorBrush x:Key="RoomDotMaintenanceBrush" Color="#EE8A82" />
+
     <!-- ============================================================
          GHI DE THEME HANDYCONTROL: cac control cua HandyControl
          (DataGrid, ComboBox, DatePicker, Growl...) tu doi sang mau

@@ -24,7 +24,10 @@
                            FontSize="11.5" Margin="0,3,0,0" />
 
                 <TextBlock Text="NGÀY TRẢ MỚI" Style="{StaticResource FieldLabel}" Margin="0,16,0,5" />
-                <DatePicker SelectedDate="{Binding NewCheckOut}" />
+                <!-- MinCheckOut chi de doc (chi co get) nen phai OneWay, khong WPF tuong
+                     minh muon ghi nguoc vao no va nem loi ngay luc mo hop thoai. -->
+                <DatePicker SelectedDate="{Binding NewCheckOut}"
+                            DisplayDateStart="{Binding MinCheckOut, Mode=OneWay}" />
 
                 <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
                     <TextBlock Text="Nhanh:" Style="{StaticResource CaptionText}" FontSize="11.5"

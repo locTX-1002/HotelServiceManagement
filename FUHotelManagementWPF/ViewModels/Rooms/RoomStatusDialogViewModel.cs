@@ -1,9 +1,11 @@
+using BusinessObjects;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using BusinessObjects.Entities;
 using BusinessObjects.Enums;
 using FUHotelManagementWPF.MvvmCore;
+using FUHotelManagementWPF.Views.Dialogs;
 using Services;
 
 namespace FUHotelManagementWPF.ViewModels.Rooms
@@ -27,6 +29,16 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
         public List<StatusOption> Options { get; }
         public bool HasOptions => Options.Count > 0;
 
+        /// <summary>
+        /// An het lua chon doi trang thai voi vai tro khong duoc phep - service van la lop chan cuoi.
+        /// RoomService.UpdateStatusAsync chan MOI thay doi trang thai neu thieu CanManageRooms,
+        /// khong rieng gi Bao tri, nen Le tan / NV dich vu chon gi cung bi tu choi.
+        /// </summary>
+        public bool CanChangeRoomStatus => AuthorizationPolicy.CanManageRooms;
+        public bool CanRequestMaintenance
+            => _room.Status == RoomStatus.Available
+               && AuthorizationPolicy.HasPermission(PermissionCodes.RoomMaintenanceRequest);
+
         // Khong chi noi "khong doi duoc" ma noi luon phai lam gi va o dau,
         // vi hai truong hop nay cach xu ly khac han nhau.
         public string NoOptionMessage => _room.Status switch
@@ -40,13 +52,16 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
             RoomStatus.Maintenance =>
                 "Phòng đang bảo trì. Chỉ Quản trị viên hoặc Quản lý mới đưa phòng ra khỏi bảo trì được — "
                 + "nhờ họ mở lại giúp.",
+            // Trong / Dang don von co buoc chuyen hop le -> het lua chon o day chi con mot ly do la vai tro.
+            _ when !CanChangeRoomStatus =>
+                "Chỉ Quản trị viên hoặc Quản lý đổi được trạng thái phòng.",
             _ => "Từ trạng thái hiện tại không chuyển sang trạng thái nào khác được.",
         };
 
         /// <summary>Man can sang de xu ly, tuy trang thai. Rong nghia la khong co loi tat.</summary>
         private string? NavigateTarget => _room.Status switch
         {
-            RoomStatus.Occupied => "Check-in / Check-out",
+            RoomStatus.Occupied => "Nhận / Trả phòng",
             RoomStatus.Reserved => "Đặt phòng",
             _ => null,
         };
@@ -76,21 +91,24 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
         }
 
         public AsyncRelayCommand ConfirmCommand { get; }
+        public AsyncRelayCommand RequestMaintenanceCommand { get; }
 
         public RoomStatusDialogViewModel(Room room)
         {
             _room = room;
-            _canManageMaintenance = AppSession.RoleName is "Admin" or "Manager";
+            // Dung thang AuthorizationPolicy (nguon su that duy nhat), khong chep lai dieu kien vai tro.
+            _canManageMaintenance = CanChangeRoomStatus;
 
+            // Moi buoc chuyen deu can CanManageRooms -> khong co quyen thi khong bay ra lua chon nao.
+            // Truoc day hai nhanh "Trong -> Dang don" va "Dang don -> Trong" khong kiem quyen,
+            // nen Le tan / NV dich vu van thay lua chon roi bam Xac nhan moi bi service tu choi.
             Options = _room.Status switch
             {
-                RoomStatus.Available when _canManageMaintenance =>
+                RoomStatus.Available when CanChangeRoomStatus =>
                     [new(RoomStatus.Cleaning, "Chuyển sang Đang dọn"), new(RoomStatus.Maintenance, "Đưa vào Bảo trì")],
-                RoomStatus.Available =>
-                    [new(RoomStatus.Cleaning, "Chuyển sang Đang dọn")],
-                RoomStatus.Cleaning =>
+                RoomStatus.Cleaning when CanChangeRoomStatus =>
                     [new(RoomStatus.Available, "Dọn xong — trả phòng về Trống")],
-                RoomStatus.Maintenance when _canManageMaintenance =>
+                RoomStatus.Maintenance when CanChangeRoomStatus =>
                     [new(RoomStatus.Available, "Bảo trì xong — trả phòng về Trống")],
                 _ => [],
             };
@@ -106,6 +124,25 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
             });
 
             ConfirmCommand = new AsyncRelayCommand(ConfirmAsync, _ => HasOptions);
+            RequestMaintenanceCommand = new AsyncRelayCommand(RequestMaintenanceAsync);
+        }
+
+        private async Task RequestMaintenanceAsync(object? _)
+        {
+            var reason = ReasonDialog.Prompt(
+                $"Yêu cầu bảo trì phòng {_room.RoomNumber}", RoomMapViewModel.ActiveWindow());
+            if (reason == null) return;
+            var result = await new ApprovalService().RequestAsync(
+                ApprovalRequestType.RoomMaintenance, _room.Id, reason);
+            if (result.Ok)
+            {
+                Notify.Success(result.Message);
+                RequestClose?.Invoke(false);
+            }
+            else
+            {
+                ErrorMessage = result.Message;
+            }
         }
 
         private async Task ConfirmAsync(object? _)

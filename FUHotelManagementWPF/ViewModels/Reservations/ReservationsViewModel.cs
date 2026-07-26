@@ -18,6 +18,7 @@ namespace FUHotelManagementWPF.ViewModels.Reservations
     public class ReservationsViewModel : ViewModelBase
     {
         private readonly IReservationService _service = new ReservationService();
+        private readonly IApprovalService _approvalService = new ApprovalService();
 
         public ObservableCollection<ReservationRow> Rows { get; } = [];
         public ICollectionView RowsView { get; }
@@ -82,6 +83,14 @@ namespace FUHotelManagementWPF.ViewModels.Reservations
             set { if (SetProperty(ref _isLoading, value)) { OnPropertyChanged(nameof(IsEmpty)); } }
         }
         public bool IsEmpty => !IsLoading && Rows.Count == 0;
+
+        /// <summary>An nut tao/xac nhan/sua/huy/khong den voi vai tro khong duoc phep - service van la lop chan cuoi.</summary>
+        public bool CanOperateFrontDesk => AuthorizationPolicy.CanOperateFrontDesk;
+
+        // Vai tro chi xem thi khong co nut "+ Tao dat phong" -> doi loi goi y cho khoi chi vao nut khong ton tai.
+        public string EmptyText => CanOperateFrontDesk
+            ? "Chưa có đặt phòng nào — bấm + Tạo đặt phòng để bắt đầu."
+            : "Chưa có đặt phòng nào.";
 
         public string TotalText => $"{Rows.Count} đặt phòng";
 
@@ -206,20 +215,21 @@ namespace FUHotelManagementWPF.ViewModels.Reservations
             else { Notify.Error(result.Message); }
         }
 
-        private Task ConfirmThenCancel()
+        private async Task ConfirmThenCancel()
         {
             if (SelectedRow == null)
             {
-                return Task.CompletedTask;
+                return;
             }
-            var ok = ConfirmDialog.Ask(
-                $"Huỷ đặt phòng của {SelectedRow.GuestName}?",
-                $"Đơn {SelectedRow.BookingCode} sẽ chuyển sang Đã huỷ và phòng {SelectedRow.RoomNumber} được giải phóng.",
-                "Đơn đã huỷ không khôi phục lại được, muốn đặt lại thì tạo đơn mới.",
-                "Huỷ đơn", isDanger: true);
-            return ok
-                ? RunAction(r => _service.CancelAsync(r.Reservation.Id))
-                : Task.CompletedTask;
+            var reason = ReasonDialog.Prompt(
+                $"Yêu cầu huỷ đặt phòng {SelectedRow.BookingCode}",
+                RoomMapViewModel.ActiveWindow());
+            if (reason == null) return;
+            var result = await _approvalService.RequestAsync(
+                ApprovalRequestType.ReservationCancel,
+                SelectedRow.Reservation.Id,
+                reason);
+            if (result.Ok) Notify.Success(result.Message); else Notify.Error(result.Message);
         }
 
         private Task ConfirmThenNoShow()

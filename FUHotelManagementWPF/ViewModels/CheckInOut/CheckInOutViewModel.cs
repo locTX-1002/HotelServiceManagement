@@ -6,7 +6,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Data;
+using BusinessObjects;
 using BusinessObjects.Entities;
+using BusinessObjects.Enums;
 using FUHotelManagementWPF.MvvmCore;
 using FUHotelManagementWPF.ViewModels.Rooms;
 using FUHotelManagementWPF.Views.Dialogs;
@@ -34,10 +36,16 @@ namespace FUHotelManagementWPF.ViewModels.CheckInOut
             Reservation.Room?.RoomTypeId ?? 0, Reservation.Room?.RoomType?.TypeName ?? string.Empty);
         public string RoomNumber => Reservation.Room?.RoomNumber ?? string.Empty;
         public string GuestName => Reservation.Guest?.FullName ?? string.Empty;
-        public string ActionLabel => Kind == FlowKind.Arrival ? "Check-in" : "Check-out";
+        public string ActionLabel => Kind == FlowKind.Arrival ? "Nhận phòng" : "Trả phòng";
 
         /// <summary>Dong nay la khach dang o (co nut Hoa don / Gia han).</summary>
         public bool IsStay => Kind == FlowKind.Stay;
+
+        /// <summary>
+        /// An nut thao tac le tan (nhan/tra phong, gia han, phu thu, khong den, huy) voi vai tro
+        /// khong duoc phep - service van la lop chan cuoi.
+        /// </summary>
+        public bool CanOperate => AuthorizationPolicy.CanOperateFrontDesk;
 
         /// <summary>Khach chua co giay to - service se chan check-in, bao truoc de le tan bo sung som.</summary>
         public bool MissingIdentity => Kind == FlowKind.Arrival
@@ -78,8 +86,30 @@ namespace FUHotelManagementWPF.ViewModels.CheckInOut
 
         public string SubText => Kind == FlowKind.Arrival
             ? $"{Reservation.Room?.RoomType?.TypeName} · {Reservation.NumberOfGuests} khách · {Reservation.CheckInDate:dd/MM} → {Reservation.CheckOutDate:dd/MM}"
-            : $"{Reservation.Room?.RoomType?.TypeName} · vào {Stay!.ActualCheckIn:dd/MM HH:mm} · {Nights} đêm";
+            // Bo GIO o dong phu: khi bang lam viec ben phai mo ra, cot chu hep lai va
+            // dong nay bi cat cut thanh "vao 24/07 1...". Gio chinh xac van co day du
+            // trong bang ben phai khi chon dong.
+            : $"{Reservation.Room?.RoomType?.TypeName} · vào {BillingStart:dd/MM} · dự kiến {ChargeableNights} đêm";
 
+        /// <summary>
+        /// Ngay BAT DAU TINH TIEN - moc som hon giua ngay vao that va ngay tren don, dung
+        /// moc ma ChargeableNights dem tu do.
+        ///
+        /// Dong phu phai dung moc nay chu khong phai ngay vao tho. Khach vao MUON hon don
+        /// thi hai moc lech nhau, va dong phu doc ra vo ly: phong 102 ghi "vao 26/07 - 2 dem"
+        /// ngay canh chip "Tra hom nay" - vao hom nay, o hai dem, ma tra hom nay.
+        /// </summary>
+        public DateTime BillingStart => Stay == null
+            ? Reservation.CheckInDate.Date
+            : Stay.ActualCheckIn.Date < Reservation.CheckInDate.Date
+                ? Stay.ActualCheckIn.Date
+                : Reservation.CheckInDate.Date;
+
+        /// <summary>
+        /// So dem khach DA o tinh den hom nay. Khong dung cho dong phu ngoai danh sach: cho
+        /// do phai la tong so dem tinh tien, khong thi khach vao hom nay se hien "1 dem"
+        /// ngay canh chip "Con 3 dem" - hai so chui nhau tren cung mot dong.
+        /// </summary>
         public int Nights => Stay == null ? 0 : Math.Max(1, (DateTime.Today - Stay.ActualCheckIn.Date).Days);
 
         // ---- Cho bang lam viec ben phai ----
@@ -111,16 +141,14 @@ namespace FUHotelManagementWPF.ViewModels.CheckInOut
                 {
                     return Math.Max(1, (Reservation.CheckOutDate.Date - Reservation.CheckInDate.Date).Days);
                 }
-                var until = Reservation.CheckOutDate.Date > DateTime.Today
-                    ? Reservation.CheckOutDate.Date
-                    : DateTime.Today;
-                return Math.Max(1, (until - Stay!.ActualCheckIn.Date).Days);
+                return BillingRules.EstimatedNights(
+                    Stay!.ActualCheckIn, Reservation.CheckOutDate, DateTime.Today);
             }
         }
 
         /// <summary>So dem o qua so voi don - hien rieng de le tan giai thich duoc voi khach.</summary>
         public int ExtraNights => Kind == FlowKind.Stay && IsOverdue
-            ? (DateTime.Today - Reservation.CheckOutDate.Date).Days
+            ? BillingRules.OverdueNights(Reservation.CheckOutDate, DateTime.Today)
             : 0;
 
         public bool HasExtraNights => ExtraNights > 0;
@@ -141,17 +169,17 @@ namespace FUHotelManagementWPF.ViewModels.CheckInOut
         public string TotalChargeText => $"{TotalCharge:N0} đ";
         public string EstimateLabel => Kind == FlowKind.Arrival ? "Dự kiến cả kỳ" : "Tạm tính";
 
-        /// <summary>Chi khach dang o moi gia han va ghi phu thu duoc.</summary>
-        public bool CanExtend => Kind == FlowKind.Stay;
+        /// <summary>Chi khach dang o moi gia han va ghi phu thu duoc, va phai co quyen le tan.</summary>
+        public bool CanExtend => CanOperate && Kind == FlowKind.Stay;
 
         // ---- Nut phu tren dong, chi hien voi viec qua han ----
         // Khach qua han den thi le tan con phai danh dau khong den hoac huy don,
         // truoc day phai roi man nay sang Dat phong tim lai don moi lam duoc.
-        public bool ShowNoShow => Kind == FlowKind.Arrival && IsOverdue;
-        public bool ShowCancel => Kind == FlowKind.Arrival && IsOverdue;
+        public bool ShowNoShow => CanOperate && Kind == FlowKind.Arrival && IsOverdue;
+        public bool ShowCancel => CanOperate && Kind == FlowKind.Arrival && IsOverdue;
 
         /// <summary>Khach qua han tra thi gia han la viec hay lam nhat - dua thang len dong.</summary>
-        public bool ShowExtendOnRow => Kind == FlowKind.Stay && IsOverdue;
+        public bool ShowExtendOnRow => CanOperate && Kind == FlowKind.Stay && IsOverdue;
 
         /// <summary>Thứ tự ưu tiên: quá hạn → việc hôm nay → còn lại (theo ngày gần nhất).</summary>
         public int SortRank => IsOverdue ? 0 : IsToday ? 1 : 2;
@@ -248,6 +276,11 @@ namespace FUHotelManagementWPF.ViewModels.CheckInOut
 
         public bool IsEmpty => !IsLoading && ItemsView.Cast<object>().Any() == false;
 
+        /// <summary>
+        /// An nut Nhan phong / Tra phong voi vai tro khong duoc phep - service van la lop chan cuoi.
+        /// </summary>
+        public bool CanOperate => AuthorizationPolicy.CanOperateFrontDesk;
+
         public string TodayText => $"Hôm nay {DateTime.Today:dd/MM/yyyy}";
 
         public AsyncRelayCommand ActionCommand { get; }
@@ -261,6 +294,7 @@ namespace FUHotelManagementWPF.ViewModels.CheckInOut
 
         private readonly ISurchargeService _surchargeService = new SurchargeService();
         private readonly IReservationService _reservationService = new ReservationService();
+        private readonly IInvoiceService _invoiceService = new InvoiceService();
 
         /// <summary>Khach qua han den ma khong toi: giai phong phong de con ban cho nguoi khac.</summary>
         private async Task MarkNoShowAsync(object? parameter)
@@ -379,8 +413,40 @@ namespace FUHotelManagementWPF.ViewModels.CheckInOut
             _ = LoadAsync();
         }
 
+        private string _searchText = string.Empty;
+        /// <summary>Tim theo so phong hoac ten khach - hai thu le tan doc duoc tu mieng khach.</summary>
+        public string SearchText
+        {
+            get => _searchText;
+            set
+            {
+                if (SetProperty(ref _searchText, value))
+                {
+                    ItemsView.Refresh();
+                    // Loc xong co the khong con dong nao - phai bao lai de hien dong "khong co viec nao"
+                    OnPropertyChanged(nameof(IsEmpty));
+                }
+            }
+        }
+
         private bool Filter(object item)
-            => item is FlowItem flow && (SelectedFilter.Predicate?.Invoke(flow) ?? true);
+        {
+            if (item is not FlowItem flow)
+            {
+                return false;
+            }
+            if (SelectedFilter.Predicate?.Invoke(flow) == false)
+            {
+                return false;
+            }
+            if (string.IsNullOrWhiteSpace(SearchText))
+            {
+                return true;
+            }
+            var keyword = SearchText.Trim();
+            return flow.RoomNumber.Contains(keyword, StringComparison.OrdinalIgnoreCase)
+                   || flow.GuestName.Contains(keyword, StringComparison.OrdinalIgnoreCase);
+        }
 
         public async Task LoadAsync()
         {
@@ -454,12 +520,19 @@ namespace FUHotelManagementWPF.ViewModels.CheckInOut
             }
             else
             {
+                // Kiem hoa don TRUOC khi hoi xac nhan. Truoc day bam xong moi bao
+                // "hoa don phai duoc thanh toan day du" roi dung im tai cho - le tan
+                // phai tu doan la con phai qua man Hoa don.
+                if (!await EnsureInvoicePaidAsync(item))
+                {
+                    return;
+                }
+
                 var confirmed = ConfirmDialog.Ask(
                     $"Cho {item.GuestName} trả phòng {item.RoomNumber}?",
                     $"Khách đã ở {item.ChargeableNights} đêm, tạm tính {item.TotalChargeText}. "
                     + "Phòng sẽ chuyển sang Đang dọn.",
-                    "Kiểm đồ trong phòng và ghi phụ thu trước khi trả — trả rồi không ghi thêm được. "
-                    + "Hoá đơn chính thức lập ở màn Hoá đơn.",
+                    "Kiểm đồ trong phòng và ghi phụ thu trước khi trả — trả rồi không ghi thêm được.",
                     "Cho trả phòng");
                 if (!confirmed)
                 {
@@ -482,6 +555,38 @@ namespace FUHotelManagementWPF.ViewModels.CheckInOut
             {
                 Notify.Error(result.Message);
             }
+        }
+
+        /// <summary>
+        /// Tra phong chi duoc phep khi hoa don da thanh toan du. Neu chua thi dua thang
+        /// le tan sang man Hoa don kem theo dung luot dang lam do, thay vi bao loi roi
+        /// de nguoi dung tu mo tim.
+        /// Tra ve true khi da thanh toan xong, duoc di tiep.
+        /// </summary>
+        private async Task<bool> EnsureInvoicePaidAsync(FlowItem item)
+        {
+            var invoice = await _invoiceService.GetByStayAsync(item.Stay!.Id);
+            if (invoice is { Status: InvoiceStatus.Paid })
+            {
+                return true;
+            }
+
+            var chuaLap = invoice == null;
+            var goNow = ConfirmDialog.Ask(
+                chuaLap ? "Chưa lập hoá đơn cho khách này" : "Hoá đơn chưa thanh toán xong",
+                $"Phòng {item.RoomNumber} · {item.GuestName} — tạm tính {item.TotalChargeText}. "
+                + "Khách phải thanh toán đủ rồi mới trả phòng được.",
+                chuaLap
+                    ? "Sang màn Hoá đơn để lập hoá đơn và thu tiền, xong quay lại đây trả phòng."
+                    : "Sang màn Hoá đơn để ghi nhận nốt phần còn thiếu.",
+                "Sang màn Hoá đơn");
+            if (goNow)
+            {
+                // Chon san dung luot nay ben man Hoa don
+                NavigationService.PendingStayId = item.Stay.Id;
+                NavigationService.NavigateTo("Hoá đơn");
+            }
+            return false;
         }
     }
 }

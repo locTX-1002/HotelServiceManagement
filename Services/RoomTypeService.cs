@@ -19,7 +19,7 @@ namespace Services
             string typeName, int capacity, decimal basePrice, string? description, bool isActive)
         {
             if (!AuthorizationPolicy.CanManageRooms)
-                return ServiceResult<RoomType>.Failure("Chi Admin hoac Manager duoc tao loai phong.");
+                return ServiceResult<RoomType>.Failure("Chỉ Quản trị viên hoặc Quản lý được tạo loại phòng.");
             var error = Validate(typeName, capacity, basePrice);
             if (error != null)
             {
@@ -48,7 +48,7 @@ namespace Services
             int id, string typeName, int capacity, decimal basePrice, string? description, bool isActive)
         {
             if (!AuthorizationPolicy.CanManageRooms)
-                return ServiceResult<RoomType>.Failure("Chi Admin hoac Manager duoc sua loai phong.");
+                return ServiceResult<RoomType>.Failure("Chỉ Quản trị viên hoặc Quản lý được sửa loại phòng.");
             var error = Validate(typeName, capacity, basePrice);
             if (error != null)
             {
@@ -74,6 +74,18 @@ namespace Services
                     "Không thể giảm sức chứa vì đang có đặt phòng vượt sức chứa mới.");
             }
 
+            // Hoa don tinh tien phong theo BasePrice HIEN TAI chu khong phai gia luc dat
+            // (Reservation khong luu gia, ma nhom khong duoc tu them cot). Vi vay doi don gia
+            // trong khi con don chua ket thuc la khach phai tra theo gia moi - doi gia da
+            // thoa thuan sau lung khach. Chan lai; doi ten / suc chua / mo ta thi van cho.
+            if (basePrice != roomType.BasePrice
+                && await _roomTypeRepository.HasOpenReservationAsync(id))
+            {
+                return ServiceResult<RoomType>.Failure(
+                    "Đang có đặt phòng hoặc khách ở theo loại phòng này nên không đổi được đơn giá. "
+                    + "Chờ các đơn đó kết thúc, hoặc tạo loại phòng mới với giá mới.");
+            }
+
             roomType.TypeName = typeName.Trim();
             roomType.Capacity = capacity;
             roomType.BasePrice = basePrice;
@@ -88,7 +100,7 @@ namespace Services
         public async Task<ServiceResult> DeleteAsync(int id)
         {
             if (!AuthorizationPolicy.CanManageRooms)
-                return ServiceResult.Failure("Chi Admin hoac Manager duoc xoa hoac ngung dung loai phong.");
+                return ServiceResult.Failure("Chỉ Quản trị viên hoặc Quản lý được xoá hoặc ngừng dùng loại phòng.");
             var roomType = await _roomTypeRepository.GetByIdAsync(id);
             if (roomType == null)
             {

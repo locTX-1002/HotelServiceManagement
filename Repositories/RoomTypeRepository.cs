@@ -15,6 +15,9 @@ namespace Repositories
         public Task<bool> HasReservationExceedingCapacityAsync(int roomTypeId, int newCapacity)
             => RoomTypeDAO.Instance.HasReservationExceedingCapacityAsync(roomTypeId, newCapacity);
 
+        public Task<bool> HasOpenReservationAsync(int roomTypeId)
+            => RoomTypeDAO.Instance.HasOpenReservationAsync(roomTypeId);
+
         public Task AddAsync(RoomType roomType) => RoomTypeDAO.Instance.AddAsync(roomType);
         public Task UpdateAsync(RoomType roomType) => RoomTypeDAO.Instance.UpdateAsync(roomType);
         public Task DeleteAsync(RoomType roomType) => RoomTypeDAO.Instance.DeleteAsync(roomType);

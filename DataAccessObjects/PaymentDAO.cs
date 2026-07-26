@@ -17,6 +17,7 @@ public sealed class PaymentDAO
         await using var context = HotelDbContextFactory.Create();
         return await context.Invoices.AsNoTracking()
             .Include(i => i.Payments)
+            .Include(i => i.CreatedByUser)
             .Include(i => i.Stay).ThenInclude(s => s.Reservation).ThenInclude(r => r.Guest)
             .FirstOrDefaultAsync(i => i.Id == invoiceId);
     }

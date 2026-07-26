@@ -47,6 +47,14 @@ namespace FUHotelManagementWPF.MvvmCore
             }
         }
 
+        /// <summary>
+        /// Cau loi dau tien trong form. Chi to vien do thi nguoi dung phai RE CHUOT vao o
+        /// moi biet sai cho nao - form dong lai ma khong hieu vi sao khong luu duoc.
+        /// Form goi ham nay de day cau loi len banner do, nhin phat la thay.
+        /// </summary>
+        protected string? FirstError()
+            => _errors.Values.FirstOrDefault(list => list.Count > 0)?.FirstOrDefault();
+
         protected void ClearAllErrors()
         {
             var names = _errors.Keys.ToList();

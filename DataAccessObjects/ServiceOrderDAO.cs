@@ -19,5 +19,8 @@ public sealed class ServiceOrderDAO
     public async Task<ServiceOrder?> GetByIdAsync(int id)
     { await using var c = HotelDbContextFactory.Create(); return await c.ServiceOrders.AsNoTracking().FirstOrDefaultAsync(o => o.Id == id); }
     public async Task<ServiceOrder?> ChangeStatusAsync(int id, ServiceOrderStatus status)
-    { await using var c = HotelDbContextFactory.Create(); var x = await c.ServiceOrders.FirstOrDefaultAsync(o => o.Id == id); if (x == null) return null; var allowed = x.Status switch { ServiceOrderStatus.Pending => status is ServiceOrderStatus.Processing or ServiceOrderStatus.Cancelled, ServiceOrderStatus.Processing => status is ServiceOrderStatus.Completed or ServiceOrderStatus.Cancelled, _ => false }; if (!allowed) return null; x.Status = status; await c.SaveChangesAsync(); return x; }
+    { await using var c = HotelDbContextFactory.Create(); var x = await c.ServiceOrders.FirstOrDefaultAsync(o => o.Id == id); if (x == null) return null; // Phai khop bang chuyen trang thai o ServiceOrderService: Cho lam duoc bam Hoan tat
+      // thang, khong bat qua "Dang lam". Kiem lai o day de hai nguoi cung bam mot don thi
+      // nguoi sau khong ghi de duoc.
+      var allowed = x.Status switch { ServiceOrderStatus.Pending => status is ServiceOrderStatus.Processing or ServiceOrderStatus.Completed or ServiceOrderStatus.Cancelled, ServiceOrderStatus.Processing => status is ServiceOrderStatus.Completed or ServiceOrderStatus.Cancelled, _ => false }; if (!allowed) return null; x.Status = status; await c.SaveChangesAsync(); return x; }
 }

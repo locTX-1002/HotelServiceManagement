@@ -1,0 +1,43 @@
+<UserControl x:Class="FUHotelManagementWPF.Views.Permissions.PermissionsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid Margin="28,24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <StackPanel>
+            <TextBlock Text="Phân quyền vai trò" Style="{StaticResource PageTitleText}" />
+            <TextBlock Text="Quyền được lưu trong cơ sở dữ liệu và áp dụng sau khi người dùng đăng nhập lại."
+                       Style="{StaticResource CaptionText}" Margin="0,5,0,0" />
+        </StackPanel>
+
+        <StackPanel Grid.Row="1" Margin="0,20,0,14">
+            <TextBlock Text="VAI TRÒ" Style="{StaticResource FieldLabel}" />
+            <ComboBox ItemsSource="{Binding Roles}" SelectedItem="{Binding SelectedRole}"
+                      DisplayMemberPath="DisplayName" Width="360" HorizontalAlignment="Left" />
+        </StackPanel>
+
+        <Border Grid.Row="2" Style="{StaticResource Card}">
+            <DataGrid ItemsSource="{Binding Permissions}" AutoGenerateColumns="False"
+                      CanUserAddRows="False" HeadersVisibility="Column"
+                      GridLinesVisibility="Horizontal" BorderThickness="0">
+                <DataGrid.Columns>
+                    <DataGridCheckBoxColumn Header="CẤP QUYỀN" Binding="{Binding IsSelected, Mode=TwoWay}"
+                                            Width="110" />
+                    <DataGridTextColumn Header="MODULE" Binding="{Binding Module}" Width="150" IsReadOnly="True" />
+                    <DataGridTextColumn Header="QUYỀN" Binding="{Binding DisplayName}" Width="240" IsReadOnly="True" />
+                    <DataGridTextColumn Header="MÃ QUYỀN" Binding="{Binding Code}" Width="*" IsReadOnly="True" />
+                </DataGrid.Columns>
+            </DataGrid>
+        </Border>
+
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,14,0,0">
+            <Button Content="Tải lại" Command="{Binding RefreshCommand}" Style="{StaticResource GhostButton}" />
+            <Button Content="Lưu phân quyền" Command="{Binding SaveCommand}"
+                    Style="{StaticResource PrimaryButton}" Margin="10,0,0,0" />
+        </StackPanel>
+    </Grid>
+</UserControl>

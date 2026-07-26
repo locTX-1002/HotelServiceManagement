@@ -81,7 +81,9 @@ public sealed class PaymentDialogViewModel : ValidatableViewModelBase
         ClearAllErrors();
         ErrorMessage = null;
 
-        if (!decimal.TryParse(AmountText, out var amount) || amount <= 0)
+        // O nhap da cham dau phan nghin nen phai boc chu so ra, khong parse thang chuoi.
+        var amount = MoneyBoxAssist.ToDecimal(AmountText) ?? 0;
+        if (amount <= 0)
         {
             AddError(nameof(AmountText), "Số tiền phải lớn hơn 0.");
         }

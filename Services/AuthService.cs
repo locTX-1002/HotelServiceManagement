@@ -20,6 +20,11 @@ namespace Services
                 return null;
             }
 
+            if (!user.Role.IsActive)
+            {
+                return null;
+            }
+
             // DB seed san 4 tai khoan (admin/manager/receptionist/
             // service @hotel.com). Verify ton ~100ms CPU nen day ra thread pool de UI khong khung.
             return await Task.Run(() => BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))

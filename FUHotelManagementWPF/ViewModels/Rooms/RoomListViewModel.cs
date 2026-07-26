@@ -139,6 +139,9 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
             }
         }
 
+        /// <summary>An nut them/sua/xoa/doi trang thai voi vai tro khong duoc phep - service van la lop chan cuoi.</summary>
+        public bool CanManageRooms => AuthorizationPolicy.CanManageRooms;
+
         public RelayCommand PickStatusCommand { get; }
         public RelayCommand AddCommand { get; }
         public RelayCommand EditCommand { get; }

@@ -1,3 +1,4 @@
+using BusinessObjects;
 using BusinessObjects.Entities;
 using Repositories;
 using Services;
@@ -9,7 +10,7 @@ public class UserManagementServiceTests
     [Fact]
     public async Task Admin_CannotDeactivateCurrentAccount()
     {
-        var admin = new User { Id = 1, IsActive = true, Role = new Role { RoleName = "Admin" } };
+        var admin = new User { Id = 1, IsActive = true, Role = new Role { RoleName = RoleNames.Admin } };
         AppSession.SignIn(admin);
         var repository = new FakeUserRepository(admin);
 
@@ -27,6 +28,13 @@ public class UserManagementServiceTests
         public Task<List<User>> GetAllAsync() => Task.FromResult(new List<User> { user });
         public Task<User?> GetByIdAsync(int id) => Task.FromResult<User?>(user);
         public Task<Role?> GetRoleAsync(int id) => Task.FromResult<Role?>(user.Role);
+        public Task<List<Role>> GetRolesAsync() => Task.FromResult(new List<Role>
+        {
+            new() { Id = 1, RoleName = RoleNames.Admin },
+            new() { Id = 2, RoleName = RoleNames.Manager },
+            new() { Id = 3, RoleName = RoleNames.Receptionist },
+            new() { Id = 4, RoleName = RoleNames.ServiceStaff },
+        });
         public Task<bool> EmailExistsAsync(string email, int? excludeId = null) => Task.FromResult(false);
         public Task SaveAsync(User entity, bool add) { SaveWasCalled = true; return Task.CompletedTask; }
         public Task EnsureBootstrapAdminAsync(string fullName, string email, string passwordHash) => Task.CompletedTask;

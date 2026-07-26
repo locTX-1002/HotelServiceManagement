@@ -24,7 +24,7 @@ namespace Services
             string roomNumber, int floor, int roomTypeId, RoomStatus status, bool isActive)
         {
             if (!AuthorizationPolicy.CanManageRooms)
-                return ServiceResult<Room>.Failure("Chi Admin hoac Manager duoc tao phong.");
+                return ServiceResult<Room>.Failure("Chỉ Quản trị viên hoặc Quản lý được tạo phòng.");
             var error = Validate(roomNumber, floor, roomTypeId, status, isCreating: true);
             if (error != null)
             {
@@ -74,7 +74,7 @@ namespace Services
             int id, string roomNumber, int floor, int roomTypeId, RoomStatus status, bool isActive)
         {
             if (!AuthorizationPolicy.CanManageRooms)
-                return ServiceResult<Room>.Failure("Chi Admin hoac Manager duoc sua phong.");
+                return ServiceResult<Room>.Failure("Chỉ Quản trị viên hoặc Quản lý được sửa phòng.");
             var error = Validate(roomNumber, floor, roomTypeId, status, isCreating: false);
             if (error != null)
             {
@@ -161,7 +161,7 @@ namespace Services
             // Giu tham so de frontend cu van build, nhung khong tin quyen do caller truyen vao.
             canManageMaintenance = AuthorizationPolicy.CanManageRooms;
             if (!canManageMaintenance)
-                return ServiceResult<Room>.Failure("Chi Admin hoac Manager duoc doi trang thai phong.");
+                return ServiceResult<Room>.Failure("Chỉ Quản trị viên hoặc Quản lý được đổi trạng thái phòng.");
             if (newStatus == RoomStatus.Reserved || newStatus == RoomStatus.Occupied)
             {
                 return ServiceResult<Room>.Failure(
@@ -246,7 +246,7 @@ namespace Services
         public async Task<ServiceResult> DeleteAsync(int id)
         {
             if (!AuthorizationPolicy.CanManageRooms)
-                return ServiceResult.Failure("Chi Admin hoac Manager duoc xoa hoac ngung dung phong.");
+                return ServiceResult.Failure("Chỉ Quản trị viên hoặc Quản lý được xoá hoặc ngừng dùng phòng.");
             var room = await _roomRepository.GetByIdAsync(id);
             if (room == null)
             {

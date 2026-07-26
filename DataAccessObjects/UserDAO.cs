@@ -1,3 +1,4 @@
+using BusinessObjects;
 using BusinessObjects.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -35,18 +36,30 @@ namespace DataAccessObjects
             return await context.Users
                 .AsNoTracking()
                 .Include(u => u.Role)
+                    .ThenInclude(r => r.RolePermissions)
+                    .ThenInclude(rp => rp.Permission)
                 .FirstOrDefaultAsync(u => u.IsActive && u.Email.ToLower() == normalized);
         }
 
-        public async Task<List<User>> GetAllAsync() { await using var c = HotelDbContextFactory.Create(); return await c.Users.AsNoTracking().Include(x => x.Role).OrderBy(x => x.Id).ToListAsync(); }
-        public async Task<User?> GetByIdAsync(int id) { await using var c = HotelDbContextFactory.Create(); return await c.Users.AsNoTracking().Include(x => x.Role).FirstOrDefaultAsync(x => x.Id == id); }
+        public async Task<List<User>> GetAllAsync() { await using var c = HotelDbContextFactory.Create(); return await c.Users.AsNoTracking().Include(x => x.Role).ThenInclude(r => r.RolePermissions).ThenInclude(rp => rp.Permission).OrderBy(x => x.Id).ToListAsync(); }
+        public async Task<User?> GetByIdAsync(int id) { await using var c = HotelDbContextFactory.Create(); return await c.Users.AsNoTracking().Include(x => x.Role).ThenInclude(r => r.RolePermissions).ThenInclude(rp => rp.Permission).FirstOrDefaultAsync(x => x.Id == id); }
         public async Task<Role?> GetRoleAsync(int id) { await using var c = HotelDbContextFactory.Create(); return await c.Roles.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id); }
+
+        /// <summary>
+        /// Danh sach vai tro doc tu DB. Truoc day man Nhan su ghi cung 4 vai tro trong
+        /// ViewModel, doi seed la lech ngay ma khong ai biet.
+        /// </summary>
+        public async Task<List<Role>> GetRolesAsync()
+        {
+            await using var c = HotelDbContextFactory.Create();
+            return await c.Roles.AsNoTracking().OrderBy(x => x.Id).ToListAsync();
+        }
         public async Task<bool> EmailExistsAsync(string email, int? excludeId = null) { var n = email.Trim().ToLower(); await using var c = HotelDbContextFactory.Create(); return await c.Users.AnyAsync(x => x.Email.ToLower() == n && (excludeId == null || x.Id != excludeId)); }
         public async Task SaveAsync(User x, bool add) { await using var c = HotelDbContextFactory.Create(); x.Role = null!; if (add) c.Users.Add(x); else c.Users.Update(x); await c.SaveChangesAsync(); }
         public async Task EnsureBootstrapAdminAsync(string fullName, string email, string passwordHash)
         {
             await using var c = HotelDbContextFactory.Create();
-            var adminRole = await c.Roles.FirstAsync(r => r.RoleName == "Admin");
+            var adminRole = await c.Roles.FirstAsync(r => r.RoleName == RoleNames.Admin);
             var admin = await c.Users.FirstOrDefaultAsync(u => u.Email == email)
                 ?? await c.Users.FirstOrDefaultAsync(u => u.RoleId == adminRole.Id);
             if (admin == null)
