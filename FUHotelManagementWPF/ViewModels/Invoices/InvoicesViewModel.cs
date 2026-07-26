@@ -224,6 +224,7 @@ public sealed class InvoicesViewModel : ViewModelBase
         ? 0
         : BillingRules.ChargeableNights(
             SelectedStay.ActualCheckIn,
+            SelectedStay.Reservation.CheckInDate,
             SelectedStay.Reservation.CheckOutDate,
             SelectedStay.ActualCheckOut ?? DateTime.Now);
     public string RoomChargeDetailText => SelectedStay?.Reservation?.Room?.RoomType == null
