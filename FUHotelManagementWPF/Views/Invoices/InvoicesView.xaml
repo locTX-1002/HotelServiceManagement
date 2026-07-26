@@ -635,48 +635,45 @@
                 <Grid Grid.Row="6" Background="{StaticResource CardBrush}">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
+                        <RowDefinition Height="8" />
+                        <RowDefinition Height="Auto" />
                         <RowDefinition Height="12" />
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="14" />
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
 
-                    <Grid Margin="6,4,6,0">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <StackPanel VerticalAlignment="Center">
-                            <TextBlock Text="Công nợ &amp; lịch sử giao dịch"
-                                       Style="{StaticResource SectionTitleText}" />
-                            <TextBlock Text="Theo dõi số tiền đã thu và dư nợ của lượt ở."
-                                       Style="{StaticResource CaptionText}" Margin="0,3,0,0" />
-                        </StackPanel>
-                        <StackPanel Grid.Column="1" Orientation="Horizontal"
-                                    HorizontalAlignment="Right" VerticalAlignment="Center">
-                            <Button Content="Lập hoá đơn"
-                                    Style="{StaticResource PrimaryButton}"
-                                    Visibility="{Binding HasInvoice, Mode=OneWay,
-                                                         Converter={StaticResource InverseBoolToVis}}"
-                                    IsEnabled="{Binding CanPrepareInvoice, Mode=OneWay}"
-                                    Command="{Binding OpenInvoiceDetailCommand}" />
-                            <Button Content="Xem hoá đơn"
-                                    Style="{StaticResource GhostButton}"
-                                    Visibility="{Binding HasInvoice, Mode=OneWay,
-                                                         Converter={StaticResource BoolToVis}}"
-                                    Command="{Binding OpenInvoiceDetailCommand}" />
-                            <Button Content="Thêm phụ thu"
-                                    Style="{StaticResource GhostButton}" Margin="8,0,0,0"
-                                    IsEnabled="{Binding CanEditSurcharges, Mode=OneWay}"
-                                    Command="{Binding AddSurchargeCommand}" />
-                            <Button Content="Ghi nhận thanh toán"
-                                    Style="{StaticResource PrimaryButton}" Margin="8,0,0,0"
-                                    IsEnabled="{Binding CanRecordPayment, Mode=OneWay}"
-                                    Command="{Binding RecordPaymentCommand}" />
-                        </StackPanel>
-                    </Grid>
+                    <StackPanel Margin="6,4,6,0">
+                        <TextBlock Text="Công nợ &amp; lịch sử giao dịch"
+                                   Style="{StaticResource SectionTitleText}" />
+                        <TextBlock Text="Theo dõi số tiền đã thu và dư nợ của lượt ở."
+                                   Style="{StaticResource CaptionText}" Margin="0,3,0,0" />
+                    </StackPanel>
 
-                    <Grid Grid.Row="2">
+                    <StackPanel Grid.Row="2" Orientation="Horizontal"
+                                HorizontalAlignment="Right">
+                        <Button Content="Lập hoá đơn"
+                                Style="{StaticResource PrimaryButton}"
+                                Visibility="{Binding HasInvoice, Mode=OneWay,
+                                                     Converter={StaticResource InverseBoolToVis}}"
+                                IsEnabled="{Binding CanPrepareInvoice, Mode=OneWay}"
+                                Command="{Binding OpenInvoiceDetailCommand}" />
+                        <Button Content="Xem hoá đơn"
+                                Style="{StaticResource GhostButton}"
+                                Visibility="{Binding HasInvoice, Mode=OneWay,
+                                                     Converter={StaticResource BoolToVis}}"
+                                Command="{Binding OpenInvoiceDetailCommand}" />
+                        <Button Content="Thêm phụ thu"
+                                Style="{StaticResource GhostButton}" Margin="8,0,0,0"
+                                IsEnabled="{Binding CanEditSurcharges, Mode=OneWay}"
+                                Command="{Binding AddSurchargeCommand}" />
+                        <Button Content="Ghi nhận thanh toán"
+                                Style="{StaticResource PrimaryButton}" Margin="8,0,0,0"
+                                IsEnabled="{Binding CanRecordPayment, Mode=OneWay}"
+                                Command="{Binding RecordPaymentCommand}" />
+                    </StackPanel>
+
+                    <Grid Grid.Row="4">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="12" />
@@ -724,7 +721,7 @@
                         </Border>
                     </Grid>
 
-                    <Border Grid.Row="4" Style="{StaticResource Card}" Padding="0">
+                    <Border Grid.Row="6" Style="{StaticResource Card}" Padding="0">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
