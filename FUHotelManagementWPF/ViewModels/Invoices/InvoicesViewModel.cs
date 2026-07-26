@@ -149,6 +149,26 @@ public sealed class InvoicesViewModel : ViewModelBase
         .Where(o => o.Status == ServiceOrderStatus.Completed).Sum(o => o.TotalAmount) ?? 0;
 
     private decimal LiveSurcharge => Surcharges.Sum(x => x.Subtotal);
+    public int ChargeableNights => SelectedStay == null
+        ? 0
+        : BillingRules.ChargeableNights(
+            SelectedStay.ActualCheckIn,
+            SelectedStay.Reservation.CheckOutDate,
+            SelectedStay.ActualCheckOut ?? DateTime.Now);
+    public string RoomChargeDetailText => SelectedStay?.Reservation?.Room?.RoomType == null
+        ? "Chưa có thông tin phòng"
+        : $"{ChargeableNights} đêm × {SelectedStay.Reservation.Room.RoomType.BasePrice:N0} đ";
+    public int CompletedServiceOrderCount => SelectedStay?.ServiceOrders
+        .Count(x => x.Status == ServiceOrderStatus.Completed) ?? 0;
+    public string ServiceChargeDetailText => CompletedServiceOrderCount == 0
+        ? "Không phát sinh"
+        : $"{CompletedServiceOrderCount} đơn đã hoàn tất";
+    public string SurchargeDetailText => Surcharges.Count == 0
+        ? "Không phát sinh"
+        : $"{Surcharges.Count} khoản phụ thu";
+    public string DiscountDetailText => string.IsNullOrWhiteSpace(Invoice?.PromotionCode)
+        ? "Không áp dụng"
+        : Invoice.PromotionCode;
 
     /// <summary>Giam gia da chot tren hoa don; chua co hoa don thi chua biet, tinh 0.</summary>
     private decimal LiveDiscount => Math.Clamp(Invoice?.DiscountAmount ?? 0, 0,
@@ -613,6 +633,12 @@ public sealed class InvoicesViewModel : ViewModelBase
         OnPropertyChanged(nameof(PrepareInvoiceText));
         OnPropertyChanged(nameof(LiveTotal));
         OnPropertyChanged(nameof(LiveTotalText));
+        OnPropertyChanged(nameof(ChargeableNights));
+        OnPropertyChanged(nameof(RoomChargeDetailText));
+        OnPropertyChanged(nameof(CompletedServiceOrderCount));
+        OnPropertyChanged(nameof(ServiceChargeDetailText));
+        OnPropertyChanged(nameof(SurchargeDetailText));
+        OnPropertyChanged(nameof(DiscountDetailText));
         OnPropertyChanged(nameof(PendingDifference));
         OnPropertyChanged(nameof(HasPendingCharges));
         OnPropertyChanged(nameof(PendingChargeText));
