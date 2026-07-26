@@ -307,26 +307,25 @@ public sealed class InvoicesViewModel : ViewModelBase
         }
     }
 
-    private bool CanManageBilling => AppSession.RoleName is RoleNames.Admin or RoleNames.Manager or RoleNames.Receptionist;
-    public bool CanRecordPayment => CanManageBilling
+    public bool CanRecordPayment => AuthorizationPolicy.CanRecordPayment
                                     && Invoice != null
                                     && Invoice.Status != InvoiceStatus.Cancelled
                                     && RemainingAmount > 0;
     // Phu thu them duoc ca sau khi da thu tien - giong dich vu. Tinh lai hoa don se cong
     // vao va le tan thu not phan chenh; khong con ly do khoa o day.
-    public bool CanEditSurcharges => CanManageBilling
+    public bool CanEditSurcharges => AuthorizationPolicy.CanAddSurcharge
                                      && SelectedStay != null
                                      && Invoice?.Status != InvoiceStatus.Cancelled;
     public bool CanCancelInvoice => Invoice != null
                                     && Invoice.Status != InvoiceStatus.Cancelled
-                                    && AppSession.RoleName is RoleNames.Admin or RoleNames.Manager;
+                                    && AuthorizationPolicy.CanApproveInvoiceCancel;
     public string CancelInvoiceHint => PaidAmount > 0
         ? "Hoá đơn đã có thanh toán. Hãy huỷ các giao dịch hoàn tất trước khi huỷ hoá đơn."
         : "Huỷ hoá đơn hiện tại.";
-    public bool CanVoidPayment => AppSession.RoleName is RoleNames.Admin or RoleNames.Manager;
+    public bool CanVoidPayment => AuthorizationPolicy.CanApprovePaymentVoid;
     // Hoa don da thu tien van cho tinh lai - khach goi them dich vu sau khi lap hoa don
     // la chuyen binh thuong. Chi chan khi hoa don da huy.
-    public bool CanPrepareInvoice => CanManageBilling && SelectedStay != null
+    public bool CanPrepareInvoice => AuthorizationPolicy.CanPrepareInvoice && SelectedStay != null
                                      && Invoice?.Status != InvoiceStatus.Cancelled;
 
     /// <summary>Lap lan dau thi ghi "Lap hoa don", da co roi thi la "Tinh lai hoa don".</summary>

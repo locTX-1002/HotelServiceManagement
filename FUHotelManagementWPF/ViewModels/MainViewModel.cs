@@ -11,14 +11,14 @@ namespace FUHotelManagementWPF.ViewModels
 {
     /// <summary>
     /// Mot muc dieu huong: icon Segoe MDL2 + ten module + nhom sidebar + ham tao ViewModel.
-    /// Roles = null nghia la moi vai tro deu thay; co gia tri thi chi cac vai tro do thay muc nay.
+    /// Permissions = null nghia la moi nhan vien deu thay; co gia tri thi can it nhat mot quyen.
     /// </summary>
     public record ModuleItem(
-        string Icon, string Title, string Group, Func<ViewModelBase> CreateViewModel, string[]? Roles = null)
+        string Icon, string Title, string Group, Func<ViewModelBase> CreateViewModel, string[]? Permissions = null)
     {
         /// <summary>Vai tro hien tai co duoc thay muc nay khong.</summary>
         public bool VisibleForCurrentRole
-            => Roles == null || Array.IndexOf(Roles, AppSession.RoleName) >= 0;
+            => Permissions == null || Permissions.Any(AuthorizationPolicy.HasPermission);
     }
 
     public class MainViewModel : ViewModelBase
@@ -31,14 +31,7 @@ namespace FUHotelManagementWPF.ViewModels
         public string AvatarInitial
             => string.IsNullOrWhiteSpace(GreetingName) ? "?" : GreetingName.Trim()[..1].ToUpper();
 
-        public string RoleDisplay => AppSession.RoleName switch
-        {
-            RoleNames.Admin => "Quản trị viên",
-            RoleNames.Manager => "Quản lý",
-            RoleNames.Receptionist => "Lễ tân",
-            RoleNames.ServiceStaff => "Nhân viên dịch vụ",
-            _ => AppSession.RoleName,
-        };
+        public string RoleDisplay => AppSession.CurrentUser?.Role?.DisplayName ?? AppSession.RoleName;
 
         // Danh sach module: thanh vien lam xong module nao thi doi factory cua module do
         // sang ViewModel that va them 1 dong DataTemplate vao Views/ViewMappings.xaml.
@@ -86,23 +79,18 @@ namespace FUHotelManagementWPF.ViewModels
             const string moneyGroup = "TÀI CHÍNH";
             const string systemGroup = "HỆ THỐNG";
 
-            // Vai tro nao thay muc nao - dat SAT voi quyen ma service thuc su cho phep, de
-            // khong ai bam vao roi moi bi tu choi. Khong ghi Roles = moi vai tro deu thay.
-            string[] quanLy = [RoleNames.Admin, RoleNames.Manager];
-            string[] leTan = [RoleNames.Admin, RoleNames.Manager, RoleNames.Receptionist];
-
             var all = new List<ModuleItem>
             {
                 new("", "Trang chủ", homeGroup, () => new Home.HomeViewModel()),
-                new("", "Sơ đồ phòng", opGroup, () => new Rooms.RoomsViewModel()),
-                new("", "Đặt phòng", opGroup, () => new Reservations.ReservationsViewModel(), leTan),
-                new("", "Nhận / Trả phòng", opGroup, () => new CheckInOut.CheckInOutViewModel(), leTan),
-                new("", "Khách hàng", peopleGroup, () => new Guests.GuestsViewModel(), leTan),
-                new("", "Dịch vụ", peopleGroup, () => new Services.ServicesViewModel()),
-                new("", "Hoá đơn", moneyGroup, () => new Invoices.InvoicesViewModel(), leTan),
-                new("", "Khuyến mãi", moneyGroup, () => new Promotions.PromotionListViewModel(), quanLy),
-                new("", "Báo cáo", moneyGroup, () => new Reports.ReportViewModel(), quanLy),
-                new("", "Người dùng", systemGroup, () => new Users.UserListViewModel(), [RoleNames.Admin]),
+                new("", "Sơ đồ phòng", opGroup, () => new Rooms.RoomsViewModel(), [PermissionCodes.RoomView]),
+                new("", "Đặt phòng", opGroup, () => new Reservations.ReservationsViewModel(), [PermissionCodes.ReservationView]),
+                new("", "Nhận / Trả phòng", opGroup, () => new CheckInOut.CheckInOutViewModel(), [PermissionCodes.StayCheckIn, PermissionCodes.StayCheckOut]),
+                new("", "Khách hàng", peopleGroup, () => new Guests.GuestsViewModel(), [PermissionCodes.GuestView]),
+                new("", "Dịch vụ", peopleGroup, () => new Services.ServicesViewModel(), [PermissionCodes.ServiceCatalogManage, PermissionCodes.ServiceOrderCreate, PermissionCodes.ServiceOrderProcess]),
+                new("", "Hoá đơn", moneyGroup, () => new Invoices.InvoicesViewModel(), [PermissionCodes.InvoiceView]),
+                new("", "Khuyến mãi", moneyGroup, () => new Promotions.PromotionListViewModel(), [PermissionCodes.PromotionManage]),
+                new("", "Báo cáo", moneyGroup, () => new Reports.ReportViewModel(), [PermissionCodes.ReportView]),
+                new("", "Người dùng", systemGroup, () => new Users.UserListViewModel(), [PermissionCodes.UserView]),
             };
 
             // Loc NGAY luc dung danh sach thay vi dung Filter cua CollectionView: vai tro khong

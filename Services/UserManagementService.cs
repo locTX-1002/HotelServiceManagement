@@ -16,21 +16,21 @@ public sealed class UserManagementService : IUserManagementService
 
     private readonly IUserRepository _r; public UserManagementService() : this(new UserRepository()) { }
     public UserManagementService(IUserRepository r) => _r = r;
-    private static bool IsAdmin => AppSession.RoleName == AdminRoleName;
+    private static bool CanManageUsers => AuthorizationPolicy.CanManageUsers;
 
-    public async Task<ServiceResult<List<User>>> GetAllAsync() => !IsAdmin ? ServiceResult<List<User>>.Failure("Chỉ Quản trị viên được quản lý nhân viên.") : ServiceResult<List<User>>.Success(await _r.GetAllAsync());
+    public async Task<ServiceResult<List<User>>> GetAllAsync() => !CanManageUsers ? ServiceResult<List<User>>.Failure("Bạn không có quyền quản lý nhân viên.") : ServiceResult<List<User>>.Success(await _r.GetAllAsync());
 
     /// <summary>Vai tro duoc phep gan qua giao dien - lay tu DB, tru Admin.</summary>
     public async Task<ServiceResult<List<Role>>> GetAssignableRolesAsync()
     {
-        if (!IsAdmin) return ServiceResult<List<Role>>.Failure("Chỉ Quản trị viên được quản lý nhân viên.");
+        if (!CanManageUsers) return ServiceResult<List<Role>>.Failure("Bạn không có quyền quản lý nhân viên.");
         var roles = await _r.GetRolesAsync();
         return ServiceResult<List<Role>>.Success(roles.Where(x => x.RoleName != AdminRoleName).ToList());
     }
 
     public async Task<ServiceResult<User>> CreateAsync(string name, string email, string password, int roleId)
     {
-        if (!IsAdmin) return ServiceResult<User>.Failure("Chỉ Quản trị viên được tạo tài khoản.");
+        if (!CanManageUsers) return ServiceResult<User>.Failure("Bạn không có quyền tạo tài khoản.");
         var error = Validate(name, email, password);
         if (error != null) return ServiceResult<User>.Failure(error);
         var role = await _r.GetRoleAsync(roleId);
@@ -46,7 +46,7 @@ public sealed class UserManagementService : IUserManagementService
 
     public async Task<ServiceResult<User>> UpdateAsync(int id, string name, string email, int roleId)
     {
-        if (!IsAdmin) return ServiceResult<User>.Failure("Chỉ Quản trị viên được sửa tài khoản.");
+        if (!CanManageUsers) return ServiceResult<User>.Failure("Bạn không có quyền sửa tài khoản.");
         var error = Validate(name, email, null);
         if (error != null) return ServiceResult<User>.Failure(error);
         var x = await _r.GetByIdAsync(id);
@@ -66,7 +66,7 @@ public sealed class UserManagementService : IUserManagementService
 
     public async Task<ServiceResult<User>> SetActiveAsync(int id, bool active)
     {
-        if (!IsAdmin) return ServiceResult<User>.Failure("Chỉ Quản trị viên được khoá tài khoản.");
+        if (!CanManageUsers) return ServiceResult<User>.Failure("Bạn không có quyền khoá tài khoản.");
         if (AppSession.CurrentUser?.Id == id && !active) return ServiceResult<User>.Failure("Không thể tự khoá tài khoản đang đăng nhập.");
         var x = await _r.GetByIdAsync(id);
         if (x == null) return ServiceResult<User>.Failure("Không tìm thấy tài khoản.");
@@ -79,7 +79,7 @@ public sealed class UserManagementService : IUserManagementService
 
     public async Task<ServiceResult> ResetPasswordAsync(int id, string password)
     {
-        if (!IsAdmin) return ServiceResult.Failure("Chỉ Quản trị viên được đặt lại mật khẩu.");
+        if (!CanManageUsers) return ServiceResult.Failure("Bạn không có quyền đặt lại mật khẩu.");
         var passwordError = PasswordPolicy.Validate(password);
         if (passwordError != null) return ServiceResult.Failure(passwordError);
         var x = await _r.GetByIdAsync(id);
