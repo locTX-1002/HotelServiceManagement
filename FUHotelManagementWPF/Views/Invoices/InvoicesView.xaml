@@ -112,7 +112,8 @@
                 </Grid>
             </Border>
 
-            <Grid Grid.Column="2">
+            <Grid Grid.Column="2"
+                  Visibility="{Binding IsEmpty, Converter={StaticResource InverseBoolToVis}}">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="12" />
@@ -618,10 +619,26 @@
                     </TabItem>
                 </TabControl>
 
-                <ProgressBar Grid.RowSpan="3" IsIndeterminate="True" Height="4"
+                <ProgressBar Grid.RowSpan="7" IsIndeterminate="True" Height="4"
                              VerticalAlignment="Top"
                              Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}" />
             </Grid>
+
+            <Border Grid.Column="2" Style="{StaticResource Card}"
+                    Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVis}}">
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"
+                            MaxWidth="430">
+                    <TextBlock Text="Không có lượt ở cần xử lý"
+                               Style="{StaticResource SectionTitleText}"
+                               HorizontalAlignment="Center" />
+                    <TextBlock Text="Các hoá đơn đã thanh toán đầy đủ sẽ không còn xuất hiện trong danh sách này."
+                               Style="{StaticResource CaptionText}" TextWrapping="Wrap"
+                               TextAlignment="Center" Margin="0,7,0,18" />
+                    <Button Content="Tải lại" Style="{StaticResource GhostButton}"
+                            HorizontalAlignment="Center"
+                            Command="{Binding RefreshCommand}" />
+                </StackPanel>
+            </Border>
         </Grid>
     </Grid>
 </UserControl>

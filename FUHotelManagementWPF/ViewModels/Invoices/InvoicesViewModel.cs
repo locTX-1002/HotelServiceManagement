@@ -74,6 +74,7 @@ public sealed class InvoicesViewModel : ViewModelBase
     }
 
     public bool HasSelectedStay => SelectedStay != null;
+    public bool IsEmpty => !IsLoading && ActiveStays.Count == 0;
     public string InvoiceNumber => Invoice == null ? "CHƯA LẬP HOÁ ĐƠN" : $"HD-{Invoice.Id:000000}";
     public string SelectedRoomText => SelectedStay?.Reservation?.Room == null
         ? "Chưa chọn phòng"
@@ -290,7 +291,13 @@ public sealed class InvoicesViewModel : ViewModelBase
     public bool IsLoading
     {
         get => _isLoading;
-        private set => SetProperty(ref _isLoading, value);
+        private set
+        {
+            if (SetProperty(ref _isLoading, value))
+            {
+                OnPropertyChanged(nameof(IsEmpty));
+            }
+        }
     }
 
     private string? _errorMessage;
@@ -346,6 +353,7 @@ public sealed class InvoicesViewModel : ViewModelBase
             {
                 ActiveStays.Add(stay);
             }
+            OnPropertyChanged(nameof(IsEmpty));
 
             var today = DateTime.Today;
             Promotions = promotions
@@ -702,6 +710,7 @@ public sealed class InvoicesViewModel : ViewModelBase
     private void RaiseInvoiceState()
     {
         OnPropertyChanged(nameof(HasInvoice));
+        OnPropertyChanged(nameof(IsEmpty));
         OnPropertyChanged(nameof(InvoiceNumber));
         OnPropertyChanged(nameof(SelectedRoomText));
         OnPropertyChanged(nameof(SelectedGuestText));
