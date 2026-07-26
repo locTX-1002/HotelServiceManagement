@@ -241,13 +241,22 @@ namespace FUHotelManagementWPF.ViewModels.Users
 
         private async void OpenEditDialog(User? existing)
         {
-            var dialog = new UserEditDialog(new UserEditDialogViewModel(existing))
+            try
             {
-                Owner = RoomMapViewModel.ActiveWindow(),
-            };
-            if (dialog.ShowDialog() == true)
+                var owner = RoomMapViewModel.ActiveWindow();
+                var dialog = new UserEditDialog(new UserEditDialogViewModel(existing));
+                if (owner != null && owner != dialog)
+                {
+                    dialog.Owner = owner;
+                }
+                if (dialog.ShowDialog() == true)
+                {
+                    await LoadAsync();
+                }
+            }
+            catch (Exception ex)
             {
-                await LoadAsync();
+                Notify.Error($"Lỗi: {ex.Message}");
             }
         }
 
@@ -259,10 +268,13 @@ namespace FUHotelManagementWPF.ViewModels.Users
                 return;
             }
 
-            new ResetPasswordDialog(new ResetPasswordDialogViewModel(user))
+            var owner = RoomMapViewModel.ActiveWindow();
+            var dialog = new ResetPasswordDialog(new ResetPasswordDialogViewModel(user));
+            if (owner != null && owner != dialog)
             {
-                Owner = RoomMapViewModel.ActiveWindow(),
-            }.ShowDialog();
+                dialog.Owner = owner;
+            }
+            dialog.ShowDialog();
         }
 
         private async Task ToggleActiveAsync(object? param)

@@ -80,9 +80,19 @@ namespace FUHotelManagementWPF.ViewModels.Users
             set => SetProperty(ref _isBusy, value);
         }
 
+        private bool _isPasswordVisible;
+        public bool IsPasswordVisible
+        {
+            get => _isPasswordVisible;
+            set => SetProperty(ref _isPasswordVisible, value);
+        }
+
+        public RelayCommand TogglePasswordCommand { get; }
+
         public UserEditDialogViewModel(User? existing)
         {
             _existing = existing;
+            TogglePasswordCommand = new RelayCommand(_ => IsPasswordVisible = !IsPasswordVisible);
 
             if (existing != null)
             {

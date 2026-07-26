@@ -177,13 +177,20 @@ namespace FUHotelManagementWPF.ViewModels.Reservations
 
         private async void OpenCreateDialog()
         {
-            var dialog = new CreateReservationDialog(new CreateReservationDialogViewModel(null))
+            try
             {
-                Owner = RoomMapViewModel.ActiveWindow(),
-            };
-            if (dialog.ShowDialog() == true)
+                var dialog = new CreateReservationDialog(new CreateReservationDialogViewModel(null))
+                {
+                    Owner = RoomMapViewModel.ActiveWindow(),
+                };
+                if (dialog.ShowDialog() == true)
+                {
+                    await LoadAsync();
+                }
+            }
+            catch (Exception ex)
             {
-                await LoadAsync();
+                Notify.Error($"Lỗi: {ex.Message}");
             }
         }
 
@@ -193,13 +200,20 @@ namespace FUHotelManagementWPF.ViewModels.Reservations
             {
                 return;
             }
-            var dialog = new CreateReservationDialog(new CreateReservationDialogViewModel(SelectedRow.Reservation))
+            try
             {
-                Owner = RoomMapViewModel.ActiveWindow(),
-            };
-            if (dialog.ShowDialog() == true)
+                var dialog = new CreateReservationDialog(new CreateReservationDialogViewModel(SelectedRow.Reservation))
+                {
+                    Owner = RoomMapViewModel.ActiveWindow(),
+                };
+                if (dialog.ShowDialog() == true)
+                {
+                    await LoadAsync();
+                }
+            }
+            catch (Exception ex)
             {
-                await LoadAsync();
+                Notify.Error($"Lỗi: {ex.Message}");
             }
         }
 

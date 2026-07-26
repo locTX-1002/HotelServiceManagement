@@ -137,11 +137,18 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
 
         private async void OpenEditDialog(RoomTypeRow? existing)
         {
-            var viewModel = new RoomTypeEditDialogViewModel(existing?.RoomType);
-            var dialog = new RoomTypeEditDialog(viewModel) { Owner = RoomMapViewModel.ActiveWindow() };
-            if (dialog.ShowDialog() == true)
+            try
             {
-                await _refreshAll();
+                var viewModel = new RoomTypeEditDialogViewModel(existing?.RoomType);
+                var dialog = new RoomTypeEditDialog(viewModel) { Owner = RoomMapViewModel.ActiveWindow() };
+                if (dialog.ShowDialog() == true)
+                {
+                    await _refreshAll();
+                }
+            }
+            catch (Exception ex)
+            {
+                Notify.Error($"Lỗi: {ex.Message}");
             }
         }
 

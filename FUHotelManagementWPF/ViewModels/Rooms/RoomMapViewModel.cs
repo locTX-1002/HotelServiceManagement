@@ -126,16 +126,23 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
                 return;
             }
 
-            var viewModel = new RoomStatusDialogViewModel(row.Room);
-            var dialog = new RoomStatusDialog(viewModel) { Owner = ActiveWindow() };
-            if (dialog.ShowDialog() == true)
+            try
             {
-                await _refreshAll();
+                var viewModel = new RoomStatusDialogViewModel(row.Room);
+                var dialog = new RoomStatusDialog(viewModel) { Owner = ActiveWindow() };
+                if (dialog.ShowDialog() == true)
+                {
+                    await _refreshAll();
+                }
+            }
+            catch (Exception ex)
+            {
+                Notify.Error($"Lỗi: {ex.Message}");
             }
         }
 
         internal static Window? ActiveWindow()
-            => Application.Current.Windows.OfType<Window>().FirstOrDefault(w => w.IsActive)
+            => Application.Current.Windows.OfType<Window>().FirstOrDefault(w => w.IsVisible && w.IsActive)
                ?? Application.Current.MainWindow;
     }
 }

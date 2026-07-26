@@ -163,13 +163,20 @@ namespace FUHotelManagementWPF.ViewModels.Promotions
                 return;
             }
 
-            var dialog = new PromotionEditDialog(new PromotionEditDialogViewModel(existing))
+            try
             {
-                Owner = RoomMapViewModel.ActiveWindow(),
-            };
-            if (dialog.ShowDialog() == true)
+                var dialog = new PromotionEditDialog(new PromotionEditDialogViewModel(existing))
+                {
+                    Owner = RoomMapViewModel.ActiveWindow(),
+                };
+                if (dialog.ShowDialog() == true)
+                {
+                    await LoadAsync();
+                }
+            }
+            catch (Exception ex)
             {
-                await LoadAsync();
+                Notify.Error($"Lỗi: {ex.Message}");
             }
         }
     }

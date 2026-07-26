@@ -176,13 +176,20 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
             {
                 return;
             }
-            var dialog = new RoomStatusDialog(new RoomStatusDialogViewModel(SelectedRow.Room))
+            try
             {
-                Owner = RoomMapViewModel.ActiveWindow(),
-            };
-            if (dialog.ShowDialog() == true)
+                var dialog = new RoomStatusDialog(new RoomStatusDialogViewModel(SelectedRow.Room))
+                {
+                    Owner = RoomMapViewModel.ActiveWindow(),
+                };
+                if (dialog.ShowDialog() == true)
+                {
+                    await _refreshAll();
+                }
+            }
+            catch (Exception ex)
             {
-                await _refreshAll();
+                Notify.Error($"Lỗi: {ex.Message}");
             }
         }
 
@@ -237,11 +244,18 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
 
         private async void OpenEditDialog(RoomRow? existing)
         {
-            var viewModel = new RoomEditDialogViewModel(existing?.Room);
-            var dialog = new RoomEditDialog(viewModel) { Owner = RoomMapViewModel.ActiveWindow() };
-            if (dialog.ShowDialog() == true)
+            try
             {
-                await _refreshAll();
+                var viewModel = new RoomEditDialogViewModel(existing?.Room);
+                var dialog = new RoomEditDialog(viewModel) { Owner = RoomMapViewModel.ActiveWindow() };
+                if (dialog.ShowDialog() == true)
+                {
+                    await _refreshAll();
+                }
+            }
+            catch (Exception ex)
+            {
+                Notify.Error($"Lỗi: {ex.Message}");
             }
         }
 

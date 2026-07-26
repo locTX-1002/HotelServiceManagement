@@ -42,7 +42,20 @@ namespace FUHotelManagementWPF.ViewModels.Users
             set => SetProperty(ref _isBusy, value);
         }
 
-        public ResetPasswordDialogViewModel(User user) => _user = user;
+        private bool _isPasswordVisible;
+        public bool IsPasswordVisible
+        {
+            get => _isPasswordVisible;
+            set => SetProperty(ref _isPasswordVisible, value);
+        }
+
+        public RelayCommand TogglePasswordCommand { get; }
+
+        public ResetPasswordDialogViewModel(User user)
+        {
+            _user = user;
+            TogglePasswordCommand = new RelayCommand(_ => IsPasswordVisible = !IsPasswordVisible);
+        }
 
         /// <summary>Hai chuoi do code-behind doc tu PasswordBox truyen sang.</summary>
         public async Task ResetAsync(string password, string confirmPassword)

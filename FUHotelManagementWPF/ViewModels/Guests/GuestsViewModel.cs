@@ -119,13 +119,20 @@ namespace FUHotelManagementWPF.ViewModels.Guests
 
         private async void OpenDialog(Guest? existing)
         {
-            var dialog = new GuestEditDialog(new GuestEditDialogViewModel(existing))
+            try
             {
-                Owner = RoomMapViewModel.ActiveWindow(),
-            };
-            if (dialog.ShowDialog() == true)
+                var dialog = new GuestEditDialog(new GuestEditDialogViewModel(existing))
+                {
+                    Owner = RoomMapViewModel.ActiveWindow(),
+                };
+                if (dialog.ShowDialog() == true)
+                {
+                    await LoadAsync();
+                }
+            }
+            catch (Exception ex)
             {
-                await LoadAsync();
+                Notify.Error($"Lỗi: {ex.Message}");
             }
         }
 

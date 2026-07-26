@@ -154,20 +154,27 @@ namespace FUHotelManagementWPF.ViewModels.Home
 
         private async void OpenBookDialog(RoomType? preferredType)
         {
-            var viewModel = new CreateReservationDialogViewModel(null)
+            try
             {
-                CheckIn = CheckIn,
-                CheckOut = CheckOut > CheckIn ? CheckOut : CheckIn.AddDays(1),
-                NumberOfGuests = preferredType != null ? Math.Min(Guests, preferredType.Capacity) : Guests,
-            };
-            var dialog = new CreateReservationDialog(viewModel)
+                var viewModel = new CreateReservationDialogViewModel(null)
+                {
+                    CheckIn = CheckIn,
+                    CheckOut = CheckOut > CheckIn ? CheckOut : CheckIn.AddDays(1),
+                    NumberOfGuests = preferredType != null ? Math.Min(Guests, preferredType.Capacity) : Guests,
+                };
+                var dialog = new CreateReservationDialog(viewModel)
+                {
+                    Owner = RoomMapViewModel.ActiveWindow(),
+                };
+                if (dialog.ShowDialog() == true)
+                {
+                    // Dialog da bao thanh cong roi - bao them o day thi hien 2 toast chong nhau.
+                    await LoadAsync();
+                }
+            }
+            catch (Exception ex)
             {
-                Owner = RoomMapViewModel.ActiveWindow(),
-            };
-            if (dialog.ShowDialog() == true)
-            {
-                // Dialog da bao thanh cong roi - bao them o day thi hien 2 toast chong nhau.
-                await LoadAsync();
+                Notify.Error($"Lỗi: {ex.Message}");
             }
         }
 
