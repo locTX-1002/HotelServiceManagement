@@ -184,8 +184,11 @@ public sealed class ReservationService : IReservationService
     {
         var reservation = await _reservations.GetByIdAsync(id);
         if (reservation == null) return ServiceResult<Reservation>.Failure("Không tìm thấy đặt phòng.");
-        if (reservation.Status != ReservationStatus.Confirmed)
-            return ServiceResult<Reservation>.Failure("Chỉ đặt phòng đã xác nhận mới đánh dấu Không đến được.");
+        // Nhan ca don CHO xac nhan: don rac thi le tan phai xac nhan mot cai vo nghia roi
+        // moi danh dau duoc - hai thao tac cho mot don khong ai den.
+        if (reservation.Status is not (ReservationStatus.Confirmed or ReservationStatus.Pending))
+            return ServiceResult<Reservation>.Failure(
+                "Chỉ đặt phòng đang chờ hoặc đã xác nhận mới đánh dấu Không đến được.");
         if (reservation.Stay != null)
             return ServiceResult<Reservation>.Failure("Đặt phòng đã có lượt lưu trú, không đánh dấu Không đến được.");
 
@@ -193,6 +196,13 @@ public sealed class ReservationService : IReservationService
         await _reservations.UpdateAsync(reservation);
         return ServiceResult<Reservation>.Success(reservation, "Đã đánh dấu khách không đến.");
     }
+
+    /// <summary>
+    /// Don da qua ngay nhan phong ma khach khong den thi chuyen sang Khong den. Goi mot lan
+    /// luc app khoi dong. Khong dung quyen vi day la viec don dep cua he thong, khong phai
+    /// hanh dong cua nguoi dung.
+    /// </summary>
+    public Task<int> SweepNoShowAsync() => _reservations.SweepNoShowAsync(DateTime.Today);
 
     /// <summary>Ten trang thai tieng Viet dung chung cho danh sach va lich phong.</summary>
     public static string StatusText(ReservationStatus status) => status switch

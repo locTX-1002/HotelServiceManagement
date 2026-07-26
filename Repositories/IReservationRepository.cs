@@ -15,4 +15,5 @@ public interface IReservationRepository
     Task AddAsync(Reservation entity);
     Task UpdateAsync(Reservation entity);
     Task<List<Room>> GetAvailableRoomsAsync(DateTime checkIn, DateTime checkOut);
+    Task<int> SweepNoShowAsync(DateTime today);
 }
