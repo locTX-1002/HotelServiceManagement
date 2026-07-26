@@ -74,7 +74,7 @@ namespace DataAccessObjects
             }
             var demoEmails = new[] { "manager@hotel.com", "receptionist@hotel.com", "service@hotel.com" };
             var demoUsers = await c.Users.Where(u => demoEmails.Contains(u.Email)).ToListAsync();
-            foreach (var demoUser in demoUsers) demoUser.IsActive = false;
+            foreach (var demoUser in demoUsers) demoUser.IsActive = true;
             await c.SaveChangesAsync();
         }
     }
