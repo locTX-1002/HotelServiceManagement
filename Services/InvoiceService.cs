@@ -23,11 +23,22 @@ public sealed class InvoiceService : IInvoiceService
     public InvoiceService() : this(new InvoiceRepository(), new PromotionRepository()) { }
     public InvoiceService(IInvoiceRepository i, IPromotionRepository p) { _invoices = i; _promotions = p; }
     public Task<Invoice?> GetByIdAsync(int id) => _invoices.GetByIdAsync(id); public Task<Invoice?> GetByStayAsync(int id) => _invoices.GetByStayAsync(id);
-    public async Task<ServiceResult<Invoice>> PrepareAsync(int stayId, string? promotionCode = null, DateTime? asOf = null, decimal manualDiscount = 0)
+    public Task<ServiceResult<Invoice>> PrepareAsync(
+        int stayId, string? promotionCode = null, DateTime? asOf = null, decimal manualDiscount = 0)
+        => PrepareCoreAsync(stayId, promotionCode, asOf, manualDiscount, requirePreparePermission: true);
+
+    public Task<ServiceResult<Invoice>> ApplyApprovedDiscountAsync(int stayId, decimal manualDiscount)
+        => !AuthorizationPolicy.CanGiveManualDiscount
+            ? Task.FromResult(ServiceResult<Invoice>.Failure("Bạn không có quyền duyệt giảm giá."))
+            : PrepareCoreAsync(stayId, null, null, manualDiscount, requirePreparePermission: false);
+
+    private async Task<ServiceResult<Invoice>> PrepareCoreAsync(
+        int stayId, string? promotionCode, DateTime? asOf, decimal manualDiscount,
+        bool requirePreparePermission)
     {
         if (manualDiscount < 0) return ServiceResult<Invoice>.Failure("Số tiền giảm tay không được âm.");
         if (manualDiscount > 0 && !AuthorizationPolicy.CanGiveManualDiscount) return ServiceResult<Invoice>.Failure("Chỉ Quản trị viên hoặc Quản lý mới được giảm giá tay.");
-        if (AppSession.RoleName is not (RoleNames.Admin or RoleNames.Manager or RoleNames.Receptionist)) return ServiceResult<Invoice>.Failure("Bạn không có quyền lập hoá đơn.");
+        if (requirePreparePermission && !AuthorizationPolicy.CanPrepareInvoice) return ServiceResult<Invoice>.Failure("Bạn không có quyền lập hoá đơn.");
         var stay = await _invoices.GetStayForBillingAsync(stayId); if (stay == null || stay.Status is not (StayStatus.Active or StayStatus.Completed)) return ServiceResult<Invoice>.Failure("Không tìm thấy lượt lưu trú hợp lệ.");
         var invoice = stay.Invoice; var isNew = invoice == null; var paid = invoice?.Payments.Where(p => p.Status == PaymentStatus.Completed).Sum(p => p.Amount) ?? 0;
         var date = asOf ?? stay.ActualCheckOut ?? DateTime.Now;
@@ -90,5 +101,5 @@ public sealed class InvoiceService : IInvoiceService
             : frozen ? "Đã cập nhật hoá đơn. Giảm giá giữ nguyên vì hoá đơn đã thu tiền."
             : "Đã tính lại hoá đơn.");
     }
-    public async Task<ServiceResult> CancelAsync(int id) { if (AppSession.RoleName is not (RoleNames.Admin or RoleNames.Manager)) return ServiceResult.Failure("Bạn không có quyền huỷ hoá đơn."); return await _invoices.CancelAsync(id) ? ServiceResult.Success("Đã huỷ hoá đơn.") : ServiceResult.Failure("Không huỷ được hoá đơn đã có thanh toán."); }
+    public async Task<ServiceResult> CancelAsync(int id) { if (!AuthorizationPolicy.CanApproveInvoiceCancel) return ServiceResult.Failure("Bạn không có quyền duyệt huỷ hoá đơn."); return await _invoices.CancelAsync(id) ? ServiceResult.Success("Đã huỷ hoá đơn.") : ServiceResult.Failure("Không huỷ được hoá đơn đã có thanh toán."); }
 }

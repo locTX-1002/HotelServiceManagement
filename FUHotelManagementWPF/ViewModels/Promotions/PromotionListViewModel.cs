@@ -81,7 +81,7 @@ namespace FUHotelManagementWPF.ViewModels.Promotions
         }
 
         // Service cung chan quyen, nhung an nut truoc cho do bam vao roi bi tu choi.
-        public bool CanManage => AppSession.RoleName is RoleNames.Admin or RoleNames.Manager;
+        public bool CanManage => AuthorizationPolicy.CanManagePromotions;
 
         public RelayCommand AddCommand { get; }
         public RelayCommand EditCommand { get; }

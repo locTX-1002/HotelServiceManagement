@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using BusinessObjects.Entities;
 using BusinessObjects.Enums;
 using FUHotelManagementWPF.MvvmCore;
+using FUHotelManagementWPF.Views.Dialogs;
 using Services;
 
 namespace FUHotelManagementWPF.ViewModels.Rooms
@@ -34,6 +35,9 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
         /// khong rieng gi Bao tri, nen Le tan / NV dich vu chon gi cung bi tu choi.
         /// </summary>
         public bool CanChangeRoomStatus => AuthorizationPolicy.CanManageRooms;
+        public bool CanRequestMaintenance
+            => _room.Status == RoomStatus.Available
+               && AuthorizationPolicy.HasPermission(PermissionCodes.RoomMaintenanceRequest);
 
         // Khong chi noi "khong doi duoc" ma noi luon phai lam gi va o dau,
         // vi hai truong hop nay cach xu ly khac han nhau.
@@ -87,6 +91,7 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
         }
 
         public AsyncRelayCommand ConfirmCommand { get; }
+        public AsyncRelayCommand RequestMaintenanceCommand { get; }
 
         public RoomStatusDialogViewModel(Room room)
         {
@@ -119,6 +124,25 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
             });
 
             ConfirmCommand = new AsyncRelayCommand(ConfirmAsync, _ => HasOptions);
+            RequestMaintenanceCommand = new AsyncRelayCommand(RequestMaintenanceAsync);
+        }
+
+        private async Task RequestMaintenanceAsync(object? _)
+        {
+            var reason = ReasonDialog.Prompt(
+                $"Yêu cầu bảo trì phòng {_room.RoomNumber}", RoomMapViewModel.ActiveWindow());
+            if (reason == null) return;
+            var result = await new ApprovalService().RequestAsync(
+                ApprovalRequestType.RoomMaintenance, _room.Id, reason);
+            if (result.Ok)
+            {
+                Notify.Success(result.Message);
+                RequestClose?.Invoke(false);
+            }
+            else
+            {
+                ErrorMessage = result.Message;
+            }
         }
 
         private async Task ConfirmAsync(object? _)

@@ -358,7 +358,7 @@ public class OperationsFlowTests
 
         await SignInAsync(RoleNames.Admin);
         var byAdmin = await orders.ChangeStatusAsync(third.Data!.Id, ServiceOrderStatus.Processing);
-        Assert.True(byAdmin.Ok, byAdmin.Message);
+        Assert.False(byAdmin.Ok, "Admin chỉ quản trị hệ thống, không xử lý đơn dịch vụ.");
     }
 
     // ================= 3. YEU CAU BUONG PHONG =================
@@ -583,7 +583,7 @@ public class OperationsFlowTests
     public async Task BaoCaoCongSuat_TongPhongKhopSoPhongDangHoatDongTrongDb()
     {
         using var session = new SessionGuard();
-        await SignInAsync(RoleNames.Admin);
+        await SignInAsync(RoleNames.Manager);
 
         await using var db = HotelDbContextFactory.Create();
         var activeRooms = await db.Rooms.CountAsync(r => r.IsActive);
@@ -636,13 +636,13 @@ public class OperationsFlowTests
     // ================= 5. PHAN QUYEN BAO CAO =================
 
     [DbFact]
-    public async Task PhanQuyenBaoCao_ChiAdminVaManagerXemDuoc()
+    public async Task PhanQuyenBaoCao_ChiManagerXemDuoc()
     {
         using var session = new SessionGuard();
         var reports = new ReportService();
         var today = DateTime.Today;
 
-        foreach (var role in new[] { RoleNames.Receptionist, RoleNames.ServiceStaff })
+        foreach (var role in new[] { RoleNames.Admin, RoleNames.Receptionist, RoleNames.ServiceStaff })
         {
             await SignInAsync(role);
 
@@ -657,15 +657,10 @@ public class OperationsFlowTests
             Assert.False(csv.Ok, $"{role} khong duoc phep xuat CSV.");
         }
 
-        foreach (var role in new[] { RoleNames.Admin, RoleNames.Manager })
-        {
-            await SignInAsync(role);
-
-            var revenue = await reports.GetRevenueAsync(today.AddDays(-7), today);
-            Assert.True(revenue.Ok, revenue.Message);
-
-            var occupancy = await reports.GetOccupancyAsync();
-            Assert.True(occupancy.Ok, occupancy.Message);
-        }
+        await SignInAsync(RoleNames.Manager);
+        var managerRevenue = await reports.GetRevenueAsync(today.AddDays(-7), today);
+        Assert.True(managerRevenue.Ok, managerRevenue.Message);
+        var managerOccupancy = await reports.GetOccupancyAsync();
+        Assert.True(managerOccupancy.Ok, managerOccupancy.Message);
     }
 }

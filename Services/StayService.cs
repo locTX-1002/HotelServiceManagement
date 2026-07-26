@@ -18,7 +18,7 @@ public sealed class StayService : IStayService
 
     public async Task<ServiceResult<Stay>> CheckInAsync(int reservationId, DateTime? actualCheckIn = null)
     {
-        if (!CanOperate()) return ServiceResult<Stay>.Failure("Bạn không có quyền nhận phòng.");
+        if (!AuthorizationPolicy.HasPermission(PermissionCodes.StayCheckIn)) return ServiceResult<Stay>.Failure("Bạn không có quyền nhận phòng.");
         var reservation = await _reservations.GetByIdAsync(reservationId);
         if (reservation == null) return ServiceResult<Stay>.Failure("Không tìm thấy đặt phòng.");
         if (reservation.Status != ReservationStatus.Confirmed)
@@ -42,7 +42,7 @@ public sealed class StayService : IStayService
 
     public async Task<ServiceResult<Stay>> CheckOutAsync(int stayId, DateTime? actualCheckOut = null)
     {
-        if (!CanOperate()) return ServiceResult<Stay>.Failure("Bạn không có quyền trả phòng.");
+        if (!AuthorizationPolicy.HasPermission(PermissionCodes.StayCheckOut)) return ServiceResult<Stay>.Failure("Bạn không có quyền trả phòng.");
         var stay = await _stays.GetByIdAsync(stayId);
         if (stay == null || stay.Status != StayStatus.Active)
             return ServiceResult<Stay>.Failure("Không tìm thấy lượt lưu trú đang hoạt động.");
@@ -67,14 +67,14 @@ public sealed class StayService : IStayService
             : ServiceResult<Stay>.Success(result, "Trả phòng thành công; phòng chuyển sang Đang dọn.");
     }
 
-    private static bool CanOperate() => AppSession.RoleName is RoleNames.Admin or RoleNames.Manager or RoleNames.Receptionist;
-
     public Task<List<Stay>> GetBillableAsync() => _stays.GetBillableAsync();
 
     public Task<List<Reservation>> GetArrivalsAsync() => _stays.GetArrivalsAsync();
 
     public async Task<ServiceResult> ExtendAsync(int stayId, DateTime newCheckOut)
     {
+        if (!AuthorizationPolicy.HasPermission(PermissionCodes.StayExtend))
+            return ServiceResult.Failure("Bạn không có quyền gia hạn lượt ở.");
         var (ok, message) = await _stays.ExtendAsync(stayId, newCheckOut);
         return ok ? ServiceResult.Success(message) : ServiceResult.Failure(message);
     }

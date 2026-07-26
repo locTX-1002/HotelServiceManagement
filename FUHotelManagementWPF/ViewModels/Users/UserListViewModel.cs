@@ -51,7 +51,7 @@ namespace FUHotelManagementWPF.ViewModels.Users
         public ObservableCollection<UserRow> Rows { get; } = [];
 
         /// <summary>Toan module chi danh cho Admin - vai tro khac chi thay dong thong bao.</summary>
-        public bool IsAdmin => AppSession.RoleName == RoleNames.Admin;
+        public bool IsAdmin => AuthorizationPolicy.CanManageUsers;
         public bool IsNotAdmin => !IsAdmin;
 
         public List<RoleFilterOption> RoleFilters { get; } =

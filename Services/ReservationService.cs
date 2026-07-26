@@ -1,3 +1,4 @@
+using BusinessObjects;
 using BusinessObjects.Entities;
 using BusinessObjects.Enums;
 using Repositories;
@@ -34,7 +35,7 @@ public sealed class ReservationService : IReservationService
         int numberOfGuests, DateTime checkInDate, DateTime checkOutDate, string? specialRequests,
         decimal? depositAmount, PaymentMethod? depositPaymentMethod)
     {
-        if (!AuthorizationPolicy.CanOperateFrontDesk)
+        if (!AuthorizationPolicy.HasPermission(PermissionCodes.ReservationCreate))
             return ServiceResult<Reservation>.Failure("Bạn không có quyền tạo đặt phòng.");
         var error = Validate(numberOfGuests, checkInDate, checkOutDate, specialRequests,
             depositAmount, depositPaymentMethod);
@@ -84,7 +85,7 @@ public sealed class ReservationService : IReservationService
     public async Task<ServiceResult<Reservation>> UpdateAsync(int id, int roomId,
         int numberOfGuests, DateTime checkInDate, DateTime checkOutDate, string? specialRequests)
     {
-        if (!AuthorizationPolicy.CanOperateFrontDesk)
+        if (!AuthorizationPolicy.HasPermission(PermissionCodes.ReservationUpdate))
             return ServiceResult<Reservation>.Failure("Bạn không có quyền sửa đặt phòng.");
         var error = Validate(numberOfGuests, checkInDate, checkOutDate, specialRequests, null, null);
         if (error != null) return ServiceResult<Reservation>.Failure(error);
@@ -111,14 +112,14 @@ public sealed class ReservationService : IReservationService
     }
 
     public Task<ServiceResult<Reservation>> ConfirmAsync(int id)
-        => !AuthorizationPolicy.CanOperateFrontDesk
+        => !AuthorizationPolicy.HasPermission(PermissionCodes.ReservationUpdate)
             ? Task.FromResult(ServiceResult<Reservation>.Failure("Bạn không có quyền xác nhận đặt phòng."))
             : ChangeStatusAsync(id, ReservationStatus.Pending, ReservationStatus.Confirmed,
             "Chỉ đặt phòng đang chờ mới xác nhận được.", "Đã xác nhận đặt phòng.");
 
     public async Task<ServiceResult<Reservation>> CancelAsync(int id)
     {
-        if (!AuthorizationPolicy.CanOperateFrontDesk)
+        if (!AuthorizationPolicy.HasPermission(PermissionCodes.ReservationCancelApprove))
             return ServiceResult<Reservation>.Failure("Bạn không có quyền huỷ đặt phòng.");
         var entity = await _reservations.GetByIdAsync(id);
         if (entity == null) return ServiceResult<Reservation>.Failure("Không tìm thấy đặt phòng.");

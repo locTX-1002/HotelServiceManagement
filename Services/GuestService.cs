@@ -20,7 +20,7 @@ public sealed class GuestService : IGuestService
     public async Task<ServiceResult<Guest>> CreateAsync(string fullName, string? email,
         string phoneNumber, string? identityNumber, GuestTag tag, string? tagNote)
     {
-        if (!AuthorizationPolicy.CanOperateFrontDesk)
+        if (!AuthorizationPolicy.CanManageGuests)
             return ServiceResult<Guest>.Failure("Bạn không có quyền tạo hồ sơ khách hàng.");
         var error = Validate(fullName, email, phoneNumber, identityNumber, tag, tagNote);
         if (error != null) return ServiceResult<Guest>.Failure(error);
@@ -56,7 +56,7 @@ public sealed class GuestService : IGuestService
     public async Task<ServiceResult<Guest>> UpdateAsync(int id, string fullName, string? email,
         string phoneNumber, string? identityNumber, GuestTag tag, string? tagNote)
     {
-        if (!AuthorizationPolicy.CanOperateFrontDesk)
+        if (!AuthorizationPolicy.CanManageGuests)
             return ServiceResult<Guest>.Failure("Bạn không có quyền sửa hồ sơ khách hàng.");
         var error = Validate(fullName, email, phoneNumber, identityNumber, tag, tagNote);
         if (error != null) return ServiceResult<Guest>.Failure(error);
@@ -79,7 +79,7 @@ public sealed class GuestService : IGuestService
 
     public async Task<ServiceResult> DeleteAsync(int id)
     {
-        if (!AuthorizationPolicy.CanOperateFrontDesk)
+        if (!AuthorizationPolicy.CanManageGuests)
             return ServiceResult.Failure("Bạn không có quyền xoá hồ sơ khách hàng.");
         var guest = await _repository.GetByIdAsync(id);
         if (guest == null) return ServiceResult.Failure("Không tìm thấy khách hàng.");

@@ -198,7 +198,7 @@
                                 Command="{Binding PrepareInvoiceCommand}" />
                         <Button Content="Xuất hoá đơn" Style="{StaticResource GhostButton}"
                                 Margin="0,8,0,0" Command="{Binding ExportInvoiceCommand}" />
-                        <Button Content="Huỷ hoá đơn" Margin="0,8,0,0"
+                        <Button Content="Yêu cầu huỷ hoá đơn" Margin="0,8,0,0"
                                 IsEnabled="{Binding CanCancelInvoice, Mode=OneWay}"
                                 ToolTip="{Binding CancelInvoiceHint, Mode=OneWay}"
                                 Command="{Binding CancelInvoiceCommand}">

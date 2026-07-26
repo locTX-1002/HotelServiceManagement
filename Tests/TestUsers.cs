@@ -32,6 +32,27 @@ public static class TestUsers
     public static async Task SignInAsync(string roleName)
         => AppSession.SignIn(await GetAsync(roleName));
 
+    /// <summary>Tao phien nhe cho unit test, khong suy dien quyen tu ten role.</summary>
+    public static void SignInWithPermissions(params string[] permissionCodes)
+    {
+        var role = new Role { RoleName = "TestRole", DisplayName = "Vai trò kiểm thử" };
+        role.RolePermissions = permissionCodes.Select((code, index) => new RolePermission
+        {
+            RoleId = 99,
+            PermissionId = index + 1,
+            IsAllowed = true,
+            Permission = new Permission
+            {
+                Id = index + 1,
+                PermissionCode = code,
+                DisplayName = code,
+                Module = "Tests",
+                IsActive = true
+            }
+        }).ToList();
+        AppSession.SignIn(new User { Id = 99, FullName = "Test User", Role = role });
+    }
+
     /// <summary>Lay (hoac tao) 1 user active theo vai tro, da Include(Role) de AppSession.RoleName dung.</summary>
     public static async Task<User> GetAsync(string roleName)
     {
@@ -74,7 +95,10 @@ public static class TestUsers
     private static async Task<User?> FindAsync(string roleName)
     {
         await using var db = HotelDbContextFactory.Create();
-        return await db.Users.AsNoTracking().Include(u => u.Role)
+        return await db.Users.AsNoTracking()
+            .Include(u => u.Role)
+                .ThenInclude(r => r.RolePermissions)
+                .ThenInclude(rp => rp.Permission)
             .FirstOrDefaultAsync(u => u.Role.RoleName == roleName && u.IsActive);
     }
 

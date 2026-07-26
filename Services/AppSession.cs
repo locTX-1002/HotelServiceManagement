@@ -8,6 +8,8 @@ namespace Services
     /// </summary>
     public static class AppSession
     {
+        private static HashSet<string> _permissionCodes = new(StringComparer.OrdinalIgnoreCase);
+
         public static User? CurrentUser { get; private set; }
 
         /// <summary>
@@ -27,6 +29,17 @@ namespace Services
 
         public static string RoleName => CurrentUser?.Role?.RoleName ?? string.Empty;
 
+        /// <summary>
+        /// Tap quyen cua phien duoc tao tu RolePermissions da nap cung tai khoan.
+        /// Khong suy dien quyen tu ten vai tro.
+        /// </summary>
+        public static IReadOnlySet<string> PermissionCodes => _permissionCodes;
+
+        public static bool HasPermission(string permissionCode)
+            => IsLoggedIn
+               && !string.IsNullOrWhiteSpace(permissionCode)
+               && _permissionCodes.Contains(permissionCode);
+
         /// <summary>Ten hien thi cua nguoi dang dung app (nhan vien hoac khach).</summary>
         public static string DisplayName
             => CurrentUser?.FullName ?? CurrentGuest?.Guest?.FullName ?? string.Empty;
@@ -35,18 +48,25 @@ namespace Services
         {
             CurrentUser = user;
             CurrentGuest = null; // hai loai phien khong bao gio ton tai cung luc
+            _permissionCodes = user.Role?.RolePermissions
+                .Where(x => x.IsAllowed && x.Permission.IsActive)
+                .Select(x => x.Permission.PermissionCode)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase)
+                ?? new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         }
 
         public static void SignInGuest(GuestAccount account)
         {
             CurrentGuest = account;
             CurrentUser = null;
+            _permissionCodes.Clear();
         }
 
         public static void SignOut()
         {
             CurrentUser = null;
             CurrentGuest = null;
+            _permissionCodes.Clear();
         }
     }
 }

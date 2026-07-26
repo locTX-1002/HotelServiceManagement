@@ -152,7 +152,7 @@ public class CatalogAndAuthorizationTests
         var rac = new DonDep();
         try
         {
-            await DangNhapAsync(RoleNames.Admin);
+            await DangNhapAsync(RoleNames.Manager);
             var roomTypeService = new RoomTypeService();
             var roomService = new RoomService();
             var hau = Hau();
@@ -318,7 +318,7 @@ public class CatalogAndAuthorizationTests
         var rac = new DonDep();
         try
         {
-            await DangNhapAsync(RoleNames.Admin);
+            await DangNhapAsync(RoleNames.Manager);
             var catalog = new ServiceCatalogService();
             var hau = Hau();
 
@@ -408,7 +408,7 @@ public class CatalogAndAuthorizationTests
         var rac = new DonDep();
         try
         {
-            await DangNhapAsync(RoleNames.Admin);
+            await DangNhapAsync(RoleNames.Manager);
             var surcharge = new SurchargeService();
             var hau = Hau();
 
@@ -503,7 +503,7 @@ public class CatalogAndAuthorizationTests
         var rac = new DonDep();
         try
         {
-            await DangNhapAsync(RoleNames.Admin);
+            await DangNhapAsync(RoleNames.Manager);
             var promotion = new PromotionService();
             var homNay = DateTime.Today;
             var hau = Hau();

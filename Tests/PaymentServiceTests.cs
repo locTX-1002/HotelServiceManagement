@@ -11,7 +11,7 @@ public class PaymentServiceTests
     [Fact]
     public async Task BankTransfer_RequiresTransactionId()
     {
-        AppSession.SignIn(new User { Id = 3, Role = new Role { RoleName = RoleNames.Receptionist } });
+        TestUsers.SignInWithPermissions(PermissionCodes.PaymentRecord);
         var repository = new FakePaymentRepository();
 
         var result = await new PaymentService(repository)
@@ -24,7 +24,7 @@ public class PaymentServiceTests
     [Fact]
     public async Task Receptionist_CannotVoidCompletedPayment()
     {
-        AppSession.SignIn(new User { Id = 3, Role = new Role { RoleName = RoleNames.Receptionist } });
+        TestUsers.SignInWithPermissions(PermissionCodes.PaymentVoidRequest);
         var repository = new FakePaymentRepository();
 
         var result = await new PaymentService(repository).VoidAsync(1);
@@ -36,7 +36,7 @@ public class PaymentServiceTests
     [Fact]
     public async Task Manager_CanVoidCompletedPayment()
     {
-        AppSession.SignIn(new User { Id = 2, Role = new Role { RoleName = RoleNames.Manager } });
+        TestUsers.SignInWithPermissions(PermissionCodes.PaymentVoidApprove);
         var repository = new FakePaymentRepository { PaymentToVoid = new Payment { Id = 9, Status = PaymentStatus.Cancelled } };
 
         var result = await new PaymentService(repository).VoidAsync(9);

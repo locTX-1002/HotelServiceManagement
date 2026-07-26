@@ -16,7 +16,7 @@ public class ReportServiceTests
     /// </summary>
     public async Task RevenueRows_LietKeDuNgay_VaSapXepGiamDanTheoDoanhThu()
     {
-        AppSession.SignIn(new User { Role = new Role { RoleName = RoleNames.Manager } });
+        TestUsers.SignInWithPermissions(PermissionCodes.ReportView);
         var repository = new FakeReportRepository();
         var result = await new ReportService(repository)
             .GetRevenueAsync(new DateTime(2026, 7, 1), new DateTime(2026, 7, 3));
@@ -34,7 +34,7 @@ public class ReportServiceTests
     [Fact]
     public async Task ExportRevenueCsv_UsesStableInvariantFormat()
     {
-        AppSession.SignIn(new User { Role = new Role { RoleName = RoleNames.Manager } });
+        TestUsers.SignInWithPermissions(PermissionCodes.ReportView, PermissionCodes.ReportExport);
 
         var result = await new ReportService(new FakeReportRepository())
             .ExportRevenueCsvAsync(new DateTime(2026, 7, 1), new DateTime(2026, 7, 3));

@@ -12,7 +12,7 @@ public sealed class PromotionService : IPromotionService
     public Task<List<Promotion>> GetAllAsync() => _r.GetAllAsync();
     public async Task<ServiceResult<Promotion>> SaveAsync(int? id, string code, string? description, PromotionType type, decimal value, DateTime start, DateTime end, bool active)
     {
-        if (AppSession.RoleName is not (RoleNames.Admin or RoleNames.Manager)) return ServiceResult<Promotion>.Failure("Bạn không có quyền quản lý khuyến mãi.");
+        if (!AuthorizationPolicy.CanManagePromotions) return ServiceResult<Promotion>.Failure("Bạn không có quyền quản lý khuyến mãi.");
         var normalized = code.Trim().ToUpperInvariant(); if (normalized.Length is 0 or > 30) return ServiceResult<Promotion>.Failure("Mã khuyến mãi phải từ 1 đến 30 ký tự.");
         if (!Enum.IsDefined(type) || value <= 0 || (type == PromotionType.Percentage && value > 100)) return ServiceResult<Promotion>.Failure("Giá trị khuyến mãi không hợp lệ.");
         if (end.Date < start.Date) return ServiceResult<Promotion>.Failure("Ngày kết thúc phải sau ngày bắt đầu.");

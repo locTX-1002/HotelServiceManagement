@@ -22,6 +22,110 @@ namespace DataAccessObjects.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("BusinessObjects.Entities.ApprovalRequest", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("RequestType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime>("RequestedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("RequestedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal?>("RequestedValue")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("ReviewNote")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime?>("ReviewedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("ReviewedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<int>("TargetId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RequestedByUserId");
+
+                    b.HasIndex("ReviewedByUserId");
+
+                    b.HasIndex("RequestType", "TargetId", "Status");
+
+                    b.ToTable("ApprovalRequests");
+                });
+
+            modelBuilder.Entity("BusinessObjects.Entities.AuditLog", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ActionCode")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("EntityId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("EntityType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("NewValues")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<string>("OldValues")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<bool>("Succeeded")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("AuditLogs");
+                });
+
             modelBuilder.Entity("BusinessObjects.Entities.Guest", b =>
                 {
                     b.Property<int>("Id")
@@ -259,6 +363,362 @@ namespace DataAccessObjects.Migrations
                         });
                 });
 
+            modelBuilder.Entity("BusinessObjects.Entities.Permission", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<string>("DisplayName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Module")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("PermissionCode")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PermissionCode")
+                        .IsUnique();
+
+                    b.ToTable("Permissions");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Description = "Xem nhân viên",
+                            DisplayName = "Xem nhân viên",
+                            IsActive = true,
+                            Module = "Người dùng",
+                            PermissionCode = "user.view"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Description = "Quản lý nhân viên",
+                            DisplayName = "Quản lý nhân viên",
+                            IsActive = true,
+                            Module = "Người dùng",
+                            PermissionCode = "user.manage"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Description = "Cấu hình phân quyền",
+                            DisplayName = "Cấu hình phân quyền",
+                            IsActive = true,
+                            Module = "Phân quyền",
+                            PermissionCode = "permission.manage"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Description = "Xem nhật ký hệ thống",
+                            DisplayName = "Xem nhật ký hệ thống",
+                            IsActive = true,
+                            Module = "Nhật ký",
+                            PermissionCode = "audit.view"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            Description = "Xem phòng",
+                            DisplayName = "Xem phòng",
+                            IsActive = true,
+                            Module = "Phòng",
+                            PermissionCode = "room.view"
+                        },
+                        new
+                        {
+                            Id = 6,
+                            Description = "Quản lý phòng",
+                            DisplayName = "Quản lý phòng",
+                            IsActive = true,
+                            Module = "Phòng",
+                            PermissionCode = "room.manage"
+                        },
+                        new
+                        {
+                            Id = 7,
+                            Description = "Yêu cầu bảo trì phòng",
+                            DisplayName = "Yêu cầu bảo trì phòng",
+                            IsActive = true,
+                            Module = "Phòng",
+                            PermissionCode = "room.maintenance.request"
+                        },
+                        new
+                        {
+                            Id = 8,
+                            Description = "Duyệt bảo trì phòng",
+                            DisplayName = "Duyệt bảo trì phòng",
+                            IsActive = true,
+                            Module = "Phòng",
+                            PermissionCode = "room.maintenance.approve"
+                        },
+                        new
+                        {
+                            Id = 9,
+                            Description = "Xem đặt phòng",
+                            DisplayName = "Xem đặt phòng",
+                            IsActive = true,
+                            Module = "Đặt phòng",
+                            PermissionCode = "reservation.view"
+                        },
+                        new
+                        {
+                            Id = 10,
+                            Description = "Tạo đặt phòng",
+                            DisplayName = "Tạo đặt phòng",
+                            IsActive = true,
+                            Module = "Đặt phòng",
+                            PermissionCode = "reservation.create"
+                        },
+                        new
+                        {
+                            Id = 11,
+                            Description = "Cập nhật đặt phòng",
+                            DisplayName = "Cập nhật đặt phòng",
+                            IsActive = true,
+                            Module = "Đặt phòng",
+                            PermissionCode = "reservation.update"
+                        },
+                        new
+                        {
+                            Id = 12,
+                            Description = "Yêu cầu hủy đặt phòng",
+                            DisplayName = "Yêu cầu hủy đặt phòng",
+                            IsActive = true,
+                            Module = "Đặt phòng",
+                            PermissionCode = "reservation.cancel.request"
+                        },
+                        new
+                        {
+                            Id = 13,
+                            Description = "Duyệt hủy đặt phòng",
+                            DisplayName = "Duyệt hủy đặt phòng",
+                            IsActive = true,
+                            Module = "Đặt phòng",
+                            PermissionCode = "reservation.cancel.approve"
+                        },
+                        new
+                        {
+                            Id = 14,
+                            Description = "Nhận phòng",
+                            DisplayName = "Nhận phòng",
+                            IsActive = true,
+                            Module = "Lượt ở",
+                            PermissionCode = "stay.check_in"
+                        },
+                        new
+                        {
+                            Id = 15,
+                            Description = "Gia hạn lượt ở",
+                            DisplayName = "Gia hạn lượt ở",
+                            IsActive = true,
+                            Module = "Lượt ở",
+                            PermissionCode = "stay.extend"
+                        },
+                        new
+                        {
+                            Id = 16,
+                            Description = "Trả phòng",
+                            DisplayName = "Trả phòng",
+                            IsActive = true,
+                            Module = "Lượt ở",
+                            PermissionCode = "stay.check_out"
+                        },
+                        new
+                        {
+                            Id = 17,
+                            Description = "Xem khách hàng",
+                            DisplayName = "Xem khách hàng",
+                            IsActive = true,
+                            Module = "Khách hàng",
+                            PermissionCode = "guest.view"
+                        },
+                        new
+                        {
+                            Id = 18,
+                            Description = "Quản lý khách hàng",
+                            DisplayName = "Quản lý khách hàng",
+                            IsActive = true,
+                            Module = "Khách hàng",
+                            PermissionCode = "guest.manage"
+                        },
+                        new
+                        {
+                            Id = 19,
+                            Description = "Quản lý danh mục dịch vụ",
+                            DisplayName = "Quản lý danh mục dịch vụ",
+                            IsActive = true,
+                            Module = "Dịch vụ",
+                            PermissionCode = "service.catalog.manage"
+                        },
+                        new
+                        {
+                            Id = 20,
+                            Description = "Tạo đơn dịch vụ",
+                            DisplayName = "Tạo đơn dịch vụ",
+                            IsActive = true,
+                            Module = "Dịch vụ",
+                            PermissionCode = "service.order.create"
+                        },
+                        new
+                        {
+                            Id = 21,
+                            Description = "Xử lý đơn dịch vụ",
+                            DisplayName = "Xử lý đơn dịch vụ",
+                            IsActive = true,
+                            Module = "Dịch vụ",
+                            PermissionCode = "service.order.process"
+                        },
+                        new
+                        {
+                            Id = 22,
+                            Description = "Quản lý danh mục phụ thu",
+                            DisplayName = "Quản lý danh mục phụ thu",
+                            IsActive = true,
+                            Module = "Phụ thu",
+                            PermissionCode = "surcharge.catalog.manage"
+                        },
+                        new
+                        {
+                            Id = 23,
+                            Description = "Thêm phụ thu",
+                            DisplayName = "Thêm phụ thu",
+                            IsActive = true,
+                            Module = "Phụ thu",
+                            PermissionCode = "surcharge.add"
+                        },
+                        new
+                        {
+                            Id = 24,
+                            Description = "Quản lý khuyến mãi",
+                            DisplayName = "Quản lý khuyến mãi",
+                            IsActive = true,
+                            Module = "Khuyến mãi",
+                            PermissionCode = "promotion.manage"
+                        },
+                        new
+                        {
+                            Id = 25,
+                            Description = "Xem hóa đơn",
+                            DisplayName = "Xem hóa đơn",
+                            IsActive = true,
+                            Module = "Hóa đơn",
+                            PermissionCode = "invoice.view"
+                        },
+                        new
+                        {
+                            Id = 26,
+                            Description = "Lập và tính lại hóa đơn",
+                            DisplayName = "Lập và tính lại hóa đơn",
+                            IsActive = true,
+                            Module = "Hóa đơn",
+                            PermissionCode = "invoice.prepare"
+                        },
+                        new
+                        {
+                            Id = 27,
+                            Description = "Yêu cầu giảm giá",
+                            DisplayName = "Yêu cầu giảm giá",
+                            IsActive = true,
+                            Module = "Hóa đơn",
+                            PermissionCode = "invoice.discount.request"
+                        },
+                        new
+                        {
+                            Id = 28,
+                            Description = "Duyệt giảm giá",
+                            DisplayName = "Duyệt giảm giá",
+                            IsActive = true,
+                            Module = "Hóa đơn",
+                            PermissionCode = "invoice.discount.approve"
+                        },
+                        new
+                        {
+                            Id = 29,
+                            Description = "Yêu cầu hủy hóa đơn",
+                            DisplayName = "Yêu cầu hủy hóa đơn",
+                            IsActive = true,
+                            Module = "Hóa đơn",
+                            PermissionCode = "invoice.cancel.request"
+                        },
+                        new
+                        {
+                            Id = 30,
+                            Description = "Duyệt hủy hóa đơn",
+                            DisplayName = "Duyệt hủy hóa đơn",
+                            IsActive = true,
+                            Module = "Hóa đơn",
+                            PermissionCode = "invoice.cancel.approve"
+                        },
+                        new
+                        {
+                            Id = 31,
+                            Description = "Ghi nhận thanh toán",
+                            DisplayName = "Ghi nhận thanh toán",
+                            IsActive = true,
+                            Module = "Thanh toán",
+                            PermissionCode = "payment.record"
+                        },
+                        new
+                        {
+                            Id = 32,
+                            Description = "Yêu cầu hủy giao dịch",
+                            DisplayName = "Yêu cầu hủy giao dịch",
+                            IsActive = true,
+                            Module = "Thanh toán",
+                            PermissionCode = "payment.void.request"
+                        },
+                        new
+                        {
+                            Id = 33,
+                            Description = "Duyệt hủy giao dịch",
+                            DisplayName = "Duyệt hủy giao dịch",
+                            IsActive = true,
+                            Module = "Thanh toán",
+                            PermissionCode = "payment.void.approve"
+                        },
+                        new
+                        {
+                            Id = 34,
+                            Description = "Xem báo cáo",
+                            DisplayName = "Xem báo cáo",
+                            IsActive = true,
+                            Module = "Báo cáo",
+                            PermissionCode = "report.view"
+                        },
+                        new
+                        {
+                            Id = 35,
+                            Description = "Xuất báo cáo",
+                            DisplayName = "Xuất báo cáo",
+                            IsActive = true,
+                            Module = "Báo cáo",
+                            PermissionCode = "report.export"
+                        });
+                });
+
             modelBuilder.Entity("BusinessObjects.Entities.Promotion", b =>
                 {
                     b.Property<int>("Id")
@@ -392,6 +852,22 @@ namespace DataAccessObjects.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<string>("DisplayName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsSystemRole")
+                        .HasColumnType("bit");
+
                     b.Property<string>("RoleName")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -408,22 +884,304 @@ namespace DataAccessObjects.Migrations
                         new
                         {
                             Id = 1,
+                            Description = "Quản lý tài khoản, quyền và an toàn hệ thống",
+                            DisplayName = "Quản trị viên",
+                            IsActive = true,
+                            IsSystemRole = true,
                             RoleName = "Admin"
                         },
                         new
                         {
                             Id = 2,
+                            Description = "Quản lý vận hành, báo cáo và phê duyệt",
+                            DisplayName = "Quản lý",
+                            IsActive = true,
+                            IsSystemRole = true,
                             RoleName = "Manager"
                         },
                         new
                         {
                             Id = 3,
+                            Description = "Thực hiện nghiệp vụ tại quầy",
+                            DisplayName = "Lễ tân",
+                            IsActive = true,
+                            IsSystemRole = true,
                             RoleName = "Receptionist"
                         },
                         new
                         {
                             Id = 4,
+                            Description = "Thực hiện dịch vụ và yêu cầu buồng phòng",
+                            DisplayName = "Nhân viên dịch vụ",
+                            IsActive = true,
+                            IsSystemRole = true,
                             RoleName = "ServiceStaff"
+                        });
+                });
+
+            modelBuilder.Entity("BusinessObjects.Entities.RolePermission", b =>
+                {
+                    b.Property<int>("RoleId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PermissionId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsAllowed")
+                        .HasColumnType("bit");
+
+                    b.HasKey("RoleId", "PermissionId");
+
+                    b.HasIndex("PermissionId");
+
+                    b.ToTable("RolePermissions");
+
+                    b.HasData(
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 1,
+                            IsAllowed = true
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 2,
+                            IsAllowed = true
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 3,
+                            IsAllowed = true
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 4,
+                            IsAllowed = true
+                        },
+                        new
+                        {
+                            RoleId = 2,
+                            PermissionId = 5,
+                            IsAllowed = true
+                        },
+                        new
+                        {
+                            RoleId = 2,
+                            PermissionId = 6,
+                            IsAllowed = true
+                        },
+                        new
+                        {
+                            RoleId = 2,
+                            PermissionId = 8,
+                            IsAllowed = true
+                        },
+                        new
+                        {
+                            RoleId = 2,
+                            PermissionId = 9,
+                            IsAllowed = true
+                        },
+                        new
+                        {
+                            RoleId = 2,
+                            PermissionId = 13,
+                            IsAllowed = true
+                        },
+                        new
+                        {
+                            RoleId = 2,
+                            PermissionId = 19,
+                            IsAllowed = true
+                        },
+                        new
+                        {
+                            RoleId = 2,
+                            PermissionId = 21,
+                            IsAllowed = true
+                        },
+                        new
+                        {
+                            RoleId = 2,
+                            PermissionId = 22,
+                            IsAllowed = true
+                        },
+                        new
+                        {
+                            RoleId = 2,
+                            PermissionId = 24,
+                            IsAllowed = true
+                        },
+                        new
+                        {
+                            RoleId = 2,
+                            PermissionId = 25,
+                            IsAllowed = true
+                        },
+                        new
+                        {
+                            RoleId = 2,
+                            PermissionId = 28,
+                            IsAllowed = true
+                        },
+                        new
+                        {
+                            RoleId = 2,
+                            PermissionId = 30,
+                            IsAllowed = true
+                        },
+                        new
+                        {
+                            RoleId = 2,
+                            PermissionId = 33,
+                            IsAllowed = true
+                        },
+                        new
+                        {
+                            RoleId = 2,
+                            PermissionId = 34,
+                            IsAllowed = true
+                        },
+                        new
+                        {
+                            RoleId = 2,
+                            PermissionId = 35,
+                            IsAllowed = true
+                        },
+                        new
+                        {
+                            RoleId = 3,
+                            PermissionId = 5,
+                            IsAllowed = true
+                        },
+                        new
+                        {
+                            RoleId = 3,
+                            PermissionId = 7,
+                            IsAllowed = true
+                        },
+                        new
+                        {
+                            RoleId = 3,
+                            PermissionId = 9,
+                            IsAllowed = true
+                        },
+                        new
+                        {
+                            RoleId = 3,
+                            PermissionId = 10,
+                            IsAllowed = true
+                        },
+                        new
+                        {
+                            RoleId = 3,
+                            PermissionId = 11,
+                            IsAllowed = true
+                        },
+                        new
+                        {
+                            RoleId = 3,
+                            PermissionId = 12,
+                            IsAllowed = true
+                        },
+                        new
+                        {
+                            RoleId = 3,
+                            PermissionId = 14,
+                            IsAllowed = true
+                        },
+                        new
+                        {
+                            RoleId = 3,
+                            PermissionId = 15,
+                            IsAllowed = true
+                        },
+                        new
+                        {
+                            RoleId = 3,
+                            PermissionId = 16,
+                            IsAllowed = true
+                        },
+                        new
+                        {
+                            RoleId = 3,
+                            PermissionId = 17,
+                            IsAllowed = true
+                        },
+                        new
+                        {
+                            RoleId = 3,
+                            PermissionId = 18,
+                            IsAllowed = true
+                        },
+                        new
+                        {
+                            RoleId = 3,
+                            PermissionId = 20,
+                            IsAllowed = true
+                        },
+                        new
+                        {
+                            RoleId = 3,
+                            PermissionId = 23,
+                            IsAllowed = true
+                        },
+                        new
+                        {
+                            RoleId = 3,
+                            PermissionId = 25,
+                            IsAllowed = true
+                        },
+                        new
+                        {
+                            RoleId = 3,
+                            PermissionId = 26,
+                            IsAllowed = true
+                        },
+                        new
+                        {
+                            RoleId = 3,
+                            PermissionId = 27,
+                            IsAllowed = true
+                        },
+                        new
+                        {
+                            RoleId = 3,
+                            PermissionId = 29,
+                            IsAllowed = true
+                        },
+                        new
+                        {
+                            RoleId = 3,
+                            PermissionId = 31,
+                            IsAllowed = true
+                        },
+                        new
+                        {
+                            RoleId = 3,
+                            PermissionId = 32,
+                            IsAllowed = true
+                        },
+                        new
+                        {
+                            RoleId = 4,
+                            PermissionId = 5,
+                            IsAllowed = true
+                        },
+                        new
+                        {
+                            RoleId = 4,
+                            PermissionId = 7,
+                            IsAllowed = true
+                        },
+                        new
+                        {
+                            RoleId = 4,
+                            PermissionId = 21,
+                            IsAllowed = true
                         });
                 });
 
@@ -1044,6 +1802,34 @@ namespace DataAccessObjects.Migrations
                         });
                 });
 
+            modelBuilder.Entity("BusinessObjects.Entities.ApprovalRequest", b =>
+                {
+                    b.HasOne("BusinessObjects.Entities.User", "RequestedByUser")
+                        .WithMany()
+                        .HasForeignKey("RequestedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("BusinessObjects.Entities.User", "ReviewedByUser")
+                        .WithMany()
+                        .HasForeignKey("ReviewedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("RequestedByUser");
+
+                    b.Navigation("ReviewedByUser");
+                });
+
+            modelBuilder.Entity("BusinessObjects.Entities.AuditLog", b =>
+                {
+                    b.HasOne("BusinessObjects.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("BusinessObjects.Entities.GuestAccount", b =>
                 {
                     b.HasOne("BusinessObjects.Entities.Guest", "Guest")
@@ -1133,6 +1919,25 @@ namespace DataAccessObjects.Migrations
                     b.Navigation("Guest");
 
                     b.Navigation("Room");
+                });
+
+            modelBuilder.Entity("BusinessObjects.Entities.RolePermission", b =>
+                {
+                    b.HasOne("BusinessObjects.Entities.Permission", "Permission")
+                        .WithMany("RolePermissions")
+                        .HasForeignKey("PermissionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BusinessObjects.Entities.Role", "Role")
+                        .WithMany("RolePermissions")
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Permission");
+
+                    b.Navigation("Role");
                 });
 
             modelBuilder.Entity("BusinessObjects.Entities.Room", b =>
@@ -1266,6 +2071,11 @@ namespace DataAccessObjects.Migrations
                     b.Navigation("Payments");
                 });
 
+            modelBuilder.Entity("BusinessObjects.Entities.Permission", b =>
+                {
+                    b.Navigation("RolePermissions");
+                });
+
             modelBuilder.Entity("BusinessObjects.Entities.Reservation", b =>
                 {
                     b.Navigation("Stay");
@@ -1273,6 +2083,8 @@ namespace DataAccessObjects.Migrations
 
             modelBuilder.Entity("BusinessObjects.Entities.Role", b =>
                 {
+                    b.Navigation("RolePermissions");
+
                     b.Navigation("Users");
                 });
 
