@@ -45,7 +45,20 @@ public sealed class InvoiceService : IInvoiceService
         }
         else
         {
-            if (!string.IsNullOrWhiteSpace(promotionCode)) { var code = promotionCode.Trim().ToUpperInvariant(); var promo = await _promotions.GetByCodeAsync(code); if (promo == null || !promo.IsActive || date.Date < promo.StartDate.Date || date.Date > promo.EndDate.Date) return ServiceResult<Invoice>.Failure("Mã khuyến mãi không hợp lệ hoặc hết hạn."); discount = promo.Type == PromotionType.Percentage ? subtotal * promo.Value / 100m : promo.Value; applied = promo.Code; }
+            if (!string.IsNullOrWhiteSpace(promotionCode))
+            {
+                var code = promotionCode.Trim().ToUpperInvariant();
+                var promo = await _promotions.GetByCodeAsync(code);
+                // Tach ba ly do thay vi gop mot cau: le tan doc "khong hop le hoac het han"
+                // thi khong biet minh go sai ma hay ma da het han, phai mo man Khuyen mai ra
+                // do tay. Noi thang ra thi biet phai lam gi.
+                if (promo == null) return ServiceResult<Invoice>.Failure($"Không tìm thấy mã khuyến mãi \"{code}\".");
+                if (!promo.IsActive) return ServiceResult<Invoice>.Failure($"Mã \"{promo.Code}\" đang tắt, không dùng được.");
+                if (date.Date < promo.StartDate.Date) return ServiceResult<Invoice>.Failure($"Mã \"{promo.Code}\" chưa tới ngày áp dụng (từ {promo.StartDate:dd/MM/yyyy}).");
+                if (date.Date > promo.EndDate.Date) return ServiceResult<Invoice>.Failure($"Mã \"{promo.Code}\" đã hết hạn ngày {promo.EndDate:dd/MM/yyyy}.");
+                discount = promo.Type == PromotionType.Percentage ? subtotal * promo.Value / 100m : promo.Value;
+                applied = promo.Code;
+            }
 
             // Uu dai khach VIP: tu dong giam 10% tren tong tam tinh, khong can nhap ma.
             // Cong DON voi ma khuyen mai (neu co) roi moi clamp mot lan o duoi, nen tong giam
