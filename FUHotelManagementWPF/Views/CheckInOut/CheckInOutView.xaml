@@ -166,7 +166,6 @@
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="*" MinWidth="150" />
-                                    <ColumnDefinition Width="Auto" SharedSizeGroup="FlowBadge" />
                                     <ColumnDefinition Width="Auto" SharedSizeGroup="FlowActions" />
                                 </Grid.ColumnDefinitions>
 
@@ -195,32 +194,32 @@
                                     </TextBlock>
                                     <TextBlock Text="{Binding SubText}" Style="{StaticResource CaptionText}"
                                                FontSize="11.5" TextTrimming="CharacterEllipsis" Margin="0,2,0,0" />
-                                </StackPanel>
 
-                                <Border Grid.Column="2" VerticalAlignment="Center" Margin="0,0,14,0">
-                                    <Border.Style>
-                                        <Style TargetType="Border" BasedOn="{StaticResource BadgeBase}">
-                                            <Setter Property="Background" Value="{StaticResource SurfaceAltBrush}" />
-                                            <Setter Property="TextElement.Foreground" Value="{StaticResource InkSoftBrush}" />
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding IsToday}" Value="True">
-                                                    <Setter Property="Background" Value="{StaticResource WarningSoftBrush}" />
-                                                    <Setter Property="TextElement.Foreground" Value="{StaticResource WarningBrush}" />
-                                                </DataTrigger>
-                                                <DataTrigger Binding="{Binding IsOverdue}" Value="True">
-                                                    <Setter Property="Background" Value="{StaticResource DangerSoftBrush}" />
-                                                    <Setter Property="TextElement.Foreground" Value="{StaticResource DangerBrush}" />
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </Border.Style>
-                                    <TextBlock Text="{Binding StatusText}" />
-                                </Border>
+                                    <Border HorizontalAlignment="Left" Margin="0,5,0,0">
+                                        <Border.Style>
+                                            <Style TargetType="Border" BasedOn="{StaticResource BadgeBase}">
+                                                <Setter Property="Background" Value="{StaticResource SurfaceAltBrush}" />
+                                                <Setter Property="TextElement.Foreground" Value="{StaticResource InkSoftBrush}" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsToday}" Value="True">
+                                                        <Setter Property="Background" Value="{StaticResource WarningSoftBrush}" />
+                                                        <Setter Property="TextElement.Foreground" Value="{StaticResource WarningBrush}" />
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding IsOverdue}" Value="True">
+                                                        <Setter Property="Background" Value="{StaticResource DangerSoftBrush}" />
+                                                        <Setter Property="TextElement.Foreground" Value="{StaticResource DangerBrush}" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <TextBlock Text="{Binding StatusText}" />
+                                    </Border>
+                                </StackPanel>
 
                                 <!-- Nút làm ngay trên dòng, không phải chọn rồi mới làm được.
                                      Dòng quá hạn có thêm nút phụ vì đó là lúc cần xử lý khác đi:
                                      khách không tới thì đánh dấu Không đến, khách ở thêm thì gia hạn. -->
-                                <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center"
+                                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center"
                                             HorizontalAlignment="Right">
                                     <Button Content="Không đến" Style="{StaticResource GhostButton}"
                                             Padding="11,7" Margin="0,0,6,0" FontSize="12"
