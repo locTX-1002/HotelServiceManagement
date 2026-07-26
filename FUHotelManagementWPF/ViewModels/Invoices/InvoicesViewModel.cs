@@ -1,13 +1,47 @@
 using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.IO;
+using System.Text;
 using System.Windows;
+using System.Windows.Data;
 using BusinessObjects;
 using BusinessObjects.Entities;
 using BusinessObjects.Enums;
 using FUHotelManagementWPF.MvvmCore;
 using FUHotelManagementWPF.Views.Dialogs;
+using Microsoft.Win32;
 using Services;
 
 namespace FUHotelManagementWPF.ViewModels.Invoices;
+
+public sealed class PaymentRow
+{
+    public Payment Payment { get; }
+    public DateTime PaymentDate => Payment.PaymentDate;
+    public decimal Amount => Payment.Amount;
+    public string MethodText => Payment.PaymentMethod switch
+    {
+        PaymentMethod.Cash => "Tiền mặt",
+        PaymentMethod.BankTransfer => "Chuyển khoản",
+        _ => "Khác",
+    };
+    public string TransactionText => string.IsNullOrWhiteSpace(Payment.TransactionId)
+        ? "—"
+        : Payment.TransactionId;
+    public string StatusText => Payment.Status switch
+    {
+        PaymentStatus.Completed => "Hoàn tất",
+        PaymentStatus.Cancelled => "Đã huỷ",
+        PaymentStatus.Pending => "Đang chờ",
+        _ => "Không xác định",
+    };
+    public bool IsCancelled => Payment.Status == PaymentStatus.Cancelled;
+    public bool IsVoidable => Payment.Status == PaymentStatus.Completed;
+
+    public PaymentRow(Payment payment) => Payment = payment;
+}
+
+public sealed record StayInvoiceFilter(string Label, Func<Stay, bool>? Predicate);
 
 public sealed class InvoicesViewModel : ViewModelBase
 {
@@ -19,8 +53,12 @@ public sealed class InvoicesViewModel : ViewModelBase
     private int _selectedStayLoadVersion;
 
     public ObservableCollection<Stay> ActiveStays { get; } = [];
+    public ICollectionView ActiveStaysView { get; }
+    public IReadOnlyList<StayInvoiceFilter> StayFilters { get; }
     public ObservableCollection<Surcharge> Surcharges { get; } = [];
-    public ObservableCollection<Payment> Payments { get; } = [];
+    public ObservableCollection<PaymentRow> Payments { get; } = [];
+    public bool HasPayments => Payments.Count > 0;
+    public string PaymentCountText => $"{Payments.Count} giao dịch";
 
     private List<Promotion> _promotions = [];
     public List<Promotion> Promotions
@@ -44,6 +82,59 @@ public sealed class InvoicesViewModel : ViewModelBase
     }
 
     public bool HasSelectedStay => SelectedStay != null;
+    public bool IsEmpty => !IsLoading && !ActiveStaysView.Cast<object>().Any();
+
+    private string _staySearchText = string.Empty;
+    public string StaySearchText
+    {
+        get => _staySearchText;
+        set
+        {
+            if (SetProperty(ref _staySearchText, value))
+            {
+                ActiveStaysView.Refresh();
+                OnPropertyChanged(nameof(IsEmpty));
+            }
+        }
+    }
+
+    private StayInvoiceFilter _selectedStayFilter;
+    public StayInvoiceFilter SelectedStayFilter
+    {
+        get => _selectedStayFilter;
+        set
+        {
+            if (SetProperty(ref _selectedStayFilter, value))
+            {
+                ActiveStaysView.Refresh();
+                OnPropertyChanged(nameof(IsEmpty));
+            }
+        }
+    }
+    public string InvoiceNumber => Invoice == null ? "CHƯA LẬP HOÁ ĐƠN" : $"HD-{Invoice.Id:000000}";
+    public string SelectedRoomText => SelectedStay?.Reservation?.Room == null
+        ? "Chưa chọn phòng"
+        : $"Phòng {SelectedStay.Reservation.Room.RoomNumber}";
+    public string SelectedGuestText => SelectedStay?.Reservation?.Guest?.FullName ?? "Chưa chọn khách";
+    public string StayPeriodText
+    {
+        get
+        {
+            if (SelectedStay == null) return "—";
+            var checkOut = SelectedStay.ActualCheckOut?.ToString("dd/MM/yyyy HH:mm")
+                           ?? $"Dự kiến {SelectedStay.Reservation.CheckOutDate:dd/MM/yyyy}";
+            return $"{SelectedStay.ActualCheckIn:dd/MM/yyyy HH:mm} → {checkOut}";
+        }
+    }
+    public string InvoiceDateText => Invoice == null
+        ? "Chưa lập"
+        : Invoice.InvoiceDate.ToString("dd/MM/yyyy HH:mm");
+    public string InvoiceCreatorText => Invoice?.CreatedByUser?.FullName
+                                        ?? (Invoice == null
+                                            ? "—"
+                                            : Invoice.CreatedByUserId.HasValue
+                                                ? $"Người dùng #{Invoice.CreatedByUserId.Value}"
+                                                : "Dữ liệu cũ — không lưu người lập");
 
     /// <summary>0 = Hoa don, 1 = Phu thu, 2 = Thanh toan.</summary>
     private int _selectedTabIndex;
@@ -98,6 +189,9 @@ public sealed class InvoicesViewModel : ViewModelBase
             {
                 OnPropertyChanged(nameof(HasInvoice));
                 OnPropertyChanged(nameof(InvoiceStatusText));
+                OnPropertyChanged(nameof(InvoiceNumber));
+                OnPropertyChanged(nameof(InvoiceDateText));
+                OnPropertyChanged(nameof(InvoiceCreatorText));
             }
         }
     }
@@ -126,6 +220,39 @@ public sealed class InvoicesViewModel : ViewModelBase
         .Where(o => o.Status == ServiceOrderStatus.Completed).Sum(o => o.TotalAmount) ?? 0;
 
     private decimal LiveSurcharge => Surcharges.Sum(x => x.Subtotal);
+    public int ChargeableNights => SelectedStay == null
+        ? 0
+        : BillingRules.ChargeableNights(
+            SelectedStay.ActualCheckIn,
+            SelectedStay.Reservation.CheckInDate,
+            SelectedStay.Reservation.CheckOutDate,
+            SelectedStay.ActualCheckOut ?? DateTime.Now);
+    public string RoomChargeDetailText => SelectedStay?.Reservation?.Room?.RoomType == null
+        ? "Chưa có thông tin phòng"
+        : $"{ChargeableNights} đêm × {SelectedStay.Reservation.Room.RoomType.BasePrice:N0} đ";
+    public int CompletedServiceOrderCount => SelectedStay?.ServiceOrders
+        .Count(x => x.Status == ServiceOrderStatus.Completed) ?? 0;
+    public string ServiceChargeDetailText => CompletedServiceOrderCount == 0
+        ? "Không phát sinh"
+        : $"{CompletedServiceOrderCount} đơn đã hoàn tất";
+    public string SurchargeDetailText => Surcharges.Count == 0
+        ? "Không phát sinh"
+        : $"{Surcharges.Count} khoản phụ thu";
+    public string DiscountDetailText => string.IsNullOrWhiteSpace(Invoice?.PromotionCode)
+        ? "Không áp dụng"
+        : Invoice.PromotionCode;
+    public decimal InvoiceSubtotal => Invoice == null
+        ? LiveRoomCharge + LiveServiceCharge + LiveSurcharge
+        : Invoice.RoomCharge + Invoice.ServiceCharge + Invoice.SurchargeAmount;
+    public decimal DisplayRoomCharge => Invoice?.RoomCharge ?? LiveRoomCharge;
+    public decimal DisplayServiceCharge => Invoice?.ServiceCharge ?? LiveServiceCharge;
+    public decimal DisplaySurchargeAmount => Invoice?.SurchargeAmount ?? LiveSurcharge;
+    public decimal DisplayDiscountAmount => Invoice?.DiscountAmount ?? 0;
+    public decimal DisplayTotalAmount => Invoice?.TotalAmount ?? LiveTotal;
+    public decimal DisplayRemainingAmount => Invoice == null ? LiveTotal : RemainingAmount;
+    public bool HasOutstandingBalance => Invoice != null && RemainingAmount > 0;
+    public bool IsPaidInFull => Invoice != null && RemainingAmount <= 0;
+    public string RemainingBalanceLabel => IsPaidInFull ? "ĐÃ THANH TOÁN ĐỦ" : "CÒN PHẢI THU";
 
     /// <summary>Giam gia da chot tren hoa don; chua co hoa don thi chua biet, tinh 0.</summary>
     private decimal LiveDiscount => Math.Clamp(Invoice?.DiscountAmount ?? 0, 0,
@@ -172,6 +299,10 @@ public sealed class InvoicesViewModel : ViewModelBase
             if (SetProperty(ref _remainingAmount, value))
             {
                 OnPropertyChanged(nameof(CanRecordPayment));
+                OnPropertyChanged(nameof(HasOutstandingBalance));
+                OnPropertyChanged(nameof(DisplayRemainingAmount));
+                OnPropertyChanged(nameof(IsPaidInFull));
+                OnPropertyChanged(nameof(RemainingBalanceLabel));
             }
         }
     }
@@ -188,8 +319,10 @@ public sealed class InvoicesViewModel : ViewModelBase
                                      && Invoice?.Status != InvoiceStatus.Cancelled;
     public bool CanCancelInvoice => Invoice != null
                                     && Invoice.Status != InvoiceStatus.Cancelled
-                                    && PaidAmount <= 0
                                     && AppSession.RoleName is RoleNames.Admin or RoleNames.Manager;
+    public string CancelInvoiceHint => PaidAmount > 0
+        ? "Hoá đơn đã có thanh toán. Hãy huỷ các giao dịch hoàn tất trước khi huỷ hoá đơn."
+        : "Huỷ hoá đơn hiện tại.";
     public bool CanVoidPayment => AppSession.RoleName is RoleNames.Admin or RoleNames.Manager;
     // Hoa don da thu tien van cho tinh lai - khach goi them dich vu sau khi lap hoa don
     // la chuyen binh thuong. Chi chan khi hoa don da huy.
@@ -212,7 +345,13 @@ public sealed class InvoicesViewModel : ViewModelBase
     public bool IsLoading
     {
         get => _isLoading;
-        private set => SetProperty(ref _isLoading, value);
+        private set
+        {
+            if (SetProperty(ref _isLoading, value))
+            {
+                OnPropertyChanged(nameof(IsEmpty));
+            }
+        }
     }
 
     private string? _errorMessage;
@@ -230,9 +369,22 @@ public sealed class InvoicesViewModel : ViewModelBase
     public AsyncRelayCommand DeleteSurchargeCommand { get; }
     public AsyncRelayCommand RecordPaymentCommand { get; }
     public AsyncRelayCommand VoidPaymentCommand { get; }
+    public AsyncRelayCommand ExportInvoiceCommand { get; }
+    public RelayCommand OpenInvoiceDetailCommand { get; }
 
     public InvoicesViewModel()
     {
+        StayFilters =
+        [
+            new("Tất cả trạng thái", null),
+            new("Chưa lập hoá đơn", stay => stay.Invoice == null),
+            new("Còn nợ", stay => stay.Invoice?.Status is InvoiceStatus.Unpaid or InvoiceStatus.PartiallyPaid),
+            new("Đã thanh toán", stay => stay.Invoice?.Status == InvoiceStatus.Paid),
+        ];
+        _selectedStayFilter = StayFilters[0];
+        ActiveStaysView = CollectionViewSource.GetDefaultView(ActiveStays);
+        ActiveStaysView.Filter = FilterStay;
+
         RefreshCommand = new AsyncRelayCommand(_ => LoadAsync());
         PrepareInvoiceCommand = new AsyncRelayCommand(PrepareInvoiceAsync);
         CancelInvoiceCommand = new AsyncRelayCommand(CancelInvoiceAsync);
@@ -241,7 +393,22 @@ public sealed class InvoicesViewModel : ViewModelBase
         DeleteSurchargeCommand = new AsyncRelayCommand(DeleteSurchargeAsync);
         RecordPaymentCommand = new AsyncRelayCommand(_ => OpenPaymentDialogAsync());
         VoidPaymentCommand = new AsyncRelayCommand(VoidPaymentAsync);
+        ExportInvoiceCommand = new AsyncRelayCommand(ExportInvoiceAsync);
+        OpenInvoiceDetailCommand = new RelayCommand(_ => OpenInvoiceDetail());
         _ = LoadAsync();
+    }
+
+    private bool FilterStay(object item)
+    {
+        if (item is not Stay stay) return false;
+        if (SelectedStayFilter.Predicate != null && !SelectedStayFilter.Predicate(stay)) return false;
+
+        var keyword = StaySearchText.Trim();
+        if (keyword.Length == 0) return true;
+
+        return (stay.Reservation.Room?.RoomNumber?.Contains(keyword, StringComparison.OrdinalIgnoreCase) ?? false)
+               || (stay.Reservation.Guest?.FullName?.Contains(keyword, StringComparison.OrdinalIgnoreCase) ?? false)
+               || (stay.Reservation.BookingCode?.Contains(keyword, StringComparison.OrdinalIgnoreCase) ?? false);
     }
 
     public async Task LoadAsync()
@@ -266,6 +433,8 @@ public sealed class InvoicesViewModel : ViewModelBase
             {
                 ActiveStays.Add(stay);
             }
+            ActiveStaysView.Refresh();
+            OnPropertyChanged(nameof(IsEmpty));
 
             var today = DateTime.Today;
             Promotions = promotions
@@ -321,6 +490,8 @@ public sealed class InvoicesViewModel : ViewModelBase
             }
 
             Invoice = invoice;
+            selectedStay.Invoice = invoice;
+            RefreshStayList();
             SelectedPromotion = Invoice?.PromotionCode == null
                 ? null
                 : Promotions.FirstOrDefault(x => x.Code == Invoice.PromotionCode);
@@ -371,6 +542,12 @@ public sealed class InvoicesViewModel : ViewModelBase
             }
 
             Invoice = result.Data;
+            if (SelectedStay != null)
+            {
+                SelectedStay.Invoice = Invoice;
+                Invoice.CreatedByUser ??= AppSession.CurrentUser;
+            }
+            RefreshStayList();
             Notify.Success(result.Message);
             await LoadPaymentSummaryAsync();
             RaiseInvoiceState();
@@ -385,6 +562,11 @@ public sealed class InvoicesViewModel : ViewModelBase
     {
         if (Invoice == null)
         {
+            return;
+        }
+        if (PaidAmount > 0)
+        {
+            Notify.Warning("Hãy huỷ các giao dịch đã hoàn tất trước khi huỷ hoá đơn.");
             return;
         }
 
@@ -484,10 +666,11 @@ public sealed class InvoicesViewModel : ViewModelBase
 
     private async Task VoidPaymentAsync(object? parameter)
     {
-        if (parameter is not Payment payment)
+        if (parameter is not PaymentRow row)
         {
             return;
         }
+        var payment = row.Payment;
 
         var confirm = MessageBox.Show(
             $"Huỷ giao dịch {payment.Amount:N0} đ ngày {payment.PaymentDate:dd/MM/yyyy HH:mm}?",
@@ -523,13 +706,66 @@ public sealed class InvoicesViewModel : ViewModelBase
         }
     }
 
+    private async Task ExportInvoiceAsync(object? _)
+    {
+        if (Invoice == null || SelectedStay == null)
+        {
+            Notify.Warning("Chưa có hoá đơn để xuất.");
+            return;
+        }
+
+        var dialog = new SaveFileDialog
+        {
+            Title = "Xuất hoá đơn",
+            Filter = "Tệp văn bản (*.txt)|*.txt",
+            FileName = $"{InvoiceNumber}.txt",
+            AddExtension = true,
+        };
+        if (dialog.ShowDialog(ActiveWindow()) != true) return;
+
+        var lines = new StringBuilder()
+            .AppendLine(InvoiceNumber)
+            .AppendLine($"Trạng thái: {InvoiceStatusText}")
+            .AppendLine($"Phòng: {SelectedRoomText}")
+            .AppendLine($"Khách hàng: {SelectedGuestText}")
+            .AppendLine($"Lượt ở: {StayPeriodText}")
+            .AppendLine($"Ngày lập: {InvoiceDateText}")
+            .AppendLine($"Nhân viên: {InvoiceCreatorText}")
+            .AppendLine(new string('-', 48))
+            .AppendLine($"Tiền phòng ({RoomChargeDetailText}): {Invoice.RoomCharge:N0} đ")
+            .AppendLine($"Dịch vụ ({ServiceChargeDetailText}): {Invoice.ServiceCharge:N0} đ")
+            .AppendLine($"Phụ thu ({SurchargeDetailText}): {Invoice.SurchargeAmount:N0} đ")
+            .AppendLine($"Giảm giá ({DiscountDetailText}): -{Invoice.DiscountAmount:N0} đ")
+            .AppendLine(new string('-', 48))
+            .AppendLine($"Tổng hoá đơn: {Invoice.TotalAmount:N0} đ")
+            .AppendLine($"Đã thanh toán: {PaidAmount:N0} đ")
+            .AppendLine($"Còn phải thu: {RemainingAmount:N0} đ");
+
+        try
+        {
+            await File.WriteAllTextAsync(dialog.FileName, lines.ToString(), Encoding.UTF8);
+            Notify.Success("Đã xuất hoá đơn.");
+        }
+        catch (Exception)
+        {
+            Notify.Error("Không xuất được hoá đơn. Hãy kiểm tra quyền ghi tệp rồi thử lại.");
+        }
+    }
+
+    private void OpenInvoiceDetail()
+    {
+        new InvoiceDetailDialog(this) { Owner = ActiveWindow() }.ShowDialog();
+    }
+
     private async Task LoadPaymentSummaryAsync(int? selectedStayLoadVersion = null, Invoice? expectedInvoice = null)
     {
         var invoice = expectedInvoice ?? Invoice;
         if (invoice == null)
         {
-            Payments.Clear();
-            PaidAmount = 0;
+        Payments.Clear();
+        OnPropertyChanged(nameof(HasPayments));
+        OnPropertyChanged(nameof(PaymentCountText));
+        PaidAmount = 0;
             RemainingAmount = 0;
             return;
         }
@@ -549,19 +785,32 @@ public sealed class InvoicesViewModel : ViewModelBase
         }
 
         Payments.Clear();
+        // PaymentDAO tra ve mot ban Invoice moi. Giu lai navigation nguoi lap neu
+        // repository tuy bien/test double khong nap CreatedByUser.
+        var knownCreator = Invoice?.CreatedByUser;
+        result.Data.Invoice.CreatedByUser ??= knownCreator;
         Invoice = result.Data.Invoice;
+        if (SelectedStay != null)
+        {
+            SelectedStay.Invoice = Invoice;
+        }
+        RefreshStayList();
         PaidAmount = result.Data.PaidAmount;
         RemainingAmount = result.Data.RemainingAmount;
         foreach (var payment in result.Data.Payments)
         {
-            Payments.Add(payment);
+            Payments.Add(new PaymentRow(payment));
         }
+        OnPropertyChanged(nameof(HasPayments));
+        OnPropertyChanged(nameof(PaymentCountText));
     }
 
     private void ClearSelectedData()
     {
         Surcharges.Clear();
         Payments.Clear();
+        OnPropertyChanged(nameof(HasPayments));
+        OnPropertyChanged(nameof(PaymentCountText));
         Invoice = null;
         PaidAmount = 0;
         RemainingAmount = 0;
@@ -575,15 +824,39 @@ public sealed class InvoicesViewModel : ViewModelBase
     private void RaiseInvoiceState()
     {
         OnPropertyChanged(nameof(HasInvoice));
+        OnPropertyChanged(nameof(IsEmpty));
+        OnPropertyChanged(nameof(InvoiceNumber));
+        OnPropertyChanged(nameof(SelectedRoomText));
+        OnPropertyChanged(nameof(SelectedGuestText));
+        OnPropertyChanged(nameof(StayPeriodText));
+        OnPropertyChanged(nameof(InvoiceDateText));
+        OnPropertyChanged(nameof(InvoiceCreatorText));
         OnPropertyChanged(nameof(InvoiceStatusText));
         OnPropertyChanged(nameof(CanRecordPayment));
         OnPropertyChanged(nameof(CanEditSurcharges));
         OnPropertyChanged(nameof(CanCancelInvoice));
+        OnPropertyChanged(nameof(CancelInvoiceHint));
         OnPropertyChanged(nameof(CanVoidPayment));
         OnPropertyChanged(nameof(CanPrepareInvoice));
         OnPropertyChanged(nameof(PrepareInvoiceText));
         OnPropertyChanged(nameof(LiveTotal));
         OnPropertyChanged(nameof(LiveTotalText));
+        OnPropertyChanged(nameof(ChargeableNights));
+        OnPropertyChanged(nameof(RoomChargeDetailText));
+        OnPropertyChanged(nameof(CompletedServiceOrderCount));
+        OnPropertyChanged(nameof(ServiceChargeDetailText));
+        OnPropertyChanged(nameof(SurchargeDetailText));
+        OnPropertyChanged(nameof(DiscountDetailText));
+        OnPropertyChanged(nameof(InvoiceSubtotal));
+        OnPropertyChanged(nameof(DisplayRoomCharge));
+        OnPropertyChanged(nameof(DisplayServiceCharge));
+        OnPropertyChanged(nameof(DisplaySurchargeAmount));
+        OnPropertyChanged(nameof(DisplayDiscountAmount));
+        OnPropertyChanged(nameof(DisplayTotalAmount));
+        OnPropertyChanged(nameof(DisplayRemainingAmount));
+        OnPropertyChanged(nameof(HasOutstandingBalance));
+        OnPropertyChanged(nameof(IsPaidInFull));
+        OnPropertyChanged(nameof(RemainingBalanceLabel));
         OnPropertyChanged(nameof(PendingDifference));
         OnPropertyChanged(nameof(HasPendingCharges));
         OnPropertyChanged(nameof(PendingChargeText));
@@ -591,4 +864,10 @@ public sealed class InvoicesViewModel : ViewModelBase
 
     private static Window? ActiveWindow()
         => Application.Current.Windows.OfType<Window>().FirstOrDefault(x => x.IsActive);
+
+    private void RefreshStayList()
+    {
+        ActiveStaysView.Refresh();
+        OnPropertyChanged(nameof(IsEmpty));
+    }
 }
