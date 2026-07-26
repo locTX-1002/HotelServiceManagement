@@ -564,4 +564,50 @@
         <Setter Property="Language" Value="vi-VN" />
     </Style>
 
+    <!-- ============================================================
+         NEN CUA VUNG NOI DUNG - phong Amanoi.
+         Boc ContentControl dang chua trang thay vi them Image vao tung cua so:
+         de o day thi ca MainWindow lan GuestWindow dung chung MOT cay nen,
+         doi anh hay doi do mo chi phai sua mot cho.
+         Cach dung:  Style="{StaticResource BackdropHost}"  tren ContentControl.
+         Thanh nav va thanh tren van de mau dac - nen mo chi chay sau noi dung,
+         menu ma cung lo mo thi doc rat met.
+         ============================================================ -->
+    <Style x:Key="BackdropHost" TargetType="ContentControl">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ContentControl">
+                    <!-- ClipToBounds: anh duoc keo rong hon khung (Margin am ben duoi),
+                         khong cat thi no tran sang thanh nav ben canh -->
+                    <Grid ClipToBounds="True">
+                        <!-- Margin am: blur lam bon mep anh nhat dan ve trong suot. Day
+                             mep ra ngoai tam nhin thi trong khung chi con phan mau day. -->
+                        <Image Stretch="UniformToFill" Margin="-60"
+                               IsHitTestVisible="False" CacheMode="BitmapCache">
+                            <Image.Source>
+                                <!-- Giai anh o 480px thay vi kich thuoc that: da lam mo
+                                     den muc nay thi mat khong phan biet duoc, ma card do
+                                     hoa do it viec han. -->
+                                <BitmapImage UriSource="pack://application:,,,/Assets/Brand/backdrop.jpg"
+                                             DecodePixelWidth="480" />
+                            </Image.Source>
+                            <Image.Effect>
+                                <!-- RenderingBias=Performance: ban mo nhanh, chat luong
+                                     thap hon - nhung ban mo ban 48px thi ai thay. -->
+                                <BlurEffect Radius="70" KernelType="Gaussian"
+                                            RenderingBias="Performance" />
+                            </Image.Effect>
+                        </Image>
+
+                        <Rectangle Fill="{StaticResource BackdropVeilBrush}" IsHitTestVisible="False" />
+                        <Rectangle Fill="{StaticResource BackdropVignetteBrush}" IsHitTestVisible="False" />
+
+                        <!-- Noi dung that: WPF van tu chon View theo ViewMappings.xaml -->
+                        <ContentPresenter />
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
 </ResourceDictionary>

@@ -7,7 +7,9 @@
     <UserControl.Resources>
         <vm:VipToVisibilityConverter x:Key="VipToVis" />
     </UserControl.Resources>
-    <Grid Background="{StaticResource SurfaceBrush}" Margin="24">
+    <!-- Khong to Background: nen da co san tu BackdropHost cua cua so. To dac o day
+         la che mat anh nen, rieng man Hoa don tro thanh mang mau khac han cac man kia. -->
+    <Grid Margin="24">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="14" />
