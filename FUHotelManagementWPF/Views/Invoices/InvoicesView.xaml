@@ -724,8 +724,22 @@
                         </Border>
                     </Grid>
 
-                    <Grid Grid.Row="4">
-                        <DataGrid ItemsSource="{Binding Payments}" AutoGenerateColumns="False"
+                    <Border Grid.Row="4" Style="{StaticResource Card}" Padding="0">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="8" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <Grid Margin="16,14,16,0">
+                            <TextBlock Text="Lịch sử giao dịch"
+                                       Style="{StaticResource SectionTitleText}" />
+                            <TextBlock Text="{Binding PaymentCountText, Mode=OneWay}"
+                                       Style="{StaticResource CaptionText}"
+                                       HorizontalAlignment="Right" VerticalAlignment="Center" />
+                        </Grid>
+
+                        <DataGrid Grid.Row="2" ItemsSource="{Binding Payments}" AutoGenerateColumns="False"
                                   CanUserAddRows="False" HeadersVisibility="Column"
                                   GridLinesVisibility="None"
                                   Visibility="{Binding HasPayments, Mode=OneWay,
@@ -743,22 +757,22 @@
                                 <DataGridTextColumn Header="Thời gian"
                                                     Binding="{Binding PaymentDate, Mode=OneWay,
                                                                       StringFormat={}{0:dd/MM/yyyy HH:mm}}"
-                                                    Width="155" />
+                                                    Width="145" />
                                 <DataGridTextColumn Header="Số tiền"
                                                     Binding="{Binding Amount, Mode=OneWay,
                                                                       Converter={StaticResource Money}}"
-                                                    Width="130" />
+                                                    Width="115" />
                                 <DataGridTextColumn Header="Phương thức"
-                                                    Binding="{Binding MethodText, Mode=OneWay}" Width="130" />
+                                                    Binding="{Binding MethodText, Mode=OneWay}" Width="120" />
                                 <DataGridTextColumn Header="Mã giao dịch"
                                                     Binding="{Binding TransactionText, Mode=OneWay}"
-                                                    Width="*" MinWidth="150" />
+                                                    Width="*" MinWidth="120" />
                                 <DataGridTextColumn Header="Trạng thái"
-                                                    Binding="{Binding StatusText, Mode=OneWay}" Width="105" />
-                                <DataGridTemplateColumn Header="" Width="92">
+                                                    Binding="{Binding StatusText, Mode=OneWay}" Width="90" />
+                                <DataGridTemplateColumn Header="" Width="70">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <Button Content="Huỷ" Padding="12,5"
+                                            <Button Content="Huỷ" Padding="8,5"
                                                     Visibility="{Binding IsVoidable, Mode=OneWay,
                                                                          Converter={StaticResource BoolToVis}}"
                                                     IsEnabled="{Binding DataContext.CanVoidPayment,
@@ -774,7 +788,7 @@
                             </DataGrid.Columns>
                         </DataGrid>
 
-                        <Border Style="{StaticResource Card}"
+                        <Border Grid.Row="2" Background="Transparent"
                                 Visibility="{Binding HasPayments, Mode=OneWay,
                                                      Converter={StaticResource InverseBoolToVis}}">
                             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"
@@ -793,6 +807,7 @@
                             </StackPanel>
                         </Border>
                     </Grid>
+                    </Border>
                 </Grid>
 
                 <ProgressBar Grid.RowSpan="7" IsIndeterminate="True" Height="4"
