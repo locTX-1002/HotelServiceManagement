@@ -151,10 +151,10 @@
                 <Border Background="{StaticResource SurfaceAltBrush}" CornerRadius="4"
                         Padding="11,8" Margin="0,16,0,0">
                     <StackPanel>
-                        <TextBlock Text="Tài khoản demo" Style="{StaticResource FieldLabel}"
+                        <TextBlock Text="Tài khoản demo Manager" Style="{StaticResource FieldLabel}"
                                    HorizontalAlignment="Center" />
                         <TextBlock HorizontalAlignment="Center" Margin="0,4,0,0" FontSize="12.5">
-                            <Run Text="admin@hotel.com" FontWeight="SemiBold" /><Run
+                            <Run Text="manager@hotel.com" FontWeight="SemiBold" /><Run
                             Text="  ·  " Foreground="{StaticResource InkSoftBrush}" /><Run
                             Text="FuHotel@2026" FontWeight="SemiBold" />
                         </TextBlock>
