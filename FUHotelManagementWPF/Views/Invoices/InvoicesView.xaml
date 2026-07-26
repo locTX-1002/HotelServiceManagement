@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:enums="clr-namespace:BusinessObjects.Enums;assembly=BusinessObjects"
              xmlns:vm="clr-namespace:FUHotelManagementWPF.ViewModels.Invoices"
+             xmlns:mvvm="clr-namespace:FUHotelManagementWPF.MvvmCore"
              xmlns:hc="https://handyorg.github.io/handycontrol">
     <UserControl.Resources>
         <vm:VipToVisibilityConverter x:Key="VipToVis" />
@@ -29,7 +30,7 @@
 
         <Grid Grid.Row="2">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="275" />
+                <ColumnDefinition Width="330" />
                 <ColumnDefinition Width="14" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
@@ -40,14 +41,23 @@
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
-                    <StackPanel Margin="18,16,18,10">
+                    <StackPanel Margin="18,16,18,12">
                         <TextBlock Text="Lượt ở cần xử lý" Style="{StaticResource SectionTitleText}" />
                         <TextBlock Text="Chọn lượt ở để xem và xử lý hoá đơn."
                                    Style="{StaticResource CaptionText}" Margin="0,3,0,0" />
+                        <TextBox Style="{StaticResource SearchBox}" Margin="0,12,0,0"
+                                 mvvm:SearchBoxAssist.Enable="True"
+                                 Text="{Binding StaySearchText, UpdateSourceTrigger=PropertyChanged, Delay=250}"
+                                 ToolTip="Tìm theo phòng, tên khách hoặc mã đặt phòng" />
+                        <ComboBox ItemsSource="{Binding StayFilters}"
+                                  SelectedItem="{Binding SelectedStayFilter}"
+                                  DisplayMemberPath="Label" Margin="0,8,0,0"
+                                  ToolTip="Lọc theo trạng thái hoá đơn" />
                     </StackPanel>
-                    <ListBox Grid.Row="1" ItemsSource="{Binding ActiveStays}"
+                    <ListBox Grid.Row="1" ItemsSource="{Binding ActiveStaysView}"
                              SelectedItem="{Binding SelectedStay}"
                              BorderThickness="0" Background="Transparent"
+                             HorizontalContentAlignment="Stretch"
                              ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                         <ListBox.ItemTemplate>
                             <DataTemplate>
@@ -57,23 +67,22 @@
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="76" />
+                                                <ColumnDefinition Width="66" />
                                             </Grid.ColumnDefinitions>
-                                            <StackPanel Orientation="Horizontal">
-                                                <TextBlock FontWeight="SemiBold">
-                                                    <Run Text="Phòng " />
-                                                    <Run Text="{Binding Reservation.Room.RoomNumber, Mode=OneWay}" />
-                                                </TextBlock>
-                                                <!-- Bao truoc khach VIP de le tan biet hoa don se tu giam 10% -->
-                                                <Border Style="{StaticResource BadgeWarning}" Margin="8,0,0,0"
-                                                        VerticalAlignment="Center">
-                                                    <Border.Visibility>
-                                                        <Binding Path="Reservation.Guest.Tag" Converter="{StaticResource VipToVis}" />
-                                                    </Border.Visibility>
-                                                    <TextBlock Text="VIP −10%" />
-                                                </Border>
-                                            </StackPanel>
-                                            <Border Grid.Column="1" Padding="7,3" CornerRadius="8"
+                                            <TextBlock FontWeight="SemiBold">
+                                                <Run Text="Phòng " />
+                                                <Run Text="{Binding Reservation.Room.RoomNumber, Mode=OneWay}" />
+                                            </TextBlock>
+                                            <!-- Cot VIP co do rong co dinh de badge cong no thang hang. -->
+                                            <Border Grid.Column="1" Style="{StaticResource BadgeWarning}"
+                                                    HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                <Border.Visibility>
+                                                    <Binding Path="Reservation.Guest.Tag" Converter="{StaticResource VipToVis}" />
+                                                </Border.Visibility>
+                                                <TextBlock Text="VIP −10%" />
+                                            </Border>
+                                            <Border Grid.Column="2" Padding="7,3" CornerRadius="8"
                                                     Background="{StaticResource SurfaceAltBrush}">
                                                 <TextBlock FontSize="11" FontWeight="SemiBold">
                                                     <TextBlock.Style>

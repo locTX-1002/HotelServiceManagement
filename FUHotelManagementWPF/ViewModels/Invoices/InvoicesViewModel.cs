@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.IO;
 using System.Text;
 using System.Windows;
@@ -40,6 +41,8 @@ public sealed class PaymentRow
     public PaymentRow(Payment payment) => Payment = payment;
 }
 
+public sealed record StayInvoiceFilter(string Label, Func<Stay, bool>? Predicate);
+
 public sealed class InvoicesViewModel : ViewModelBase
 {
     private readonly IStayService _stayService = new StayService();
@@ -50,6 +53,8 @@ public sealed class InvoicesViewModel : ViewModelBase
     private int _selectedStayLoadVersion;
 
     public ObservableCollection<Stay> ActiveStays { get; } = [];
+    public ICollectionView ActiveStaysView { get; }
+    public IReadOnlyList<StayInvoiceFilter> StayFilters { get; }
     public ObservableCollection<Surcharge> Surcharges { get; } = [];
     public ObservableCollection<PaymentRow> Payments { get; } = [];
     public bool HasPayments => Payments.Count > 0;
@@ -76,7 +81,35 @@ public sealed class InvoicesViewModel : ViewModelBase
     }
 
     public bool HasSelectedStay => SelectedStay != null;
-    public bool IsEmpty => !IsLoading && ActiveStays.Count == 0;
+    public bool IsEmpty => !IsLoading && !ActiveStaysView.Cast<object>().Any();
+
+    private string _staySearchText = string.Empty;
+    public string StaySearchText
+    {
+        get => _staySearchText;
+        set
+        {
+            if (SetProperty(ref _staySearchText, value))
+            {
+                ActiveStaysView.Refresh();
+                OnPropertyChanged(nameof(IsEmpty));
+            }
+        }
+    }
+
+    private StayInvoiceFilter _selectedStayFilter;
+    public StayInvoiceFilter SelectedStayFilter
+    {
+        get => _selectedStayFilter;
+        set
+        {
+            if (SetProperty(ref _selectedStayFilter, value))
+            {
+                ActiveStaysView.Refresh();
+                OnPropertyChanged(nameof(IsEmpty));
+            }
+        }
+    }
     public string InvoiceNumber => Invoice == null ? "CHƯA LẬP HOÁ ĐƠN" : $"HD-{Invoice.Id:000000}";
     public string SelectedRoomText => SelectedStay?.Reservation?.Room == null
         ? "Chưa chọn phòng"
@@ -333,6 +366,17 @@ public sealed class InvoicesViewModel : ViewModelBase
 
     public InvoicesViewModel()
     {
+        StayFilters =
+        [
+            new("Tất cả trạng thái", null),
+            new("Chưa lập hoá đơn", stay => stay.Invoice == null),
+            new("Còn nợ", stay => stay.Invoice?.Status is InvoiceStatus.Unpaid or InvoiceStatus.PartiallyPaid),
+            new("Đã thanh toán", stay => stay.Invoice?.Status == InvoiceStatus.Paid),
+        ];
+        _selectedStayFilter = StayFilters[0];
+        ActiveStaysView = CollectionViewSource.GetDefaultView(ActiveStays);
+        ActiveStaysView.Filter = FilterStay;
+
         RefreshCommand = new AsyncRelayCommand(_ => LoadAsync());
         PrepareInvoiceCommand = new AsyncRelayCommand(PrepareInvoiceAsync);
         CancelInvoiceCommand = new AsyncRelayCommand(CancelInvoiceAsync);
@@ -344,6 +388,19 @@ public sealed class InvoicesViewModel : ViewModelBase
         ExportInvoiceCommand = new AsyncRelayCommand(ExportInvoiceAsync);
         OpenInvoiceDetailCommand = new RelayCommand(_ => OpenInvoiceDetail());
         _ = LoadAsync();
+    }
+
+    private bool FilterStay(object item)
+    {
+        if (item is not Stay stay) return false;
+        if (SelectedStayFilter.Predicate != null && !SelectedStayFilter.Predicate(stay)) return false;
+
+        var keyword = StaySearchText.Trim();
+        if (keyword.Length == 0) return true;
+
+        return (stay.Reservation.Room?.RoomNumber?.Contains(keyword, StringComparison.OrdinalIgnoreCase) ?? false)
+               || (stay.Reservation.Guest?.FullName?.Contains(keyword, StringComparison.OrdinalIgnoreCase) ?? false)
+               || (stay.Reservation.BookingCode?.Contains(keyword, StringComparison.OrdinalIgnoreCase) ?? false);
     }
 
     public async Task LoadAsync()
@@ -368,6 +425,7 @@ public sealed class InvoicesViewModel : ViewModelBase
             {
                 ActiveStays.Add(stay);
             }
+            ActiveStaysView.Refresh();
             OnPropertyChanged(nameof(IsEmpty));
 
             var today = DateTime.Today;
@@ -785,5 +843,8 @@ public sealed class InvoicesViewModel : ViewModelBase
         => Application.Current.Windows.OfType<Window>().FirstOrDefault(x => x.IsActive);
 
     private void RefreshStayList()
-        => CollectionViewSource.GetDefaultView(ActiveStays)?.Refresh();
+    {
+        ActiveStaysView.Refresh();
+        OnPropertyChanged(nameof(IsEmpty));
+    }
 }
