@@ -161,7 +161,7 @@ namespace Services
             // Giu tham so de frontend cu van build, nhung khong tin quyen do caller truyen vao.
             canManageMaintenance = AuthorizationPolicy.CanManageRooms;
             if (!canManageMaintenance)
-                return ServiceResult<Room>.Failure("Chỉ Quản trị viên hoặc Quản lý được đổi trạng thái phòng.");
+                return ServiceResult<Room>.Failure("Chỉ Quản lý được đổi trạng thái phòng.");
             if (newStatus == RoomStatus.Reserved || newStatus == RoomStatus.Occupied)
             {
                 return ServiceResult<Room>.Failure(

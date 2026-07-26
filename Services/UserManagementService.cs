@@ -51,12 +51,15 @@ public sealed class UserManagementService : IUserManagementService
         if (error != null) return ServiceResult<User>.Failure(error);
         var x = await _r.GetByIdAsync(id);
         if (x == null) return ServiceResult<User>.Failure("Không tìm thấy tài khoản.");
-        if (x.Role?.RoleName == AdminRoleName)
-            return ServiceResult<User>.Failure("Không thể sửa tài khoản Quản trị viên.");
+
         var role = await _r.GetRoleAsync(roleId);
         if (role == null) return ServiceResult<User>.Failure("Vai trò không tồn tại.");
-        if (role.RoleName == AdminRoleName)
+
+        if (x.Role?.RoleName == AdminRoleName && roleId != x.RoleId)
+            return ServiceResult<User>.Failure("Không thể đổi vai trò của tài khoản Quản trị viên.");
+        if (x.Role?.RoleName != AdminRoleName && role.RoleName == AdminRoleName)
             return ServiceResult<User>.Failure("Không thể gán vai trò Quản trị viên cho tài khoản khác.");
+
         var n = email.Trim().ToLowerInvariant();
         if (await _r.EmailExistsAsync(n, id)) return ServiceResult<User>.Failure("Email đã tồn tại.");
         x.FullName = name.Trim(); x.Email = n; x.RoleId = roleId;
@@ -70,7 +73,7 @@ public sealed class UserManagementService : IUserManagementService
         if (AppSession.CurrentUser?.Id == id && !active) return ServiceResult<User>.Failure("Không thể tự khoá tài khoản đang đăng nhập.");
         var x = await _r.GetByIdAsync(id);
         if (x == null) return ServiceResult<User>.Failure("Không tìm thấy tài khoản.");
-        if (x.Role?.RoleName == AdminRoleName)
+        if (x.Role?.RoleName == AdminRoleName && !active)
             return ServiceResult<User>.Failure("Không thể khoá tài khoản Quản trị viên.");
         x.IsActive = active;
         await _r.SaveAsync(x, false);
@@ -84,8 +87,6 @@ public sealed class UserManagementService : IUserManagementService
         if (passwordError != null) return ServiceResult.Failure(passwordError);
         var x = await _r.GetByIdAsync(id);
         if (x == null) return ServiceResult.Failure("Không tìm thấy tài khoản.");
-        if (x.Role?.RoleName == AdminRoleName)
-            return ServiceResult.Failure("Không thể đặt lại mật khẩu tài khoản Quản trị viên. Đổi trong cấu hình triển khai.");
         x.PasswordHash = BCrypt.Net.BCrypt.HashPassword(password);
         await _r.SaveAsync(x, false);
         return ServiceResult.Success("Đã đặt lại mật khẩu.");

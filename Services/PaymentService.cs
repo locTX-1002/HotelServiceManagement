@@ -26,7 +26,7 @@ public sealed class PaymentService : IPaymentService
     public async Task<ServiceResult<Payment>> RecordAsync(int invoiceId, decimal amount,
         PaymentMethod method, string? transactionId)
     {
-        if (AppSession.RoleName is not (RoleNames.Admin or RoleNames.Manager or RoleNames.Receptionist))
+        if (AppSession.RoleName is not (RoleNames.Manager or RoleNames.Receptionist))
             return ServiceResult<Payment>.Failure("Bạn không có quyền ghi nhận thanh toán.");
         if (!Enum.IsDefined(method))
             return ServiceResult<Payment>.Failure("Phương thức thanh toán không hợp lệ.");
@@ -65,7 +65,7 @@ public sealed class PaymentService : IPaymentService
 
     public async Task<ServiceResult<Payment>> VoidAsync(int paymentId)
     {
-        if (AppSession.RoleName is not (RoleNames.Admin or RoleNames.Manager))
+        if (AppSession.RoleName is not RoleNames.Manager)
             return ServiceResult<Payment>.Failure("Bạn không có quyền huỷ giao dịch.");
         var payment = await _repository.VoidAsync(paymentId);
         return payment == null

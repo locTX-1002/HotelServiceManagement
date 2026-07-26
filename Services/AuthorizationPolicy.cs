@@ -12,11 +12,11 @@ namespace Services;
 /// </summary>
 public static class AuthorizationPolicy
 {
-    public static bool CanManageRooms => AppSession.RoleName is RoleNames.Admin or RoleNames.Manager;
-    public static bool CanOperateFrontDesk => AppSession.RoleName is RoleNames.Admin or RoleNames.Manager or RoleNames.Receptionist;
-    public static bool CanManageServiceCatalog => AppSession.RoleName is RoleNames.Admin or RoleNames.Manager;
+    public static bool CanManageRooms => AppSession.RoleName is RoleNames.Manager;
+    public static bool CanOperateFrontDesk => AppSession.RoleName is RoleNames.Manager or RoleNames.Receptionist;
+    public static bool CanManageServiceCatalog => AppSession.RoleName is RoleNames.Manager;
     public static bool CanCreateServiceOrder => CanOperateFrontDesk;
-    public static bool CanProcessServiceOrder => AppSession.RoleName is RoleNames.Admin or RoleNames.Manager or RoleNames.ServiceStaff;
+    public static bool CanProcessServiceOrder => AppSession.RoleName is RoleNames.Manager or RoleNames.ServiceStaff;
 
     /// <summary>
     /// Giam gia TU NHAP tren hoa don (khong qua ma khuyen mai). Chat hon lap hoa don:
@@ -25,5 +25,7 @@ public static class AuthorizationPolicy
     /// va he thong khong luu duoc ly do (cot PromotionCode chi 30 ky tu, nhom cam tu
     /// tao migration de them cot).
     /// </summary>
-    public static bool CanGiveManualDiscount => AppSession.RoleName is RoleNames.Admin or RoleNames.Manager;
+    public static bool CanGiveManualDiscount => AppSession.RoleName is RoleNames.Manager;
+
+    public static bool CanManageUsers => AppSession.RoleName is RoleNames.Admin;
 }

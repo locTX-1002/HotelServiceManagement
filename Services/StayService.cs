@@ -67,7 +67,7 @@ public sealed class StayService : IStayService
             : ServiceResult<Stay>.Success(result, "Trả phòng thành công; phòng chuyển sang Đang dọn.");
     }
 
-    private static bool CanOperate() => AppSession.RoleName is RoleNames.Admin or RoleNames.Manager or RoleNames.Receptionist;
+    private static bool CanOperate() => AuthorizationPolicy.CanOperateFrontDesk;
 
     public Task<List<Stay>> GetBillableAsync() => _stays.GetBillableAsync();
 
