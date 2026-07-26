@@ -65,6 +65,9 @@
                     Margin="10,0,0,0" Padding="16,8" IsDefault="True"
                     Command="{Binding NavigateCommand}"
                     Visibility="{Binding HasNavigate, Converter={StaticResource BoolToVis}}" />
+            <Button Content="Yêu cầu bảo trì" Style="{StaticResource GhostButton}"
+                    Margin="10,0,0,0" Command="{Binding RequestMaintenanceCommand}"
+                    Visibility="{Binding CanRequestMaintenance, Converter={StaticResource BoolToVis}}" />
             <Button Content="Xác nhận" Style="{StaticResource PrimaryButton}" Margin="10,0,0,0"
                     MinWidth="110" IsDefault="True"
                     Command="{Binding ConfirmCommand}"

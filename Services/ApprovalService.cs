@@ -126,6 +126,12 @@ public sealed class ApprovalService : IApprovalService
                     request.TargetId, request.RequestedValue ?? 0);
                 return result.Ok ? ServiceResult.Success(result.Message) : ServiceResult.Failure(result.Message);
             }
+            case ApprovalRequestType.RoomMaintenance:
+            {
+                var result = await new RoomService().UpdateStatusAsync(
+                    request.TargetId, RoomStatus.Maintenance, canManageMaintenance: true);
+                return result.Ok ? ServiceResult.Success(result.Message) : ServiceResult.Failure(result.Message);
+            }
             default:
                 return ServiceResult.Failure("Loại yêu cầu này chưa có bộ xử lý.");
         }
