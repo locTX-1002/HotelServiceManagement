@@ -26,6 +26,9 @@ public static class AuthorizationPolicy
     /// tao migration de them cot).
     /// </summary>
     public static bool CanGiveManualDiscount => AppSession.RoleName is RoleNames.Manager;
+    public static bool CanViewReports => AppSession.RoleName is RoleNames.Manager;
+    public static bool CanManagePromotions => AppSession.RoleName is RoleNames.Manager;
+    public static bool CanManageSurcharges => AppSession.RoleName is RoleNames.Manager;
 
     public static bool CanManageUsers => AppSession.RoleName is RoleNames.Admin;
 }
