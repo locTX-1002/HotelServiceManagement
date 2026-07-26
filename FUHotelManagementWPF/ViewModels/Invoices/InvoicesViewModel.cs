@@ -219,13 +219,15 @@ public sealed class InvoicesViewModel : ViewModelBase
         .Where(o => o.Status == ServiceOrderStatus.Completed).Sum(o => o.TotalAmount) ?? 0;
 
     private decimal LiveSurcharge => Surcharges.Sum(x => x.Subtotal);
+    /// <summary>
+    /// So dem len hoa don: dem tu luc nhan phong that den luc roi di that. Truoc day ham
+    /// nay nhan them ngay tren don de "thu toi thieu so dem da dat", quy tac do da bo -
+    /// khach o bao nhieu dem tra bay nhieu.
+    /// </summary>
     public int ChargeableNights => SelectedStay == null
         ? 0
         : BillingRules.ChargeableNights(
-            SelectedStay.ActualCheckIn,
-            SelectedStay.Reservation.CheckInDate,
-            SelectedStay.Reservation.CheckOutDate,
-            SelectedStay.ActualCheckOut ?? DateTime.Now);
+            SelectedStay.ActualCheckIn, SelectedStay.ActualCheckOut ?? DateTime.Now);
     public string RoomChargeDetailText => SelectedStay?.Reservation?.Room?.RoomType == null
         ? "Chưa có thông tin phòng"
         : $"{ChargeableNights} đêm × {SelectedStay.Reservation.Room.RoomType.BasePrice:N0} đ";
