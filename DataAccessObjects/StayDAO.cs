@@ -98,6 +98,18 @@ public sealed class StayDAO
             return null;
 
         stay.ActualCheckOut = actualCheckOut;
+
+        // Ve doi xung voi luc nhan phong: o QUA HAN thi keo ngay tra cua don ve ngay roi di
+        // that. Khong keo thi don van ghi ngay tra cu, trong khi khach o them may dem nua -
+        // danh sach dat phong, lich phong va bao cao deu doc ra ngay sai.
+        //
+        // Chi keo DAI ra, khong bao gio rut ngan: tra som thi giu nguyen ngay tren don vi
+        // nhung dem da giu cho van phai tra tien. Cua so cua don chi no ra cho vua thuc te.
+        if (actualCheckOut.Date > stay.Reservation.CheckOutDate.Date)
+        {
+            stay.Reservation.CheckOutDate = actualCheckOut.Date;
+        }
+
         stay.CheckedOutByUserId = userId;
         stay.Status = StayStatus.Completed;
         stay.Reservation.Status = ReservationStatus.Completed;
