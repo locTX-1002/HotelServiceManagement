@@ -208,7 +208,8 @@
                     </DockPanel>
                 </Border>
 
-                <TabControl Grid.Row="6" SelectedIndex="{Binding SelectedTabIndex}">
+                <TabControl Grid.Row="6" SelectedIndex="{Binding SelectedTabIndex}"
+                            Visibility="Collapsed">
                     <TabItem Header="Hoá đơn">
                         <Grid>
                         <ScrollViewer VerticalScrollBarVisibility="Auto"
@@ -618,6 +619,153 @@
                         </Grid>
                     </TabItem>
                 </TabControl>
+
+                <Grid Grid.Row="6" Background="{StaticResource CardBrush}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="12" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="14" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <Grid Margin="6,4,6,0">
+                        <StackPanel>
+                            <TextBlock Text="Công nợ &amp; lịch sử giao dịch"
+                                       Style="{StaticResource SectionTitleText}" />
+                            <TextBlock Text="Theo dõi các khoản đã thu và số tiền còn phải thu của lượt ở."
+                                       Style="{StaticResource CaptionText}" Margin="0,3,0,0" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right"
+                                    VerticalAlignment="Center">
+                            <Button Content="Lập hoá đơn"
+                                    Style="{StaticResource PrimaryButton}"
+                                    Visibility="{Binding HasInvoice, Mode=OneWay,
+                                                         Converter={StaticResource InverseBoolToVis}}"
+                                    IsEnabled="{Binding CanPrepareInvoice, Mode=OneWay}"
+                                    Command="{Binding PrepareInvoiceCommand}" />
+                            <Button Content="Xem hoá đơn"
+                                    Style="{StaticResource GhostButton}"
+                                    Visibility="{Binding HasInvoice, Mode=OneWay,
+                                                         Converter={StaticResource BoolToVis}}"
+                                    Command="{Binding OpenInvoiceDetailCommand}" />
+                            <Button Content="Thêm phụ thu"
+                                    Style="{StaticResource GhostButton}" Margin="8,0,0,0"
+                                    IsEnabled="{Binding CanEditSurcharges, Mode=OneWay}"
+                                    Command="{Binding AddSurchargeCommand}" />
+                            <Button Content="Ghi nhận thanh toán"
+                                    Style="{StaticResource PrimaryButton}" Margin="8,0,0,0"
+                                    IsEnabled="{Binding CanRecordPayment, Mode=OneWay}"
+                                    Command="{Binding RecordPaymentCommand}" />
+                        </StackPanel>
+                    </Grid>
+
+                    <Grid Grid.Row="2">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="12" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="12" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Border Style="{StaticResource Card}" Padding="16,12">
+                            <StackPanel>
+                                <TextBlock Text="TỔNG HOÁ ĐƠN" Style="{StaticResource FieldLabel}" />
+                                <TextBlock Text="{Binding Invoice.TotalAmount, Mode=OneWay,
+                                                         Converter={StaticResource Money}}"
+                                           Style="{StaticResource SectionTitleText}" Margin="0,5,0,0" />
+                            </StackPanel>
+                        </Border>
+                        <Border Grid.Column="2" Style="{StaticResource Card}" Padding="16,12">
+                            <StackPanel>
+                                <TextBlock Text="ĐÃ THU" Style="{StaticResource FieldLabel}" />
+                                <TextBlock Text="{Binding PaidAmount, Mode=OneWay,
+                                                         Converter={StaticResource Money}}"
+                                           Style="{StaticResource SectionTitleText}"
+                                           Foreground="{StaticResource SuccessBrush}" Margin="0,5,0,0" />
+                            </StackPanel>
+                        </Border>
+                        <Border Grid.Column="4" Style="{StaticResource Card}" Padding="16,12">
+                            <StackPanel>
+                                <TextBlock Text="CÒN PHẢI THU" Style="{StaticResource FieldLabel}" />
+                                <TextBlock Text="{Binding RemainingAmount, Mode=OneWay,
+                                                         Converter={StaticResource Money}}"
+                                           Style="{StaticResource SectionTitleText}"
+                                           Foreground="{StaticResource DangerBrush}" Margin="0,5,0,0" />
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+
+                    <Grid Grid.Row="4">
+                        <DataGrid ItemsSource="{Binding Payments}" AutoGenerateColumns="False"
+                                  CanUserAddRows="False" HeadersVisibility="Column"
+                                  GridLinesVisibility="None"
+                                  Visibility="{Binding HasPayments, Mode=OneWay,
+                                                       Converter={StaticResource BoolToVis}}">
+                            <DataGrid.RowStyle>
+                                <Style TargetType="DataGridRow">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsCancelled, Mode=OneWay}" Value="True">
+                                            <Setter Property="Opacity" Value="0.5" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </DataGrid.RowStyle>
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Thời gian"
+                                                    Binding="{Binding PaymentDate, Mode=OneWay,
+                                                                      StringFormat={}{0:dd/MM/yyyy HH:mm}}"
+                                                    Width="155" />
+                                <DataGridTextColumn Header="Số tiền"
+                                                    Binding="{Binding Amount, Mode=OneWay,
+                                                                      Converter={StaticResource Money}}"
+                                                    Width="130" />
+                                <DataGridTextColumn Header="Phương thức"
+                                                    Binding="{Binding MethodText, Mode=OneWay}" Width="130" />
+                                <DataGridTextColumn Header="Mã giao dịch"
+                                                    Binding="{Binding TransactionText, Mode=OneWay}"
+                                                    Width="*" MinWidth="150" />
+                                <DataGridTextColumn Header="Trạng thái"
+                                                    Binding="{Binding StatusText, Mode=OneWay}" Width="105" />
+                                <DataGridTemplateColumn Header="" Width="120">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Button Content="Huỷ giao dịch" Padding="10,5"
+                                                    Visibility="{Binding IsVoidable, Mode=OneWay,
+                                                                         Converter={StaticResource BoolToVis}}"
+                                                    IsEnabled="{Binding DataContext.CanVoidPayment,
+                                                                        RelativeSource={RelativeSource AncestorType=DataGrid},
+                                                                        Mode=OneWay}"
+                                                    Command="{Binding DataContext.VoidPaymentCommand,
+                                                                      RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                    CommandParameter="{Binding}"
+                                                    Style="{StaticResource GhostButton}" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+
+                        <Border Style="{StaticResource Card}"
+                                Visibility="{Binding HasPayments, Mode=OneWay,
+                                                     Converter={StaticResource InverseBoolToVis}}">
+                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"
+                                        MaxWidth="440">
+                                <TextBlock Text="Chưa có giao dịch thanh toán"
+                                           Style="{StaticResource SectionTitleText}"
+                                           HorizontalAlignment="Center" />
+                                <TextBlock Text="Khi ghi nhận thanh toán, giao dịch sẽ xuất hiện tại đây để đối chiếu."
+                                           Style="{StaticResource CaptionText}" TextWrapping="Wrap"
+                                           TextAlignment="Center" Margin="0,7,0,14" />
+                                <TextBlock Text="{Binding RemainingAmount, Mode=OneWay,
+                                                         Converter={StaticResource Money}}"
+                                           Style="{StaticResource PageTitleText}"
+                                           Foreground="{StaticResource DangerBrush}"
+                                           HorizontalAlignment="Center" />
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </Grid>
 
                 <ProgressBar Grid.RowSpan="7" IsIndeterminate="True" Height="4"
                              VerticalAlignment="Top"

@@ -51,6 +51,7 @@ public sealed class InvoicesViewModel : ViewModelBase
     public ObservableCollection<Stay> ActiveStays { get; } = [];
     public ObservableCollection<Surcharge> Surcharges { get; } = [];
     public ObservableCollection<PaymentRow> Payments { get; } = [];
+    public bool HasPayments => Payments.Count > 0;
 
     private List<Promotion> _promotions = [];
     public List<Promotion> Promotions
@@ -676,8 +677,9 @@ public sealed class InvoicesViewModel : ViewModelBase
         var invoice = expectedInvoice ?? Invoice;
         if (invoice == null)
         {
-            Payments.Clear();
-            PaidAmount = 0;
+        Payments.Clear();
+        OnPropertyChanged(nameof(HasPayments));
+        PaidAmount = 0;
             RemainingAmount = 0;
             return;
         }
@@ -704,12 +706,14 @@ public sealed class InvoicesViewModel : ViewModelBase
         {
             Payments.Add(new PaymentRow(payment));
         }
+        OnPropertyChanged(nameof(HasPayments));
     }
 
     private void ClearSelectedData()
     {
         Surcharges.Clear();
         Payments.Clear();
+        OnPropertyChanged(nameof(HasPayments));
         Invoice = null;
         PaidAmount = 0;
         RemainingAmount = 0;
