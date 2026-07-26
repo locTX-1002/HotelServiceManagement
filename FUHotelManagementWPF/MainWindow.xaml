@@ -4,10 +4,17 @@
         xmlns:hc="https://handyorg.github.io/handycontrol"
         xmlns:vm="clr-namespace:FUHotelManagementWPF.ViewModels"
         Title="FU Hotel Management"
-        Height="760" Width="1220"
-        MinHeight="680" MinWidth="1100"
+        Height="820" Width="1400"
+        MinHeight="700" MinWidth="1280"
         WindowStartupLocation="CenterScreen"
         Style="{StaticResource BaseWindow}">
+    <!-- BE RONG TOI THIEU phai chua duoc TRANG RONG NHAT, khong thi thu nho cua so la chu
+         bi cat cut va nut mat mot nua chu.
+             menu trai 238 + le trang 24x2 + trang rong nhat
+             (Dich vu: 240 phong + 16 + 360 thuc don + 16 + 300 gio hang = 932)
+             = 1218
+         Lay 1280 de con cho cho thanh cuon doc va vien cua so. Them trang moi ma cot co
+         dinh cong lai vuot 932 thi phai nang so nay len theo. -->
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
