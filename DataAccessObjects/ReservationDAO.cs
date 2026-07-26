@@ -73,12 +73,37 @@ public sealed class ReservationDAO
     private static IQueryable<Reservation> Query(HotelDbContext context)
         => context.Reservations.AsNoTracking()
             .Include(r => r.Guest)
+            .Include(r => r.Stay)
             .Include(r => r.Room).ThenInclude(room => room.RoomType);
 
     /// <summary>
     /// Phong con trong trong khoang ngay: khong co dat phong chong lich VA khong co
     /// khach dang o keo sang. Man Dat phong, tab Lich phong va thanh tra cuu o Trang chu deu goi.
     /// </summary>
+    /// <summary>
+    /// Chuyen cac don da qua ngay nhan phong ma khach khong den sang Khong den.
+    ///
+    /// Khong co buoc nay thi don treo mai o "Cho xac nhan": truy van phong trong van tinh
+    /// no la ban nen phong khong ban lai duoc, con lich phong thi ve mot thanh cua ky nghi
+    /// da troi qua. Chay mot lan luc app khoi dong, dung mot cau UPDATE.
+    /// </summary>
+    public async Task<int> SweepNoShowAsync(DateTime today)
+    {
+        await using var context = HotelDbContextFactory.Create();
+        var stale = await context.Reservations
+            .Where(r => (r.Status == ReservationStatus.Pending || r.Status == ReservationStatus.Confirmed)
+                        && r.CheckInDate < today.Date
+                        && !context.Stays.Any(s => s.ReservationId == r.Id))
+            .ToListAsync();
+
+        foreach (var reservation in stale)
+        {
+            reservation.Status = ReservationStatus.NoShow;
+        }
+        await context.SaveChangesAsync();
+        return stale.Count;
+    }
+
     public async Task<List<Room>> GetAvailableRoomsAsync(DateTime checkIn, DateTime checkOut)
     {
         await using var context = HotelDbContextFactory.Create();

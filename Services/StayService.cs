@@ -26,6 +26,14 @@ public sealed class StayService : IStayService
         if (string.IsNullOrWhiteSpace(reservation.Guest.IdentityNumber))
             return ServiceResult<Stay>.Failure("Phải xác minh giấy tờ khách hàng trước khi nhận phòng.");
         var time = actualCheckIn ?? DateTime.Now;
+
+        // Truoc day khong kiem ngay gi ca: don 24-26 van nhan phong duoc vao 26 - tuc la
+        // nhan phong cho mot ky nghi da ket thuc, khong con dem nao de o. Don het han thi
+        // phai ghi Khong den roi tao don moi, khong "nhan phong nguoc thoi gian".
+        if (time.Date >= reservation.CheckOutDate.Date)
+            return ServiceResult<Stay>.Failure(
+                $"Đơn này đã qua ngày trả phòng ({reservation.CheckOutDate:dd/MM}). "
+                + "Hãy ghi Không đến rồi tạo đơn mới cho khách.");
         var stay = await _stays.CheckInAsync(reservationId, AppSession.CurrentUser?.Id, time);
         return stay == null
             ? ServiceResult<Stay>.Failure("Không nhận phòng được vì trạng thái phòng hoặc đặt phòng đã thay đổi.")

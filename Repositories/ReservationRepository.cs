@@ -13,6 +13,8 @@ public sealed class ReservationRepository : IReservationRepository
         => ReservationDAO.Instance.HasOverlapAsync(roomId, checkIn, checkOut, excludeId);
     public Task AddAsync(Reservation entity) => ReservationDAO.Instance.AddAsync(entity);
     public Task UpdateAsync(Reservation entity) => ReservationDAO.Instance.UpdateAsync(entity);
+    public Task<int> SweepNoShowAsync(DateTime today) => ReservationDAO.Instance.SweepNoShowAsync(today);
+
     public Task<List<Room>> GetAvailableRoomsAsync(DateTime checkIn, DateTime checkOut)
         => ReservationDAO.Instance.GetAvailableRoomsAsync(checkIn, checkOut);
 }

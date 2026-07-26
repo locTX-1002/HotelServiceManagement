@@ -22,12 +22,19 @@ namespace BusinessObjects
         /// xa hon trong hai moc, va it nhat luon la mot dem.
         /// </summary>
         /// <param name="actualCheckIn">Luc khach nhan phong that.</param>
+        /// <param name="plannedCheckIn">Ngay nhan phong ghi tren don dat.</param>
         /// <param name="plannedCheckOut">Ngay tra phong ghi tren don dat.</param>
         /// <param name="leavingAt">Luc tinh tien: ngay tra thuc te, hoac hom nay neu con o.</param>
-        public static int ChargeableNights(DateTime actualCheckIn, DateTime plannedCheckOut, DateTime leavingAt)
+        public static int ChargeableNights(DateTime actualCheckIn, DateTime plannedCheckIn,
+            DateTime plannedCheckOut, DateTime leavingAt)
         {
+            // Moc DAU lay ngay som hon: khach den muon van tra du so dem da giu cho, vi tu
+            // ngay dat la phong do khong ban cho ai duoc nua. Neu do tu ngay den THAT thi di
+            // som mat tien ma den muon lai duoc giam - hai chieu xu khac nhau.
+            var from = actualCheckIn.Date < plannedCheckIn.Date ? actualCheckIn.Date : plannedCheckIn.Date;
+            // Moc CUOI lay ngay muon hon: o qua han thi tinh theo ngay roi di that.
             var until = leavingAt.Date > plannedCheckOut.Date ? leavingAt.Date : plannedCheckOut.Date;
-            return Math.Max(1, (until - actualCheckIn.Date).Days);
+            return Math.Max(1, (until - from).Days);
         }
 
         /// <summary>So dem o qua so voi don - hien rieng de le tan giai thich duoc voi khach.</summary>

@@ -209,8 +209,8 @@ public sealed class InvoicesViewModel : ViewModelBase
         {
             if (SelectedStay?.Reservation?.Room?.RoomType == null) return 0;
 
-            var nights = BillingRules.ChargeableNights(
-                SelectedStay.ActualCheckIn, SelectedStay.Reservation.CheckOutDate,
+            var nights = BillingRules.ChargeableNights(SelectedStay.ActualCheckIn,
+                SelectedStay.Reservation.CheckInDate, SelectedStay.Reservation.CheckOutDate,
                 SelectedStay.ActualCheckOut ?? DateTime.Now);
             return nights * SelectedStay.Reservation.Room.RoomType.BasePrice;
         }

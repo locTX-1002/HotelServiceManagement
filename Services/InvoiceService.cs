@@ -31,8 +31,8 @@ public sealed class InvoiceService : IInvoiceService
         var stay = await _invoices.GetStayForBillingAsync(stayId); if (stay == null || stay.Status is not (StayStatus.Active or StayStatus.Completed)) return ServiceResult<Invoice>.Failure("Không tìm thấy lượt lưu trú hợp lệ.");
         var invoice = stay.Invoice; var isNew = invoice == null; var paid = invoice?.Payments.Where(p => p.Status == PaymentStatus.Completed).Sum(p => p.Amount) ?? 0;
         var date = asOf ?? stay.ActualCheckOut ?? DateTime.Now;
-        var nights = BillingRules.ChargeableNights(
-            stay.ActualCheckIn, stay.Reservation.CheckOutDate, date); var room = nights * stay.Reservation.Room.RoomType.BasePrice; var services = stay.ServiceOrders.Where(o => o.Status == ServiceOrderStatus.Completed).Sum(o => o.TotalAmount); var surcharge = stay.Surcharges.Sum(x => x.Subtotal); var subtotal = room + services + surcharge; decimal discount = 0; string? applied = null;
+        var nights = BillingRules.ChargeableNights(stay.ActualCheckIn,
+            stay.Reservation.CheckInDate, stay.Reservation.CheckOutDate, date); var room = nights * stay.Reservation.Room.RoomType.BasePrice; var services = stay.ServiceOrders.Where(o => o.Status == ServiceOrderStatus.Completed).Sum(o => o.TotalAmount); var surcharge = stay.Surcharges.Sum(x => x.Subtotal); var subtotal = room + services + surcharge; decimal discount = 0; string? applied = null;
         // GIAM GIA CHOT TAI LUC LAP HOA DON. Khi hoa don da thu tien, giu nguyen muc giam
         // va nhan giam cu thay vi tinh lai theo the VIP / ma khuyen mai hien tai. Neu khong,
         // chi can gan the VIP cho khach sau khi ho da tra tien la tong tut xuong duoi so da
@@ -45,7 +45,20 @@ public sealed class InvoiceService : IInvoiceService
         }
         else
         {
-            if (!string.IsNullOrWhiteSpace(promotionCode)) { var code = promotionCode.Trim().ToUpperInvariant(); var promo = await _promotions.GetByCodeAsync(code); if (promo == null || !promo.IsActive || date.Date < promo.StartDate.Date || date.Date > promo.EndDate.Date) return ServiceResult<Invoice>.Failure("Mã khuyến mãi không hợp lệ hoặc hết hạn."); discount = promo.Type == PromotionType.Percentage ? subtotal * promo.Value / 100m : promo.Value; applied = promo.Code; }
+            if (!string.IsNullOrWhiteSpace(promotionCode))
+            {
+                var code = promotionCode.Trim().ToUpperInvariant();
+                var promo = await _promotions.GetByCodeAsync(code);
+                // Tach ba ly do thay vi gop mot cau: le tan doc "khong hop le hoac het han"
+                // thi khong biet minh go sai ma hay ma da het han, phai mo man Khuyen mai ra
+                // do tay. Noi thang ra thi biet phai lam gi.
+                if (promo == null) return ServiceResult<Invoice>.Failure($"Không tìm thấy mã khuyến mãi \"{code}\".");
+                if (!promo.IsActive) return ServiceResult<Invoice>.Failure($"Mã \"{promo.Code}\" đang tắt, không dùng được.");
+                if (date.Date < promo.StartDate.Date) return ServiceResult<Invoice>.Failure($"Mã \"{promo.Code}\" chưa tới ngày áp dụng (từ {promo.StartDate:dd/MM/yyyy}).");
+                if (date.Date > promo.EndDate.Date) return ServiceResult<Invoice>.Failure($"Mã \"{promo.Code}\" đã hết hạn ngày {promo.EndDate:dd/MM/yyyy}.");
+                discount = promo.Type == PromotionType.Percentage ? subtotal * promo.Value / 100m : promo.Value;
+                applied = promo.Code;
+            }
 
             // Uu dai khach VIP: tu dong giam 10% tren tong tam tinh, khong can nhap ma.
             // Cong DON voi ma khuyen mai (neu co) roi moi clamp mot lan o duoi, nen tong giam

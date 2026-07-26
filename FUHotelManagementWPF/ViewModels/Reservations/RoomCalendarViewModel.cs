@@ -64,19 +64,33 @@ namespace FUHotelManagementWPF.ViewModels.Reservations
         public ReservationStatus Status => Reservation.Status;
         public string GuestName => Reservation.Guest?.FullName ?? string.Empty;
 
-        /// <summary>Thanh hep qua thi chi hien so khach, khoi bi cat chu giua chung.</summary>
-        public string Label => Span >= 2 ? GuestName : $"{Reservation.NumberOfGuests}k";
+        /// <summary>
+        /// Luon hien ten khach, hep qua thi de no tu cat bot (TextTrimming ben XAML).
+        ///
+        /// Truoc day thanh hep chi hien so khach kieu "2k" cho khoi cat chu. Nhung mot don
+        /// trai qua hai tuan se hien "2k" o tuan bi cat con lai mot ngay va hien ten o tuan
+        /// kia - nhin ra thanh HAI don khac nhau cua hai khach khac nhau. Ten bi cat cut
+        /// van doc ra la ten; "2k" thi khong.
+        /// </summary>
+        public string Label => GuestName;
 
         public string Tooltip =>
             $"{Reservation.BookingCode} · {GuestName}\n"
             + $"{Reservation.CheckInDate:dd/MM} → {Reservation.CheckOutDate:dd/MM/yyyy}\n"
             + $"{ReservationService.StatusText(Reservation.Status)} · bấm để sửa";
 
-        public CalendarBar(Reservation reservation, int column, int span)
+        /// <summary>Khoang dat keo dai ra ngoai tuan dang xem - phia truoc / phia sau.</summary>
+        public bool ContinuesBefore { get; }
+        public bool ContinuesAfter { get; }
+
+        public CalendarBar(Reservation reservation, int column, int span,
+            bool continuesBefore = false, bool continuesAfter = false)
         {
             Reservation = reservation;
             Column = column;
             Span = span;
+            ContinuesBefore = continuesBefore;
+            ContinuesAfter = continuesAfter;
         }
     }
 
@@ -220,12 +234,39 @@ namespace FUHotelManagementWPF.ViewModels.Reservations
             }
         }
 
-        /// <summary>Cat khoang dat phong cho vua trong tuan dang xem. Ngay tra khong tinh la mot dem.</summary>
+        /// <summary>
+        /// Cat khoang dat phong cho vua trong tuan dang xem. Ngay tra khong tinh la mot dem.
+        ///
+        /// Khach nhan phong SOM hon ngay tren don thi ve tu ngay nhan that: neu cu ve theo
+        /// don, phong da co nguoi tu hom qua ma tren lich van trong, le tan nhin vao tuong
+        /// con ban duoc.
+        /// </summary>
         private CalendarBar ToBar(Reservation reservation)
         {
-            var start = Math.Max(0, (reservation.CheckInDate.Date - WeekStart).Days);
-            var end = Math.Min(DayCount, (reservation.CheckOutDate.Date - WeekStart).Days);
-            return new CalendarBar(reservation, start, Math.Max(0, end - start));
+            var from = reservation.CheckInDate.Date;
+            var to = reservation.CheckOutDate.Date;
+
+            if (reservation.Stay is { } stay)
+            {
+                // Nhan phong SOM hon don thi keo dau thanh ve ngay vao that.
+                if (stay.ActualCheckIn.Date < from) { from = stay.ActualCheckIn.Date; }
+
+                // Va keo DUOI thanh theo thuc te: khach chua tra phong thi dem nay van con
+                // trong phong, du don ghi ngay tra la hom qua. Thieu ve nay thi phong dang
+                // co nguoi ma o lich trong nhu da tra - le tan tuong ban lai duoc.
+                // Moc cuoi KHONG tinh la mot dem, nen con o thi phai la ngay mai.
+                var actualTo = stay.ActualCheckOut?.Date ?? DateTime.Today.AddDays(1);
+                if (actualTo > to) { to = actualTo; }
+            }
+
+            var rawStart = (from - WeekStart).Days;
+            var rawEnd = (to - WeekStart).Days;
+            var start = Math.Max(0, rawStart);
+            var end = Math.Min(DayCount, rawEnd);
+            // Bi cat thi phai bao: thanh cat trong y het thanh bat dau dung dau tuan, nhin
+            // vao la doc sai ngay nhan phong.
+            return new CalendarBar(reservation, start, Math.Max(0, end - start),
+                continuesBefore: rawStart < 0, continuesAfter: rawEnd > DayCount);
         }
 
         private async Task BookCellAsync(object? parameter)

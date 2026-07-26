@@ -68,14 +68,38 @@
                     <ControlTemplate TargetType="Button">
                         <Border x:Name="bd" Background="{TemplateBinding Background}" Margin="1"
                                 CornerRadius="4" Padding="7,5" MinHeight="34">
-                            <TextBlock Text="{Binding Label}" Foreground="White" FontSize="11"
-                                       FontWeight="SemiBold" VerticalAlignment="Center"
-                                       TextTrimming="CharacterEllipsis" />
+                            <DockPanel>
+                                <!-- Mui ten bao khoang dat con keo dai ra ngoai tuan dang xem.
+                                     Khong co no thi thanh bi cat trong y het thanh bat dau dung
+                                     dau tuan - nguoi dung doc ra sai ngay nhan phong. -->
+                                <TextBlock x:Name="before" DockPanel.Dock="Left" Text="‹"
+                                           Foreground="White" FontSize="13" FontWeight="Bold"
+                                           Margin="0,0,4,0" VerticalAlignment="Center"
+                                           Visibility="Collapsed" />
+                                <TextBlock x:Name="after" DockPanel.Dock="Right" Text="›"
+                                           Foreground="White" FontSize="13" FontWeight="Bold"
+                                           Margin="4,0,0,0" VerticalAlignment="Center"
+                                           Visibility="Collapsed" />
+                                <TextBlock Text="{Binding Label}" Foreground="White" FontSize="11"
+                                           FontWeight="SemiBold" VerticalAlignment="Center"
+                                           TextTrimming="CharacterEllipsis" />
+                            </DockPanel>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="bd" Property="Opacity" Value="0.85" />
                             </Trigger>
+                            <!-- Canh bi cat de VUONG, canh that thi bo tron -->
+                            <DataTrigger Binding="{Binding ContinuesBefore}" Value="True">
+                                <Setter TargetName="before" Property="Visibility" Value="Visible" />
+                                <Setter TargetName="bd" Property="CornerRadius" Value="0,4,4,0" />
+                                <Setter TargetName="bd" Property="Margin" Value="0,1,1,1" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding ContinuesAfter}" Value="True">
+                                <Setter TargetName="after" Property="Visibility" Value="Visible" />
+                                <Setter TargetName="bd" Property="CornerRadius" Value="4,0,0,4" />
+                                <Setter TargetName="bd" Property="Margin" Value="1,1,0,1" />
+                            </DataTrigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>

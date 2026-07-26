@@ -78,6 +78,8 @@ namespace FUHotelManagementWPF.ViewModels
 
         public MainViewModel()
         {
+            _ = SweepStaleReservationsAsync();
+
             const string homeGroup = "TỔNG QUAN";
             const string opGroup = "VẬN HÀNH";
             const string peopleGroup = "ĐỐI TƯỢNG";
@@ -129,5 +131,29 @@ namespace FUHotelManagementWPF.ViewModels
                 LoggedOut?.Invoke();
             });
         }
+        /// <summary>
+        /// Don don treo ngay khi vao app: don da qua ngay nhan phong ma khach khong den thi
+        /// chuyen sang Khong den. Khong lam thi no giu cho mai - truy van phong trong van
+        /// tinh la ban nen phong khong ban lai duoc, con lich phong ve mot thanh cua ky nghi
+        /// da troi qua.
+        ///
+        /// Loi o buoc nay khong duoc lam hong man hinh: don dep hong thi lan sau quet lai.
+        /// </summary>
+        private static async Task SweepStaleReservationsAsync()
+        {
+            try
+            {
+                var swept = await new ReservationService().SweepNoShowAsync();
+                if (swept > 0)
+                {
+                    Notify.Info($"Đã tự chuyển {swept} đơn quá hạn sang Không đến.");
+                }
+            }
+            catch (Exception)
+            {
+                // Co y nuot: khong the vi don dep that bai ma chan nguoi dung vao app.
+            }
+        }
+
     }
 }

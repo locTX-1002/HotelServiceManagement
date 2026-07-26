@@ -25,4 +25,5 @@ public interface IReservationService
 
     /// <summary>Danh dau khach khong den - chi tu don da xac nhan.</summary>
     Task<ServiceResult<Reservation>> NoShowAsync(int id);
+    Task<int> SweepNoShowAsync();
 }
