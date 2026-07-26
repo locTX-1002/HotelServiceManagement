@@ -436,6 +436,8 @@
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="10" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="10" />
                                 <RowDefinition Height="*" />
                             </Grid.RowDefinitions>
                             <Grid>
@@ -497,11 +499,8 @@
                             <Grid>
                                 <StackPanel>
                                     <TextBlock Text="Lịch sử thanh toán" Style="{StaticResource SectionTitleText}" />
-                                    <TextBlock Style="{StaticResource CaptionText}" Margin="0,3,0,0">
-                                        <Run Text="Còn lại: " />
-                                        <Run Text="{Binding RemainingAmount, Mode=OneWay, Converter={StaticResource Money}}"
-                                             FontWeight="SemiBold" />
-                                    </TextBlock>
+                                    <TextBlock Text="Các khoản tiền đã ghi nhận cho hoá đơn này."
+                                               Style="{StaticResource CaptionText}" Margin="0,3,0,0" />
                                 </StackPanel>
                                 <Button Content="Ghi nhận thanh toán"
                                         Style="{StaticResource PrimaryButton}"
@@ -509,9 +508,52 @@
                                         IsEnabled="{Binding CanRecordPayment}"
                                         Command="{Binding RecordPaymentCommand}" />
                             </Grid>
-                            <DataGrid Grid.Row="2" ItemsSource="{Binding Payments}"
+
+                            <Grid Grid.Row="2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="10" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="10" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Border Style="{StaticResource Card}" Padding="14,10">
+                                    <StackPanel>
+                                        <TextBlock Text="TỔNG HOÁ ĐƠN" Style="{StaticResource FieldLabel}" />
+                                        <TextBlock Text="{Binding Invoice.TotalAmount, Converter={StaticResource Money}}"
+                                                   FontWeight="SemiBold" Margin="0,4,0,0" />
+                                    </StackPanel>
+                                </Border>
+                                <Border Grid.Column="2" Style="{StaticResource Card}" Padding="14,10">
+                                    <StackPanel>
+                                        <TextBlock Text="ĐÃ THU" Style="{StaticResource FieldLabel}" />
+                                        <TextBlock Text="{Binding PaidAmount, Converter={StaticResource Money}}"
+                                                   Foreground="{StaticResource SuccessBrush}"
+                                                   FontWeight="SemiBold" Margin="0,4,0,0" />
+                                    </StackPanel>
+                                </Border>
+                                <Border Grid.Column="4" Style="{StaticResource Card}" Padding="14,10">
+                                    <StackPanel>
+                                        <TextBlock Text="CÒN LẠI" Style="{StaticResource FieldLabel}" />
+                                        <TextBlock Text="{Binding RemainingAmount, Converter={StaticResource Money}}"
+                                                   Foreground="{StaticResource DangerBrush}"
+                                                   FontWeight="SemiBold" Margin="0,4,0,0" />
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+
+                            <DataGrid Grid.Row="4" ItemsSource="{Binding Payments}"
                                       AutoGenerateColumns="False" CanUserAddRows="False"
                                       HeadersVisibility="Column" GridLinesVisibility="None">
+                                <DataGrid.RowStyle>
+                                    <Style TargetType="DataGridRow">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsCancelled}" Value="True">
+                                                <Setter Property="Opacity" Value="0.5" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </DataGrid.RowStyle>
                                 <DataGrid.Columns>
                                     <DataGridTextColumn Header="Thời gian"
                                                         Binding="{Binding PaymentDate, StringFormat={}{0:dd/MM/yyyy HH:mm}}"
@@ -520,18 +562,19 @@
                                                         Binding="{Binding Amount, Converter={StaticResource Money}}"
                                                         Width="130" />
                                     <DataGridTextColumn Header="Phương thức"
-                                                        Binding="{Binding PaymentMethod}" Width="120" />
+                                                        Binding="{Binding MethodText}" Width="130" />
                                     <DataGridTextColumn Header="Mã giao dịch"
-                                                        Binding="{Binding TransactionId}" Width="*" />
+                                                        Binding="{Binding TransactionText}" Width="*" MinWidth="140" />
                                     <DataGridTextColumn Header="Trạng thái"
-                                                        Binding="{Binding Status}" Width="100" />
-                                    <DataGridTemplateColumn Header="" Width="90">
+                                                        Binding="{Binding StatusText}" Width="100" />
+                                    <DataGridTemplateColumn Header="" Width="120">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <Button Content="Void" Padding="10,5"
+                                                <Button Content="Huỷ giao dịch" Padding="10,5"
                                                         Command="{Binding DataContext.VoidPaymentCommand,
                                                                           RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                                        CommandParameter="{Binding}">
+                                                        CommandParameter="{Binding}"
+                                                        Visibility="{Binding IsVoidable, Converter={StaticResource BoolToVis}}">
                                                     <Button.Style>
                                                         <Style TargetType="Button"
                                                                BasedOn="{StaticResource GhostButton}">
@@ -542,8 +585,7 @@
                                                                         <Condition Binding="{Binding DataContext.CanVoidPayment,
                                                                                                      RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                                                                    Value="True" />
-                                                                        <Condition Binding="{Binding Status}"
-                                                                                   Value="{x:Static enums:PaymentStatus.Completed}" />
+                                                                        <Condition Binding="{Binding IsVoidable}" Value="True" />
                                                                     </MultiDataTrigger.Conditions>
                                                                     <Setter Property="IsEnabled" Value="True" />
                                                                 </MultiDataTrigger>

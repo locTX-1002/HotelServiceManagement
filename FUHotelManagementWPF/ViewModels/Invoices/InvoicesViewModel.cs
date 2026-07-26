@@ -9,6 +9,33 @@ using Services;
 
 namespace FUHotelManagementWPF.ViewModels.Invoices;
 
+public sealed class PaymentRow
+{
+    public Payment Payment { get; }
+    public DateTime PaymentDate => Payment.PaymentDate;
+    public decimal Amount => Payment.Amount;
+    public string MethodText => Payment.PaymentMethod switch
+    {
+        PaymentMethod.Cash => "Tiền mặt",
+        PaymentMethod.BankTransfer => "Chuyển khoản",
+        _ => "Khác",
+    };
+    public string TransactionText => string.IsNullOrWhiteSpace(Payment.TransactionId)
+        ? "—"
+        : Payment.TransactionId;
+    public string StatusText => Payment.Status switch
+    {
+        PaymentStatus.Completed => "Hoàn tất",
+        PaymentStatus.Cancelled => "Đã huỷ",
+        PaymentStatus.Pending => "Đang chờ",
+        _ => "Không xác định",
+    };
+    public bool IsCancelled => Payment.Status == PaymentStatus.Cancelled;
+    public bool IsVoidable => Payment.Status == PaymentStatus.Completed;
+
+    public PaymentRow(Payment payment) => Payment = payment;
+}
+
 public sealed class InvoicesViewModel : ViewModelBase
 {
     private readonly IStayService _stayService = new StayService();
@@ -20,7 +47,7 @@ public sealed class InvoicesViewModel : ViewModelBase
 
     public ObservableCollection<Stay> ActiveStays { get; } = [];
     public ObservableCollection<Surcharge> Surcharges { get; } = [];
-    public ObservableCollection<Payment> Payments { get; } = [];
+    public ObservableCollection<PaymentRow> Payments { get; } = [];
 
     private List<Promotion> _promotions = [];
     public List<Promotion> Promotions
@@ -532,10 +559,11 @@ public sealed class InvoicesViewModel : ViewModelBase
 
     private async Task VoidPaymentAsync(object? parameter)
     {
-        if (parameter is not Payment payment)
+        if (parameter is not PaymentRow row)
         {
             return;
         }
+        var payment = row.Payment;
 
         var confirm = MessageBox.Show(
             $"Huỷ giao dịch {payment.Amount:N0} đ ngày {payment.PaymentDate:dd/MM/yyyy HH:mm}?",
@@ -602,7 +630,7 @@ public sealed class InvoicesViewModel : ViewModelBase
         RemainingAmount = result.Data.RemainingAmount;
         foreach (var payment in result.Data.Payments)
         {
-            Payments.Add(payment);
+            Payments.Add(new PaymentRow(payment));
         }
     }
 
