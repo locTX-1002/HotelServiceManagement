@@ -45,6 +45,45 @@ namespace FUHotelManagementWPF.MvvmCore
             }
         }
 
+        /// <summary>
+        /// Gan nut "Tìm" ben canh mot o tim kiem: bam la day chu vao binding ngay, khong
+        /// doi het Delay. Dat tren Button, tro toi TextBox bang ElementName.
+        ///
+        /// Danh sach von da loc trong luc go nen nut nay khong doi hanh vi may - no la cho
+        /// bam quen tay, va la dau hieu nhin phat biet o do de tim.
+        /// </summary>
+        public static readonly DependencyProperty SubmitForProperty =
+            DependencyProperty.RegisterAttached(
+                "SubmitFor", typeof(TextBox), typeof(SearchBoxAssist),
+                new PropertyMetadata(null, OnSubmitForChanged));
+
+        public static TextBox? GetSubmitFor(DependencyObject element) => (TextBox?)element.GetValue(SubmitForProperty);
+        public static void SetSubmitFor(DependencyObject element, TextBox? value) => element.SetValue(SubmitForProperty, value);
+
+        private static void OnSubmitForChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is not Button button)
+            {
+                return;
+            }
+
+            button.Click -= OnSubmitClick;
+            if (e.NewValue is TextBox)
+            {
+                button.Click += OnSubmitClick;
+            }
+        }
+
+        private static void OnSubmitClick(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button button && GetSubmitFor(button) is { } box)
+            {
+                box.GetBindingExpression(TextBox.TextProperty)?.UpdateSource();
+                box.Focus();
+                box.CaretIndex = box.Text.Length;
+            }
+        }
+
         private static void OnLoaded(object sender, RoutedEventArgs e)
         {
             if (sender is TextBox box && box.Template.FindName("PART_Clear", box) is Button clear)

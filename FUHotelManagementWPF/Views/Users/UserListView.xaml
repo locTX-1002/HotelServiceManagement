@@ -1,6 +1,7 @@
 <UserControl x:Class="FUHotelManagementWPF.Views.Users.UserListView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mvvm="clr-namespace:FUHotelManagementWPF.MvvmCore"
              xmlns:hc="https://handyorg.github.io/handycontrol">
     <UserControl.Resources>
         <!-- Badge vai tro: doi mau theo ten vai tro goc trong DB.
@@ -98,9 +99,11 @@
                 <Button DockPanel.Dock="Right" Content="+ Thêm tài khoản" Style="{StaticResource PrimaryButton}"
                         Padding="16,8" Command="{Binding AddCommand}" />
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBox Style="{StaticResource SearchBox}" VerticalAlignment="Center"
+                    <TextBox x:Name="userSearch" Style="{StaticResource SearchBox}" VerticalAlignment="Center"
                              Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged, Delay=300}"
                              ToolTip="Tìm theo họ tên hoặc email" />
+                    <Button Style="{StaticResource SearchButton}"
+                            mvvm:SearchBoxAssist.SubmitFor="{Binding ElementName=userSearch}" />
                     <TextBlock Text="{Binding TotalText}" Style="{StaticResource CaptionText}"
                                FontSize="12.5" VerticalAlignment="Center" Margin="14,0,0,0" />
                 </StackPanel>

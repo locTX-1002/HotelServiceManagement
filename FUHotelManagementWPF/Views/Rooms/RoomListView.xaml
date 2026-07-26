@@ -1,6 +1,7 @@
 <UserControl x:Class="FUHotelManagementWPF.Views.Rooms.RoomListView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mvvm="clr-namespace:FUHotelManagementWPF.MvvmCore"
              xmlns:hc="https://handyorg.github.io/handycontrol">
     <UserControl.Resources>
         <!-- Card-row trong ListBox: bo default highlight, chon thi vien + nen nhat brand -->
@@ -72,9 +73,11 @@
                     Command="{Binding AddCommand}"
                     Visibility="{Binding CanManageRooms, Converter={StaticResource BoolToVis}}" />
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                <TextBox Style="{StaticResource SearchBox}" VerticalAlignment="Center"
+                <TextBox x:Name="roomSearch" Style="{StaticResource SearchBox}" VerticalAlignment="Center"
                          Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
                          ToolTip="Tìm theo số phòng hoặc tên loại phòng" />
+                <Button Style="{StaticResource SearchButton}"
+                        mvvm:SearchBoxAssist.SubmitFor="{Binding ElementName=roomSearch}" />
                 <TextBlock Text="{Binding TotalText}" Style="{StaticResource CaptionText}"
                            FontSize="12.5" VerticalAlignment="Center" Margin="14,0,0,0" />
             </StackPanel>

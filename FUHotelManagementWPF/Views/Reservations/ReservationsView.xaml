@@ -1,6 +1,7 @@
 <UserControl x:Class="FUHotelManagementWPF.Views.Reservations.ReservationsView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mvvm="clr-namespace:FUHotelManagementWPF.MvvmCore"
              xmlns:hc="https://handyorg.github.io/handycontrol"
              xmlns:res="clr-namespace:FUHotelManagementWPF.Views.Reservations"
              xmlns:enums="clr-namespace:BusinessObjects.Enums;assembly=BusinessObjects">
@@ -120,10 +121,14 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
 
-                        <TextBox Grid.Column="0" Style="{StaticResource SearchBox}"
-                                 VerticalAlignment="Center"
-                                 Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
-                                 ToolTip="Tìm theo tên khách, số phòng hoặc mã đặt" />
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBox x:Name="bookingSearch" Style="{StaticResource SearchBox}"
+                                     VerticalAlignment="Center"
+                                     Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                                     ToolTip="Tìm theo tên khách, số phòng hoặc mã đặt" />
+                            <Button Style="{StaticResource SearchButton}"
+                                    mvvm:SearchBoxAssist.SubmitFor="{Binding ElementName=bookingSearch}" />
+                        </StackPanel>
 
                         <ComboBox Grid.Column="2" MinWidth="170" VerticalAlignment="Center"
                                   ItemsSource="{Binding Chips}" SelectedItem="{Binding SelectedChip}"

@@ -1,6 +1,7 @@
 <UserControl x:Class="FUHotelManagementWPF.Views.Promotions.PromotionListView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mvvm="clr-namespace:FUHotelManagementWPF.MvvmCore"
              xmlns:hc="https://handyorg.github.io/handycontrol"
              xmlns:vmPromo="clr-namespace:FUHotelManagementWPF.ViewModels.Promotions">
     <UserControl.Resources>
@@ -92,9 +93,11 @@
                     Padding="16,8" Command="{Binding AddCommand}"
                     Visibility="{Binding CanManage, Converter={StaticResource BoolToVis}}" />
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                <TextBox Style="{StaticResource SearchBox}" VerticalAlignment="Center"
+                <TextBox x:Name="promoSearch" Style="{StaticResource SearchBox}" VerticalAlignment="Center"
                          Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged, Delay=300}"
                          ToolTip="Tìm theo mã hoặc mô tả khuyến mãi" />
+                <Button Style="{StaticResource SearchButton}"
+                        mvvm:SearchBoxAssist.SubmitFor="{Binding ElementName=promoSearch}" />
                 <Button Content="Tất cả" Style="{StaticResource ChipAll}" Margin="14,0,6,0"
                         Command="{Binding SetFilterCommand}"
                         CommandParameter="{x:Static vmPromo:PromotionFilter.All}" />
