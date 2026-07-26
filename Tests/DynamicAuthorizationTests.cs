@@ -65,6 +65,25 @@ public class DynamicAuthorizationTests
         Assert.False(repository.Saved);
     }
 
+    [Fact]
+    public async Task RoleCannotBothRecordAndApprovePaymentVoid()
+    {
+        TestUsers.SignInWithPermissions(PermissionCodes.PermissionManage);
+        var permissions = new List<Permission>
+        {
+            new() { Id = 1, PermissionCode = PermissionCodes.PaymentRecord, IsActive = true },
+            new() { Id = 2, PermissionCode = PermissionCodes.PaymentVoidApprove, IsActive = true }
+        };
+        var repository = new FakeAuthorizationRepository(permissions);
+
+        var result = await new PermissionManagementService(repository)
+            .SaveRolePermissionsAsync(2, [1, 2]);
+
+        Assert.False(result.Ok);
+        Assert.Contains("ghi nhận thanh toán", result.Message);
+        Assert.False(repository.Saved);
+    }
+
     private sealed class FakeApprovalRepository(ApprovalRequest request)
         : IApprovalRequestRepository
     {
@@ -74,5 +93,18 @@ public class DynamicAuthorizationTests
         public Task<bool> HasPendingAsync(ApprovalRequestType type, int targetId) => Task.FromResult(false);
         public Task SaveAsync(ApprovalRequest value, bool add) { Saved = true; return Task.CompletedTask; }
         public Task AddAuditAsync(AuditLog log) => Task.CompletedTask;
+    }
+
+    private sealed class FakeAuthorizationRepository(List<Permission> permissions)
+        : IAuthorizationRepository
+    {
+        public bool Saved { get; private set; }
+        public Task<List<Role>> GetRolesWithPermissionsAsync() => Task.FromResult(new List<Role>());
+        public Task<List<Permission>> GetPermissionsAsync() => Task.FromResult(permissions);
+        public Task<bool> ReplaceRolePermissionsAsync(int roleId, IReadOnlyCollection<int> permissionIds)
+        {
+            Saved = true;
+            return Task.FromResult(true);
+        }
     }
 }

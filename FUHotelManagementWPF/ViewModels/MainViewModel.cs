@@ -94,6 +94,8 @@ namespace FUHotelManagementWPF.ViewModels
                     [PermissionCodes.ReservationCancelApprove, PermissionCodes.InvoiceDiscountApprove,
                      PermissionCodes.InvoiceCancelApprove, PermissionCodes.PaymentVoidApprove]),
                 new("", "Người dùng", systemGroup, () => new Users.UserListViewModel(), [PermissionCodes.UserView]),
+                new("", "Phân quyền", systemGroup, () => new Permissions.PermissionsViewModel(),
+                    [PermissionCodes.PermissionManage]),
             };
 
             // Loc NGAY luc dung danh sach thay vi dung Filter cua CollectionView: vai tro khong
