@@ -249,6 +249,8 @@ public sealed class InvoicesViewModel : ViewModelBase
     public decimal DisplayTotalAmount => Invoice?.TotalAmount ?? LiveTotal;
     public decimal DisplayRemainingAmount => Invoice == null ? LiveTotal : RemainingAmount;
     public bool HasOutstandingBalance => Invoice != null && RemainingAmount > 0;
+    public bool IsPaidInFull => Invoice != null && RemainingAmount <= 0;
+    public string RemainingBalanceLabel => IsPaidInFull ? "ĐÃ THANH TOÁN ĐỦ" : "CÒN PHẢI THU";
 
     /// <summary>Giam gia da chot tren hoa don; chua co hoa don thi chua biet, tinh 0.</summary>
     private decimal LiveDiscount => Math.Clamp(Invoice?.DiscountAmount ?? 0, 0,
@@ -297,6 +299,8 @@ public sealed class InvoicesViewModel : ViewModelBase
                 OnPropertyChanged(nameof(CanRecordPayment));
                 OnPropertyChanged(nameof(HasOutstandingBalance));
                 OnPropertyChanged(nameof(DisplayRemainingAmount));
+                OnPropertyChanged(nameof(IsPaidInFull));
+                OnPropertyChanged(nameof(RemainingBalanceLabel));
             }
         }
     }
@@ -834,6 +838,8 @@ public sealed class InvoicesViewModel : ViewModelBase
         OnPropertyChanged(nameof(DisplayTotalAmount));
         OnPropertyChanged(nameof(DisplayRemainingAmount));
         OnPropertyChanged(nameof(HasOutstandingBalance));
+        OnPropertyChanged(nameof(IsPaidInFull));
+        OnPropertyChanged(nameof(RemainingBalanceLabel));
         OnPropertyChanged(nameof(PendingDifference));
         OnPropertyChanged(nameof(HasPendingCharges));
         OnPropertyChanged(nameof(PendingChargeText));
