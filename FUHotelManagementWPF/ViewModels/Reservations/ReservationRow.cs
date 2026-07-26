@@ -16,7 +16,21 @@ namespace FUHotelManagementWPF.ViewModels.Reservations
         public string GuestName => Reservation.Guest?.FullName ?? string.Empty;
         public string RoomNumber => Reservation.Room?.RoomNumber ?? string.Empty;
         public string TypeName => Reservation.Room?.RoomType?.TypeName ?? string.Empty;
-        public string DateRange => $"{Reservation.CheckInDate:dd/MM} → {Reservation.CheckOutDate:dd/MM/yyyy}";
+        /// <summary>
+        /// Khoang ngay THEO DON. Neu khach da nhan phong vao ngay khac thi noi them ngay
+        /// vao that - khong thi doc danh sach nay ra mot ngay, mo man Nhan/Tra phong ra
+        /// mot ngay khac, khong biet tin cai nao.
+        /// </summary>
+        public string DateRange
+        {
+            get
+            {
+                var range = $"{Reservation.CheckInDate:dd/MM} → {Reservation.CheckOutDate:dd/MM/yyyy}";
+                return Reservation.Stay is { } stay && stay.ActualCheckIn.Date != Reservation.CheckInDate.Date
+                    ? $"{range}  (vào thật {stay.ActualCheckIn:dd/MM})"
+                    : range;
+            }
+        }
         public string SubText => $"{RoomNumber} · {TypeName} · {DateRange}";
         public string GuestCountText => $"{Reservation.NumberOfGuests} khách";
         public string BookingCode => Reservation.BookingCode;

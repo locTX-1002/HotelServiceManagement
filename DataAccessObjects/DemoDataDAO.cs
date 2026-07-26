@@ -25,6 +25,181 @@ public static class DemoDataDAO
         // khong con bi buoc cu chan, va sau nay them buoc nua cung the.
         await SeedPromotionsAsync(context);
         await SeedOperationsAsync(context);
+        await SeedServiceMenuAsync(context);
+        await SeedHistoryAsync(context);
+    }
+
+    /// <summary>
+    /// Mo rong thuc don dich vu. Ban dau chi co 6 mon o 2 nhom nen man Dich vu nhin trong
+    /// tron va khong the hien duoc chuyen nhom mon.
+    ///
+    /// Chot chan rieng cua buoc nay la DEM SO MON, khong phai "da co mon nao chua" - de
+    /// may nao dang chay ban 6 mon cu van duoc bo sung.
+    /// </summary>
+    private static async Task SeedServiceMenuAsync(HotelDbContext context)
+    {
+        if (await context.ServiceItems.CountAsync() >= 16)
+        {
+            return;
+        }
+
+        var menu = new (string Category, string Name, decimal Price)[]
+        {
+            ("Nhà hàng", "Suất ăn trưa", 120_000),
+            ("Nhà hàng", "Lẩu thái 2 người", 350_000),
+            ("Nhà hàng", "Cà phê sữa", 35_000),
+            ("Nhà hàng", "Nước cam vắt", 45_000),
+            ("Minibar", "Bia lon", 30_000),
+            ("Minibar", "Nước ngọt", 20_000),
+            ("Minibar", "Snack khoai tây", 25_000),
+            ("Minibar", "Nước suối lớn", 25_000),
+            ("Spa", "Massage chân 45 phút", 250_000),
+            ("Spa", "Massage toàn thân 90 phút", 450_000),
+            ("Spa", "Xông hơi", 150_000),
+            ("Đưa đón", "Đưa đón sân bay 1 chiều", 400_000),
+            ("Đưa đón", "Thuê xe máy theo ngày", 150_000),
+            ("Giặt là", "Giặt hấp vest", 90_000),
+        };
+
+        var categories = await context.ServiceCategories.ToListAsync();
+        var existingItems = await context.ServiceItems.Select(x => x.ServiceName).ToListAsync();
+
+        foreach (var (categoryName, name, price) in menu)
+        {
+            if (existingItems.Contains(name))
+            {
+                continue;
+            }
+
+            var category = categories.FirstOrDefault(c => c.CategoryName == categoryName);
+            if (category == null)
+            {
+                category = new ServiceCategory { CategoryName = categoryName, IsActive = true };
+                context.ServiceCategories.Add(category);
+                await context.SaveChangesAsync();
+                categories.Add(category);
+            }
+
+            context.ServiceItems.Add(new ServiceItem
+            {
+                ServiceCategoryId = category.Id,
+                ServiceName = name,
+                UnitPrice = price,
+                IsAvailable = true,
+            });
+        }
+        await context.SaveChangesAsync();
+    }
+
+    /// <summary>
+    /// Lich su luu tru DA HOAN TAT trong 6 tuan gan day, kem hoa don da thu du.
+    ///
+    /// Khong co no thi trang Bao cao gan nhu trong: chi vai hoa don cua may hom nay, bieu do
+    /// doanh thu khong ve duoc gi, va khong ai kiem tra duoc bo loc khoang ngay co chay dung
+    /// khong. Day cung la du lieu de demo cong suat phong.
+    ///
+    /// Chot chan rieng: da co luot o nao ket thuc trước 14 ngay thi coi nhu da seed.
+    /// </summary>
+    private static async Task SeedHistoryAsync(HotelDbContext context)
+    {
+        var today = DateTime.Today;
+        if (await context.Stays.AnyAsync(s => s.ActualCheckOut != null
+                                              && s.ActualCheckOut < today.AddDays(-13)))
+        {
+            return;
+        }
+
+        var rooms = await context.Rooms.Include(r => r.RoomType).Where(r => r.IsActive).ToListAsync();
+        var guests = await context.Guests.OrderBy(g => g.Id).ToListAsync();
+        if (rooms.Count == 0 || guests.Count == 0)
+        {
+            return;
+        }
+
+        var staffId = await context.Users.Select(u => (int?)u.Id).FirstOrDefaultAsync();
+
+        // Rai deu qua 6 tuan, so dem va phong xen ke de bieu do co len xuong that chu khong
+        // phang li. Khong dung Random de may nao chay cung ra cung mot bo so.
+        var plans = new (int DaysAgo, int Nights, int RoomIndex, int GuestIndex)[]
+        {
+            (42, 2, 0, 0), (41, 3, 2, 1), (39, 1, 4, 2), (37, 4, 1, 3),
+            (35, 2, 3, 4), (33, 3, 5, 5), (31, 1, 0, 6), (29, 2, 2, 7),
+            (27, 5, 6, 0), (25, 2, 1, 1), (23, 3, 4, 2), (21, 1, 3, 3),
+            (19, 2, 7, 4), (17, 4, 0, 5), (15, 3, 2, 6), (14, 2, 5, 7),
+        };
+
+        var index = 1;
+        foreach (var (daysAgo, nights, roomIndex, guestIndex) in plans)
+        {
+            var room = rooms[roomIndex % rooms.Count];
+            var guest = guests[guestIndex % guests.Count];
+            var checkIn = today.AddDays(-daysAgo);
+            var checkOut = checkIn.AddDays(nights);
+
+            // Khong dam vao don nao dang co cua chinh phong do
+            if (await context.Reservations.AnyAsync(r => r.RoomId == room.Id
+                    && r.CheckInDate < checkOut && r.CheckOutDate > checkIn))
+            {
+                continue;
+            }
+
+            var reservation = new Reservation
+            {
+                BookingCode = $"LS-{checkIn:yyMMdd}-{index:00}",
+                GuestId = guest.Id,
+                RoomId = room.Id,
+                NumberOfGuests = Math.Min(2, room.RoomType?.Capacity ?? 2),
+                CheckInDate = checkIn,
+                CheckOutDate = checkOut,
+                Status = ReservationStatus.Completed,
+                CreatedByUserId = staffId,
+            };
+            context.Reservations.Add(reservation);
+            await context.SaveChangesAsync();
+
+            var stay = new Stay
+            {
+                ReservationId = reservation.Id,
+                ActualCheckIn = checkIn.AddHours(14),
+                ActualCheckOut = checkOut.AddHours(11),
+                Status = StayStatus.Completed,
+                CheckedInByUserId = staffId,
+                CheckedOutByUserId = staffId,
+            };
+            context.Stays.Add(stay);
+            await context.SaveChangesAsync();
+
+            var roomCharge = nights * (room.RoomType?.BasePrice ?? 500_000m);
+            // Cu ba luot thi mot luot co goi dich vu, de bao cao tach duoc doanh thu phong
+            // va doanh thu dich vu chu khong phai cot dich vu bang 0 het.
+            var serviceCharge = index % 3 == 0 ? 150_000m : 0m;
+            var total = roomCharge + serviceCharge;
+
+            var invoice = new Invoice
+            {
+                StayId = stay.Id,
+                InvoiceDate = checkOut.AddHours(11),
+                RoomCharge = roomCharge,
+                ServiceCharge = serviceCharge,
+                SurchargeAmount = 0,
+                DiscountAmount = 0,
+                TotalAmount = total,
+                Status = InvoiceStatus.Paid,
+                CreatedByUserId = staffId,
+            };
+            invoice.Payments.Add(new Payment
+            {
+                PaymentDate = checkOut.AddHours(11),
+                Amount = total,
+                PaymentMethod = index % 2 == 0 ? PaymentMethod.BankTransfer : PaymentMethod.Cash,
+                Status = PaymentStatus.Completed,
+                TransactionId = index % 2 == 0 ? $"TXN{checkIn:yyMMdd}{index:00}" : null,
+                ReceivedByUserId = staffId,
+            });
+            context.Invoices.Add(invoice);
+            await context.SaveChangesAsync();
+            index++;
+        }
     }
 
     /// <summary>

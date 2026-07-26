@@ -213,8 +213,11 @@ namespace FUHotelManagementWPF.ViewModels.Reservations
                     var bars = reservations
                         .Where(r => r.RoomId == room.Id
                                     && Blocking.Contains(r.Status)
-                                    && r.CheckInDate.Date < weekEnd
-                                    && r.CheckOutDate.Date > WeekStart)
+                                    // Loc theo moc DA DIEU CHINH, khong phai moc tren don:
+                                    // don bi loai o day thi ToBar khong bao gio duoc goi, va
+                                    // khoang dat bien mat khoi lich thay vi chi bi cat.
+                                    && BarStart(r) < weekEnd
+                                    && BarEnd(r) > WeekStart)
                         .Select(r => ToBar(r))
                         .Where(b => b.Span > 0)
                         .ToList();
@@ -241,26 +244,33 @@ namespace FUHotelManagementWPF.ViewModels.Reservations
         /// don, phong da co nguoi tu hom qua ma tren lich van trong, le tan nhin vao tuong
         /// con ban duoc.
         /// </summary>
-        private CalendarBar ToBar(Reservation reservation)
-        {
-            var from = reservation.CheckInDate.Date;
-            var to = reservation.CheckOutDate.Date;
+        /// <summary>Ngay bat dau ve thanh: som hon giua ngay tren don va ngay vao that.</summary>
+        private static DateTime BarStart(Reservation reservation)
+            => reservation.Stay is { } stay && stay.ActualCheckIn.Date < reservation.CheckInDate.Date
+                ? stay.ActualCheckIn.Date
+                : reservation.CheckInDate.Date;
 
+        /// <summary>
+        /// Ngay ket thuc ve thanh: muon hon giua ngay tra tren don va thuc te. Khach chua
+        /// tra phong thi dem nay van con trong phong, du don ghi ngay tra la hom qua - thieu
+        /// ve nay thi phong dang co nguoi ma lich trong nhu da tra. Moc cuoi khong tinh la
+        /// mot dem nen con dang o thi la ngay mai.
+        /// </summary>
+        private static DateTime BarEnd(Reservation reservation)
+        {
+            var to = reservation.CheckOutDate.Date;
             if (reservation.Stay is { } stay)
             {
-                // Nhan phong SOM hon don thi keo dau thanh ve ngay vao that.
-                if (stay.ActualCheckIn.Date < from) { from = stay.ActualCheckIn.Date; }
-
-                // Va keo DUOI thanh theo thuc te: khach chua tra phong thi dem nay van con
-                // trong phong, du don ghi ngay tra la hom qua. Thieu ve nay thi phong dang
-                // co nguoi ma o lich trong nhu da tra - le tan tuong ban lai duoc.
-                // Moc cuoi KHONG tinh la mot dem, nen con o thi phai la ngay mai.
                 var actualTo = stay.ActualCheckOut?.Date ?? DateTime.Today.AddDays(1);
                 if (actualTo > to) { to = actualTo; }
             }
+            return to;
+        }
 
-            var rawStart = (from - WeekStart).Days;
-            var rawEnd = (to - WeekStart).Days;
+        private CalendarBar ToBar(Reservation reservation)
+        {
+            var rawStart = (BarStart(reservation) - WeekStart).Days;
+            var rawEnd = (BarEnd(reservation) - WeekStart).Days;
             var start = Math.Max(0, rawStart);
             var end = Math.Min(DayCount, rawEnd);
             // Bi cat thi phai bao: thanh cat trong y het thanh bat dau dung dau tuan, nhin

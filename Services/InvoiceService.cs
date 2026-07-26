@@ -42,8 +42,7 @@ public sealed class InvoiceService : IInvoiceService
         var stay = await _invoices.GetStayForBillingAsync(stayId); if (stay == null || stay.Status is not (StayStatus.Active or StayStatus.Completed)) return ServiceResult<Invoice>.Failure("Không tìm thấy lượt lưu trú hợp lệ.");
         var invoice = stay.Invoice; var isNew = invoice == null; var paid = invoice?.Payments.Where(p => p.Status == PaymentStatus.Completed).Sum(p => p.Amount) ?? 0;
         var date = asOf ?? stay.ActualCheckOut ?? DateTime.Now;
-        var nights = BillingRules.ChargeableNights(stay.ActualCheckIn,
-            stay.Reservation.CheckInDate, stay.Reservation.CheckOutDate, date); var room = nights * stay.Reservation.Room.RoomType.BasePrice; var services = stay.ServiceOrders.Where(o => o.Status == ServiceOrderStatus.Completed).Sum(o => o.TotalAmount); var surcharge = stay.Surcharges.Sum(x => x.Subtotal); var subtotal = room + services + surcharge; decimal discount = 0; string? applied = null;
+        var nights = BillingRules.ChargeableNights(stay.ActualCheckIn, date); var room = nights * stay.Reservation.Room.RoomType.BasePrice; var services = stay.ServiceOrders.Where(o => o.Status == ServiceOrderStatus.Completed).Sum(o => o.TotalAmount); var surcharge = stay.Surcharges.Sum(x => x.Subtotal); var subtotal = room + services + surcharge; decimal discount = 0; string? applied = null;
         // GIAM GIA CHOT TAI LUC LAP HOA DON. Khi hoa don da thu tien, giu nguyen muc giam
         // va nhan giam cu thay vi tinh lai theo the VIP / ma khuyen mai hien tai. Neu khong,
         // chi can gan the VIP cho khach sau khi ho da tra tien la tong tut xuong duoi so da
