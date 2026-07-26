@@ -113,7 +113,7 @@
             </Border>
 
             <Grid Grid.Column="2"
-                  Visibility="{Binding IsEmpty, Converter={StaticResource InverseBoolToVis}}">
+                  Visibility="{Binding IsEmpty, Mode=OneWay, Converter={StaticResource InverseBoolToVis}}">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="12" />
@@ -155,13 +155,13 @@
                         </Grid.ColumnDefinitions>
 
                         <StackPanel>
-                            <TextBlock Text="{Binding InvoiceNumber}"
+                            <TextBlock Text="{Binding InvoiceNumber, Mode=OneWay}"
                                        Style="{StaticResource SectionTitleText}" />
                             <Border Margin="0,7,0,0" Padding="9,4"
                                     HorizontalAlignment="Left"
                                     Background="{StaticResource BrandSoftBrush}"
                                     CornerRadius="10">
-                                <TextBlock Text="{Binding InvoiceStatusText}"
+                                <TextBlock Text="{Binding InvoiceStatusText, Mode=OneWay}"
                                            Foreground="{StaticResource BrandBrush}"
                                            FontWeight="SemiBold" FontSize="12" />
                             </Border>
@@ -169,10 +169,10 @@
 
                         <StackPanel Grid.Column="2">
                             <TextBlock Text="LƯỢT Ở" Style="{StaticResource FieldLabel}" />
-                            <TextBlock Text="{Binding SelectedRoomText}" FontWeight="SemiBold"
+                            <TextBlock Text="{Binding SelectedRoomText, Mode=OneWay}" FontWeight="SemiBold"
                                        Margin="0,5,0,0" />
-                            <TextBlock Text="{Binding SelectedGuestText}" Margin="0,3,0,0" />
-                            <TextBlock Text="{Binding StayPeriodText}" Style="{StaticResource CaptionText}"
+                            <TextBlock Text="{Binding SelectedGuestText, Mode=OneWay}" Margin="0,3,0,0" />
+                            <TextBlock Text="{Binding StayPeriodText, Mode=OneWay}" Style="{StaticResource CaptionText}"
                                        Margin="0,3,0,0" />
                         </StackPanel>
 
@@ -180,11 +180,11 @@
                             <TextBlock Text="THÔNG TIN LẬP HOÁ ĐƠN" Style="{StaticResource FieldLabel}" />
                             <TextBlock Margin="0,5,0,0">
                                 <Run Text="Ngày lập: " />
-                                <Run Text="{Binding InvoiceDateText}" FontWeight="SemiBold" />
+                                <Run Text="{Binding InvoiceDateText, Mode=OneWay}" FontWeight="SemiBold" />
                             </TextBlock>
                             <TextBlock Margin="0,3,0,0">
                                 <Run Text="Nhân viên: " />
-                                <Run Text="{Binding InvoiceCreatorText}" FontWeight="SemiBold" />
+                                <Run Text="{Binding InvoiceCreatorText, Mode=OneWay}" FontWeight="SemiBold" />
                             </TextBlock>
                         </StackPanel>
                     </Grid>
@@ -247,7 +247,7 @@
                                                         <ColumnDefinition Width="130" />
                                                     </Grid.ColumnDefinitions>
                                                     <TextBlock Text="Tiền phòng" FontWeight="SemiBold" />
-                                                    <TextBlock Grid.Column="1" Text="{Binding RoomChargeDetailText}"
+                                                    <TextBlock Grid.Column="1" Text="{Binding RoomChargeDetailText, Mode=OneWay}"
                                                                Style="{StaticResource CaptionText}" />
                                                     <TextBlock Grid.Column="2"
                                                                Text="{Binding Invoice.RoomCharge, Converter={StaticResource Money}}"
@@ -263,7 +263,7 @@
                                                         <ColumnDefinition Width="130" />
                                                     </Grid.ColumnDefinitions>
                                                     <TextBlock Text="Dịch vụ" FontWeight="SemiBold" />
-                                                    <TextBlock Grid.Column="1" Text="{Binding ServiceChargeDetailText}"
+                                                    <TextBlock Grid.Column="1" Text="{Binding ServiceChargeDetailText, Mode=OneWay}"
                                                                Style="{StaticResource CaptionText}" />
                                                     <TextBlock Grid.Column="2"
                                                                Text="{Binding Invoice.ServiceCharge, Converter={StaticResource Money}}"
@@ -279,7 +279,7 @@
                                                         <ColumnDefinition Width="130" />
                                                     </Grid.ColumnDefinitions>
                                                     <TextBlock Text="Phụ thu" FontWeight="SemiBold" />
-                                                    <TextBlock Grid.Column="1" Text="{Binding SurchargeDetailText}"
+                                                    <TextBlock Grid.Column="1" Text="{Binding SurchargeDetailText, Mode=OneWay}"
                                                                Style="{StaticResource CaptionText}" />
                                                     <TextBlock Grid.Column="2"
                                                                Text="{Binding Invoice.SurchargeAmount, Converter={StaticResource Money}}"
@@ -296,7 +296,7 @@
                                                     </Grid.ColumnDefinitions>
                                                     <TextBlock Text="Giảm giá" FontWeight="SemiBold"
                                                                Foreground="{StaticResource SuccessBrush}" />
-                                                    <TextBlock Grid.Column="1" Text="{Binding DiscountDetailText}"
+                                                    <TextBlock Grid.Column="1" Text="{Binding DiscountDetailText, Mode=OneWay}"
                                                                Style="{StaticResource CaptionText}" />
                                                     <TextBlock Grid.Column="2"
                                                                Text="{Binding Invoice.DiscountAmount, Converter={StaticResource Money}, StringFormat=-{0}}"
@@ -333,7 +333,7 @@
                                                 <StackPanel>
                                                     <Grid Margin="0,0,0,8">
                                                         <TextBlock Text="Tạm tính" Style="{StaticResource CaptionText}" />
-                                                        <TextBlock Text="{Binding InvoiceSubtotal, Converter={StaticResource Money}}"
+                                                        <TextBlock Text="{Binding InvoiceSubtotal, Mode=OneWay, Converter={StaticResource Money}}"
                                                                    HorizontalAlignment="Right" />
                                                     </Grid>
                                                     <Grid Margin="0,0,0,8">
@@ -363,7 +363,7 @@
                                                     <Style TargetType="Border">
                                                         <Setter Property="Background" Value="{StaticResource SuccessSoftBrush}" />
                                                         <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding HasOutstandingBalance}" Value="True">
+                                                            <DataTrigger Binding="{Binding HasOutstandingBalance, Mode=OneWay}" Value="True">
                                                                 <Setter Property="Background" Value="{StaticResource DangerSoftBrush}" />
                                                             </DataTrigger>
                                                         </Style.Triggers>
@@ -377,7 +377,7 @@
                                                             <Style TargetType="TextBlock" BasedOn="{StaticResource SectionTitleText}">
                                                                 <Setter Property="Foreground" Value="{StaticResource SuccessBrush}" />
                                                                 <Style.Triggers>
-                                                                    <DataTrigger Binding="{Binding HasOutstandingBalance}" Value="True">
+                                                                    <DataTrigger Binding="{Binding HasOutstandingBalance, Mode=OneWay}" Value="True">
                                                                         <Setter Property="Foreground" Value="{StaticResource DangerBrush}" />
                                                                     </DataTrigger>
                                                                 </Style.Triggers>
@@ -426,7 +426,7 @@
                                 <TextBlock Text="Chưa lập hoá đơn"
                                            Style="{StaticResource SectionTitleText}"
                                            HorizontalAlignment="Center" />
-                                <TextBlock Text="{Binding SelectedRoomText}"
+                                <TextBlock Text="{Binding SelectedRoomText, Mode=OneWay}"
                                            FontWeight="SemiBold" HorizontalAlignment="Center"
                                            Margin="0,8,0,0" />
                                 <TextBlock Text="Các khoản bên dưới là tạm tính theo dữ liệu hiện tại. Hãy kiểm tra trước khi lập hoá đơn."
@@ -565,7 +565,7 @@
                                 <DataGrid.RowStyle>
                                     <Style TargetType="DataGridRow">
                                         <Style.Triggers>
-                                            <DataTrigger Binding="{Binding IsCancelled}" Value="True">
+                                            <DataTrigger Binding="{Binding IsCancelled, Mode=OneWay}" Value="True">
                                                 <Setter Property="Opacity" Value="0.5" />
                                             </DataTrigger>
                                         </Style.Triggers>
@@ -579,11 +579,11 @@
                                                         Binding="{Binding Amount, Converter={StaticResource Money}}"
                                                         Width="130" />
                                     <DataGridTextColumn Header="Phương thức"
-                                                        Binding="{Binding MethodText}" Width="130" />
+                                                        Binding="{Binding MethodText, Mode=OneWay}" Width="130" />
                                     <DataGridTextColumn Header="Mã giao dịch"
-                                                        Binding="{Binding TransactionText}" Width="*" MinWidth="140" />
+                                                        Binding="{Binding TransactionText, Mode=OneWay}" Width="*" MinWidth="140" />
                                     <DataGridTextColumn Header="Trạng thái"
-                                                        Binding="{Binding StatusText}" Width="100" />
+                                                        Binding="{Binding StatusText, Mode=OneWay}" Width="100" />
                                     <DataGridTemplateColumn Header="" Width="120">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
@@ -591,7 +591,7 @@
                                                         Command="{Binding DataContext.VoidPaymentCommand,
                                                                           RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                                         CommandParameter="{Binding}"
-                                                        Visibility="{Binding IsVoidable, Converter={StaticResource BoolToVis}}">
+                                                        Visibility="{Binding IsVoidable, Mode=OneWay, Converter={StaticResource BoolToVis}}">
                                                     <Button.Style>
                                                         <Style TargetType="Button"
                                                                BasedOn="{StaticResource GhostButton}">
@@ -602,7 +602,7 @@
                                                                         <Condition Binding="{Binding DataContext.CanVoidPayment,
                                                                                                      RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                                                                    Value="True" />
-                                                                        <Condition Binding="{Binding IsVoidable}" Value="True" />
+                                                                        <Condition Binding="{Binding IsVoidable, Mode=OneWay}" Value="True" />
                                                                     </MultiDataTrigger.Conditions>
                                                                     <Setter Property="IsEnabled" Value="True" />
                                                                 </MultiDataTrigger>
@@ -625,7 +625,7 @@
             </Grid>
 
             <Border Grid.Column="2" Style="{StaticResource Card}"
-                    Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVis}}">
+                    Visibility="{Binding IsEmpty, Mode=OneWay, Converter={StaticResource BoolToVis}}">
                 <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"
                             MaxWidth="430">
                     <TextBlock Text="Không có lượt ở cần xử lý"
