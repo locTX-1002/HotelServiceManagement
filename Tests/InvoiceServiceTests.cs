@@ -20,6 +20,8 @@ public class InvoiceServiceTests
             Reservation = new Reservation
             {
                 BookingCode = "BK01",
+                CheckInDate = new DateTime(2026, 7, 20),
+                CheckOutDate = new DateTime(2026, 7, 22),
                 DepositAmount = 100_000,
                 DepositPaymentMethod = PaymentMethod.Cash,
                 Room = new Room { RoomType = new RoomType { BasePrice = 500_000 } }
@@ -60,7 +62,12 @@ public class InvoiceServiceTests
             Id = 1,
             ActualCheckIn = new DateTime(2026, 7, 20),
             Status = StayStatus.Active,
-            Reservation = new Reservation { Room = new Room { RoomType = new RoomType { BasePrice = 500_000 } } }
+            Reservation = new Reservation
+            {
+                CheckInDate = new DateTime(2026, 7, 20),
+                CheckOutDate = new DateTime(2026, 7, 21),
+                Room = new Room { RoomType = new RoomType { BasePrice = 500_000 } }
+            }
         };
         var invoices = new FakeInvoiceRepository(stay) { SaveSucceeds = false };
 
@@ -83,7 +90,12 @@ public class InvoiceServiceTests
             Id = 1,
             ActualCheckIn = new DateTime(2026, 7, 20, 14, 0, 0),
             Status = StayStatus.Active,
-            Reservation = new Reservation { Room = new Room { RoomType = new RoomType { BasePrice = 500_000 } } },
+            Reservation = new Reservation
+            {
+                CheckInDate = new DateTime(2026, 7, 20),
+                CheckOutDate = new DateTime(2026, 7, 21),
+                Room = new Room { RoomType = new RoomType { BasePrice = 500_000 } }
+            },
             Invoice = new Invoice
             {
                 Id = 7,

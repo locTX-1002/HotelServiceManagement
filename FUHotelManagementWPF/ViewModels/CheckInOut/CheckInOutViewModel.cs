@@ -122,8 +122,8 @@ namespace FUHotelManagementWPF.ViewModels.CheckInOut
                 {
                     return Math.Max(1, (Reservation.CheckOutDate.Date - Reservation.CheckInDate.Date).Days);
                 }
-                return BillingRules.ChargeableNights(
-                    Stay!.ActualCheckIn, Reservation.CheckOutDate, DateTime.Today);
+                return BillingRules.ChargeableNights(Stay!.ActualCheckIn,
+                    Reservation.CheckInDate, Reservation.CheckOutDate, DateTime.Today);
             }
         }
 
