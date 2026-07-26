@@ -88,17 +88,18 @@ namespace FUHotelManagementWPF.ViewModels
 
             // Vai tro nao thay muc nao - dat SAT voi quyen ma service thuc su cho phep, de
             // khong ai bam vao roi moi bi tu choi. Khong ghi Roles = moi vai tro deu thay.
-            string[] quanLy = [RoleNames.Admin, RoleNames.Manager];
-            string[] leTan = [RoleNames.Admin, RoleNames.Manager, RoleNames.Receptionist];
+            string[] quanLy = [RoleNames.Manager];
+            string[] leTan = [RoleNames.Manager, RoleNames.Receptionist];
+            string[] nhanVienVanHanh = [RoleNames.Manager, RoleNames.Receptionist, RoleNames.ServiceStaff];
 
             var all = new List<ModuleItem>
             {
                 new("", "Trang chủ", homeGroup, () => new Home.HomeViewModel()),
-                new("", "Sơ đồ phòng", opGroup, () => new Rooms.RoomsViewModel()),
+                new("", "Sơ đồ phòng", opGroup, () => new Rooms.RoomsViewModel(), nhanVienVanHanh),
                 new("", "Đặt phòng", opGroup, () => new Reservations.ReservationsViewModel(), leTan),
                 new("", "Nhận / Trả phòng", opGroup, () => new CheckInOut.CheckInOutViewModel(), leTan),
                 new("", "Khách hàng", peopleGroup, () => new Guests.GuestsViewModel(), leTan),
-                new("", "Dịch vụ", peopleGroup, () => new Services.ServicesViewModel()),
+                new("", "Dịch vụ", peopleGroup, () => new Services.ServicesViewModel(), nhanVienVanHanh),
                 new("", "Hoá đơn", moneyGroup, () => new Invoices.InvoicesViewModel(), leTan),
                 new("", "Khuyến mãi", moneyGroup, () => new Promotions.PromotionListViewModel(), quanLy),
                 new("", "Báo cáo", moneyGroup, () => new Reports.ReportViewModel(), quanLy),

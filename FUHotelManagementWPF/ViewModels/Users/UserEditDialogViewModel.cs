@@ -104,6 +104,10 @@ namespace FUHotelManagementWPF.ViewModels.Users
             }
 
             RoleOptions.Clear();
+            if (_existing?.Role?.RoleName == RoleNames.Admin)
+            {
+                RoleOptions.Add(new RoleOption(_existing.RoleId, "Quản trị viên (Admin)"));
+            }
             foreach (var role in result.Data)
             {
                 RoleOptions.Add(new RoleOption(role.Id, Describe(role.RoleName)));

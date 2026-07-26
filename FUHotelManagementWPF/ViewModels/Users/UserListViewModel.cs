@@ -16,9 +16,23 @@ namespace FUHotelManagementWPF.ViewModels.Users
     /// <summary>Mot chip loc theo vai tro. IsSelected de chip dang chon in dam.</summary>
     public class RoleFilterOption : ViewModelBase
     {
-        /// <summary>Rong = "Tat ca" (khong loc).</summary>
         public string RoleName { get; }
-        public string Label { get; }
+        public string RawLabel { get; }
+
+        private int _count;
+        public int Count
+        {
+            get => _count;
+            set
+            {
+                if (SetProperty(ref _count, value))
+                {
+                    OnPropertyChanged(nameof(Label));
+                }
+            }
+        }
+
+        public string Label => Count > 0 ? $"{RawLabel} ({Count})" : RawLabel;
 
         private bool _isSelected;
         public bool IsSelected
@@ -30,7 +44,7 @@ namespace FUHotelManagementWPF.ViewModels.Users
         public RoleFilterOption(string roleName, string label)
         {
             RoleName = roleName;
-            Label = label;
+            RawLabel = label;
         }
     }
 
@@ -42,15 +56,10 @@ namespace FUHotelManagementWPF.ViewModels.Users
     {
         private readonly IUserManagementService _service = new UserManagementService();
 
-        /// <summary>
-        /// Ban goc tai ve tu service. Loc/tim lam ngay tren bo nho vi service chi co
-        /// GetAllAsync (khong co ham tim theo tu khoa) va so nhan vien khach san rat it.
-        /// </summary>
         private List<User> _all = [];
 
         public ObservableCollection<UserRow> Rows { get; } = [];
 
-        /// <summary>Toan module chi danh cho Admin - vai tro khac chi thay dong thong bao.</summary>
         public bool IsAdmin => AppSession.RoleName == RoleNames.Admin;
         public bool IsNotAdmin => !IsAdmin;
 
@@ -121,15 +130,17 @@ namespace FUHotelManagementWPF.ViewModels.Users
         public RelayCommand EditCommand { get; }
         public RelayCommand ResetPasswordCommand { get; }
         public RelayCommand FilterRoleCommand { get; }
+        public RelayCommand ClearFilterCommand { get; }
         public AsyncRelayCommand ToggleActiveCommand { get; }
         public AsyncRelayCommand ReloadCommand { get; }
 
         public UserListViewModel()
         {
             AddCommand = new RelayCommand(_ => OpenEditDialog(null));
-            EditCommand = new RelayCommand(_ => OpenEditDialog(SelectedRow?.User));
-            ResetPasswordCommand = new RelayCommand(_ => OpenResetPasswordDialog());
+            EditCommand = new RelayCommand(p => OpenEditDialog((p as UserRow)?.User ?? SelectedRow?.User));
+            ResetPasswordCommand = new RelayCommand(p => OpenResetPasswordDialog((p as UserRow)?.User ?? SelectedRow?.User));
             FilterRoleCommand = new RelayCommand(SelectRoleFilter);
+            ClearFilterCommand = new RelayCommand(_ => ClearFilters());
             ToggleActiveCommand = new AsyncRelayCommand(ToggleActiveAsync);
             ReloadCommand = new AsyncRelayCommand(_ => LoadAsync());
 
@@ -139,6 +150,12 @@ namespace FUHotelManagementWPF.ViewModels.Users
             {
                 _ = LoadAsync();
             }
+        }
+
+        private void ClearFilters()
+        {
+            SearchText = string.Empty;
+            SelectRoleFilter(RoleFilters[0]);
         }
 
         public async Task LoadAsync()
@@ -172,9 +189,15 @@ namespace FUHotelManagementWPF.ViewModels.Users
             }
         }
 
-        // Loc tren danh sach da tai: theo tu khoa (ten/email) + theo vai tro dang chon.
         private void ApplyFilter()
         {
+            foreach (var filter in RoleFilters)
+            {
+                filter.Count = string.IsNullOrEmpty(filter.RoleName)
+                    ? _all.Count
+                    : _all.Count(u => u.Role?.RoleName == filter.RoleName);
+            }
+
             var keyword = _searchText.Trim();
             var keepId = SelectedRow?.User.Id;
 
@@ -228,29 +251,28 @@ namespace FUHotelManagementWPF.ViewModels.Users
             }
         }
 
-        private void OpenResetPasswordDialog()
+        private void OpenResetPasswordDialog(User? target)
         {
-            if (SelectedRow == null)
+            var user = target ?? SelectedRow?.User;
+            if (user == null)
             {
                 return;
             }
 
-            new ResetPasswordDialog(new ResetPasswordDialogViewModel(SelectedRow.User))
+            new ResetPasswordDialog(new ResetPasswordDialogViewModel(user))
             {
                 Owner = RoomMapViewModel.ActiveWindow(),
             }.ShowDialog();
         }
 
-        // Khoa / mo khoa tai khoan dang chon. Dung MessageBox vi day la hanh dong
-        // chan nguoi khac dang nhap - can hoi lai truoc khi lam.
-        private async Task ToggleActiveAsync(object? _)
+        private async Task ToggleActiveAsync(object? param)
         {
-            if (SelectedRow == null || !SelectedRow.CanToggleActive)
+            var row = (param as UserRow) ?? SelectedRow;
+            if (row == null || !row.CanToggleActive)
             {
                 return;
             }
 
-            var row = SelectedRow;
             var willLock = row.IsActive;
             var question = willLock
                 ? $"Khoá tài khoản \"{row.FullName}\"?\n\nNhân viên này sẽ không đăng nhập được cho tới khi được mở khoá."

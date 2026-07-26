@@ -89,7 +89,8 @@
 
             <!-- ======= THANH TRA CUU PHONG TRONG (noi len day hero) ======= -->
             <Border Style="{StaticResource Card}" Margin="40,-30,40,0" Padding="16,13"
-                    Effect="{StaticResource SoftShadowLarge}">
+                    Effect="{StaticResource SoftShadowLarge}"
+                    Visibility="{Binding CanOperateFrontDesk, Converter={StaticResource BoolToVis}}">
                 <StackPanel>
                     <Grid>
                         <Grid.ColumnDefinitions>
@@ -219,7 +220,10 @@
                             <Button Content="Đặt phòng  →" Style="{StaticResource TileBook}"
                                     Command="{Binding DataContext.BookCommand,
                                               RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                    CommandParameter="{Binding RoomType}" />
+                                    CommandParameter="{Binding RoomType}"
+                                    Visibility="{Binding DataContext.CanOperateFrontDesk,
+                                              RelativeSource={RelativeSource AncestorType=UserControl},
+                                              Converter={StaticResource BoolToVis}}" />
                         </StackPanel>
                     </Grid>
                 </Border>

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using BusinessObjects;
 using BusinessObjects.Entities;
 using BusinessObjects.Enums;
 using FUHotelManagementWPF.MvvmCore;
@@ -274,14 +275,18 @@ namespace FUHotelManagementWPF.ViewModels.Home
             private set => SetProperty(ref _isLoading, value);
         }
 
+        public bool CanOperateFrontDesk => AuthorizationPolicy.CanOperateFrontDesk;
+
         public HomeViewModel()
         {
             PrevHeroCommand = new RelayCommand(_ => MoveHero(-1));
             NextHeroCommand = new RelayCommand(_ => MoveHero(1));
-            SearchCommand = new AsyncRelayCommand(SearchAsync);
-            BookCommand = new RelayCommand(p => OpenBookDialog(p as RoomType));
-            OpenRoomTypesCommand = new RelayCommand(_ => NavigationService.NavigateTo("Sơ đồ phòng"));
-            OpenCheckInOutCommand = new RelayCommand(_ => NavigationService.NavigateTo("Nhận / Trả phòng"));
+            SearchCommand = new AsyncRelayCommand(SearchAsync, _ => CanOperateFrontDesk);
+            BookCommand = new RelayCommand(p => OpenBookDialog(p as RoomType), _ => CanOperateFrontDesk);
+            OpenRoomTypesCommand = new RelayCommand(
+                _ => NavigationService.NavigateTo("Sơ đồ phòng"),
+                _ => CanOperateFrontDesk || AppSession.RoleName is RoleNames.ServiceStaff);
+            OpenCheckInOutCommand = new RelayCommand(_ => NavigationService.NavigateTo("Nhận / Trả phòng"), _ => CanOperateFrontDesk);
             RefreshCommand = new AsyncRelayCommand(_ => LoadAsync());
             _ = LoadAsync();
         }
