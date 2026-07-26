@@ -89,7 +89,21 @@ namespace FUHotelManagementWPF.ViewModels.CheckInOut
             // Bo GIO o dong phu: khi bang lam viec ben phai mo ra, cot chu hep lai va
             // dong nay bi cat cut thanh "vao 24/07 1...". Gio chinh xac van co day du
             // trong bang ben phai khi chon dong.
-            : $"{Reservation.Room?.RoomType?.TypeName} · vào {Stay!.ActualCheckIn:dd/MM} · {ChargeableNights} đêm";
+            : $"{Reservation.Room?.RoomType?.TypeName} · vào {BillingStart:dd/MM} · {ChargeableNights} đêm";
+
+        /// <summary>
+        /// Ngay BAT DAU TINH TIEN - moc som hon giua ngay vao that va ngay tren don, dung
+        /// moc ma ChargeableNights dem tu do.
+        ///
+        /// Dong phu phai dung moc nay chu khong phai ngay vao tho. Khach vao MUON hon don
+        /// thi hai moc lech nhau, va dong phu doc ra vo ly: phong 102 ghi "vao 26/07 - 2 dem"
+        /// ngay canh chip "Tra hom nay" - vao hom nay, o hai dem, ma tra hom nay.
+        /// </summary>
+        public DateTime BillingStart => Stay == null
+            ? Reservation.CheckInDate.Date
+            : Stay.ActualCheckIn.Date < Reservation.CheckInDate.Date
+                ? Stay.ActualCheckIn.Date
+                : Reservation.CheckInDate.Date;
 
         /// <summary>
         /// So dem khach DA o tinh den hom nay. Khong dung cho dong phu ngoai danh sach: cho
