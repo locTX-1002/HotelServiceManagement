@@ -318,8 +318,10 @@ public sealed class InvoicesViewModel : ViewModelBase
                                      && Invoice?.Status != InvoiceStatus.Cancelled;
     public bool CanCancelInvoice => Invoice != null
                                     && Invoice.Status != InvoiceStatus.Cancelled
-                                    && PaidAmount <= 0
                                     && AppSession.RoleName is RoleNames.Admin or RoleNames.Manager;
+    public string CancelInvoiceHint => PaidAmount > 0
+        ? "Hoá đơn đã có thanh toán. Hãy huỷ các giao dịch hoàn tất trước khi huỷ hoá đơn."
+        : "Huỷ hoá đơn hiện tại.";
     public bool CanVoidPayment => AppSession.RoleName is RoleNames.Admin or RoleNames.Manager;
     // Hoa don da thu tien van cho tinh lai - khach goi them dich vu sau khi lap hoa don
     // la chuyen binh thuong. Chi chan khi hoa don da huy.
@@ -559,6 +561,11 @@ public sealed class InvoicesViewModel : ViewModelBase
     {
         if (Invoice == null)
         {
+            return;
+        }
+        if (PaidAmount > 0)
+        {
+            Notify.Warning("Hãy huỷ các giao dịch đã hoàn tất trước khi huỷ hoá đơn.");
             return;
         }
 
@@ -823,6 +830,7 @@ public sealed class InvoicesViewModel : ViewModelBase
         OnPropertyChanged(nameof(CanRecordPayment));
         OnPropertyChanged(nameof(CanEditSurcharges));
         OnPropertyChanged(nameof(CanCancelInvoice));
+        OnPropertyChanged(nameof(CancelInvoiceHint));
         OnPropertyChanged(nameof(CanVoidPayment));
         OnPropertyChanged(nameof(CanPrepareInvoice));
         OnPropertyChanged(nameof(PrepareInvoiceText));

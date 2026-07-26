@@ -200,6 +200,7 @@
                                 Margin="0,8,0,0" Command="{Binding ExportInvoiceCommand}" />
                         <Button Content="Huỷ hoá đơn" Margin="0,8,0,0"
                                 IsEnabled="{Binding CanCancelInvoice, Mode=OneWay}"
+                                ToolTip="{Binding CancelInvoiceHint, Mode=OneWay}"
                                 Command="{Binding CancelInvoiceCommand}">
                             <Button.Style>
                                 <Style TargetType="Button" BasedOn="{StaticResource GhostButton}">
