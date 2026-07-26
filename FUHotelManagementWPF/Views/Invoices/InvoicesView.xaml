@@ -294,11 +294,65 @@
                                                                   ToolTip="Giảm thẳng một số tiền, không cần mã khuyến mãi. Cộng dồn với mã và ưu đãi VIP, tối đa bằng tổng hoá đơn." />
                                             </StackPanel>
 
-                                            <TextBlock Text="Tổng phải trả" Style="{StaticResource CaptionText}"
-                                                       Margin="0,20,0,3" />
-                                            <TextBlock Text="{Binding Invoice.TotalAmount, Converter={StaticResource Money}}"
-                                                       Style="{StaticResource PageTitleText}"
-                                                       Foreground="{StaticResource BrandBrush}" />
+                                            <Border BorderBrush="{StaticResource LineBrush}" BorderThickness="0,1,0,0"
+                                                    Margin="0,18,0,0" Padding="0,14,0,0">
+                                                <StackPanel>
+                                                    <Grid Margin="0,0,0,8">
+                                                        <TextBlock Text="Tạm tính" Style="{StaticResource CaptionText}" />
+                                                        <TextBlock Text="{Binding InvoiceSubtotal, Converter={StaticResource Money}}"
+                                                                   HorizontalAlignment="Right" />
+                                                    </Grid>
+                                                    <Grid Margin="0,0,0,8">
+                                                        <TextBlock Text="Giảm giá" Style="{StaticResource CaptionText}" />
+                                                        <TextBlock HorizontalAlignment="Right"
+                                                                   Foreground="{StaticResource SuccessBrush}">
+                                                            <Run Text="−" />
+                                                            <Run Text="{Binding Invoice.DiscountAmount, Converter={StaticResource Money}}" />
+                                                        </TextBlock>
+                                                    </Grid>
+                                                    <Grid Margin="0,0,0,8">
+                                                        <TextBlock Text="Tổng hoá đơn" FontWeight="SemiBold" />
+                                                        <TextBlock Text="{Binding Invoice.TotalAmount, Converter={StaticResource Money}}"
+                                                                   HorizontalAlignment="Right" FontWeight="SemiBold" />
+                                                    </Grid>
+                                                    <Grid Margin="0,0,0,8">
+                                                        <TextBlock Text="Đã thanh toán" Style="{StaticResource CaptionText}" />
+                                                        <TextBlock Text="{Binding PaidAmount, Converter={StaticResource Money}}"
+                                                                   HorizontalAlignment="Right"
+                                                                   Foreground="{StaticResource SuccessBrush}" />
+                                                    </Grid>
+                                                </StackPanel>
+                                            </Border>
+
+                                            <Border Padding="12,10" Margin="0,4,0,0" CornerRadius="8">
+                                                <Border.Style>
+                                                    <Style TargetType="Border">
+                                                        <Setter Property="Background" Value="{StaticResource SuccessSoftBrush}" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding HasOutstandingBalance}" Value="True">
+                                                                <Setter Property="Background" Value="{StaticResource DangerSoftBrush}" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Border.Style>
+                                                <StackPanel>
+                                                    <TextBlock Text="CÒN PHẢI THU" Style="{StaticResource FieldLabel}" />
+                                                    <TextBlock Text="{Binding RemainingAmount, Converter={StaticResource Money}}"
+                                                               Margin="0,4,0,0">
+                                                        <TextBlock.Style>
+                                                            <Style TargetType="TextBlock" BasedOn="{StaticResource SectionTitleText}">
+                                                                <Setter Property="Foreground" Value="{StaticResource SuccessBrush}" />
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding HasOutstandingBalance}" Value="True">
+                                                                        <Setter Property="Foreground" Value="{StaticResource DangerBrush}" />
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </TextBlock.Style>
+                                                    </TextBlock>
+                                                </StackPanel>
+                                            </Border>
+
                                             <Button Content="{Binding PrepareInvoiceText}"
                                                     Style="{StaticResource PrimaryButton}"
                                                     Margin="0,18,0,0"

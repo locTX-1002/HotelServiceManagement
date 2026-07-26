@@ -169,6 +169,10 @@ public sealed class InvoicesViewModel : ViewModelBase
     public string DiscountDetailText => string.IsNullOrWhiteSpace(Invoice?.PromotionCode)
         ? "Không áp dụng"
         : Invoice.PromotionCode;
+    public decimal InvoiceSubtotal => Invoice == null
+        ? LiveRoomCharge + LiveServiceCharge + LiveSurcharge
+        : Invoice.RoomCharge + Invoice.ServiceCharge + Invoice.SurchargeAmount;
+    public bool HasOutstandingBalance => Invoice != null && RemainingAmount > 0;
 
     /// <summary>Giam gia da chot tren hoa don; chua co hoa don thi chua biet, tinh 0.</summary>
     private decimal LiveDiscount => Math.Clamp(Invoice?.DiscountAmount ?? 0, 0,
@@ -215,6 +219,7 @@ public sealed class InvoicesViewModel : ViewModelBase
             if (SetProperty(ref _remainingAmount, value))
             {
                 OnPropertyChanged(nameof(CanRecordPayment));
+                OnPropertyChanged(nameof(HasOutstandingBalance));
             }
         }
     }
@@ -639,6 +644,8 @@ public sealed class InvoicesViewModel : ViewModelBase
         OnPropertyChanged(nameof(ServiceChargeDetailText));
         OnPropertyChanged(nameof(SurchargeDetailText));
         OnPropertyChanged(nameof(DiscountDetailText));
+        OnPropertyChanged(nameof(InvoiceSubtotal));
+        OnPropertyChanged(nameof(HasOutstandingBalance));
         OnPropertyChanged(nameof(PendingDifference));
         OnPropertyChanged(nameof(HasPendingCharges));
         OnPropertyChanged(nameof(PendingChargeText));
