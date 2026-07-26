@@ -12,10 +12,9 @@ Mục tiêu là:
 - service luôn kiểm tra lại quyền, kể cả khi người dùng gọi được command bằng cách khác;
 - thao tác nhạy cảm có người yêu cầu, người phê duyệt và nhật ký truy vết.
 
-> **Lưu ý trạng thái:** source hiện tại đã có kiểm tra quyền theo 4 tên vai trò,
-> nhưng phần lớn ánh xạ vai trò - quyền vẫn đang viết trực tiếp trong code.
-> Các bảng quyền động, quy trình phê duyệt và nhật ký bên dưới là **thiết kế mục tiêu,
-> chưa phải toàn bộ chức năng đã được triển khai**.
+> **Trạng thái cập nhật:** hệ thống đã triển khai quyền động từ cơ sở dữ liệu,
+> màn hình cấu hình ma trận quyền, quy trình yêu cầu - phê duyệt và nhật ký cho các
+> yêu cầu nhạy cảm. Những mục còn mở được ghi rõ ở phần 10.
 
 ## 2. Các loại tài khoản
 
@@ -311,21 +310,24 @@ if (AppSession.RoleName is RoleNames.Admin or RoleNames.Manager)
 
 Source hiện đã có:
 
-- 4 vai trò được định nghĩa và seed: Admin, Manager, Receptionist, ServiceStaff;
-- lọc một số module ở sidebar theo vai trò;
-- ẩn/hiện một số nút theo vai trò;
-- kiểm tra quyền ở nhiều service;
-- test biên phân quyền cho một số nghiệp vụ.
+- 4 vai trò và 35 quyền được seed trong cơ sở dữ liệu;
+- bảng `Permissions`, `RolePermissions`, `ApprovalRequests` và `AuditLogs`;
+- nạp tập quyền của vai trò vào phiên đăng nhập;
+- lọc module, nút và command theo mã quyền;
+- service kiểm tra lại quyền trước khi thay đổi dữ liệu;
+- màn hình cấu hình ma trận quyền cho Admin;
+- màn hình phê duyệt cho Manager;
+- luồng yêu cầu - phê duyệt cho huỷ đặt phòng, giảm giá, huỷ hoá đơn,
+  huỷ thanh toán và yêu cầu bảo trì;
+- chặn người yêu cầu tự phê duyệt và chặn cấu hình quyền xung đột;
+- test ma trận quyền và tách nhiệm vụ.
 
 Source hiện còn cần thay đổi:
 
-- nhiều ViewModel và service vẫn so sánh trực tiếp `RoleNames`;
-- chưa có bảng `Permissions` và `RolePermissions`;
-- chưa có dịch vụ phân quyền động dùng chung;
-- chưa có màn hình cấu hình ma trận quyền;
-- chưa có quy trình yêu cầu - phê duyệt đầy đủ;
-- chưa có nhật ký nghiệp vụ tập trung;
-- Admin hiện còn được cấp nhiều quyền nghiệp vụ, chưa đúng nguyên tắc tách nhiệm vụ mới.
+- mở rộng `AuditLogs` sang toàn bộ thao tác CRUD thông thường; hiện nhật ký tập trung
+  đã bao phủ quy trình yêu cầu - phê duyệt;
+- bổ sung màn hình tra cứu nhật ký cho Admin;
+- tiếp tục bổ sung test giao diện tự động nếu dự án chọn framework UI automation.
 
 ## 11. Kế hoạch triển khai đề xuất
 
@@ -357,4 +359,3 @@ Mỗi mục hoàn thành phải là một commit riêng:
 - [ ] Có test cho từng quyền được phép và bị từ chối.
 - [ ] Có test chống tự yêu cầu - tự phê duyệt.
 - [ ] Không xóa cứng lịch sử thanh toán hoặc hóa đơn.
-
