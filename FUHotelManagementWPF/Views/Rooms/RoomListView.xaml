@@ -69,7 +69,8 @@
         <DockPanel Grid.Row="0" Margin="0,0,0,12">
             <Button DockPanel.Dock="Right" Content="+ Thêm phòng"
                     Style="{StaticResource PrimaryButton}" Padding="16,8"
-                    Command="{Binding AddCommand}" />
+                    Command="{Binding AddCommand}"
+                    Visibility="{Binding CanManageRooms, Converter={StaticResource BoolToVis}}" />
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                 <TextBox Style="{StaticResource SearchBox}" VerticalAlignment="Center"
                          Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
@@ -246,23 +247,36 @@
                                        FontSize="12" TextWrapping="Wrap" Margin="0,12,0,0"
                                        Visibility="{Binding HasDescription, Converter={StaticResource BoolToVis}}" />
 
-                            <Border Height="1" Background="{StaticResource LineBrush}" Margin="0,16,0,14" />
+                            <!-- Ca 3 nut deu can quyen quan ly phong -> an luon duong ke cho khoi tro -->
+                            <Border Height="1" Background="{StaticResource LineBrush}" Margin="0,16,0,14"
+                                    Visibility="{Binding DataContext.CanManageRooms,
+                                                 RelativeSource={RelativeSource AncestorType=UserControl},
+                                                 Converter={StaticResource BoolToVis}}" />
                             <WrapPanel>
                                 <Button Content="Đổi trạng thái" Style="{StaticResource PrimaryButton}"
                                         Padding="14,7" Margin="0,0,8,8"
                                         Command="{Binding DataContext.ChangeStatusCommand,
-                                                  RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                                                  RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                        Visibility="{Binding DataContext.CanManageRooms,
+                                                     RelativeSource={RelativeSource AncestorType=UserControl},
+                                                     Converter={StaticResource BoolToVis}}" />
                                 <Button Content="Sửa" Style="{StaticResource GhostButton}"
                                         Padding="14,7" Margin="0,0,8,8"
                                         Command="{Binding DataContext.EditCommand,
                                                   RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                        CommandParameter="{Binding}" />
+                                        CommandParameter="{Binding}"
+                                        Visibility="{Binding DataContext.CanManageRooms,
+                                                     RelativeSource={RelativeSource AncestorType=UserControl},
+                                                     Converter={StaticResource BoolToVis}}" />
                                 <Button Content="Xoá" Style="{StaticResource GhostButton}"
                                         Padding="14,7" Margin="0,0,0,8"
                                         Foreground="{StaticResource DangerBrush}"
                                         Command="{Binding DataContext.DeleteCommand,
                                                   RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                        CommandParameter="{Binding}" />
+                                        CommandParameter="{Binding}"
+                                        Visibility="{Binding DataContext.CanManageRooms,
+                                                     RelativeSource={RelativeSource AncestorType=UserControl},
+                                                     Converter={StaticResource BoolToVis}}" />
                             </WrapPanel>
                         </StackPanel>
                     </StackPanel>

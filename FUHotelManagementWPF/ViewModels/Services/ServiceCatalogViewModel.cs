@@ -37,8 +37,8 @@ namespace FUHotelManagementWPF.ViewModels.Services
         public ObservableCollection<ServiceCategory> Categories { get; } = [];
         public ObservableCollection<ServiceItemRow> Items { get; } = [];
 
-        /// <summary>Chi Admin/Manager duoc sua danh muc; nguoi khac chi xem.</summary>
-        public bool CanManage => AppSession.RoleName is RoleNames.Admin or RoleNames.Manager;
+        /// <summary>An nut them/sua/ngung ban voi vai tro khong duoc phep - service van la lop chan cuoi.</summary>
+        public bool CanManage => AuthorizationPolicy.CanManageServiceCatalog;
 
         private ServiceItemRow? _selectedItem;
         public ServiceItemRow? SelectedItem
@@ -91,7 +91,7 @@ namespace FUHotelManagementWPF.ViewModels.Services
             _refreshAll = refreshAll;
             AddCategoryCommand = new AsyncRelayCommand(_ => OpenCategoryAsync());
             AddItemCommand = new AsyncRelayCommand(_ => OpenItemAsync(null));
-            EditItemCommand = new AsyncRelayCommand(_ => OpenItemAsync(SelectedItem?.Item));
+            EditItemCommand = new AsyncRelayCommand(EditItemAsync);
             ToggleItemCommand = new AsyncRelayCommand(ToggleAsync);
             ReloadCommand = new AsyncRelayCommand(_ => LoadAsync());
         }
@@ -137,6 +137,21 @@ namespace FUHotelManagementWPF.ViewModels.Services
             {
                 await _refreshAll();
             }
+        }
+
+        /// <summary>
+        /// Sua mon: lay dong tu CommandParameter chu KHONG dung SelectedItem. Bam Button ben trong
+        /// ListBoxItem thi ButtonBase dat e.Handled = true nen ListBoxItem khong duoc chon,
+        /// SelectedItem con null va hop thoai se mo trong (bam Luu la tao moi thay vi sua).
+        /// </summary>
+        private Task EditItemAsync(object? parameter)
+        {
+            if (parameter is not ServiceItemRow row)
+            {
+                return Task.CompletedTask;
+            }
+
+            return OpenItemAsync(row.Item);
         }
 
         private async Task OpenItemAsync(ServiceItem? existing)

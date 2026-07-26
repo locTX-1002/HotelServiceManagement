@@ -56,7 +56,8 @@
 
         <DockPanel Grid.Row="1" Margin="0,0,0,12">
             <Button DockPanel.Dock="Right" Content="+ Thêm khách" Style="{StaticResource PrimaryButton}"
-                    Padding="16,8" Command="{Binding AddCommand}" />
+                    Padding="16,8" Command="{Binding AddCommand}"
+                    Visibility="{Binding CanManageGuests, Converter={StaticResource BoolToVis}}" />
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                 <TextBox Style="{StaticResource SearchBox}" VerticalAlignment="Center"
                          Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged, Delay=300}"
@@ -193,24 +194,37 @@
                                    TextWrapping="Wrap"
                                    Visibility="{Binding HasTagNote, Converter={StaticResource BoolToVis}}" />
 
-                        <Border Height="1" Background="{StaticResource LineBrush}" Margin="0,16,0,14" />
+                        <!-- Vach ngan cua vung hanh dong: an luon khi khong co nut nao hien -->
+                        <Border Height="1" Background="{StaticResource LineBrush}" Margin="0,16,0,14"
+                                Visibility="{Binding DataContext.CanManageGuests,
+                                             RelativeSource={RelativeSource AncestorType=UserControl},
+                                             Converter={StaticResource BoolToVis}}" />
                         <StackPanel Orientation="Horizontal">
                             <Button Content="Sửa thông tin" Style="{StaticResource PrimaryButton}"
                                     Padding="16,7"
                                     Command="{Binding DataContext.EditCommand,
-                                              RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                                              RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                    Visibility="{Binding DataContext.CanManageGuests,
+                                                 RelativeSource={RelativeSource AncestorType=UserControl},
+                                                 Converter={StaticResource BoolToVis}}" />
                             <!-- Kich hoat tai khoan dat phong online cho khach (theo phan cong Phuc) -->
                             <Button Content="Cấp tài khoản đặt phòng" Style="{StaticResource GhostButton}"
                                     Padding="16,7" Margin="10,0,0,0"
                                     ToolTip="Tạo tài khoản để khách tự đăng nhập bằng số điện thoại"
                                     Command="{Binding DataContext.ActivateAccountCommand,
-                                              RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                                              RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                    Visibility="{Binding DataContext.CanManageGuests,
+                                                 RelativeSource={RelativeSource AncestorType=UserControl},
+                                                 Converter={StaticResource BoolToVis}}" />
                             <Button Content="Xoá" Style="{StaticResource GhostButton}"
                                     Padding="16,7" Margin="10,0,0,0"
                                     Foreground="{StaticResource DangerBrush}"
                                     ToolTip="Xoá hồ sơ khách — khách đã có lịch sử đặt phòng sẽ không xoá được"
                                     Command="{Binding DataContext.DeleteCommand,
-                                              RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                                              RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                    Visibility="{Binding DataContext.CanManageGuests,
+                                                 RelativeSource={RelativeSource AncestorType=UserControl},
+                                                 Converter={StaticResource BoolToVis}}" />
                         </StackPanel>
                     </StackPanel>
                 </Grid>

@@ -230,6 +230,9 @@
                                                       RelativeSource={RelativeSource AncestorType=UserControl}}" />
                                     <Button Content="{Binding ActionLabel}"
                                             Style="{StaticResource PrimaryButton}" Padding="14,7"
+                                            Visibility="{Binding DataContext.CanOperate,
+                                                         RelativeSource={RelativeSource AncestorType=UserControl},
+                                                         Converter={StaticResource BoolToVis}}"
                                             Command="{Binding DataContext.ActionCommand,
                                                       RelativeSource={RelativeSource AncestorType=UserControl}}"
                                             CommandParameter="{Binding}" />
@@ -393,6 +396,9 @@
 
                             <Button Content="{Binding ActionLabel}" Style="{StaticResource PrimaryButton}"
                                     Padding="0,10" Margin="0,8,0,0" FontSize="13.5"
+                                    Visibility="{Binding DataContext.CanOperate,
+                                                 RelativeSource={RelativeSource AncestorType=UserControl},
+                                                 Converter={StaticResource BoolToVis}}"
                                     Command="{Binding DataContext.ActionCommand,
                                               RelativeSource={RelativeSource AncestorType=UserControl}}"
                                     CommandParameter="{Binding}" />

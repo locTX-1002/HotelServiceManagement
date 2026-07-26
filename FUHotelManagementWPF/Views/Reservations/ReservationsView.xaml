@@ -134,15 +134,17 @@
                                    Style="{StaticResource CaptionText}" FontSize="12.5"
                                    VerticalAlignment="Center" Margin="12,0,0,0" />
 
+                        <!-- Chi vai tro truc le tan moi tao duoc don -->
                         <Button Grid.Column="5" Content="+ Tạo đặt phòng"
                                 Style="{StaticResource PrimaryButton}" Padding="16,8"
+                                Visibility="{Binding CanOperateFrontDesk, Converter={StaticResource BoolToVis}}"
                                 Command="{Binding AddCommand}" />
                     </Grid>
 
                     <hc:LoadingCircle Grid.Row="2" Width="34" Height="34"
                                       Foreground="{StaticResource BrandBrush}"
                                       Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}" />
-                    <TextBlock Grid.Row="2" Text="Chưa có đặt phòng nào — bấm + Tạo đặt phòng để bắt đầu."
+                    <TextBlock Grid.Row="2" Text="{Binding EmptyText}"
                                Style="{StaticResource CaptionText}" FontSize="13"
                                HorizontalAlignment="Center" VerticalAlignment="Center"
                                Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVis}}" />
@@ -205,27 +207,36 @@
                                             </Style>
                                         </StackPanel.Style>
 
-                                        <Button Content="Xác nhận" Style="{StaticResource PrimaryButton}"
-                                                Padding="14,6" Margin="0,0,7,0"
-                                                Visibility="{Binding CanConfirm, Converter={StaticResource BoolToVis}}"
-                                                Command="{Binding DataContext.ConfirmCommand,
-                                                          RelativeSource={RelativeSource AncestorType=UserControl}}" />
-                                        <Button Content="Sửa" Style="{StaticResource GhostButton}"
-                                                Padding="14,6" Margin="0,0,7,0"
-                                                Visibility="{Binding CanEdit, Converter={StaticResource BoolToVis}}"
-                                                Command="{Binding DataContext.EditCommand,
-                                                          RelativeSource={RelativeSource AncestorType=UserControl}}" />
-                                        <Button Content="Huỷ" Style="{StaticResource GhostButton}"
-                                                Padding="14,6" Margin="0,0,7,0"
-                                                Foreground="{StaticResource DangerBrush}"
-                                                Visibility="{Binding CanCancel, Converter={StaticResource BoolToVis}}"
-                                                Command="{Binding DataContext.CancelCommand,
-                                                          RelativeSource={RelativeSource AncestorType=UserControl}}" />
-                                        <Button Content="Không đến" Style="{StaticResource GhostButton}"
-                                                Padding="14,6"
-                                                Visibility="{Binding CanNoShow, Converter={StaticResource BoolToVis}}"
-                                                Command="{Binding DataContext.NoShowCommand,
-                                                          RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                                        <!-- Boc ca cum nut hanh dong trong mot khung an theo QUYEN: cach don gian nhat
+                                             de giu nguyen dieu kien TRANG THAI (CanConfirm/CanEdit/CanCancel/CanNoShow)
+                                             tren tung nut ma khong phai viet MultiBinding cho bon cho.
+                                             DataContext o day la ReservationRow nen phai tro nguoc len UserControl. -->
+                                        <StackPanel Orientation="Horizontal"
+                                                    Visibility="{Binding DataContext.CanOperateFrontDesk,
+                                                                 RelativeSource={RelativeSource AncestorType=UserControl},
+                                                                 Converter={StaticResource BoolToVis}}">
+                                            <Button Content="Xác nhận" Style="{StaticResource PrimaryButton}"
+                                                    Padding="14,6" Margin="0,0,7,0"
+                                                    Visibility="{Binding CanConfirm, Converter={StaticResource BoolToVis}}"
+                                                    Command="{Binding DataContext.ConfirmCommand,
+                                                              RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                                            <Button Content="Sửa" Style="{StaticResource GhostButton}"
+                                                    Padding="14,6" Margin="0,0,7,0"
+                                                    Visibility="{Binding CanEdit, Converter={StaticResource BoolToVis}}"
+                                                    Command="{Binding DataContext.EditCommand,
+                                                              RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                                            <Button Content="Huỷ" Style="{StaticResource GhostButton}"
+                                                    Padding="14,6" Margin="0,0,7,0"
+                                                    Foreground="{StaticResource DangerBrush}"
+                                                    Visibility="{Binding CanCancel, Converter={StaticResource BoolToVis}}"
+                                                    Command="{Binding DataContext.CancelCommand,
+                                                              RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                                            <Button Content="Không đến" Style="{StaticResource GhostButton}"
+                                                    Padding="14,6"
+                                                    Visibility="{Binding CanNoShow, Converter={StaticResource BoolToVis}}"
+                                                    Command="{Binding DataContext.NoShowCommand,
+                                                              RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                                        </StackPanel>
                                         <TextBlock Text="{Binding SpecialRequests}" Style="{StaticResource CaptionText}"
                                                    FontSize="11.5" VerticalAlignment="Center" Margin="12,0,0,0"
                                                    TextTrimming="CharacterEllipsis" MaxWidth="320"
