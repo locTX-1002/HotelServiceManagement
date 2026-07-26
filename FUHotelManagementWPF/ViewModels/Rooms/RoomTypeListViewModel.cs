@@ -78,6 +78,9 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
             }
         }
 
+        /// <summary>An nut them/sua/xoa voi vai tro khong duoc phep - service van la lop chan cuoi.</summary>
+        public bool CanManageRooms => AuthorizationPolicy.CanManageRooms;
+
         public RelayCommand AddCommand { get; }
         public RelayCommand EditCommand { get; }
         public AsyncRelayCommand DeleteCommand { get; }

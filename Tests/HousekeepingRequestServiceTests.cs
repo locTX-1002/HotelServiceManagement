@@ -1,3 +1,4 @@
+using BusinessObjects;
 using BusinessObjects.Entities;
 using BusinessObjects.Enums;
 using Repositories;
@@ -10,7 +11,7 @@ public class HousekeepingRequestServiceTests
     [Fact]
     public async Task CompletedRequest_CannotReturnToPending()
     {
-        AppSession.SignIn(new User { Id = 2, Role = new Role { RoleName = "ServiceStaff" } });
+        AppSession.SignIn(new User { Id = 2, Role = new Role { RoleName = RoleNames.ServiceStaff } });
         var request = new HousekeepingRequest { Id = 1, Status = HousekeepingRequestStatus.Completed };
         var repository = new FakeRepository(request);
 

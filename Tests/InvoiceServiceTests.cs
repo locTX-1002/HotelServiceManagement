@@ -1,3 +1,4 @@
+using BusinessObjects;
 using BusinessObjects.Entities;
 using BusinessObjects.Enums;
 using Repositories;
@@ -67,10 +68,40 @@ public class InvoiceServiceTests
             .PrepareAsync(1, null, new DateTime(2026, 7, 21));
 
         Assert.False(result.Ok);
-        Assert.Contains("tai lai", result.Message);
+        Assert.Contains("tải lại", result.Message);
     }
 
-    private static User Admin() => new() { Id = 1, Role = new Role { RoleName = "Admin" } };
+    /// <summary>
+    /// Tong moi thap hon so da thu thi phai hoan tien - viec do lam ngoai app, nen chan.
+    /// </summary>
+    [Fact]
+    public async Task PrepareAsync_KhiTongMoiThapHonSoDaThu_ChanVaBaoHoanTien()
+    {
+        AppSession.SignIn(Admin());
+        var stay = new Stay
+        {
+            Id = 1,
+            ActualCheckIn = new DateTime(2026, 7, 20, 14, 0, 0),
+            Status = StayStatus.Active,
+            Reservation = new Reservation { Room = new Room { RoomType = new RoomType { BasePrice = 500_000 } } },
+            Invoice = new Invoice
+            {
+                Id = 7,
+                StayId = 1,
+                TotalAmount = 2_000_000,
+                Payments = [new Payment { Amount = 2_000_000, Status = PaymentStatus.Completed }]
+            }
+        };
+
+        // Tinh lai o ngay 21 -> chi con 1 dem = 500k, thap hon 2 trieu da thu
+        var result = await new InvoiceService(new FakeInvoiceRepository(stay), new FakePromotionRepository(new Promotion()))
+            .PrepareAsync(1, null, new DateTime(2026, 7, 21, 11, 0, 0));
+
+        Assert.False(result.Ok);
+        Assert.Contains("hoàn tiền", result.Message);
+    }
+
+    private static User Admin() => new() { Id = 1, Role = new Role { RoleName = RoleNames.Admin } };
 
     private sealed class FakeInvoiceRepository(Stay stay) : IInvoiceRepository
     {

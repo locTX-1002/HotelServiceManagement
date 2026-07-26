@@ -83,6 +83,14 @@ namespace FUHotelManagementWPF.ViewModels.Reservations
         }
         public bool IsEmpty => !IsLoading && Rows.Count == 0;
 
+        /// <summary>An nut tao/xac nhan/sua/huy/khong den voi vai tro khong duoc phep - service van la lop chan cuoi.</summary>
+        public bool CanOperateFrontDesk => AuthorizationPolicy.CanOperateFrontDesk;
+
+        // Vai tro chi xem thi khong co nut "+ Tao dat phong" -> doi loi goi y cho khoi chi vao nut khong ton tai.
+        public string EmptyText => CanOperateFrontDesk
+            ? "Chưa có đặt phòng nào — bấm + Tạo đặt phòng để bắt đầu."
+            : "Chưa có đặt phòng nào.";
+
         public string TotalText => $"{Rows.Count} đặt phòng";
 
         public RelayCommand AddCommand { get; }

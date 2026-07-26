@@ -58,7 +58,7 @@
                 <Border.InputBindings>
                     <MouseBinding Gesture="LeftClick" Command="{Binding ChooseImageCommand}" />
                 </Border.InputBindings>
-                <Border CornerRadius="4" Background="#A6000000" Padding="10,4"
+                <Border CornerRadius="4" Background="{StaticResource ScrimBrush}" Padding="10,4"
                         HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="10,0,0,10">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="&#xE722;" Style="{StaticResource IconText}" FontSize="11"
@@ -100,7 +100,7 @@
                                 <Run Text="{Binding TypeName, Mode=OneWay}" FontWeight="SemiBold" />
                                 <Run Text=" · " Foreground="{StaticResource InkSoftBrush}" />
                                 <Run Text="{Binding Capacity, Mode=OneWay}" /><Run Text=" khách · " />
-                                <Run Text="{Binding BasePrice, Mode=OneWay, StringFormat={}{0:N0}}" /><Run Text=" đ/đêm" />
+                                <Run Text="{Binding BasePrice, Mode=OneWay, Converter={StaticResource Money}, ConverterParameter=raw}" /><Run Text=" đ/đêm" />
                             </TextBlock>
                         </DataTemplate>
                     </ComboBox.ItemTemplate>

@@ -19,6 +19,26 @@ public sealed class StayDAO
             .OrderBy(s => s.Reservation.Room.RoomNumber).ToListAsync();
     }
 
+    /// <summary>
+    /// Luot can xu ly tien: dang o, HOAC da tra phong ma hoa don chua thanh toan xong.
+    ///
+    /// Ve nhom thu hai: man Hoa don truoc day chi nap luot dang o, nen luot nao da tra
+    /// phong ma con no tien la bien mat khoi giao dien - khong con cho nao thu duoc nua.
+    /// Tien khach no nam lai trong database ma khong ai nhin thay.
+    /// </summary>
+    public async Task<List<Stay>> GetBillableAsync()
+    {
+        await using var context = HotelDbContextFactory.Create();
+        return await Query(context)
+            .Where(s => s.Status == StayStatus.Active
+                        || s.Invoice == null
+                        || (s.Invoice.Status != InvoiceStatus.Paid
+                            && s.Invoice.Status != InvoiceStatus.Cancelled))
+            .OrderBy(s => s.Status == StayStatus.Active ? 0 : 1)
+            .ThenBy(s => s.Reservation.Room.RoomNumber)
+            .ToListAsync();
+    }
+
     public async Task<Stay?> GetByIdAsync(int id)
     {
         await using var context = HotelDbContextFactory.Create();
@@ -105,15 +125,15 @@ public sealed class StayDAO
             .Include(s => s.Reservation).ThenInclude(r => r.Room)
             .FirstOrDefaultAsync(s => s.Id == stayId);
 
-        if (stay == null) return (false, "Khong tim thay luot luu tru.");
-        if (stay.Status != StayStatus.Active) return (false, "Chi khach dang luu tru moi gia han duoc.");
+        if (stay == null) return (false, "Không tìm thấy lượt lưu trú.");
+        if (stay.Status != StayStatus.Active) return (false, "Chỉ khách đang lưu trú mới gia hạn được.");
 
         var reservation = stay.Reservation;
         var target = newCheckOut.Date;
 
-        if (target <= stay.ActualCheckIn.Date) return (false, "Ngay tra moi phai sau ngay khach nhan phong.");
-        if (target == reservation.CheckOutDate.Date) return (false, "Ngay tra moi trung ngay tra hien tai.");
-        if (target < DateTime.Today) return (false, "Ngay tra moi khong duoc o qua khu.");
+        if (target <= stay.ActualCheckIn.Date) return (false, "Ngày trả mới phải sau ngày khách nhận phòng.");
+        if (target == reservation.CheckOutDate.Date) return (false, "Ngày trả mới trùng ngày trả hiện tại.");
+        if (target < DateTime.Today) return (false, "Ngày trả mới không được ở quá khứ.");
 
         if (target > reservation.CheckOutDate.Date)
         {
@@ -125,7 +145,7 @@ public sealed class StayDAO
                     || other.Status == ReservationStatus.CheckedIn)
                 && other.CheckInDate < target
                 && other.CheckOutDate > reservation.CheckOutDate);
-            if (busy) return (false, "Phong da co khach khac dat trong khoang muon o them.");
+            if (busy) return (false, "Phòng đã có khách khác đặt trong khoảng muốn ở thêm.");
         }
 
         var oldDate = reservation.CheckOutDate;

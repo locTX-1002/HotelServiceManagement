@@ -1,8 +1,15 @@
 <UserControl x:Class="FUHotelManagementWPF.Views.Invoices.InvoicesView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:enums="clr-namespace:BusinessObjects.Enums;assembly=BusinessObjects"
+             xmlns:vm="clr-namespace:FUHotelManagementWPF.ViewModels.Invoices"
              xmlns:hc="https://handyorg.github.io/handycontrol">
-    <Grid Background="{StaticResource SurfaceBrush}" Margin="24">
+    <UserControl.Resources>
+        <vm:VipToVisibilityConverter x:Key="VipToVis" />
+    </UserControl.Resources>
+    <!-- Khong to Background: nen da co san tu BackdropHost cua cua so. To dac o day
+         la che mat anh nen, rieng man Hoa don tro thanh mang mau khac han cac man kia. -->
+    <Grid Margin="24">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="14" />
@@ -47,14 +54,24 @@
                                 <Border Padding="14,10" BorderBrush="{StaticResource LineBrush}"
                                         BorderThickness="0,1,0,0">
                                     <StackPanel>
-                                        <TextBlock FontWeight="SemiBold">
-                                            <Run Text="Phòng " />
-                                            <Run Text="{Binding Reservation.Room.RoomNumber}" />
-                                        </TextBlock>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock FontWeight="SemiBold">
+                                                <Run Text="Phòng " />
+                                                <Run Text="{Binding Reservation.Room.RoomNumber, Mode=OneWay}" />
+                                            </TextBlock>
+                                            <!-- Bao truoc khach VIP de le tan biet hoa don se tu giam 10% -->
+                                            <Border Style="{StaticResource BadgeWarning}" Margin="8,0,0,0"
+                                                    VerticalAlignment="Center">
+                                                <Border.Visibility>
+                                                    <Binding Path="Reservation.Guest.Tag" Converter="{StaticResource VipToVis}" />
+                                                </Border.Visibility>
+                                                <TextBlock Text="VIP −10%" />
+                                            </Border>
+                                        </StackPanel>
                                         <TextBlock Style="{StaticResource CaptionText}" Margin="0,3,0,0">
-                                            <Run Text="{Binding Reservation.Guest.FullName}" />
+                                            <Run Text="{Binding Reservation.Guest.FullName, Mode=OneWay}" />
                                             <Run Text=" · " />
-                                            <Run Text="{Binding ActualCheckIn, StringFormat={}{0:dd/MM/yyyy HH:mm}}" />
+                                            <Run Text="{Binding ActualCheckIn, Mode=OneWay, StringFormat={}{0:dd/MM/yyyy HH:mm}}" />
                                         </TextBlock>
                                     </StackPanel>
                                 </Border>
@@ -68,6 +85,7 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="12" />
+                    <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
 
@@ -90,7 +108,25 @@
                                TextWrapping="Wrap" />
                 </Border>
 
-                <TabControl Grid.Row="2">
+                <!-- Dai canh bao: hoa don trong DB la anh chup luc bam lap, khach goi them
+                     dich vu hay bi ghi phu thu sau do thi so tren man hinh van la so cu.
+                     Bao ngay tai day thay vi de le tan bam "Tinh lai" moi biet co chenh. -->
+                <Border Grid.Row="2" Padding="12,9" CornerRadius="8" Margin="0,0,0,12"
+                        Background="{StaticResource WarningSoftBrush}"
+                        Visibility="{Binding HasPendingCharges, Converter={StaticResource BoolToVis}}">
+                    <DockPanel>
+                        <Button DockPanel.Dock="Right" Content="{Binding PrepareInvoiceText}"
+                                Style="{StaticResource PrimaryButton}" Padding="14,6" FontSize="12"
+                                VerticalAlignment="Center" Margin="12,0,0,0"
+                                IsEnabled="{Binding CanPrepareInvoice}"
+                                Command="{Binding PrepareInvoiceCommand}" />
+                        <TextBlock Text="{Binding PendingChargeText}" TextWrapping="Wrap"
+                                   VerticalAlignment="Center"
+                                   Foreground="{StaticResource WarningBrush}" />
+                    </DockPanel>
+                </Border>
+
+                <TabControl Grid.Row="3" SelectedIndex="{Binding SelectedTabIndex}">
                     <TabItem Header="Hoá đơn">
                         <ScrollViewer VerticalScrollBarVisibility="Auto">
                             <StackPanel Margin="4,14,4,4">
@@ -114,24 +150,29 @@
                                                 </Grid.ColumnDefinitions>
                                                 <StackPanel Grid.Column="0">
                                                     <TextBlock Text="Tiền phòng" Style="{StaticResource CaptionText}" />
-                                                    <TextBlock Text="{Binding Invoice.RoomCharge, StringFormat={}{0:N0} đ}"
+                                                    <TextBlock Text="{Binding Invoice.RoomCharge, Converter={StaticResource Money}}"
                                                                Style="{StaticResource BodyText}" Margin="0,3,0,10" />
                                                     <TextBlock Text="Tiền dịch vụ" Style="{StaticResource CaptionText}" />
-                                                    <TextBlock Text="{Binding Invoice.ServiceCharge, StringFormat={}{0:N0} đ}"
+                                                    <TextBlock Text="{Binding Invoice.ServiceCharge, Converter={StaticResource Money}}"
                                                                Style="{StaticResource BodyText}" Margin="0,3,0,10" />
                                                     <TextBlock Text="Phụ thu" Style="{StaticResource CaptionText}" />
-                                                    <TextBlock Text="{Binding Invoice.SurchargeAmount, StringFormat={}{0:N0} đ}"
+                                                    <TextBlock Text="{Binding Invoice.SurchargeAmount, Converter={StaticResource Money}}"
                                                                Style="{StaticResource BodyText}" Margin="0,3,0,0" />
                                                 </StackPanel>
                                                 <StackPanel Grid.Column="1">
                                                     <TextBlock Text="Giảm giá" Style="{StaticResource CaptionText}" />
-                                                    <TextBlock Text="{Binding Invoice.DiscountAmount, StringFormat={}{0:N0} đ}"
-                                                               Style="{StaticResource BodyText}" Margin="0,3,0,10" />
+                                                    <TextBlock Text="{Binding Invoice.DiscountAmount, Converter={StaticResource Money}}"
+                                                               Style="{StaticResource BodyText}" Margin="0,3,0,0" />
+                                                    <!-- Ly do giam (ma khuyen mai / VIP10) - de le tan giai thich duoc voi khach -->
+                                                    <TextBlock Text="{Binding Invoice.PromotionCode}" Style="{StaticResource CaptionText}"
+                                                               FontSize="11" Foreground="{StaticResource SuccessBrush}"
+                                                               TextTrimming="CharacterEllipsis" Margin="0,1,0,10"
+                                                               ToolTip="{Binding Invoice.PromotionCode}" />
                                                     <TextBlock Text="Đã thanh toán" Style="{StaticResource CaptionText}" />
-                                                    <TextBlock Text="{Binding PaidAmount, StringFormat={}{0:N0} đ}"
+                                                    <TextBlock Text="{Binding PaidAmount, Converter={StaticResource Money}}"
                                                                Style="{StaticResource BodyText}" Margin="0,3,0,10" />
                                                     <TextBlock Text="Còn lại" Style="{StaticResource CaptionText}" />
-                                                    <TextBlock Text="{Binding RemainingAmount, StringFormat={}{0:N0} đ}"
+                                                    <TextBlock Text="{Binding RemainingAmount, Converter={StaticResource Money}}"
                                                                Foreground="{StaticResource DangerBrush}"
                                                                FontWeight="SemiBold" Margin="0,3,0,0" />
                                                 </StackPanel>
@@ -145,15 +186,30 @@
                                                       DisplayMemberPath="Code"
                                                       IsEditable="True"
                                                       Text="{Binding PromotionCode, UpdateSourceTrigger=PropertyChanged}" />
+
+                                            <!-- GIAM TAY: chi quan ly moi thay o nay. Dung khi khach can bot
+                                                 ma chua kip tao ma khuyen mai - go thang so tien roi tinh lai.
+                                                 Cong don voi ma khuyen mai va uu dai VIP; tren hoa don se hien
+                                                 nhan "TUNHAP" o dong ly do giam. Le tan khong thay o nay, va
+                                                 service van chan lai mot lan nua neu co ai goi thang. -->
+                                            <StackPanel Visibility="{Binding CanGiveManualDiscount,
+                                                                     Converter={StaticResource BoolToVis}}">
+                                                <TextBlock Text="GIẢM TAY (Đ)" Style="{StaticResource FieldLabel}"
+                                                           Margin="0,14,0,0" />
+                                                <hc:NumericUpDown Minimum="0" Maximum="500000000" Increment="50000"
+                                                                  Value="{Binding ManualDiscount}"
+                                                                  ToolTip="Giảm thẳng một số tiền, không cần mã khuyến mãi. Cộng dồn với mã và ưu đãi VIP, tối đa bằng tổng hoá đơn." />
+                                            </StackPanel>
+
                                             <TextBlock Text="Tổng phải trả" Style="{StaticResource CaptionText}"
                                                        Margin="0,20,0,3" />
-                                            <TextBlock Text="{Binding Invoice.TotalAmount, StringFormat={}{0:N0} đ}"
+                                            <TextBlock Text="{Binding Invoice.TotalAmount, Converter={StaticResource Money}}"
                                                        Style="{StaticResource PageTitleText}"
                                                        Foreground="{StaticResource BrandBrush}" />
-                                            <Button Content="Lập / tính lại hoá đơn"
+                                            <Button Content="{Binding PrepareInvoiceText}"
                                                     Style="{StaticResource PrimaryButton}"
                                                     Margin="0,18,0,0"
-                                                    IsEnabled="{Binding HasSelectedStay}"
+                                                    IsEnabled="{Binding CanPrepareInvoice}"
                                                     Command="{Binding PrepareInvoiceCommand}" />
                                             <Button Content="Huỷ hoá đơn"
                                                     Style="{StaticResource GhostButton}"
@@ -191,10 +247,10 @@
                                     <DataGridTextColumn Header="Số lượng"
                                                         Binding="{Binding Quantity}" Width="80" />
                                     <DataGridTextColumn Header="Đơn giá"
-                                                        Binding="{Binding UnitPriceSnapshot, StringFormat={}{0:N0} đ}"
+                                                        Binding="{Binding UnitPriceSnapshot, Converter={StaticResource Money}}"
                                                         Width="120" />
                                     <DataGridTextColumn Header="Thành tiền"
-                                                        Binding="{Binding Subtotal, StringFormat={}{0:N0} đ}"
+                                                        Binding="{Binding Subtotal, Converter={StaticResource Money}}"
                                                         Width="130" />
                                     <DataGridTemplateColumn Header="" Width="150">
                                         <DataGridTemplateColumn.CellTemplate>
@@ -235,7 +291,7 @@
                                     <TextBlock Text="Lịch sử thanh toán" Style="{StaticResource SectionTitleText}" />
                                     <TextBlock Style="{StaticResource CaptionText}" Margin="0,3,0,0">
                                         <Run Text="Còn lại: " />
-                                        <Run Text="{Binding RemainingAmount, StringFormat={}{0:N0} đ}"
+                                        <Run Text="{Binding RemainingAmount, Mode=OneWay, Converter={StaticResource Money}}"
                                              FontWeight="SemiBold" />
                                     </TextBlock>
                                 </StackPanel>
@@ -253,7 +309,7 @@
                                                         Binding="{Binding PaymentDate, StringFormat={}{0:dd/MM/yyyy HH:mm}}"
                                                         Width="150" />
                                     <DataGridTextColumn Header="Số tiền"
-                                                        Binding="{Binding Amount, StringFormat={}{0:N0} đ}"
+                                                        Binding="{Binding Amount, Converter={StaticResource Money}}"
                                                         Width="130" />
                                     <DataGridTextColumn Header="Phương thức"
                                                         Binding="{Binding PaymentMethod}" Width="120" />
@@ -264,13 +320,29 @@
                                     <DataGridTemplateColumn Header="" Width="90">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <Button Content="Void" Style="{StaticResource GhostButton}"
-                                                        Padding="10,5"
-                                                        IsEnabled="{Binding DataContext.CanVoidPayment,
-                                                                            RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                <Button Content="Void" Padding="10,5"
                                                         Command="{Binding DataContext.VoidPaymentCommand,
                                                                           RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                                        CommandParameter="{Binding}" />
+                                                        CommandParameter="{Binding}">
+                                                    <Button.Style>
+                                                        <Style TargetType="Button"
+                                                               BasedOn="{StaticResource GhostButton}">
+                                                            <Setter Property="IsEnabled" Value="False" />
+                                                            <Style.Triggers>
+                                                                <MultiDataTrigger>
+                                                                    <MultiDataTrigger.Conditions>
+                                                                        <Condition Binding="{Binding DataContext.CanVoidPayment,
+                                                                                                     RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                                                   Value="True" />
+                                                                        <Condition Binding="{Binding Status}"
+                                                                                   Value="{x:Static enums:PaymentStatus.Completed}" />
+                                                                    </MultiDataTrigger.Conditions>
+                                                                    <Setter Property="IsEnabled" Value="True" />
+                                                                </MultiDataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Button.Style>
+                                                </Button>
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>

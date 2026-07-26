@@ -68,29 +68,37 @@
             <Button DockPanel.Dock="Right" Content="Tải lại" Style="{StaticResource GhostButton}"
                     Padding="14,7" VerticalAlignment="Top" Command="{Binding RefreshCommand}" />
             <StackPanel>
-                <TextBlock Text="Check-in / Check-out" Style="{StaticResource PageTitleText}" />
+                <TextBlock Text="Nhận / Trả phòng" Style="{StaticResource PageTitleText}" />
                 <TextBlock Text="{Binding TodayText}" Style="{StaticResource CaptionText}"
                            FontSize="12.5" Margin="0,3,0,0" />
             </StackPanel>
         </DockPanel>
 
-        <!-- Chip lọc: Tất cả / Hôm nay / Sắp đến / Đang ở / Quá hạn -->
-        <ItemsControl Grid.Row="1" ItemsSource="{Binding Filters}" Margin="0,0,0,12">
-            <ItemsControl.ItemsPanel>
-                <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
-            <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                    <Button Style="{StaticResource FilterChip}"
-                            Command="{Binding DataContext.PickFilterCommand,
-                                      RelativeSource={RelativeSource AncestorType=UserControl}}"
-                            CommandParameter="{Binding}">
-                        <TextBlock><Run Text="{Binding Label, Mode=OneWay}" /><Run Text=" " /><Run
-                            Text="{Binding Count, Mode=OneWay}" FontWeight="SemiBold" /></TextBlock>
-                    </Button>
-                </DataTemplate>
-            </ItemsControl.ItemTemplate>
-        </ItemsControl>
+        <!-- Chip lọc + ô tìm cùng một hàng: chip thu hẹp phạm vi, ô tìm nhắm thẳng
+             vào một phòng hoặc một khách. Ô tìm neo phải để hàng chip không bị đẩy. -->
+        <DockPanel Grid.Row="1" Margin="0,0,0,12">
+            <TextBox DockPanel.Dock="Right" Style="{StaticResource SearchBox}"
+                     VerticalAlignment="Center" Margin="12,0,0,0"
+                     Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged, Delay=250}"
+                     ToolTip="Tìm theo số phòng hoặc tên khách" />
+
+            <ItemsControl ItemsSource="{Binding Filters}" VerticalAlignment="Center">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Button Style="{StaticResource FilterChip}"
+                                Command="{Binding DataContext.PickFilterCommand,
+                                          RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                CommandParameter="{Binding}">
+                            <TextBlock><Run Text="{Binding Label, Mode=OneWay}" /><Run Text=" " /><Run
+                                Text="{Binding Count, Mode=OneWay}" FontWeight="SemiBold" /></TextBlock>
+                        </Button>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </DockPanel>
 
         <hc:LoadingCircle Grid.Row="2" Width="34" Height="34"
                           Foreground="{StaticResource BrandBrush}"
@@ -101,17 +109,25 @@
                    Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVis}}" />
 
         <Grid Grid.Row="2">
+            <!-- Bang chi tiet ben phai de BE RONG CO DINH: de "1*" thi no giu gianh cho
+                 theo ti le, cua so hep di la cot danh sach bi bop lai va ten khach bi cat.
+                 Bang chi tiet khong can rong them, nen danh phan co gian cho danh sach. -->
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="1.5*" />
+                <ColumnDefinition Width="*" MinWidth="520" />
                 <ColumnDefinition Width="16" />
-                <ColumnDefinition Width="1*" />
+                <ColumnDefinition Width="340" />
             </Grid.ColumnDefinitions>
 
             <!-- CỘT TRÁI: dòng thời gian việc cần làm, quá hạn lên đầu và có vạch đỏ -->
+            <!-- IsSharedSizeScope: cho phep cac cot cung SharedSizeGroup o MOI dong tu do
+                 theo noi dung roi lay be rong LON NHAT ap cho tat ca - chip va nut van
+                 thang hang tuyet doi (dieu ma so cung 118/212 truoc day dang co mua) ma
+                 khong bao gio cat chu. Khuon nay nhom da dung o Views/Dialogs/ExtendStayDialog.xaml. -->
             <ListBox Grid.Column="0" ItemsSource="{Binding ItemsView}"
                      SelectedItem="{Binding SelectedItem}"
                      ItemContainerStyle="{StaticResource FlowItemContainer}"
                      Background="Transparent" BorderThickness="0"
+                     Grid.IsSharedSizeScope="True"
                      ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                 <ListBox.ItemTemplate>
                     <DataTemplate>
@@ -134,12 +150,21 @@
                                     </Style.Triggers>
                                 </Style>
                             </Border.Style>
+                            <!-- Cot chip va cot nut dung SharedSizeGroup chu KHONG phai so cung.
+                                 Truoc day de cung 118 va 212 de cac dong thang hang, nhung dong
+                                 QUA HAN co them nut thu ba (Khong den / Gia han) doi toi ~244px,
+                                 vuot 212 - StackPanel lai neo phai nen phan du tran nguoc sang
+                                 TRAI va bi WPF tu cat, thanh ra chu dau bi mat ("ng den", "a han").
+                                 Nut thi bam duoc nhung khong doc duoc la nut gi.
+                                 Auto + SharedSizeGroup: moi dong do theo noi dung cua chinh no roi
+                                 CA DANH SACH lay be rong lon nhat - van thang hang, ma doi nhan nut
+                                 hay doi font sau nay khong phai ngoi tinh lai px. -->
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" MinWidth="150" />
+                                    <ColumnDefinition Width="Auto" SharedSizeGroup="FlowBadge" />
+                                    <ColumnDefinition Width="Auto" SharedSizeGroup="FlowActions" />
                                 </Grid.ColumnDefinitions>
 
                                 <Border Grid.Column="0" Width="64" Height="46" CornerRadius="4">
@@ -149,11 +174,22 @@
                                 </Border>
 
                                 <StackPanel Grid.Column="1" Margin="13,0,10,0" VerticalAlignment="Center">
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="{Binding RoomNumber}" FontSize="14.5" FontWeight="SemiBold" />
-                                        <TextBlock Text=" · " Foreground="{StaticResource InkSoftBrush}" VerticalAlignment="Center" />
-                                        <TextBlock Text="{Binding GuestName}" FontSize="14" VerticalAlignment="Center" />
-                                    </StackPanel>
+                                    <!-- Mot TextBlock voi ba Run chu khong phai ba TextBlock trong
+                                         StackPanel ngang: trong StackPanel ngang moi TextBlock duoc
+                                         cap be rong vo han nen TextTrimming khong bao gio an, ten
+                                         khach dai la bi cat cut giua chu. Gop lai thi cat o ten
+                                         thanh dau ba cham dang hoang. -->
+                                    <!-- Mode=OneWay BAT BUOC: Run.Text la mot trong so it thuoc tinh
+                                         cua WPF mac dinh bind HAI CHIEU, ma RoomNumber/GuestName ben
+                                         FlowItem chi co getter - de mac dinh la nem XamlParseException
+                                         lam SAP ca app ngay khi mo man nay (da dinh that). -->
+                                    <TextBlock TextTrimming="CharacterEllipsis"
+                                               ToolTip="{Binding GuestName, Mode=OneWay}">
+                                        <Run Text="{Binding RoomNumber, Mode=OneWay}"
+                                             FontSize="14.5" FontWeight="SemiBold" />
+                                        <Run Text=" · " Foreground="{StaticResource InkSoftBrush}" />
+                                        <Run Text="{Binding GuestName, Mode=OneWay}" FontSize="14" />
+                                    </TextBlock>
                                     <TextBlock Text="{Binding SubText}" Style="{StaticResource CaptionText}"
                                                FontSize="11.5" TextTrimming="CharacterEllipsis" Margin="0,2,0,0" />
                                 </StackPanel>
@@ -181,7 +217,8 @@
                                 <!-- Nút làm ngay trên dòng, không phải chọn rồi mới làm được.
                                      Dòng quá hạn có thêm nút phụ vì đó là lúc cần xử lý khác đi:
                                      khách không tới thì đánh dấu Không đến, khách ở thêm thì gia hạn. -->
-                                <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center">
+                                <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center"
+                                            HorizontalAlignment="Right">
                                     <Button Content="Không đến" Style="{StaticResource GhostButton}"
                                             Padding="11,7" Margin="0,0,6,0" FontSize="12"
                                             Foreground="{StaticResource DangerBrush}"
@@ -213,6 +250,9 @@
                                                       RelativeSource={RelativeSource AncestorType=UserControl}}" />
                                     <Button Content="{Binding ActionLabel}"
                                             Style="{StaticResource PrimaryButton}" Padding="14,7"
+                                            Visibility="{Binding DataContext.CanOperate,
+                                                         RelativeSource={RelativeSource AncestorType=UserControl},
+                                                         Converter={StaticResource BoolToVis}}"
                                             Command="{Binding DataContext.ActionCommand,
                                                       RelativeSource={RelativeSource AncestorType=UserControl}}"
                                             CommandParameter="{Binding}" />
@@ -376,6 +416,9 @@
 
                             <Button Content="{Binding ActionLabel}" Style="{StaticResource PrimaryButton}"
                                     Padding="0,10" Margin="0,8,0,0" FontSize="13.5"
+                                    Visibility="{Binding DataContext.CanOperate,
+                                                 RelativeSource={RelativeSource AncestorType=UserControl},
+                                                 Converter={StaticResource BoolToVis}}"
                                     Command="{Binding DataContext.ActionCommand,
                                               RelativeSource={RelativeSource AncestorType=UserControl}}"
                                     CommandParameter="{Binding}" />

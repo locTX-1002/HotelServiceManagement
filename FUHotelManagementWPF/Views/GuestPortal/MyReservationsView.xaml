@@ -1,0 +1,151 @@
+<UserControl x:Class="FUHotelManagementWPF.Views.GuestPortal.MyReservationsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:hc="https://handyorg.github.io/handycontrol"
+             xmlns:enums="clr-namespace:BusinessObjects.Enums;assembly=BusinessObjects">
+    <UserControl.Resources>
+        <!-- Badge trang thai don dat phong: mac dinh trung tinh, doi mau theo Status -->
+        <Style x:Key="ReservationStatusBadge" TargetType="Border" BasedOn="{StaticResource BadgeNeutral}">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Status}" Value="{x:Static enums:ReservationStatus.Pending}">
+                    <Setter Property="Background" Value="{StaticResource WarningSoftBrush}" />
+                    <Setter Property="TextElement.Foreground" Value="{StaticResource WarningBrush}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="{x:Static enums:ReservationStatus.Confirmed}">
+                    <Setter Property="Background" Value="{StaticResource InfoSoftBrush}" />
+                    <Setter Property="TextElement.Foreground" Value="{StaticResource InfoBrush}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="{x:Static enums:ReservationStatus.CheckedIn}">
+                    <Setter Property="Background" Value="{StaticResource SuccessSoftBrush}" />
+                    <Setter Property="TextElement.Foreground" Value="{StaticResource SuccessBrush}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="{x:Static enums:ReservationStatus.NoShow}">
+                    <Setter Property="Background" Value="{StaticResource DangerSoftBrush}" />
+                    <Setter Property="TextElement.Foreground" Value="{StaticResource DangerBrush}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Margin="24,18,24,24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- Hang dau: tieu de + dong phu, nut Tai lai goc phai -->
+        <DockPanel Grid.Row="0" Margin="0,0,0,14">
+            <Button DockPanel.Dock="Right" Content="Tải lại" Style="{StaticResource GhostButton}"
+                    Padding="16,7" VerticalAlignment="Top"
+                    ToolTip="Lấy lại danh sách đặt phòng mới nhất"
+                    Command="{Binding ReloadCommand}" />
+            <StackPanel>
+                <TextBlock Text="Đặt phòng của tôi" Style="{StaticResource PageTitleText}" />
+                <TextBlock Text="Toàn bộ đơn đặt phòng của bạn tại khách sạn."
+                           Style="{StaticResource CaptionText}" Margin="0,4,0,0" />
+            </StackPanel>
+        </DockPanel>
+
+        <!-- The tom tat: tong so don / sap toi / dang o -->
+        <Border Grid.Row="1" Style="{StaticResource Card}" Effect="{StaticResource SoftShadow}"
+                Margin="0,0,0,14">
+            <UniformGrid Columns="3">
+                <StackPanel>
+                    <TextBlock Text="TỔNG SỐ ĐƠN" Style="{StaticResource FieldLabel}" />
+                    <TextBlock Text="{Binding TotalText}" Style="{StaticResource SectionTitleText}" />
+                </StackPanel>
+                <StackPanel>
+                    <TextBlock Text="SẮP TỚI" Style="{StaticResource FieldLabel}" />
+                    <TextBlock Text="{Binding UpcomingText}" Style="{StaticResource SectionTitleText}" />
+                </StackPanel>
+                <StackPanel>
+                    <TextBlock Text="ĐANG Ở" Style="{StaticResource FieldLabel}" />
+                    <TextBlock Text="{Binding StayingText}" Style="{StaticResource SectionTitleText}" />
+                </StackPanel>
+            </UniformGrid>
+        </Border>
+
+        <!-- Trang thai loi -->
+        <Border Grid.Row="2" Background="{StaticResource DangerSoftBrush}" CornerRadius="4"
+                Padding="14,10" Margin="0,0,0,12"
+                Visibility="{Binding HasError, Converter={StaticResource BoolToVis}}">
+            <TextBlock Text="{Binding ErrorMessage}" TextWrapping="Wrap"
+                       Foreground="{StaticResource DangerBrush}" />
+        </Border>
+
+        <!-- Trang thai dang tai -->
+        <hc:LoadingCircle Grid.Row="3" Width="34" Height="34"
+                          VerticalAlignment="Center" HorizontalAlignment="Center"
+                          Foreground="{StaticResource BrandBrush}"
+                          Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}" />
+
+        <!-- Trang thai rong -->
+        <TextBlock Grid.Row="3" Text="Bạn chưa có đơn đặt phòng nào — liên hệ lễ tân để được đặt phòng."
+                   Style="{StaticResource CaptionText}"
+                   HorizontalAlignment="Center" VerticalAlignment="Center"
+                   Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVis}}" />
+
+        <!-- Danh sach card-row -->
+        <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled">
+            <ItemsControl ItemsSource="{Binding Rows}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Background="{StaticResource CardBrush}"
+                                BorderBrush="{StaticResource LineBrush}" BorderThickness="1"
+                                CornerRadius="4" Padding="14,12" Margin="0,0,0,8">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="{Binding BookingCode}" FontWeight="Bold"
+                                                   VerticalAlignment="Center" />
+                                        <Border Style="{StaticResource ReservationStatusBadge}"
+                                                VerticalAlignment="Center" Margin="10,0,0,0">
+                                            <TextBlock Text="{Binding StatusText}" />
+                                        </Border>
+                                    </StackPanel>
+
+                                    <StackPanel Orientation="Horizontal" Margin="0,7,0,0">
+                                        <TextBlock Text="{Binding RoomText}" Style="{StaticResource CaptionText}" />
+                                        <TextBlock Text="·" Style="{StaticResource CaptionText}" Margin="6,0" />
+                                        <TextBlock Text="{Binding GuestCountText}" Style="{StaticResource CaptionText}" />
+                                    </StackPanel>
+
+                                    <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
+                                        <TextBlock Text="{Binding DateRangeText}" Style="{StaticResource CaptionText}" />
+                                        <TextBlock Text="·" Style="{StaticResource CaptionText}" Margin="6,0" />
+                                        <TextBlock Text="{Binding NightText}" Style="{StaticResource CaptionText}" />
+                                    </StackPanel>
+
+                                    <!-- Yeu cau dac biet chi hien khi khach co ghi -->
+                                    <StackPanel Visibility="{Binding HasSpecialRequests, Converter={StaticResource BoolToVis}}">
+                                        <Border Height="1" Background="{StaticResource LineBrush}" Margin="0,10,0,8" />
+                                        <TextBlock Text="YÊU CẦU ĐẶC BIỆT" Style="{StaticResource FieldLabel}" />
+                                        <TextBlock Text="{Binding SpecialRequests}" Style="{StaticResource CaptionText}"
+                                                   TextWrapping="Wrap" Margin="0,2,0,0" />
+                                    </StackPanel>
+                                </StackPanel>
+
+                                <!-- Tien coc chi hien khi don co thu coc -->
+                                <StackPanel Grid.Column="1" VerticalAlignment="Top"
+                                            Visibility="{Binding HasDeposit, Converter={StaticResource BoolToVis}}">
+                                    <TextBlock Text="TIỀN CỌC" Style="{StaticResource FieldLabel}"
+                                               HorizontalAlignment="Right" />
+                                    <TextBlock Text="{Binding DepositAmount, Converter={StaticResource Money}}"
+                                               FontWeight="SemiBold" HorizontalAlignment="Right" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

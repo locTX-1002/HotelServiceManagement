@@ -129,16 +129,33 @@ namespace FUHotelManagementWPF.ViewModels.Guests
             {
                 AddError(nameof(FullName), "Chưa nhập họ tên.");
             }
-            if (string.IsNullOrWhiteSpace(Phone))
+
+            // Kiem DINH DANG chu khong chi kiem rong: truoc day so dien thoai kieu "abc"
+            // hay email kieu "mana@nn." deu luu duoc vao database.
+            var phoneError = InputPolicy.ValidatePhone(Phone, required: true);
+            if (phoneError != null)
             {
-                AddError(nameof(Phone), "Chưa nhập số điện thoại.");
+                AddError(nameof(Phone), phoneError);
             }
-            if (string.IsNullOrWhiteSpace(IdentityNumber))
+
+            var identityError = InputPolicy.ValidateIdentity(IdentityNumber, required: true);
+            if (identityError != null)
             {
-                AddError(nameof(IdentityNumber), "Chưa nhập CCCD/CMND.");
+                AddError(nameof(IdentityNumber), identityError);
             }
+
+            // Email khong bat buoc voi khach - chi kiem dinh dang khi co nhap.
+            var emailError = InputPolicy.ValidateEmail(Email, required: false);
+            if (emailError != null)
+            {
+                AddError(nameof(Email), emailError);
+            }
+
             if (HasErrors)
             {
+                // Vien do khong noi duoc vi sao - phai day cau loi len banner, khong thi
+                // nguoi dung ngoi nhin o do ma khong biet sai cho nao.
+                ErrorMessage = FirstError();
                 return;
             }
 

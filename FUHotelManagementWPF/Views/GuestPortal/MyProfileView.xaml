@@ -1,0 +1,138 @@
+<UserControl x:Class="FUHotelManagementWPF.Views.GuestPortal.MyProfileView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:hc="https://handyorg.github.io/handycontrol">
+    <Grid Margin="24,18,24,24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Margin="0,0,0,14">
+            <TextBlock Text="Hồ sơ của tôi" Style="{StaticResource PageTitleText}" />
+            <TextBlock Text="Thông tin khách sạn đang lưu về bạn và nơi đổi mật khẩu đăng nhập."
+                       Style="{StaticResource CaptionText}" Margin="0,4,0,0" />
+        </StackPanel>
+
+        <!-- Trang thai rong/loi: het phien nen khong con ho so de hien -->
+        <TextBlock Grid.Row="1" Text="Chưa đọc được hồ sơ của bạn — hãy đăng xuất rồi đăng nhập lại bằng số điện thoại."
+                   TextWrapping="Wrap" MaxWidth="360"
+                   HorizontalAlignment="Center" VerticalAlignment="Center">
+            <TextBlock.Style>
+                <Style TargetType="TextBlock" BasedOn="{StaticResource CaptionText}">
+                    <Setter Property="Visibility" Value="Visible" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding HasProfile}" Value="True">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </TextBlock.Style>
+        </TextBlock>
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled"
+                      Visibility="{Binding HasProfile, Converter={StaticResource BoolToVis}}">
+            <StackPanel MaxWidth="620" HorizontalAlignment="Left" Margin="0,0,4,0">
+
+                <!-- THE 1: thong tin ho so (chi doc, lay tu phien dang nhap) -->
+                <Border Style="{StaticResource Card}" Effect="{StaticResource SoftShadow}">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <!-- Avatar chu cai dau (hinh tron - ngoai le he bo goc) -->
+                            <Border Width="56" Height="56" CornerRadius="999"
+                                    Background="{StaticResource BrandSoftBrush}">
+                                <TextBlock Text="{Binding Initial}" FontWeight="Bold"
+                                           Foreground="{StaticResource BrandDarkBrush}"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding FullName}" Style="{StaticResource SectionTitleText}" />
+                                <Border Style="{StaticResource BadgeWarning}" HorizontalAlignment="Left"
+                                        Margin="0,5,0,0"
+                                        Visibility="{Binding IsVip, Converter={StaticResource BoolToVis}}">
+                                    <TextBlock Text="KHÁCH VIP" />
+                                </Border>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <!-- Uu dai VIP: noi thang cho khach thay minh dang duoc giam bao nhieu -->
+                        <TextBlock Text="{Binding VipNoteText}" Foreground="{StaticResource SuccessBrush}"
+                                   TextWrapping="Wrap" Margin="0,10,0,0"
+                                   Visibility="{Binding IsVip, Converter={StaticResource BoolToVis}}" />
+
+                        <Border Height="1" Background="{StaticResource LineBrush}" Margin="0,16,0,14" />
+
+                        <UniformGrid Columns="2">
+                            <StackPanel Margin="0,0,0,12">
+                                <TextBlock Text="SỐ ĐIỆN THOẠI" Style="{StaticResource FieldLabel}" />
+                                <TextBlock Text="{Binding PhoneText}" FontWeight="SemiBold" />
+                            </StackPanel>
+                            <StackPanel Margin="0,0,0,12">
+                                <TextBlock Text="EMAIL" Style="{StaticResource FieldLabel}" />
+                                <TextBlock Text="{Binding EmailText}" FontWeight="SemiBold"
+                                           TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+                            <StackPanel>
+                                <TextBlock Text="CCCD / HỘ CHIẾU" Style="{StaticResource FieldLabel}" />
+                                <TextBlock Text="{Binding IdentityText}" FontWeight="SemiBold" />
+                            </StackPanel>
+                            <StackPanel>
+                                <TextBlock Text="NGÀY TẠO TÀI KHOẢN" Style="{StaticResource FieldLabel}" />
+                                <TextBlock Text="{Binding CreatedAtText}" FontWeight="SemiBold" />
+                            </StackPanel>
+                        </UniformGrid>
+
+                        <TextBlock Text="Cần sửa họ tên, email hay CCCD? Báo lễ tân để cập nhật giúp bạn."
+                                   Style="{StaticResource CaptionText}" TextWrapping="Wrap" Margin="0,14,0,0" />
+                    </StackPanel>
+                </Border>
+
+                <!-- THE 2: doi mat khau -->
+                <Border Style="{StaticResource Card}" Effect="{StaticResource SoftShadow}" Margin="0,16,0,0">
+                    <StackPanel>
+                        <TextBlock Text="Đổi mật khẩu" Style="{StaticResource SectionTitleText}" />
+                        <TextBlock Text="Mật khẩu dùng để đăng nhập cùng số điện thoại của bạn."
+                                   Style="{StaticResource CaptionText}" Margin="0,4,0,0" />
+
+                        <TextBlock Text="MẬT KHẨU HIỆN TẠI" Style="{StaticResource FieldLabel}" Margin="0,16,0,5" />
+                        <PasswordBox x:Name="CurrentInput" Style="{StaticResource InputPasswordBox}" />
+
+                        <TextBlock Text="MẬT KHẨU MỚI" Style="{StaticResource FieldLabel}" Margin="0,13,0,5" />
+                        <PasswordBox x:Name="NewInput" Style="{StaticResource InputPasswordBox}" />
+                        <TextBlock Text="{Binding PasswordHint}" Style="{StaticResource CaptionText}"
+                                   TextWrapping="Wrap" Margin="0,6,0,0" />
+
+                        <TextBlock Text="XÁC NHẬN MẬT KHẨU MỚI" Style="{StaticResource FieldLabel}" Margin="0,13,0,5" />
+                        <PasswordBox x:Name="ConfirmInput" Style="{StaticResource InputPasswordBox}" />
+
+                        <!-- Banner loi: thieu o, hai o lech nhau, mat khau hien tai sai hoac
+                             mat khau moi chua du manh (cau chu do service tra ve) -->
+                        <Border Margin="0,14,0,0" CornerRadius="4" Padding="10,8"
+                                Background="{StaticResource DangerSoftBrush}"
+                                Visibility="{Binding HasError, Converter={StaticResource BoolToVis}}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE7BA;" Style="{StaticResource IconText}"
+                                           Foreground="{StaticResource DangerBrush}"
+                                           Margin="0,2,8,0" VerticalAlignment="Top" />
+                                <TextBlock Text="{Binding ErrorMessage}" Foreground="{StaticResource DangerBrush}"
+                                           TextWrapping="Wrap" MaxWidth="420" />
+                            </StackPanel>
+                        </Border>
+
+                        <Border Height="1" Background="{StaticResource LineBrush}" Margin="0,16,0,0" />
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,14,0,0">
+                            <hc:LoadingCircle Width="22" Height="22" VerticalAlignment="Center"
+                                              Margin="0,0,12,0"
+                                              Foreground="{StaticResource BrandBrush}"
+                                              Visibility="{Binding IsBusy, Converter={StaticResource BoolToVis}}" />
+                            <Button Content="Đổi mật khẩu" Style="{StaticResource PrimaryButton}"
+                                    Padding="16,8" MinWidth="130"
+                                    Click="ChangePassword_Click" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

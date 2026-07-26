@@ -33,6 +33,11 @@ public sealed class PaymentDialogViewModel : ValidatableViewModelBase
         get => _selectedMethod;
         set
         {
+            if (value == null)
+            {
+                return;
+            }
+
             if (SetProperty(ref _selectedMethod, value))
             {
                 OnPropertyChanged(nameof(RequiresTransactionId));
@@ -76,7 +81,9 @@ public sealed class PaymentDialogViewModel : ValidatableViewModelBase
         ClearAllErrors();
         ErrorMessage = null;
 
-        if (!decimal.TryParse(AmountText, out var amount) || amount <= 0)
+        // O nhap da cham dau phan nghin nen phai boc chu so ra, khong parse thang chuoi.
+        var amount = MoneyBoxAssist.ToDecimal(AmountText) ?? 0;
+        if (amount <= 0)
         {
             AddError(nameof(AmountText), "Số tiền phải lớn hơn 0.");
         }
@@ -89,7 +96,7 @@ public sealed class PaymentDialogViewModel : ValidatableViewModelBase
         {
             AddError(nameof(TransactionId), "Chuyển khoản bắt buộc có mã giao dịch.");
         }
-        else if (TransactionId.Trim().Length > 100)
+        else if ((TransactionId?.Trim().Length ?? 0) > 100)
         {
             AddError(nameof(TransactionId), "Mã giao dịch tối đa 100 ký tự.");
         }
@@ -105,7 +112,7 @@ public sealed class PaymentDialogViewModel : ValidatableViewModelBase
                 _invoiceId,
                 amount,
                 SelectedMethod.Method,
-                RequiresTransactionId ? TransactionId : null);
+                RequiresTransactionId ? TransactionId?.Trim() : null);
 
             if (!result.Ok)
             {

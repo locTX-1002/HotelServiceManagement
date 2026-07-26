@@ -43,6 +43,13 @@ namespace FUHotelManagementWPF.ViewModels.Guests
     {
         private readonly IGuestService _service = new GuestService();
 
+        /// <summary>
+        /// An nut them/sua/cap tai khoan/xoa voi vai tro khong duoc phep - service van la lop chan cuoi.
+        /// Dung thang AuthorizationPolicy (nguon su that duy nhat), khong chep lai dieu kien vai tro.
+        /// NV dich vu van xem duoc danh sach khach de biet khach nao o phong nao.
+        /// </summary>
+        public bool CanManageGuests => AuthorizationPolicy.CanOperateFrontDesk;
+
         public ObservableCollection<GuestRow> Rows { get; } = [];
 
         private string _searchText = string.Empty;

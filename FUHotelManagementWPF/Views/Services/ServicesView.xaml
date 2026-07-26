@@ -1,0 +1,477 @@
+<UserControl x:Class="FUHotelManagementWPF.Views.Services.ServicesView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:hc="https://handyorg.github.io/handycontrol">
+    <UserControl.Resources>
+        <!-- Chip trang thai don: mau doi theo trang thai de nhin phat ra ngay -->
+        <Style x:Key="OrderBadge" TargetType="Border" BasedOn="{StaticResource BadgeColumn}">
+            <Setter Property="Background" Value="{StaticResource SurfaceAltBrush}" />
+            <Setter Property="TextElement.Foreground" Value="{StaticResource InkSoftBrush}" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding StatusKey}" Value="Pending">
+                    <Setter Property="Background" Value="{StaticResource WarningSoftBrush}" />
+                    <Setter Property="TextElement.Foreground" Value="{StaticResource WarningBrush}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding StatusKey}" Value="Processing">
+                    <Setter Property="Background" Value="{StaticResource WarningSoftBrush}" />
+                    <Setter Property="TextElement.Foreground" Value="{StaticResource WarningBrush}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding StatusKey}" Value="Completed">
+                    <Setter Property="Background" Value="{StaticResource SuccessSoftBrush}" />
+                    <Setter Property="TextElement.Foreground" Value="{StaticResource SuccessBrush}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="ItemBadge" TargetType="Border" BasedOn="{StaticResource BadgeColumn}">
+            <Setter Property="Background" Value="{StaticResource SurfaceAltBrush}" />
+            <Setter Property="TextElement.Foreground" Value="{StaticResource InkSoftBrush}" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsAvailable}" Value="True">
+                    <Setter Property="Background" Value="{StaticResource SuccessSoftBrush}" />
+                    <Setter Property="TextElement.Foreground" Value="{StaticResource SuccessBrush}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Mot mon tren thuc don la MOT HANG, khong phai o vuong. The vuong xuong dong
+             theo be ngang cot nen luon con mot cai le loi o hang cuoi, va gia moi the moi
+             cho. Hang thi gia thang cot, doc luot mat la ra, va them bao nhieu mon cung
+             khong bao gio le. Ca hang bam duoc chu khong phai nham vao dau nut. -->
+        <Style x:Key="MenuRowButton" TargetType="Button">
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="row" CornerRadius="5" Padding="10,7"
+                                Background="Transparent">
+                            <ContentPresenter />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="row" Property="Background"
+                                        Value="{StaticResource BrandSoftBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="row" Property="Background"
+                                        Value="{StaticResource SurfaceAltBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Margin="24,18,24,24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Text="Dịch vụ" Style="{StaticResource PageTitleText}" Margin="0,0,0,12" />
+
+        <!-- Man hinh nay truoc day khong bao gi luc dang tai: bam vao menu la thay mot
+             khung trang roi du lieu bung ra, cam giac nhu app dung hinh. -->
+        <hc:LoadingCircle Grid.Row="1" Width="34" Height="34" Panel.ZIndex="10"
+                          HorizontalAlignment="Center" VerticalAlignment="Center"
+                          Foreground="{StaticResource BrandBrush}"
+                          Visibility="{Binding Orders.IsLoading, Converter={StaticResource BoolToVis}}" />
+
+        <TabControl Grid.Row="1">
+            <!-- ============================ TAB GỌI DỊCH VỤ ============================ -->
+            <TabItem Header="Gọi dịch vụ">
+                <Grid x:Name="OrdersRoot" Margin="4,14,4,4" DataContext="{Binding Orders}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="240" />
+                        <ColumnDefinition Width="16" />
+                        <ColumnDefinition Width="*" MinWidth="360" />
+                        <ColumnDefinition Width="16" />
+                        <ColumnDefinition Width="300" />
+                    </Grid.ColumnDefinitions>
+
+                    <!-- CỘT 1: phòng đang có khách ở -->
+                    <DockPanel Grid.Column="0">
+                        <TextBlock DockPanel.Dock="Top" Text="PHÒNG ĐANG CÓ KHÁCH"
+                                   Style="{StaticResource FieldLabel}" Margin="0,0,0,8" />
+
+                        <TextBlock DockPanel.Dock="Top" TextWrapping="Wrap"
+                                   Text="Không có phòng nào đang có khách ở. Nhận phòng cho khách trước rồi mới gọi dịch vụ được."
+                                   Style="{StaticResource CaptionText}" FontSize="12.5"
+                                   Visibility="{Binding NoStay, Converter={StaticResource BoolToVis}}" />
+
+                        <ListBox ItemsSource="{Binding Stays}" SelectedItem="{Binding SelectedStay}"
+                                 Background="Transparent" BorderThickness="0"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                            <ListBox.ItemContainerStyle>
+                                <Style TargetType="ListBoxItem">
+                                    <Setter Property="Padding" Value="0" />
+                                    <Setter Property="Margin" Value="0,0,0,6" />
+                                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="ListBoxItem">
+                                                <ContentPresenter />
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </ListBox.ItemContainerStyle>
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="{StaticResource CardBrush}" BorderThickness="1"
+                                            CornerRadius="6" Padding="11,9" Cursor="Hand">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
+                                                <Style.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter Property="BorderBrush" Value="{StaticResource BrandLightBrush}" />
+                                                    </Trigger>
+                                                    <DataTrigger Value="True" Binding="{Binding IsSelected,
+                                                                 RelativeSource={RelativeSource AncestorType=ListBoxItem}}">
+                                                        <Setter Property="Background" Value="{StaticResource BrandSoftBrush}" />
+                                                        <Setter Property="BorderBrush" Value="{StaticResource BrandBrush}" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <StackPanel>
+                                            <TextBlock>
+                                                <Run Text="{Binding RoomNumber, Mode=OneWay}" FontWeight="SemiBold" FontSize="14" /><Run
+                                                Text=" · " Foreground="{StaticResource InkSoftBrush}" /><Run
+                                                Text="{Binding GuestName, Mode=OneWay}" FontSize="13.5" />
+                                            </TextBlock>
+                                            <TextBlock Text="{Binding SubText}" Style="{StaticResource CaptionText}"
+                                                       FontSize="11.5" Margin="0,2,0,0" />
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </DockPanel>
+
+                    <!-- CỘT 2: thực đơn theo nhóm + đơn đã gọi của phòng đang chọn -->
+                    <Grid Grid.Column="2" Visibility="{Binding HasSelectedStay, Converter={StaticResource BoolToVis}}">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0" Text="{Binding SelectedStayTitle}"
+                                   Style="{StaticResource SectionTitleText}" Margin="0,0,0,10" />
+
+                        <Border Grid.Row="1" Style="{StaticResource Card}" Padding="6,10" Margin="0,0,0,14"
+                                Visibility="{Binding CanCreate, Converter={StaticResource BoolToVis}}">
+                            <ItemsControl ItemsSource="{Binding Menu}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Margin="0,0,0,4">
+                                            <TextBlock Text="{Binding Heading}" Style="{StaticResource FieldLabel}"
+                                                       Margin="10,4,0,4" />
+                                            <ItemsControl ItemsSource="{Binding Tiles}">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <!-- DataTemplate long trong DataTemplate: ElementName phai di
+                                                             qua hai namescope nen khong chac an. Tro thang tu
+                                                             UserControl xuong Orders cho khoi hut binding am tham. -->
+                                                        <Button Style="{StaticResource MenuRowButton}"
+                                                                ToolTip="Bấm để thêm vào giỏ"
+                                                                Command="{Binding DataContext.Orders.AddTileCommand,
+                                                                          RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                                CommandParameter="{Binding}">
+                                                            <Grid>
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="*" />
+                                                                    <ColumnDefinition Width="110" />
+                                                                    <ColumnDefinition Width="26" />
+                                                                </Grid.ColumnDefinitions>
+                                                                <TextBlock Grid.Column="0" Text="{Binding Name}"
+                                                                           FontSize="13" VerticalAlignment="Center"
+                                                                           TextTrimming="CharacterEllipsis" />
+                                                                <TextBlock Grid.Column="1" Text="{Binding PriceText}"
+                                                                           FontSize="13" FontWeight="SemiBold"
+                                                                           HorizontalAlignment="Right"
+                                                                           VerticalAlignment="Center"
+                                                                           Typography.NumeralAlignment="Tabular" />
+                                                                <TextBlock Grid.Column="2" Text="+" FontSize="16"
+                                                                           HorizontalAlignment="Right"
+                                                                           VerticalAlignment="Center"
+                                                                           Foreground="{StaticResource BrandBrush}" />
+                                                            </Grid>
+                                                        </Button>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Border>
+
+                        <Border Grid.Row="2" Margin="0,0,0,12" CornerRadius="6" Padding="10,8"
+                                Background="{StaticResource DangerSoftBrush}"
+                                Visibility="{Binding HasError, Converter={StaticResource BoolToVis}}">
+                            <TextBlock Text="{Binding ErrorMessage}" Foreground="{StaticResource DangerBrush}"
+                                       TextWrapping="Wrap" />
+                        </Border>
+
+                        <!-- Đơn đã gọi của phòng này -->
+                        <DockPanel Grid.Row="3">
+                            <TextBlock DockPanel.Dock="Top" Text="ĐƠN ĐÃ GỌI"
+                                       Style="{StaticResource FieldLabel}" Margin="0,0,0,8" />
+                            <TextBlock DockPanel.Dock="Top" TextWrapping="Wrap"
+                                       Text="Phòng này chưa gọi dịch vụ nào."
+                                       Style="{StaticResource CaptionText}" FontSize="12.5"
+                                       Visibility="{Binding NoOrder, Converter={StaticResource BoolToVis}}" />
+
+                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                <ItemsControl ItemsSource="{Binding Orders}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Background="{StaticResource CardBrush}" BorderThickness="1"
+                                                    BorderBrush="{StaticResource LineBrush}"
+                                                    CornerRadius="6" Padding="12,10" Margin="0,0,0,8">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*" MinWidth="140" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+
+                                                    <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,10,0">
+                                                        <TextBlock Typography.NumeralAlignment="Tabular">
+                                                            <Run Text="{Binding TotalText, Mode=OneWay}" FontWeight="SemiBold" FontSize="13.5" /><Run
+                                                            Text="  ·  " Foreground="{StaticResource InkSoftBrush}" /><Run
+                                                            Text="{Binding TimeText, Mode=OneWay}" FontSize="12" />
+                                                        </TextBlock>
+                                                        <TextBlock Text="{Binding ItemsText}" Style="{StaticResource CaptionText}"
+                                                                   FontSize="11.5" TextWrapping="Wrap" Margin="0,2,0,0" />
+                                                    </StackPanel>
+
+                                                    <Border Grid.Column="1" Style="{StaticResource OrderBadge}"
+                                                            VerticalAlignment="Center" Margin="0,0,10,0">
+                                                        <TextBlock Text="{Binding StatusText}" />
+                                                    </Border>
+
+                                                    <!-- Ca cum Hoan tat/Huy an voi vai tro khong duoc xu ly don;
+                                                         tung nut van tu an theo trang thai don (ShowComplete/ShowCancel). -->
+                                                    <StackPanel Grid.Column="2" Orientation="Horizontal"
+                                                                VerticalAlignment="Center"
+                                                                Visibility="{Binding DataContext.CanProcess, ElementName=OrdersRoot,
+                                                                             Converter={StaticResource BoolToVis}}">
+                                                        <Button Content="Hoàn tất" Style="{StaticResource PrimaryButton}"
+                                                                Padding="13,6" FontSize="12" Margin="0,0,6,0"
+                                                                ToolTip="Chỉ đơn Hoàn tất mới được tính tiền vào hoá đơn"
+                                                                Visibility="{Binding ShowComplete, Converter={StaticResource BoolToVis}}"
+                                                                Command="{Binding DataContext.CompleteCommand, ElementName=OrdersRoot}"
+                                                                CommandParameter="{Binding}" />
+                                                        <Button Content="Huỷ" Style="{StaticResource GhostButton}"
+                                                                Padding="11,6" FontSize="12"
+                                                                Foreground="{StaticResource DangerBrush}"
+                                                                Visibility="{Binding ShowCancel, Converter={StaticResource BoolToVis}}"
+                                                                Command="{Binding DataContext.CancelOrderCommand, ElementName=OrdersRoot}"
+                                                                CommandParameter="{Binding}" />
+                                                    </StackPanel>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </DockPanel>
+                    </Grid>
+
+                    <!-- CỘT 3: giỏ hàng ghim cố định - tổng tiền và nút Tạo đơn luôn ở một chỗ -->
+                    <Grid Grid.Column="4" Visibility="{Binding HasSelectedStay, Converter={StaticResource BoolToVis}}">
+                        <!-- Gio cao het cot: tong tien va nut Tao don ghim day, danh sach mon
+                             cuon o giua. De VerticalAlignment=Top thi gio treo lung lung tren
+                             dinh, duoi bo trong ca man. -->
+                        <Border Style="{StaticResource Card}" Padding="14,12"
+                                Visibility="{Binding CanCreate, Converter={StaticResource BoolToVis}}">
+                            <DockPanel>
+                                <TextBlock DockPanel.Dock="Top" Text="GIỎ HÀNG"
+                                           Style="{StaticResource FieldLabel}" Margin="0,0,0,10" />
+
+                                <Border DockPanel.Dock="Bottom"
+                                        Visibility="{Binding CartIsEmpty, Converter={StaticResource InverseBoolToVis}}">
+                                    <StackPanel>
+                                        <Border Height="1" Background="{StaticResource LineBrush}" Margin="0,8,0,10" />
+                                        <DockPanel Margin="0,0,0,12">
+                                            <TextBlock DockPanel.Dock="Right" Text="{Binding CartTotalText}"
+                                                       FontWeight="SemiBold" FontSize="16"
+                                                       Typography.NumeralAlignment="Tabular"
+                                                       Foreground="{StaticResource BrandBrush}" />
+                                            <TextBlock Text="Tổng" Foreground="{StaticResource InkSoftBrush}"
+                                                       VerticalAlignment="Center" />
+                                        </DockPanel>
+                                        <Button Content="Tạo đơn" Style="{StaticResource PrimaryButton}"
+                                                Padding="18,9" HorizontalAlignment="Stretch"
+                                                IsEnabled="{Binding CanSubmit}" Command="{Binding SubmitCommand}" />
+                                    </StackPanel>
+                                </Border>
+
+                                <TextBlock TextWrapping="Wrap" VerticalAlignment="Center"
+                                           TextAlignment="Center" Margin="8,0"
+                                           Text="Giỏ đang trống. Bấm một món ở thực đơn bên trái để thêm."
+                                           Style="{StaticResource CaptionText}" FontSize="12"
+                                           Visibility="{Binding CartIsEmpty, Converter={StaticResource BoolToVis}}" />
+
+                                <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                              Visibility="{Binding CartIsEmpty, Converter={StaticResource InverseBoolToVis}}">
+                                <ItemsControl ItemsSource="{Binding Cart}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid Margin="0,0,0,10">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto" />
+                                                    <RowDefinition Height="Auto" />
+                                                </Grid.RowDefinitions>
+
+                                                <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding Name}"
+                                                           FontSize="12.5" VerticalAlignment="Center"
+                                                           TextTrimming="CharacterEllipsis" Margin="0,0,8,0" />
+                                                <Button Grid.Row="0" Grid.Column="1" Content="Bỏ"
+                                                        Style="{StaticResource GhostButton}"
+                                                        Padding="9,3" FontSize="11"
+                                                        Foreground="{StaticResource DangerBrush}"
+                                                        Command="{Binding DataContext.RemoveFromCartCommand, ElementName=OrdersRoot}"
+                                                        CommandParameter="{Binding}" />
+
+                                                <hc:NumericUpDown Grid.Row="1" Grid.Column="0" Width="74"
+                                                                  HorizontalAlignment="Left" Margin="0,4,0,0"
+                                                                  Minimum="1" Maximum="99" Value="{Binding Quantity}" />
+                                                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SubtotalText}"
+                                                           FontSize="12.5" FontWeight="SemiBold" Margin="8,4,0,0"
+                                                           Typography.NumeralAlignment="Tabular"
+                                                           HorizontalAlignment="Right" VerticalAlignment="Center" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                </ScrollViewer>
+                            </DockPanel>
+                        </Border>
+                    </Grid>
+
+                    <TextBlock Grid.Column="2" Grid.ColumnSpan="3"
+                               Text="Chọn một phòng bên trái để gọi dịch vụ"
+                               Style="{StaticResource CaptionText}" FontSize="13"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                               Visibility="{Binding HasSelectedStay, Converter={StaticResource InverseBoolToVis}}" />
+                </Grid>
+            </TabItem>
+
+            <!-- ============================== TAB DANH MỤC ============================== -->
+            <TabItem Header="Danh mục">
+                <Grid x:Name="CatalogRoot" Margin="4,14,4,4" DataContext="{Binding Catalog}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <DockPanel Grid.Row="0" Margin="0,0,0,12">
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal"
+                                    Visibility="{Binding CanManage, Converter={StaticResource BoolToVis}}">
+                            <Button Content="+ Thêm nhóm" Style="{StaticResource GhostButton}"
+                                    Padding="14,8" Command="{Binding AddCategoryCommand}" />
+                            <Button Content="+ Thêm món" Style="{StaticResource PrimaryButton}"
+                                    Padding="16,8" Margin="10,0,0,0" Command="{Binding AddItemCommand}" />
+                        </StackPanel>
+                        <TextBlock Text="{Binding TotalText}" Style="{StaticResource CaptionText}"
+                                   FontSize="12.5" VerticalAlignment="Center" />
+                    </DockPanel>
+
+                    <Border Grid.Row="1" CornerRadius="6" Padding="10,8" Margin="0,0,0,10"
+                            Background="{StaticResource DangerSoftBrush}"
+                            Visibility="{Binding HasError, Converter={StaticResource BoolToVis}}">
+                        <TextBlock Text="{Binding ErrorMessage}" Foreground="{StaticResource DangerBrush}"
+                                   TextWrapping="Wrap" />
+                    </Border>
+
+                    <TextBlock Grid.Row="2" Text="Chưa có món dịch vụ nào. Bấm Thêm nhóm rồi Thêm món."
+                               Style="{StaticResource CaptionText}" FontSize="13"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                               Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVis}}" />
+
+                    <ListBox Grid.Row="2" ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem}"
+                             Background="Transparent" BorderThickness="0"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                        <ListBox.ItemContainerStyle>
+                            <Style TargetType="ListBoxItem">
+                                <Setter Property="Padding" Value="0" />
+                                <Setter Property="Margin" Value="0,0,0,8" />
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="ListBoxItem">
+                                            <ContentPresenter />
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </ListBox.ItemContainerStyle>
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="{StaticResource CardBrush}" BorderThickness="1"
+                                        BorderBrush="{StaticResource LineBrush}"
+                                        CornerRadius="6" Padding="13,10">
+                                    <!-- Cot co dinh: de Auto thi moi dong tu co gian theo noi dung
+                                         cua rieng no, nhin xuong ca cot la so le. -->
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" MinWidth="160" />
+                                            <ColumnDefinition Width="120" />
+                                            <ColumnDefinition Width="112" />
+                                            <ColumnDefinition Width="196" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,10,0">
+                                            <TextBlock Text="{Binding Name}" FontSize="14" FontWeight="SemiBold"
+                                                       TextTrimming="CharacterEllipsis" />
+                                            <TextBlock Text="{Binding CategoryName}" Style="{StaticResource CaptionText}"
+                                                       FontSize="11.5" Margin="0,2,0,0" />
+                                        </StackPanel>
+
+                                        <TextBlock Grid.Column="1" Text="{Binding PriceText}" FontSize="13.5"
+                                                   FontWeight="SemiBold" HorizontalAlignment="Right"
+                                                   Typography.NumeralAlignment="Tabular"
+                                                   VerticalAlignment="Center" Margin="0,0,14,0" />
+
+                                        <Border Grid.Column="2" Style="{StaticResource ItemBadge}"
+                                                HorizontalAlignment="Right"
+                                                VerticalAlignment="Center" Margin="0,0,12,0">
+                                            <TextBlock Text="{Binding StatusText}" />
+                                        </Border>
+
+                                        <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center"
+                                                    HorizontalAlignment="Right"
+                                                    Visibility="{Binding DataContext.CanManage, ElementName=CatalogRoot,
+                                                                 Converter={StaticResource BoolToVis}}">
+                                            <Button Content="Sửa" Style="{StaticResource GhostButton}"
+                                                    Padding="13,6" FontSize="12" Margin="0,0,6,0" MinWidth="70"
+                                                    Command="{Binding DataContext.EditItemCommand, ElementName=CatalogRoot}"
+                                                    CommandParameter="{Binding}" />
+                                            <Button Content="{Binding ToggleText}" Style="{StaticResource GhostButton}"
+                                                    Padding="13,6" FontSize="12" MinWidth="106"
+                                                    Command="{Binding DataContext.ToggleItemCommand, ElementName=CatalogRoot}"
+                                                    CommandParameter="{Binding}" />
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Grid>
+            </TabItem>
+        </TabControl>
+    </Grid>
+</UserControl>

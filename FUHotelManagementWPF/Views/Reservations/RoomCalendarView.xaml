@@ -192,6 +192,20 @@
                                 </StackPanel>
 
                                 <Grid Grid.Column="1">
+                                    <!-- Ke doc phan ngay. Khong co no thi ca dai lich la mot mang
+                                         trong lien tuc, nhin mot thanh dat phong khong doan duoc
+                                         no bat dau va ket thuc o ngay nao - phai do mat len hang
+                                         tieu de. Lop nay nam duoi cung va khong bat chuot. -->
+                                    <UniformGrid Rows="1" Columns="7" IsHitTestVisible="False">
+                                        <Border />
+                                        <Border BorderBrush="{StaticResource LineBrush}" BorderThickness="1,0,0,0" />
+                                        <Border BorderBrush="{StaticResource LineBrush}" BorderThickness="1,0,0,0" />
+                                        <Border BorderBrush="{StaticResource LineBrush}" BorderThickness="1,0,0,0" />
+                                        <Border BorderBrush="{StaticResource LineBrush}" BorderThickness="1,0,0,0" />
+                                        <Border BorderBrush="{StaticResource LineBrush}" BorderThickness="1,0,0,0" />
+                                        <Border BorderBrush="{StaticResource LineBrush}" BorderThickness="1,0,0,0" />
+                                    </UniformGrid>
+
                                     <ItemsControl ItemsSource="{Binding Cells}"
                                                   ItemsPanel="{StaticResource WeekGrid}"
                                                   ItemContainerStyle="{StaticResource DayCellContainer}">

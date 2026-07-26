@@ -13,7 +13,11 @@ public sealed class GuestDAO
     public async Task<List<Guest>> GetAllAsync()
     {
         await using var context = HotelDbContextFactory.Create();
-        return await context.Guests.AsNoTracking().OrderBy(g => g.FullName).ToListAsync();
+        // Include Reservations vi man Khach hang hien "so lan dat" cho tung khach - thieu thi
+        // moi khach deu hien 0 lan, le tan khong phan biet duoc khach quen voi khach moi.
+        return await context.Guests.AsNoTracking()
+            .Include(g => g.Reservations)
+            .OrderBy(g => g.FullName).ToListAsync();
     }
 
     public async Task<Guest?> GetByIdAsync(int id)
@@ -27,6 +31,7 @@ public sealed class GuestDAO
         var term = keyword.Trim();
         await using var context = HotelDbContextFactory.Create();
         return await context.Guests.AsNoTracking()
+            .Include(g => g.Reservations)
             .Where(g => g.FullName.Contains(term)
                 || g.PhoneNumber.Contains(term)
                 || (g.Email != null && g.Email.Contains(term))

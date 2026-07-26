@@ -1,3 +1,4 @@
+using BusinessObjects;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -8,8 +9,17 @@ using Services;
 
 namespace FUHotelManagementWPF.ViewModels
 {
-    /// <summary>Mot muc dieu huong: icon Segoe MDL2 + ten module + nhom sidebar + ham tao ViewModel.</summary>
-    public record ModuleItem(string Icon, string Title, string Group, Func<ViewModelBase> CreateViewModel);
+    /// <summary>
+    /// Mot muc dieu huong: icon Segoe MDL2 + ten module + nhom sidebar + ham tao ViewModel.
+    /// Roles = null nghia la moi vai tro deu thay; co gia tri thi chi cac vai tro do thay muc nay.
+    /// </summary>
+    public record ModuleItem(
+        string Icon, string Title, string Group, Func<ViewModelBase> CreateViewModel, string[]? Roles = null)
+    {
+        /// <summary>Vai tro hien tai co duoc thay muc nay khong.</summary>
+        public bool VisibleForCurrentRole
+            => Roles == null || Array.IndexOf(Roles, AppSession.RoleName) >= 0;
+    }
 
     public class MainViewModel : ViewModelBase
     {
@@ -23,10 +33,10 @@ namespace FUHotelManagementWPF.ViewModels
 
         public string RoleDisplay => AppSession.RoleName switch
         {
-            "Admin" => "Quản trị viên",
-            "Manager" => "Quản lý",
-            "Receptionist" => "Lễ tân",
-            "ServiceStaff" => "Nhân viên dịch vụ",
+            RoleNames.Admin => "Quản trị viên",
+            RoleNames.Manager => "Quản lý",
+            RoleNames.Receptionist => "Lễ tân",
+            RoleNames.ServiceStaff => "Nhân viên dịch vụ",
             _ => AppSession.RoleName,
         };
 
@@ -74,18 +84,28 @@ namespace FUHotelManagementWPF.ViewModels
             const string moneyGroup = "TÀI CHÍNH";
             const string systemGroup = "HỆ THỐNG";
 
-            Modules =
-            [
+            // Vai tro nao thay muc nao - dat SAT voi quyen ma service thuc su cho phep, de
+            // khong ai bam vao roi moi bi tu choi. Khong ghi Roles = moi vai tro deu thay.
+            string[] quanLy = [RoleNames.Admin, RoleNames.Manager];
+            string[] leTan = [RoleNames.Admin, RoleNames.Manager, RoleNames.Receptionist];
+
+            var all = new List<ModuleItem>
+            {
                 new("", "Trang chủ", homeGroup, () => new Home.HomeViewModel()),
                 new("", "Sơ đồ phòng", opGroup, () => new Rooms.RoomsViewModel()),
-                new("", "Đặt phòng", opGroup, () => new Reservations.ReservationsViewModel()),
-                new("", "Check-in / Check-out", opGroup, () => new CheckInOut.CheckInOutViewModel()),
-                new("", "Khách hàng", peopleGroup, () => new Guests.GuestsViewModel()),
-                new("", "Dịch vụ", peopleGroup, () => new PlaceholderViewModel("Dịch vụ")),
-                new("", "Hoá đơn", moneyGroup, () => new Invoices.InvoicesViewModel()),
-                new("", "Báo cáo", moneyGroup, () => new PlaceholderViewModel("Báo cáo")),
-                new("", "Người dùng", systemGroup, () => new PlaceholderViewModel("Người dùng")),
-            ];
+                new("", "Đặt phòng", opGroup, () => new Reservations.ReservationsViewModel(), leTan),
+                new("", "Nhận / Trả phòng", opGroup, () => new CheckInOut.CheckInOutViewModel(), leTan),
+                new("", "Khách hàng", peopleGroup, () => new Guests.GuestsViewModel(), leTan),
+                new("", "Dịch vụ", peopleGroup, () => new Services.ServicesViewModel()),
+                new("", "Hoá đơn", moneyGroup, () => new Invoices.InvoicesViewModel(), leTan),
+                new("", "Khuyến mãi", moneyGroup, () => new Promotions.PromotionListViewModel(), quanLy),
+                new("", "Báo cáo", moneyGroup, () => new Reports.ReportViewModel(), quanLy),
+                new("", "Người dùng", systemGroup, () => new Users.UserListViewModel(), [RoleNames.Admin]),
+            };
+
+            // Loc NGAY luc dung danh sach thay vi dung Filter cua CollectionView: vai tro khong
+            // doi trong mot phien dang nhap nen loc mot lan la du, va SelectedModule chac chan hop le.
+            Modules = all.Where(m => m.VisibleForCurrentRole).ToList();
 
             ModulesView = new ListCollectionView(Modules);
             ModulesView.GroupDescriptions.Add(new PropertyGroupDescription(nameof(ModuleItem.Group)));

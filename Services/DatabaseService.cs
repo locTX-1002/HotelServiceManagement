@@ -22,7 +22,7 @@ namespace Services
             var password = configuration["BootstrapAdmin:Password"];
             if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(fullName)
                 || string.IsNullOrWhiteSpace(password))
-                throw new InvalidOperationException("Thieu cau hinh BootstrapAdmin trong appsettings.Local.json.");
+                throw new InvalidOperationException("Thiếu cấu hình BootstrapAdmin trong appsettings.Local.json.");
             var passwordError = PasswordPolicy.Validate(password);
             if (passwordError != null) throw new InvalidOperationException(passwordError);
             await new UserRepository().EnsureBootstrapAdminAsync(fullName, email, BCrypt.Net.BCrypt.HashPassword(password));

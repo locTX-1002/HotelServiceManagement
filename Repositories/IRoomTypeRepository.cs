@@ -9,6 +9,7 @@ namespace Repositories
         Task<RoomType?> GetByIdAsync(int id);
         Task<bool> NameExistsAsync(string typeName, int? excludeId = null);
         Task<bool> HasReservationExceedingCapacityAsync(int roomTypeId, int newCapacity);
+        Task<bool> HasOpenReservationAsync(int roomTypeId);
         Task AddAsync(RoomType roomType);
         Task UpdateAsync(RoomType roomType);
         Task DeleteAsync(RoomType roomType);

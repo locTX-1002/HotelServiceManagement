@@ -13,7 +13,17 @@
                     xmlns:views="clr-namespace:FUHotelManagementWPF.Views"
                     xmlns:viewsRooms="clr-namespace:FUHotelManagementWPF.Views.Rooms"
                     xmlns:viewsRes="clr-namespace:FUHotelManagementWPF.Views.Reservations"
-                    xmlns:viewsInvoices="clr-namespace:FUHotelManagementWPF.Views.Invoices">
+                    xmlns:viewsInvoices="clr-namespace:FUHotelManagementWPF.Views.Invoices"
+                    xmlns:vmPromo="clr-namespace:FUHotelManagementWPF.ViewModels.Promotions"
+                    xmlns:viewsPromo="clr-namespace:FUHotelManagementWPF.Views.Promotions"
+                    xmlns:vmReports="clr-namespace:FUHotelManagementWPF.ViewModels.Reports"
+                    xmlns:viewsReports="clr-namespace:FUHotelManagementWPF.Views.Reports"
+                    xmlns:vmUsers="clr-namespace:FUHotelManagementWPF.ViewModels.Users"
+                    xmlns:viewsUsers="clr-namespace:FUHotelManagementWPF.Views.Users"
+                    xmlns:vmServices="clr-namespace:FUHotelManagementWPF.ViewModels.Services"
+                    xmlns:viewsServices="clr-namespace:FUHotelManagementWPF.Views.Services"
+                    xmlns:vmGuestPortal="clr-namespace:FUHotelManagementWPF.ViewModels.GuestPortal"
+                    xmlns:viewsGuestPortal="clr-namespace:FUHotelManagementWPF.Views.GuestPortal">
 
     <!-- ============================================================
          DANG KY VIEW CHO VIEWMODEL (dieu huong ViewModel-first).
@@ -51,6 +61,35 @@
 
     <DataTemplate DataType="{x:Type vmInvoices:InvoicesViewModel}">
         <viewsInvoices:InvoicesView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vmPromo:PromotionListViewModel}">
+        <viewsPromo:PromotionListView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vmReports:ReportViewModel}">
+        <viewsReports:ReportView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vmUsers:UserListViewModel}">
+        <viewsUsers:UserListView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vmServices:ServicesViewModel}">
+        <viewsServices:ServicesView />
+    </DataTemplate>
+
+    <!-- Khu "Phong cua toi" - danh cho KHACH tu dang nhap (GuestWindow) -->
+    <DataTemplate DataType="{x:Type vmGuestPortal:MyReservationsViewModel}">
+        <viewsGuestPortal:MyReservationsView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vmGuestPortal:MyInvoicesViewModel}">
+        <viewsGuestPortal:MyInvoicesView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vmGuestPortal:MyProfileViewModel}">
+        <viewsGuestPortal:MyProfileView />
     </DataTemplate>
 
 </ResourceDictionary>

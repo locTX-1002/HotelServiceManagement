@@ -52,12 +52,67 @@
                            Style="{StaticResource CaptionText}" FontSize="12.5"
                            Margin="0,7,0,26" />
 
-                <TextBlock Text="EMAIL" Style="{StaticResource FieldLabel}" />
+                <!-- Mot o cho ca 2 loai tai khoan: nhan vien go email, khach go so dien thoai -->
+                <TextBlock Text="EMAIL HOẶC SỐ ĐIỆN THOẠI" Style="{StaticResource FieldLabel}" />
                 <TextBox Style="{StaticResource InputBox}"
                          Text="{Binding Email, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}" />
 
                 <TextBlock Text="MẬT KHẨU" Style="{StaticResource FieldLabel}" Margin="0,16,0,5" />
-                <PasswordBox x:Name="PasswordInput" Style="{StaticResource InputPasswordBox}" />
+                <!-- PasswordBox cua WPF khong hien duoc chu thuong va cung khong cho
+                     binding. Cach duy nhat de lam nut con mat la chong mot TextBox len
+                     tren roi an/hien qua lai; hai o dung chung Password cua ViewModel
+                     nen go o nao cung duoc, doi qua lai khong mat chu.
+                     Padding chua 40px ben phai de chu khong chui xuong duoi nut. -->
+                <Grid>
+                    <PasswordBox x:Name="PasswordInput" Padding="10,8,40,8"
+                                 PasswordChanged="PasswordInput_PasswordChanged">
+                        <PasswordBox.Style>
+                            <Style TargetType="PasswordBox" BasedOn="{StaticResource InputPasswordBox}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsPasswordVisible}" Value="True">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </PasswordBox.Style>
+                    </PasswordBox>
+
+                    <TextBox Style="{StaticResource InputBox}" Padding="10,8,40,8"
+                             Text="{Binding Password, UpdateSourceTrigger=PropertyChanged}"
+                             Visibility="{Binding IsPasswordVisible, Converter={StaticResource BoolToVis}}" />
+
+                    <Button HorizontalAlignment="Right" VerticalAlignment="Center"
+                            Width="32" Height="30" Margin="0,0,4,0"
+                            Cursor="Hand" Focusable="False"
+                            Command="{Binding TogglePasswordCommand}"
+                            ToolTip="Hiện / ẩn mật khẩu">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border Background="Transparent">
+                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                </Border>
+                            </ControlTemplate>
+                        </Button.Template>
+                        <TextBlock Foreground="{StaticResource InkSoftBrush}">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock" BasedOn="{StaticResource IconText}">
+                                    <Setter Property="FontSize" Value="15" />
+                                    <Setter Property="Text" Value="&#xE7B3;" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsPasswordVisible}" Value="True">
+                                            <Setter Property="Text" Value="&#xED1A;" />
+                                            <Setter Property="Foreground" Value="{StaticResource BrandBrush}" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </Button>
+                </Grid>
+
+                <CheckBox Content="Ghi nhớ đăng nhập" IsChecked="{Binding RememberMe}"
+                          Margin="0,14,0,0" FontSize="12.5"
+                          ToolTip="Lưu email và mật khẩu vào máy này để lần sau khỏi gõ lại" />
 
                 <!-- Dong bao loi: icon canh bao + chu do -->
                 <Border Margin="0,12,0,0" CornerRadius="4" Padding="10,8"
@@ -87,8 +142,7 @@
                 <Button Content="Đăng nhập" Style="{StaticResource PrimaryButton}"
                         Margin="0,24,0,0" IsDefault="True"
                         HorizontalContentAlignment="Center"
-                        Command="{Binding LoginCommand}"
-                        CommandParameter="{Binding ElementName=PasswordInput}" />
+                        Command="{Binding LoginCommand}" />
 
                 <!-- Khong bay mat khau ra man dang nhap nua: mat khau admin gio lay tu
                      appsettings.Local.json rieng tung may nen ghi cung o day la sai. -->

@@ -281,7 +281,7 @@ namespace FUHotelManagementWPF.ViewModels.Home
             SearchCommand = new AsyncRelayCommand(SearchAsync);
             BookCommand = new RelayCommand(p => OpenBookDialog(p as RoomType));
             OpenRoomTypesCommand = new RelayCommand(_ => NavigationService.NavigateTo("Sơ đồ phòng"));
-            OpenCheckInOutCommand = new RelayCommand(_ => NavigationService.NavigateTo("Check-in / Check-out"));
+            OpenCheckInOutCommand = new RelayCommand(_ => NavigationService.NavigateTo("Nhận / Trả phòng"));
             RefreshCommand = new AsyncRelayCommand(_ => LoadAsync());
             _ = LoadAsync();
         }

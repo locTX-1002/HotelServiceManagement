@@ -36,22 +36,31 @@ namespace DataAccessObjects
                 return;
             }
 
-            var configurationDirectory = ResolveConfigurationDirectory();
+            optionsBuilder.UseSqlServer(ConnectionString.Value);
+        }
+
+        /// <summary>
+        /// Chuoi ket noi doc MOT LAN cho ca tien trinh.
+        ///
+        /// Truoc day OnConfiguring chay lai toan bo viec nay moi lan tao DbContext, ma moi
+        /// ham DAO deu tao mot cai moi: duyet cay thu muc tu thu muc chay len tan goc de tim
+        /// appsettings.json (~14 lan File.Exists), roi doc va phan tich hai file JSON. Mot man
+        /// hinh goi nam sau lenh la lam lai chung ay lan.
+        /// </summary>
+        private static readonly Lazy<string> ConnectionString = new(() =>
+        {
             var configuration = new ConfigurationBuilder()
-                .SetBasePath(configurationDirectory)
+                .SetBasePath(ResolveConfigurationDirectory())
                 .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false)
                 .AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: false)
                 .Build();
 
-            var connectionString = configuration.GetConnectionString("FUHotelManagement");
-            if (string.IsNullOrWhiteSpace(connectionString))
-            {
-                throw new InvalidOperationException(
-                    "Thiếu ConnectionStrings:FUHotelManagement trong appsettings.json hoặc appsettings.Local.json.");
-            }
-
-            optionsBuilder.UseSqlServer(connectionString);
-        }
+            var value = configuration.GetConnectionString("FUHotelManagement");
+            return string.IsNullOrWhiteSpace(value)
+                ? throw new InvalidOperationException(
+                    "Thiếu ConnectionStrings:FUHotelManagement trong appsettings.json hoặc appsettings.Local.json.")
+                : value;
+        });
 
         private static string ResolveConfigurationDirectory()
         {
