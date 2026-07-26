@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Text;
 using System.Windows;
+using System.Windows.Data;
 using BusinessObjects;
 using BusinessObjects.Entities;
 using BusinessObjects.Enums;
@@ -204,6 +205,12 @@ public sealed class InvoicesViewModel : ViewModelBase
     public decimal InvoiceSubtotal => Invoice == null
         ? LiveRoomCharge + LiveServiceCharge + LiveSurcharge
         : Invoice.RoomCharge + Invoice.ServiceCharge + Invoice.SurchargeAmount;
+    public decimal DisplayRoomCharge => Invoice?.RoomCharge ?? LiveRoomCharge;
+    public decimal DisplayServiceCharge => Invoice?.ServiceCharge ?? LiveServiceCharge;
+    public decimal DisplaySurchargeAmount => Invoice?.SurchargeAmount ?? LiveSurcharge;
+    public decimal DisplayDiscountAmount => Invoice?.DiscountAmount ?? 0;
+    public decimal DisplayTotalAmount => Invoice?.TotalAmount ?? LiveTotal;
+    public decimal DisplayRemainingAmount => Invoice == null ? LiveTotal : RemainingAmount;
     public bool HasOutstandingBalance => Invoice != null && RemainingAmount > 0;
 
     /// <summary>Giam gia da chot tren hoa don; chua co hoa don thi chua biet, tinh 0.</summary>
@@ -252,6 +259,7 @@ public sealed class InvoicesViewModel : ViewModelBase
             {
                 OnPropertyChanged(nameof(CanRecordPayment));
                 OnPropertyChanged(nameof(HasOutstandingBalance));
+                OnPropertyChanged(nameof(DisplayRemainingAmount));
             }
         }
     }
@@ -412,6 +420,8 @@ public sealed class InvoicesViewModel : ViewModelBase
             }
 
             Invoice = invoice;
+            selectedStay.Invoice = invoice;
+            RefreshStayList();
             SelectedPromotion = Invoice?.PromotionCode == null
                 ? null
                 : Promotions.FirstOrDefault(x => x.Code == Invoice.PromotionCode);
@@ -462,6 +472,12 @@ public sealed class InvoicesViewModel : ViewModelBase
             }
 
             Invoice = result.Data;
+            if (SelectedStay != null)
+            {
+                SelectedStay.Invoice = Invoice;
+                Invoice.CreatedByUser ??= AppSession.CurrentUser;
+            }
+            RefreshStayList();
             Notify.Success(result.Message);
             await LoadPaymentSummaryAsync();
             RaiseInvoiceState();
@@ -663,12 +679,6 @@ public sealed class InvoicesViewModel : ViewModelBase
 
     private void OpenInvoiceDetail()
     {
-        if (Invoice == null)
-        {
-            Notify.Warning("Hãy lập hoá đơn trước khi xem chi tiết.");
-            return;
-        }
-
         new InvoiceDetailDialog(this) { Owner = ActiveWindow() }.ShowDialog();
     }
 
@@ -700,6 +710,11 @@ public sealed class InvoicesViewModel : ViewModelBase
 
         Payments.Clear();
         Invoice = result.Data.Invoice;
+        if (SelectedStay != null)
+        {
+            SelectedStay.Invoice = Invoice;
+        }
+        RefreshStayList();
         PaidAmount = result.Data.PaidAmount;
         RemainingAmount = result.Data.RemainingAmount;
         foreach (var payment in result.Data.Payments)
@@ -750,6 +765,12 @@ public sealed class InvoicesViewModel : ViewModelBase
         OnPropertyChanged(nameof(SurchargeDetailText));
         OnPropertyChanged(nameof(DiscountDetailText));
         OnPropertyChanged(nameof(InvoiceSubtotal));
+        OnPropertyChanged(nameof(DisplayRoomCharge));
+        OnPropertyChanged(nameof(DisplayServiceCharge));
+        OnPropertyChanged(nameof(DisplaySurchargeAmount));
+        OnPropertyChanged(nameof(DisplayDiscountAmount));
+        OnPropertyChanged(nameof(DisplayTotalAmount));
+        OnPropertyChanged(nameof(DisplayRemainingAmount));
         OnPropertyChanged(nameof(HasOutstandingBalance));
         OnPropertyChanged(nameof(PendingDifference));
         OnPropertyChanged(nameof(HasPendingCharges));
@@ -758,4 +779,7 @@ public sealed class InvoicesViewModel : ViewModelBase
 
     private static Window? ActiveWindow()
         => Application.Current.Windows.OfType<Window>().FirstOrDefault(x => x.IsActive);
+
+    private void RefreshStayList()
+        => CollectionViewSource.GetDefaultView(ActiveStays)?.Refresh();
 }

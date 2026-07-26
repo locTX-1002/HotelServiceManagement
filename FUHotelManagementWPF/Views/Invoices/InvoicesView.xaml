@@ -643,7 +643,7 @@
                                     Visibility="{Binding HasInvoice, Mode=OneWay,
                                                          Converter={StaticResource InverseBoolToVis}}"
                                     IsEnabled="{Binding CanPrepareInvoice, Mode=OneWay}"
-                                    Command="{Binding PrepareInvoiceCommand}" />
+                                    Command="{Binding OpenInvoiceDetailCommand}" />
                             <Button Content="Xem hoá đơn"
                                     Style="{StaticResource GhostButton}"
                                     Visibility="{Binding HasInvoice, Mode=OneWay,
