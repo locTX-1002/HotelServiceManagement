@@ -9,7 +9,12 @@ namespace HotelManagement.Tests;
 public class ReportServiceTests
 {
     [Fact]
-    public async Task RevenueRows_AreSortedByDateDescending()
+    /// <summary>
+    /// De bai (docs/PHAN_CONG.md) doi HAI thu: liet ke DU moi ngay trong khoang - ngay khong
+    /// phat sinh van co mot dong gia tri 0, khong nhay coc; va sap xep giam dan theo DOANH THU
+    /// chu KHONG phai theo ngay. Du lieu gia: 1/7 = 100, 3/7 = 200, 2/7 khong co gi.
+    /// </summary>
+    public async Task RevenueRows_LietKeDuNgay_VaSapXepGiamDanTheoDoanhThu()
     {
         AppSession.SignIn(new User { Role = new Role { RoleName = RoleNames.Manager } });
         var repository = new FakeReportRepository();
@@ -17,8 +22,13 @@ public class ReportServiceTests
             .GetRevenueAsync(new DateTime(2026, 7, 1), new DateTime(2026, 7, 3));
 
         Assert.True(result.Ok);
-        Assert.Equal([new DateTime(2026, 7, 3), new DateTime(2026, 7, 1)],
-            result.Data!.ByDay.Select(x => x.Date).ToArray());
+        // Du 3 ngay (khong bo ngay 2/7 du hom do khong ban duoc gi)
+        Assert.Equal(3, result.Data!.ByDay.Count);
+        // Thu tu: 3/7 (200) -> 1/7 (100) -> 2/7 (0)
+        Assert.Equal(
+            [new DateTime(2026, 7, 3), new DateTime(2026, 7, 1), new DateTime(2026, 7, 2)],
+            result.Data.ByDay.Select(x => x.Date).ToArray());
+        Assert.Equal(0, result.Data.ByDay.Single(x => x.Date == new DateTime(2026, 7, 2)).InvoiceRevenue);
     }
 
     [Fact]
