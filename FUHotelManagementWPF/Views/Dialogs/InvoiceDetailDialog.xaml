@@ -1,0 +1,204 @@
+<Window x:Class="FUHotelManagementWPF.Views.Dialogs.InvoiceDetailDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Chi tiết hoá đơn"
+        Width="980" Height="720" MinWidth="820" MinHeight="620"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False"
+        Style="{StaticResource BaseWindow}">
+    <Grid Margin="22">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="14" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="14" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <Grid>
+            <StackPanel>
+                <TextBlock Text="{Binding InvoiceNumber, Mode=OneWay}"
+                           Style="{StaticResource PageTitleText}" />
+                <TextBlock Text="{Binding InvoiceStatusText, Mode=OneWay}"
+                           Foreground="{StaticResource BrandBrush}"
+                           FontWeight="SemiBold" Margin="0,4,0,0" />
+            </StackPanel>
+            <StackPanel HorizontalAlignment="Right">
+                <TextBlock Text="{Binding SelectedRoomText, Mode=OneWay}"
+                           FontWeight="SemiBold" TextAlignment="Right" />
+                <TextBlock Text="{Binding SelectedGuestText, Mode=OneWay}"
+                           TextAlignment="Right" Margin="0,3,0,0" />
+                <TextBlock Text="{Binding StayPeriodText, Mode=OneWay}"
+                           Style="{StaticResource CaptionText}" TextAlignment="Right"
+                           Margin="0,3,0,0" />
+            </StackPanel>
+        </Grid>
+
+        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="18" />
+                    <ColumnDefinition Width="290" />
+                </Grid.ColumnDefinitions>
+
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Text="Bản kê hoá đơn" Style="{StaticResource SectionTitleText}" />
+                        <TextBlock Text="Các khoản đã chốt tại lần lập hoá đơn gần nhất."
+                                   Style="{StaticResource CaptionText}" Margin="0,3,0,16" />
+
+                        <Grid Margin="0,0,0,6">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="130" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="130" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="KHOẢN THU" Style="{StaticResource FieldLabel}" />
+                            <TextBlock Grid.Column="1" Text="CHI TIẾT" Style="{StaticResource FieldLabel}" />
+                            <TextBlock Grid.Column="2" Text="THÀNH TIỀN"
+                                       Style="{StaticResource FieldLabel}" TextAlignment="Right" />
+                        </Grid>
+
+                        <Border BorderBrush="{StaticResource LineBrush}" BorderThickness="0,1,0,0">
+                            <Grid Margin="0,13">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="130" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="130" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Tiền phòng" FontWeight="SemiBold" />
+                                <TextBlock Grid.Column="1" Text="{Binding RoomChargeDetailText, Mode=OneWay}"
+                                           Style="{StaticResource CaptionText}" />
+                                <TextBlock Grid.Column="2"
+                                           Text="{Binding Invoice.RoomCharge, Mode=OneWay, Converter={StaticResource Money}}"
+                                           FontWeight="SemiBold" TextAlignment="Right" />
+                            </Grid>
+                        </Border>
+                        <Border BorderBrush="{StaticResource LineBrush}" BorderThickness="0,1,0,0">
+                            <Grid Margin="0,13">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="130" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="130" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Dịch vụ" FontWeight="SemiBold" />
+                                <TextBlock Grid.Column="1" Text="{Binding ServiceChargeDetailText, Mode=OneWay}"
+                                           Style="{StaticResource CaptionText}" />
+                                <TextBlock Grid.Column="2"
+                                           Text="{Binding Invoice.ServiceCharge, Mode=OneWay, Converter={StaticResource Money}}"
+                                           FontWeight="SemiBold" TextAlignment="Right" />
+                            </Grid>
+                        </Border>
+                        <Border BorderBrush="{StaticResource LineBrush}" BorderThickness="0,1,0,0">
+                            <Grid Margin="0,13">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="130" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="130" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Phụ thu" FontWeight="SemiBold" />
+                                <TextBlock Grid.Column="1" Text="{Binding SurchargeDetailText, Mode=OneWay}"
+                                           Style="{StaticResource CaptionText}" />
+                                <TextBlock Grid.Column="2"
+                                           Text="{Binding Invoice.SurchargeAmount, Mode=OneWay, Converter={StaticResource Money}}"
+                                           FontWeight="SemiBold" TextAlignment="Right" />
+                            </Grid>
+                        </Border>
+                        <Border BorderBrush="{StaticResource LineBrush}" BorderThickness="0,1,0,0">
+                            <Grid Margin="0,13">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="130" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="130" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Giảm giá" FontWeight="SemiBold"
+                                           Foreground="{StaticResource SuccessBrush}" />
+                                <TextBlock Grid.Column="1" Text="{Binding DiscountDetailText, Mode=OneWay}"
+                                           Style="{StaticResource CaptionText}" />
+                                <TextBlock Grid.Column="2" TextAlignment="Right" FontWeight="SemiBold"
+                                           Foreground="{StaticResource SuccessBrush}">
+                                    <Run Text="−" />
+                                    <Run Text="{Binding Invoice.DiscountAmount, Mode=OneWay,
+                                                       Converter={StaticResource Money}}" />
+                                </TextBlock>
+                            </Grid>
+                        </Border>
+
+                        <TextBlock Text="THÔNG TIN LẬP HOÁ ĐƠN"
+                                   Style="{StaticResource FieldLabel}" Margin="0,20,0,7" />
+                        <TextBlock>
+                            <Run Text="Ngày lập: " />
+                            <Run Text="{Binding InvoiceDateText, Mode=OneWay}" FontWeight="SemiBold" />
+                        </TextBlock>
+                        <TextBlock Margin="0,4,0,0">
+                            <Run Text="Nhân viên: " />
+                            <Run Text="{Binding InvoiceCreatorText, Mode=OneWay}" FontWeight="SemiBold" />
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Column="2" Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Text="Tổng kết" Style="{StaticResource SectionTitleText}" />
+                        <Grid Margin="0,18,0,9">
+                            <TextBlock Text="Tạm tính" Style="{StaticResource CaptionText}" />
+                            <TextBlock Text="{Binding InvoiceSubtotal, Mode=OneWay, Converter={StaticResource Money}}"
+                                       HorizontalAlignment="Right" />
+                        </Grid>
+                        <Grid Margin="0,0,0,9">
+                            <TextBlock Text="Giảm giá" Style="{StaticResource CaptionText}" />
+                            <TextBlock HorizontalAlignment="Right"
+                                       Foreground="{StaticResource SuccessBrush}">
+                                <Run Text="−" />
+                                <Run Text="{Binding Invoice.DiscountAmount, Mode=OneWay,
+                                                   Converter={StaticResource Money}}" />
+                            </TextBlock>
+                        </Grid>
+                        <Grid Margin="0,0,0,9">
+                            <TextBlock Text="Tổng hoá đơn" FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding Invoice.TotalAmount, Mode=OneWay,
+                                                     Converter={StaticResource Money}}"
+                                       HorizontalAlignment="Right" FontWeight="SemiBold" />
+                        </Grid>
+                        <Grid Margin="0,0,0,12">
+                            <TextBlock Text="Đã thanh toán" Style="{StaticResource CaptionText}" />
+                            <TextBlock Text="{Binding PaidAmount, Mode=OneWay, Converter={StaticResource Money}}"
+                                       HorizontalAlignment="Right"
+                                       Foreground="{StaticResource SuccessBrush}" />
+                        </Grid>
+
+                        <Border Padding="14,12" CornerRadius="8"
+                                Background="{StaticResource DangerSoftBrush}">
+                            <StackPanel>
+                                <TextBlock Text="CÒN PHẢI THU" Style="{StaticResource FieldLabel}" />
+                                <TextBlock Text="{Binding RemainingAmount, Mode=OneWay,
+                                                         Converter={StaticResource Money}}"
+                                           Style="{StaticResource PageTitleText}"
+                                           Foreground="{StaticResource DangerBrush}" Margin="0,5,0,0" />
+                            </StackPanel>
+                        </Border>
+
+                        <Button Content="{Binding PrepareInvoiceText, Mode=OneWay}"
+                                Style="{StaticResource PrimaryButton}" Margin="0,20,0,0"
+                                IsEnabled="{Binding CanPrepareInvoice, Mode=OneWay}"
+                                Command="{Binding PrepareInvoiceCommand}" />
+                        <Button Content="Xuất hoá đơn" Style="{StaticResource GhostButton}"
+                                Margin="0,8,0,0" Command="{Binding ExportInvoiceCommand}" />
+                        <Button Content="Huỷ hoá đơn" Margin="0,8,0,0"
+                                IsEnabled="{Binding CanCancelInvoice, Mode=OneWay}"
+                                Command="{Binding CancelInvoiceCommand}">
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource GhostButton}">
+                                    <Setter Property="Foreground" Value="{StaticResource DangerBrush}" />
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </ScrollViewer>
+
+        <Button Grid.Row="4" Content="Đóng" Style="{StaticResource GhostButton}"
+                HorizontalAlignment="Right" Padding="24,8" Click="Close_Click" />
+    </Grid>
+</Window>

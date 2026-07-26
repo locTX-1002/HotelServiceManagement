@@ -316,6 +316,7 @@ public sealed class InvoicesViewModel : ViewModelBase
     public AsyncRelayCommand RecordPaymentCommand { get; }
     public AsyncRelayCommand VoidPaymentCommand { get; }
     public AsyncRelayCommand ExportInvoiceCommand { get; }
+    public RelayCommand OpenInvoiceDetailCommand { get; }
 
     public InvoicesViewModel()
     {
@@ -328,6 +329,7 @@ public sealed class InvoicesViewModel : ViewModelBase
         RecordPaymentCommand = new AsyncRelayCommand(_ => OpenPaymentDialogAsync());
         VoidPaymentCommand = new AsyncRelayCommand(VoidPaymentAsync);
         ExportInvoiceCommand = new AsyncRelayCommand(ExportInvoiceAsync);
+        OpenInvoiceDetailCommand = new RelayCommand(_ => OpenInvoiceDetail());
         _ = LoadAsync();
     }
 
@@ -656,6 +658,17 @@ public sealed class InvoicesViewModel : ViewModelBase
         {
             Notify.Error("Không xuất được hoá đơn. Hãy kiểm tra quyền ghi tệp rồi thử lại.");
         }
+    }
+
+    private void OpenInvoiceDetail()
+    {
+        if (Invoice == null)
+        {
+            Notify.Warning("Hãy lập hoá đơn trước khi xem chi tiết.");
+            return;
+        }
+
+        new InvoiceDetailDialog(this) { Owner = ActiveWindow() }.ShowDialog();
     }
 
     private async Task LoadPaymentSummaryAsync(int? selectedStayLoadVersion = null, Invoice? expectedInvoice = null)
