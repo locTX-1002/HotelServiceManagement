@@ -243,11 +243,24 @@ namespace FUHotelManagementWPF.ViewModels.Reservations
         /// </summary>
         private CalendarBar ToBar(Reservation reservation)
         {
-            var from = reservation.Stay is { } stay && stay.ActualCheckIn.Date < reservation.CheckInDate.Date
-                ? stay.ActualCheckIn.Date
-                : reservation.CheckInDate.Date;
+            var from = reservation.CheckInDate.Date;
+            var to = reservation.CheckOutDate.Date;
+
+            if (reservation.Stay is { } stay)
+            {
+                // Nhan phong SOM hon don thi keo dau thanh ve ngay vao that.
+                if (stay.ActualCheckIn.Date < from) { from = stay.ActualCheckIn.Date; }
+
+                // Va keo DUOI thanh theo thuc te: khach chua tra phong thi dem nay van con
+                // trong phong, du don ghi ngay tra la hom qua. Thieu ve nay thi phong dang
+                // co nguoi ma o lich trong nhu da tra - le tan tuong ban lai duoc.
+                // Moc cuoi KHONG tinh la mot dem, nen con o thi phai la ngay mai.
+                var actualTo = stay.ActualCheckOut?.Date ?? DateTime.Today.AddDays(1);
+                if (actualTo > to) { to = actualTo; }
+            }
+
             var rawStart = (from - WeekStart).Days;
-            var rawEnd = (reservation.CheckOutDate.Date - WeekStart).Days;
+            var rawEnd = (to - WeekStart).Days;
             var start = Math.Max(0, rawStart);
             var end = Math.Min(DayCount, rawEnd);
             // Bi cat thi phai bao: thanh cat trong y het thanh bat dau dung dau tuan, nhin
