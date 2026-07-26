@@ -72,11 +72,18 @@ namespace FUHotelManagementWPF.ViewModels.Reservations
             + $"{Reservation.CheckInDate:dd/MM} → {Reservation.CheckOutDate:dd/MM/yyyy}\n"
             + $"{ReservationService.StatusText(Reservation.Status)} · bấm để sửa";
 
-        public CalendarBar(Reservation reservation, int column, int span)
+        /// <summary>Khoang dat keo dai ra ngoai tuan dang xem - phia truoc / phia sau.</summary>
+        public bool ContinuesBefore { get; }
+        public bool ContinuesAfter { get; }
+
+        public CalendarBar(Reservation reservation, int column, int span,
+            bool continuesBefore = false, bool continuesAfter = false)
         {
             Reservation = reservation;
             Column = column;
             Span = span;
+            ContinuesBefore = continuesBefore;
+            ContinuesAfter = continuesAfter;
         }
     }
 
@@ -232,9 +239,14 @@ namespace FUHotelManagementWPF.ViewModels.Reservations
             var from = reservation.Stay is { } stay && stay.ActualCheckIn.Date < reservation.CheckInDate.Date
                 ? stay.ActualCheckIn.Date
                 : reservation.CheckInDate.Date;
-            var start = Math.Max(0, (from - WeekStart).Days);
-            var end = Math.Min(DayCount, (reservation.CheckOutDate.Date - WeekStart).Days);
-            return new CalendarBar(reservation, start, Math.Max(0, end - start));
+            var rawStart = (from - WeekStart).Days;
+            var rawEnd = (reservation.CheckOutDate.Date - WeekStart).Days;
+            var start = Math.Max(0, rawStart);
+            var end = Math.Min(DayCount, rawEnd);
+            // Bi cat thi phai bao: thanh cat trong y het thanh bat dau dung dau tuan, nhin
+            // vao la doc sai ngay nhan phong.
+            return new CalendarBar(reservation, start, Math.Max(0, end - start),
+                continuesBefore: rawStart < 0, continuesAfter: rawEnd > DayCount);
         }
 
         private async Task BookCellAsync(object? parameter)
