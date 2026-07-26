@@ -48,6 +48,18 @@ public sealed class ReservationService : IReservationService
         if (await _reservations.HasOverlapAsync(roomId, checkInDate, checkOutDate))
             return ServiceResult<Reservation>.Failure("Phòng đã có lịch đặt trùng khoảng thời gian này.");
 
+        // Coc khong duoc vuot tien phong ca ky. Neu vuot, luc lap hoa don service se tu choi
+        // ("Tien coc vuot tong hoa don") ma khong co hoa don thi cung khong tra phong duoc -
+        // khach ket lai trong phong. Chan ngay tu luc nhap thi khong bao gio roi vao the do.
+        if (depositAmount is > 0)
+        {
+            var nights = Math.Max(1, (checkOutDate.Date - checkInDate.Date).Days);
+            var roomCharge = nights * room!.RoomType.BasePrice;
+            if (depositAmount > roomCharge)
+                return ServiceResult<Reservation>.Failure(
+                    $"Tiền cọc ({depositAmount:N0} đ) không được vượt tiền phòng cả kỳ ({roomCharge:N0} đ).");
+        }
+
         var entity = new Reservation
         {
             BookingCode = await GenerateCodeAsync(),
