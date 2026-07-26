@@ -209,7 +209,9 @@
 
                 <TabControl Grid.Row="6" SelectedIndex="{Binding SelectedTabIndex}">
                     <TabItem Header="Hoá đơn">
-                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <Grid>
+                        <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                      Visibility="{Binding HasInvoice, Converter={StaticResource BoolToVis}}">
                             <StackPanel Margin="4,14,4,4">
                                 <Border Style="{StaticResource Card}">
                                     <Grid>
@@ -399,6 +401,34 @@
                                 </Border>
                             </StackPanel>
                         </ScrollViewer>
+
+                        <Border Style="{StaticResource Card}" Margin="4,14,4,4"
+                                Visibility="{Binding HasInvoice, Converter={StaticResource InverseBoolToVis}}">
+                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"
+                                        MaxWidth="420">
+                                <TextBlock Text="Chưa lập hoá đơn"
+                                           Style="{StaticResource SectionTitleText}"
+                                           HorizontalAlignment="Center" />
+                                <TextBlock Text="{Binding SelectedRoomText}"
+                                           FontWeight="SemiBold" HorizontalAlignment="Center"
+                                           Margin="0,8,0,0" />
+                                <TextBlock Text="Các khoản bên dưới là tạm tính theo dữ liệu hiện tại. Hãy kiểm tra trước khi lập hoá đơn."
+                                           Style="{StaticResource CaptionText}" TextWrapping="Wrap"
+                                           TextAlignment="Center" Margin="0,6,0,18" />
+                                <TextBlock Text="TẠM TÍNH" Style="{StaticResource FieldLabel}"
+                                           HorizontalAlignment="Center" />
+                                <TextBlock Text="{Binding LiveTotalText}"
+                                           Style="{StaticResource PageTitleText}"
+                                           Foreground="{StaticResource BrandBrush}"
+                                           HorizontalAlignment="Center" Margin="0,5,0,18" />
+                                <Button Content="Lập hoá đơn"
+                                        Style="{StaticResource PrimaryButton}"
+                                        HorizontalAlignment="Center"
+                                        IsEnabled="{Binding CanPrepareInvoice}"
+                                        Command="{Binding PrepareInvoiceCommand}" />
+                            </StackPanel>
+                        </Border>
+                        </Grid>
                     </TabItem>
 
                     <TabItem Header="Phụ thu">
@@ -457,7 +487,7 @@
                         </Grid>
                     </TabItem>
 
-                    <TabItem Header="Thanh toán">
+                    <TabItem Header="Thanh toán" IsEnabled="{Binding HasInvoice}">
                         <Grid Margin="4,14,4,4">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
