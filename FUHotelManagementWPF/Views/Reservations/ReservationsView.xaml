@@ -230,7 +230,7 @@
                                                     Visibility="{Binding CanEdit, Converter={StaticResource BoolToVis}}"
                                                     Command="{Binding DataContext.EditCommand,
                                                               RelativeSource={RelativeSource AncestorType=UserControl}}" />
-                                            <Button Content="Huỷ" Style="{StaticResource GhostButton}"
+                                            <Button Content="Yêu cầu huỷ" Style="{StaticResource GhostButton}"
                                                     Padding="14,6" Margin="0,0,7,0"
                                                     Foreground="{StaticResource DangerBrush}"
                                                     Visibility="{Binding CanCancel, Converter={StaticResource BoolToVis}}"

@@ -50,6 +50,7 @@ public sealed class InvoicesViewModel : ViewModelBase
     private readonly IPaymentService _paymentService = new PaymentService();
     private readonly ISurchargeService _surchargeService = new SurchargeService();
     private readonly IPromotionService _promotionService = new PromotionService();
+    private readonly IApprovalService _approvalService = new ApprovalService();
     private int _selectedStayLoadVersion;
 
     public ObservableCollection<Stay> ActiveStays { get; } = [];
@@ -176,8 +177,8 @@ public sealed class InvoicesViewModel : ViewModelBase
         set => SetProperty(ref _manualDiscount, value);
     }
 
-    /// <summary>Chi quan ly moi thay o "Giam tay" - dung chung luat voi service.</summary>
-    public bool CanGiveManualDiscount => AuthorizationPolicy.CanGiveManualDiscount;
+    /// <summary>Le tan gui yeu cau giam tay; quan ly duyet tai man Phê duyệt.</summary>
+    public bool CanGiveManualDiscount => AuthorizationPolicy.CanRequestManualDiscount;
 
     private Invoice? _invoice;
     public Invoice? Invoice
@@ -318,11 +319,11 @@ public sealed class InvoicesViewModel : ViewModelBase
                                      && Invoice?.Status != InvoiceStatus.Cancelled;
     public bool CanCancelInvoice => Invoice != null
                                     && Invoice.Status != InvoiceStatus.Cancelled
-                                    && AuthorizationPolicy.CanApproveInvoiceCancel;
+                                    && AuthorizationPolicy.CanRequestInvoiceCancel;
     public string CancelInvoiceHint => PaidAmount > 0
         ? "Hoá đơn đã có thanh toán. Hãy huỷ các giao dịch hoàn tất trước khi huỷ hoá đơn."
         : "Huỷ hoá đơn hiện tại.";
-    public bool CanVoidPayment => AuthorizationPolicy.CanApprovePaymentVoid;
+    public bool CanVoidPayment => AuthorizationPolicy.CanRequestPaymentVoid;
     // Hoa don da thu tien van cho tinh lai - khach goi them dich vu sau khi lap hoa don
     // la chuyen binh thuong. Chi chan khi hoa don da huy.
     public bool CanPrepareInvoice => AuthorizationPolicy.CanPrepareInvoice && SelectedStay != null
@@ -529,6 +530,22 @@ public sealed class InvoicesViewModel : ViewModelBase
         ErrorMessage = null;
         try
         {
+            if (ManualDiscount > 0)
+            {
+                var reason = ReasonDialog.Prompt("Yêu cầu giảm giá thủ công", ActiveWindow());
+                if (reason == null) return;
+                var request = await _approvalService.RequestAsync(
+                    ApprovalRequestType.InvoiceDiscount, SelectedStay.Id, reason, ManualDiscount);
+                if (!request.Ok)
+                {
+                    Notify.Error(request.Message);
+                    return;
+                }
+                ManualDiscount = 0;
+                Notify.Success(request.Message);
+                return;
+            }
+
             var result = await _invoiceService.PrepareAsync(
                 SelectedStay.Id,
                 string.IsNullOrWhiteSpace(PromotionCode) ? null : PromotionCode,
@@ -569,19 +586,13 @@ public sealed class InvoicesViewModel : ViewModelBase
             return;
         }
 
-        var confirm = MessageBox.Show(
-            "Huỷ hoá đơn hiện tại? Hoá đơn đã có thanh toán sẽ không thể huỷ.",
-            "Xác nhận huỷ hoá đơn",
-            MessageBoxButton.YesNo,
-            MessageBoxImage.Question);
-        if (confirm != MessageBoxResult.Yes)
-        {
-            return;
-        }
+        var reason = ReasonDialog.Prompt("Yêu cầu huỷ hoá đơn", ActiveWindow());
+        if (reason == null) return;
 
         try
         {
-            var result = await _invoiceService.CancelAsync(Invoice.Id);
+            var result = await _approvalService.RequestAsync(
+                ApprovalRequestType.InvoiceCancel, Invoice.Id, reason);
             if (!result.Ok)
             {
                 Notify.Error(result.Message);
@@ -589,7 +600,6 @@ public sealed class InvoicesViewModel : ViewModelBase
             }
 
             Notify.Success(result.Message);
-            await LoadSelectedStayAsync();
         }
         catch (Exception)
         {
@@ -671,25 +681,20 @@ public sealed class InvoicesViewModel : ViewModelBase
         }
         var payment = row.Payment;
 
-        var confirm = MessageBox.Show(
-            $"Huỷ giao dịch {payment.Amount:N0} đ ngày {payment.PaymentDate:dd/MM/yyyy HH:mm}?",
-            "Xác nhận huỷ giao dịch",
-            MessageBoxButton.YesNo,
-            MessageBoxImage.Warning);
-        if (confirm != MessageBoxResult.Yes)
-        {
-            return;
-        }
-
         if (payment.Status != PaymentStatus.Completed)
         {
             Notify.Warning("Chỉ có thể huỷ giao dịch đã hoàn tất.");
             return;
         }
 
+        var reason = ReasonDialog.Prompt(
+            $"Yêu cầu huỷ giao dịch {payment.Amount:N0} đ", ActiveWindow());
+        if (reason == null) return;
+
         try
         {
-            var result = await _paymentService.VoidAsync(payment.Id);
+            var result = await _approvalService.RequestAsync(
+                ApprovalRequestType.PaymentVoid, payment.Id, reason);
             if (!result.Ok)
             {
                 Notify.Error(result.Message);
@@ -697,7 +702,6 @@ public sealed class InvoicesViewModel : ViewModelBase
             }
 
             Notify.Success(result.Message);
-            await LoadSelectedStayAsync();
         }
         catch (Exception)
         {

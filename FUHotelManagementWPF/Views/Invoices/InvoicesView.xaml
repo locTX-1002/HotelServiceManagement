@@ -416,7 +416,7 @@
                                                     Margin="0,8,0,0"
                                                     Visibility="{Binding HasInvoice, Converter={StaticResource BoolToVis}}"
                                                     Command="{Binding ExportInvoiceCommand}" />
-                                            <Button Content="Huỷ hoá đơn"
+                                            <Button Content="Yêu cầu huỷ hoá đơn"
                                                     Margin="0,8,0,0"
                                                     IsEnabled="{Binding CanCancelInvoice}"
                                                     Command="{Binding CancelInvoiceCommand}">
@@ -600,7 +600,7 @@
                                     <DataGridTemplateColumn Header="" Width="120">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <Button Content="Huỷ giao dịch" Padding="10,5"
+                                                <Button Content="Yêu cầu huỷ" Padding="10,5"
                                                         Command="{Binding DataContext.VoidPaymentCommand,
                                                                           RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                                         CommandParameter="{Binding}"

@@ -90,6 +90,9 @@ namespace FUHotelManagementWPF.ViewModels
                 new("", "Hoá đơn", moneyGroup, () => new Invoices.InvoicesViewModel(), [PermissionCodes.InvoiceView]),
                 new("", "Khuyến mãi", moneyGroup, () => new Promotions.PromotionListViewModel(), [PermissionCodes.PromotionManage]),
                 new("", "Báo cáo", moneyGroup, () => new Reports.ReportViewModel(), [PermissionCodes.ReportView]),
+                new("", "Phê duyệt", moneyGroup, () => new Approvals.ApprovalsViewModel(),
+                    [PermissionCodes.ReservationCancelApprove, PermissionCodes.InvoiceDiscountApprove,
+                     PermissionCodes.InvoiceCancelApprove, PermissionCodes.PaymentVoidApprove]),
                 new("", "Người dùng", systemGroup, () => new Users.UserListViewModel(), [PermissionCodes.UserView]),
             };
 

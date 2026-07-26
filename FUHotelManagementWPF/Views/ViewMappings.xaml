@@ -23,7 +23,9 @@
                     xmlns:vmServices="clr-namespace:FUHotelManagementWPF.ViewModels.Services"
                     xmlns:viewsServices="clr-namespace:FUHotelManagementWPF.Views.Services"
                     xmlns:vmGuestPortal="clr-namespace:FUHotelManagementWPF.ViewModels.GuestPortal"
-                    xmlns:viewsGuestPortal="clr-namespace:FUHotelManagementWPF.Views.GuestPortal">
+                    xmlns:viewsGuestPortal="clr-namespace:FUHotelManagementWPF.Views.GuestPortal"
+                    xmlns:vmApprovals="clr-namespace:FUHotelManagementWPF.ViewModels.Approvals"
+                    xmlns:viewsApprovals="clr-namespace:FUHotelManagementWPF.Views.Approvals">
 
     <!-- ============================================================
          DANG KY VIEW CHO VIEWMODEL (dieu huong ViewModel-first).
@@ -77,6 +79,10 @@
 
     <DataTemplate DataType="{x:Type vmServices:ServicesViewModel}">
         <viewsServices:ServicesView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vmApprovals:ApprovalsViewModel}">
+        <viewsApprovals:ApprovalsView />
     </DataTemplate>
 
     <!-- Khu "Phong cua toi" - danh cho KHACH tu dang nhap (GuestWindow) -->
