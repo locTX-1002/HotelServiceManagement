@@ -41,8 +41,8 @@
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
                     <StackPanel Margin="18,16,18,10">
-                        <TextBlock Text="Lượt ở đang hoạt động" Style="{StaticResource SectionTitleText}" />
-                        <TextBlock Text="Chọn phòng để quản lý hoá đơn."
+                        <TextBlock Text="Lượt ở cần xử lý" Style="{StaticResource SectionTitleText}" />
+                        <TextBlock Text="Chọn lượt ở để xem và xử lý hoá đơn."
                                    Style="{StaticResource CaptionText}" Margin="0,3,0,0" />
                     </StackPanel>
                     <ListBox Grid.Row="1" ItemsSource="{Binding ActiveStays}"
@@ -54,20 +54,51 @@
                                 <Border Padding="14,10" BorderBrush="{StaticResource LineBrush}"
                                         BorderThickness="0,1,0,0">
                                     <StackPanel>
-                                        <StackPanel Orientation="Horizontal">
-                                            <TextBlock FontWeight="SemiBold">
-                                                <Run Text="Phòng " />
-                                                <Run Text="{Binding Reservation.Room.RoomNumber, Mode=OneWay}" />
-                                            </TextBlock>
-                                            <!-- Bao truoc khach VIP de le tan biet hoa don se tu giam 10% -->
-                                            <Border Style="{StaticResource BadgeWarning}" Margin="8,0,0,0"
-                                                    VerticalAlignment="Center">
-                                                <Border.Visibility>
-                                                    <Binding Path="Reservation.Guest.Tag" Converter="{StaticResource VipToVis}" />
-                                                </Border.Visibility>
-                                                <TextBlock Text="VIP −10%" />
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock FontWeight="SemiBold">
+                                                    <Run Text="Phòng " />
+                                                    <Run Text="{Binding Reservation.Room.RoomNumber, Mode=OneWay}" />
+                                                </TextBlock>
+                                                <!-- Bao truoc khach VIP de le tan biet hoa don se tu giam 10% -->
+                                                <Border Style="{StaticResource BadgeWarning}" Margin="8,0,0,0"
+                                                        VerticalAlignment="Center">
+                                                    <Border.Visibility>
+                                                        <Binding Path="Reservation.Guest.Tag" Converter="{StaticResource VipToVis}" />
+                                                    </Border.Visibility>
+                                                    <TextBlock Text="VIP −10%" />
+                                                </Border>
+                                            </StackPanel>
+                                            <Border Grid.Column="1" Padding="7,3" CornerRadius="8"
+                                                    Background="{StaticResource SurfaceAltBrush}">
+                                                <TextBlock FontSize="11" FontWeight="SemiBold">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Setter Property="Text" Value="Chưa lập" />
+                                                            <Setter Property="Foreground" Value="{StaticResource InkSoftBrush}" />
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding Invoice.Status}" Value="{x:Static enums:InvoiceStatus.Unpaid}">
+                                                                    <Setter Property="Text" Value="Còn nợ" />
+                                                                    <Setter Property="Foreground" Value="{StaticResource DangerBrush}" />
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding Invoice.Status}" Value="{x:Static enums:InvoiceStatus.PartiallyPaid}">
+                                                                    <Setter Property="Text" Value="Còn nợ" />
+                                                                    <Setter Property="Foreground" Value="{StaticResource DangerBrush}" />
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding Invoice.Status}" Value="{x:Static enums:InvoiceStatus.Paid}">
+                                                                    <Setter Property="Text" Value="Đã thu" />
+                                                                    <Setter Property="Foreground" Value="{StaticResource SuccessBrush}" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
                                             </Border>
-                                        </StackPanel>
+                                        </Grid>
                                         <TextBlock Style="{StaticResource CaptionText}" Margin="0,3,0,0">
                                             <Run Text="{Binding Reservation.Guest.FullName, Mode=OneWay}" />
                                             <Run Text=" · " />
