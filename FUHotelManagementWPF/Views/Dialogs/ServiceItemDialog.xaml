@@ -1,6 +1,7 @@
 <Window x:Class="FUHotelManagementWPF.Views.Dialogs.ServiceItemDialog"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mvvm="clr-namespace:FUHotelManagementWPF.MvvmCore"
         Title="{Binding Title}"
         Width="460" SizeToContent="Height"
         WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
@@ -37,7 +38,8 @@
                                 ValidatesOnNotifyDataErrors=True}" />
 
                 <TextBlock Text="ĐƠN GIÁ (đ) *" Style="{StaticResource FieldLabel}" Margin="0,14,0,5" />
-                <TextBox Text="{Binding PriceText, UpdateSourceTrigger=PropertyChanged,
+                <TextBox mvvm:MoneyBoxAssist.Enable="True"
+                         Text="{Binding PriceText, UpdateSourceTrigger=PropertyChanged,
                                 ValidatesOnNotifyDataErrors=True}"
                          ToolTip="Gõ số, ví dụ 50000 hoặc 50.000" />
 

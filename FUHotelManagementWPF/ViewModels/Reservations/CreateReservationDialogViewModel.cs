@@ -494,7 +494,8 @@ namespace FUHotelManagementWPF.ViewModels.Reservations
                     decimal? deposit = null;
                     if (!string.IsNullOrWhiteSpace(DepositText))
                     {
-                        if (!decimal.TryParse(DepositText.Trim(), out var parsed) || parsed < 0)
+                        var parsed = MoneyBoxAssist.ToDecimal(DepositText) ?? -1;
+                        if (parsed < 0)
                         {
                             ErrorMessage = "Tiền cọc phải là số không âm (bỏ trống nếu không thu cọc).";
                             return;

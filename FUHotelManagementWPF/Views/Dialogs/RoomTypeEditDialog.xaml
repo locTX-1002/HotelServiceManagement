@@ -1,6 +1,7 @@
 <Window x:Class="FUHotelManagementWPF.Views.Dialogs.RoomTypeEditDialog"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mvvm="clr-namespace:FUHotelManagementWPF.MvvmCore"
         Title="{Binding Title}"
         Width="460" SizeToContent="Height"
         WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
@@ -83,7 +84,8 @@
                     </StackPanel>
                     <StackPanel Grid.Column="2">
                         <TextBlock Text="GIÁ CƠ BẢN / ĐÊM" Style="{StaticResource FieldLabel}" />
-                        <TextBox Text="{Binding BasePriceText, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                        <TextBox mvvm:MoneyBoxAssist.Enable="True"
+                                 Text="{Binding BasePriceText, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
                                  ToolTip="Nhập số, ví dụ 500000" />
                     </StackPanel>
                 </Grid>
