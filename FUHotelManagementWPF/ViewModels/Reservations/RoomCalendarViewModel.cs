@@ -220,10 +220,19 @@ namespace FUHotelManagementWPF.ViewModels.Reservations
             }
         }
 
-        /// <summary>Cat khoang dat phong cho vua trong tuan dang xem. Ngay tra khong tinh la mot dem.</summary>
+        /// <summary>
+        /// Cat khoang dat phong cho vua trong tuan dang xem. Ngay tra khong tinh la mot dem.
+        ///
+        /// Khach nhan phong SOM hon ngay tren don thi ve tu ngay nhan that: neu cu ve theo
+        /// don, phong da co nguoi tu hom qua ma tren lich van trong, le tan nhin vao tuong
+        /// con ban duoc.
+        /// </summary>
         private CalendarBar ToBar(Reservation reservation)
         {
-            var start = Math.Max(0, (reservation.CheckInDate.Date - WeekStart).Days);
+            var from = reservation.Stay is { } stay && stay.ActualCheckIn.Date < reservation.CheckInDate.Date
+                ? stay.ActualCheckIn.Date
+                : reservation.CheckInDate.Date;
+            var start = Math.Max(0, (from - WeekStart).Days);
             var end = Math.Min(DayCount, (reservation.CheckOutDate.Date - WeekStart).Days);
             return new CalendarBar(reservation, start, Math.Max(0, end - start));
         }
