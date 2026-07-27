@@ -17,9 +17,11 @@
          nut=pill(999) | o nhap=8 | card/dialog=12 | nav item=10 | badge=pill -->
 
     <!-- Bong khuech tan mem cho card/dialog - CAM bong den gat -->
-    <DropShadowEffect x:Key="SoftShadow" BlurRadius="26" ShadowDepth="2" Direction="270"
+    <!-- x:Shared="False" de moi cho dung mot the Effect rieng. Dung chung mot the cho
+         nhieu control thi WPF nem loi khi control nam o cua so khac luong dispatcher. -->
+    <DropShadowEffect x:Key="SoftShadow" x:Shared="False" BlurRadius="26" ShadowDepth="2" Direction="270"
                       Opacity="0.10" Color="#1D231D" />
-    <DropShadowEffect x:Key="SoftShadowLarge" BlurRadius="40" ShadowDepth="4" Direction="270"
+    <DropShadowEffect x:Key="SoftShadowLarge" x:Shared="False" BlurRadius="40" ShadowDepth="4" Direction="270"
                       Opacity="0.14" Color="#1D231D" />
 
     <!-- ============================================================
