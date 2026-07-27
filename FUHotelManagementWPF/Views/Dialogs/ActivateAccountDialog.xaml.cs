@@ -18,5 +18,14 @@ public partial class ActivateAccountDialog : Window
     // PasswordBox khong binding duoc (bao mat cua WPF) nen doc tai day roi dua thang vao VM,
     // giong cach LoginWindow lam - mat khau khong nam trong property/binding nao.
     private async void Activate_Click(object sender, RoutedEventArgs e)
-        => await _viewModel.ActivateAsync(PasswordInput.Password, ConfirmInput.Password);
+    {
+        try
+        {
+            await _viewModel.ActivateAsync(PasswordInput.Password, ConfirmInput.Password);
+        }
+        catch (System.Exception ex)
+        {
+            MvvmCore.Notify.Error($"Lỗi: {ex.Message}");
+        }
+    }
 }
