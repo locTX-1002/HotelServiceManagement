@@ -6,6 +6,7 @@ namespace Services;
 public interface IReservationService
 {
     Task<List<Reservation>> GetAllAsync();
+    Task<List<Reservation>> GetRecentByRoomAsync(int roomId, int count = 5);
 
     /// <summary>
     /// Don dat phong CUA CHINH khach dang dang nhap (man "Đặt phòng của tôi").
