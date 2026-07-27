@@ -17,6 +17,14 @@ namespace FUHotelManagementWPF.ViewModels.AuditLogs
             ["user.lock"] = "Khoá tài khoản",
             ["user.unlock"] = "Mở khoá tài khoản",
             ["user.reset_password"] = "Đặt lại mật khẩu",
+            ["guest.create"] = "Tạo hồ sơ khách",
+            ["guest.update"] = "Sửa hồ sơ khách",
+            ["guest.delete"] = "Xoá hồ sơ khách",
+            ["guest.activate_account"] = "Cấp tài khoản khách",
+            ["room.create"] = "Tạo phòng mới",
+            ["room.update"] = "Sửa thông tin phòng",
+            ["room.delete"] = "Xoá/Ngừng dùng phòng",
+            ["room.change_status"] = "Đổi trạng thái phòng",
             ["permission.update"] = "Đổi quyền của vai trò",
             ["approval.request"] = "Gửi yêu cầu duyệt",
             ["approval.approve"] = "Duyệt yêu cầu",
@@ -70,9 +78,9 @@ namespace FUHotelManagementWPF.ViewModels.AuditLogs
 
         public string ActionKind => Log.ActionCode switch
         {
-            "user.create" or "user.unlock" or "approval.approve" => "Success",
-            "user.lock" or "approval.reject" => "Danger",
-            "user.reset_password" or "permission.update" => "Warning",
+            "user.create" or "user.unlock" or "guest.create" or "guest.activate_account" or "room.create" or "approval.approve" => "Success",
+            "user.lock" or "guest.delete" or "room.delete" or "approval.reject" => "Danger",
+            "user.reset_password" or "guest.update" or "room.update" or "room.change_status" or "permission.update" => "Warning",
             _ => "Info"
         };
 
