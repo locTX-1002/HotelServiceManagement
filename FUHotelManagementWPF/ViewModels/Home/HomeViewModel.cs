@@ -344,6 +344,26 @@ namespace FUHotelManagementWPF.ViewModels.Home
 
         public bool HasPendingApprovals => _pendingApprovalsCount > 0;
 
+        private int _maintenanceRoomsCount;
+        public int MaintenanceRoomsCount
+        {
+            get => _maintenanceRoomsCount;
+            private set => SetProperty(ref _maintenanceRoomsCount, value);
+        }
+
+        private int _blacklistedActiveCount;
+        public int BlacklistedActiveCount
+        {
+            get => _blacklistedActiveCount;
+            private set
+            {
+                if (SetProperty(ref _blacklistedActiveCount, value))
+                    OnPropertyChanged(nameof(HasBlacklistAlert));
+            }
+        }
+
+        public bool HasBlacklistAlert => _blacklistedActiveCount > 0;
+
         public string OccupancyRateText => RoomCount > 0 ? $"{(StayingRooms * 100.0 / RoomCount):F0}%" : "0%";
 
         public RelayCommand OpenReportsCommand { get; }
@@ -392,6 +412,7 @@ namespace FUHotelManagementWPF.ViewModels.Home
                 RoomTypeCount = types.Count;
 
                 AvailableRooms = rooms.Count(r => r.IsActive && r.Status == RoomStatus.Available);
+                MaintenanceRoomsCount = rooms.Count(r => r.IsActive && r.Status == RoomStatus.Maintenance);
                 StayingRooms = stays.Count;
                 ArrivalsToday = arrivals.Count(r => r.CheckInDate.Date == DateTime.Today);
                 OverdueTasks = arrivals.Count(r => r.CheckInDate.Date < DateTime.Today)
@@ -437,6 +458,13 @@ namespace FUHotelManagementWPF.ViewModels.Home
                 {
                     PendingApprovalsCount = pendingResult.Data.Count;
                 }
+
+                // Le tan dat ho tai quay khong bi chan boi tag Blacklist nhu khach tu dat online -
+                // Quan ly can biet co bao nhieu don dang hoat dong cua khach blacklist de doi soat.
+                var reservations = await _reservationService.GetAllAsync();
+                BlacklistedActiveCount = reservations.Count(r =>
+                    (r.Status == ReservationStatus.Pending || r.Status == ReservationStatus.Confirmed)
+                    && r.Guest.Tag == GuestTag.Blacklisted);
             }
             catch (Exception)
             {
