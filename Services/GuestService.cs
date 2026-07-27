@@ -42,6 +42,7 @@ public sealed class GuestService : IGuestService
         try
         {
             await _repository.AddAsync(guest);
+            await AuditTrail.WriteAsync("guest.create", nameof(Guest), guest.Id, null, $"{guest.FullName} <{guest.PhoneNumber}>");
         }
         catch (DbUpdateException)
         {
@@ -67,6 +68,7 @@ public sealed class GuestService : IGuestService
         if (identity != null && await _repository.IdentityNumberExistsAsync(identity, id))
             return ServiceResult<Guest>.Failure("Số giấy tờ đã tồn tại.");
 
+        var cu = $"{guest.FullName} <{guest.PhoneNumber}>";
         guest.FullName = fullName.Trim();
         guest.Email = Normalize(email);
         guest.PhoneNumber = phoneNumber.Trim();
@@ -74,6 +76,7 @@ public sealed class GuestService : IGuestService
         guest.Tag = tag;
         guest.TagNote = tag == GuestTag.None ? null : Normalize(tagNote);
         await _repository.UpdateAsync(guest);
+        await AuditTrail.WriteAsync("guest.update", nameof(Guest), guest.Id, cu, $"{guest.FullName} <{guest.PhoneNumber}>");
         return ServiceResult<Guest>.Success(guest, "Đã cập nhật hồ sơ khách hàng.");
     }
 
@@ -86,6 +89,7 @@ public sealed class GuestService : IGuestService
         if (await _repository.HasReservationsAsync(id))
             return ServiceResult.Failure("Khách hàng đã có lịch sử đặt phòng nên không xoá được.");
         await _repository.DeleteAsync(guest);
+        await AuditTrail.WriteAsync("guest.delete", nameof(Guest), id, $"{guest.FullName} <{guest.PhoneNumber}>", null);
         return ServiceResult.Success("Đã xoá hồ sơ khách hàng.");
     }
 

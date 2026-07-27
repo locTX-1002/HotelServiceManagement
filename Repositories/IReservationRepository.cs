@@ -8,6 +8,7 @@ public interface IReservationRepository
 
     /// <summary>Don dat phong cua dung mot khach - man "Đặt phòng của tôi" ben phia khach.</summary>
     Task<List<Reservation>> GetByGuestAsync(int guestId);
+    Task<List<Reservation>> GetRecentByRoomAsync(int roomId, int count = 5);
 
     Task<Reservation?> GetByIdAsync(int id);
     Task<bool> BookingCodeExistsAsync(string code);

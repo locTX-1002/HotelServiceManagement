@@ -34,14 +34,28 @@ namespace FUHotelManagementWPF.ViewModels.Reports
         public DateTime FromDate
         {
             get => _fromDate;
-            set { if (SetProperty(ref _fromDate, value)) { OnPropertyChanged(nameof(RangeText)); } }
+            set
+            {
+                if (SetProperty(ref _fromDate, value))
+                {
+                    OnPropertyChanged(nameof(RangeText));
+                    if (HasPermission) { _ = LoadAsync(false); }
+                }
+            }
         }
 
         private DateTime _toDate = DateTime.Today;
         public DateTime ToDate
         {
             get => _toDate;
-            set { if (SetProperty(ref _toDate, value)) { OnPropertyChanged(nameof(RangeText)); } }
+            set
+            {
+                if (SetProperty(ref _toDate, value))
+                {
+                    OnPropertyChanged(nameof(RangeText));
+                    if (HasPermission) { _ = LoadAsync(false); }
+                }
+            }
         }
 
         public string RangeText => $"Từ {FromDate:dd/MM/yyyy} đến {ToDate:dd/MM/yyyy}";
@@ -183,7 +197,7 @@ namespace FUHotelManagementWPF.ViewModels.Reports
 
         public ReportViewModel()
         {
-            LoadCommand = new AsyncRelayCommand(_ => LoadAsync());
+            LoadCommand = new AsyncRelayCommand(_ => LoadAsync(true));
             ExportCsvCommand = new AsyncRelayCommand(ExportCsvAsync);
             Last7DaysCommand = new RelayCommand(_ => SetRange(DateTime.Today.AddDays(-6), DateTime.Today));
             Last30DaysCommand = new RelayCommand(_ => SetRange(DateTime.Today.AddDays(-29), DateTime.Today));
@@ -196,19 +210,22 @@ namespace FUHotelManagementWPF.ViewModels.Reports
             // Khong co quyen thi khong goi service (service cung se tu choi) - chi hien thong bao
             if (HasPermission)
             {
-                _ = LoadAsync();
+                _ = LoadAsync(false);
             }
         }
 
         // Chip nhanh: doi ca 2 dau ngay roi tai lai luon cho khoi bam them nut Xem
         private void SetRange(DateTime from, DateTime to)
         {
-            FromDate = from;
-            ToDate = to;
-            _ = LoadAsync();
+            _fromDate = from;
+            _toDate = to;
+            OnPropertyChanged(nameof(FromDate));
+            OnPropertyChanged(nameof(ToDate));
+            OnPropertyChanged(nameof(RangeText));
+            _ = LoadAsync(true);
         }
 
-        public async Task LoadAsync()
+        public async Task LoadAsync(bool showNotification = true)
         {
             if (!HasPermission)
             {
@@ -243,6 +260,11 @@ namespace FUHotelManagementWPF.ViewModels.Reports
                 else
                 {
                     Notify.Error(occupancy.Message);
+                }
+
+                if (showNotification)
+                {
+                    Notify.Success($"Đã tải báo cáo ({FromDate:dd/MM/yyyy} - {ToDate:dd/MM/yyyy})");
                 }
             }
             catch (Exception)

@@ -67,6 +67,7 @@ namespace Services
             }
 
             room.RoomType = roomType;
+            await AuditTrail.WriteAsync("room.create", nameof(Room), room.Id, null, $"Phòng {room.RoomNumber} (Tầng {room.Floor})");
             return ServiceResult<Room>.Success(room, "Đã tạo phòng.");
         }
 
@@ -152,6 +153,7 @@ namespace Services
             }
 
             room.RoomType = roomType;
+            await AuditTrail.WriteAsync("room.update", nameof(Room), room.Id, null, $"Phòng {room.RoomNumber} (Tầng {room.Floor})");
             return ServiceResult<Room>.Success(room, "Đã cập nhật phòng.");
         }
 
@@ -191,6 +193,7 @@ namespace Services
 
             var hasPendingOrConfirmed = await _roomRepository.HasPendingOrConfirmedReservationAsync(id);
 
+            var oldStatusText = RoomStatusText(room.Status);
             switch (room.Status)
             {
                 case RoomStatus.Available when newStatus == RoomStatus.Cleaning:
@@ -240,6 +243,7 @@ namespace Services
             await _roomRepository.UpdateAsync(room);
             room.RoomType = savedRoomType;
 
+            await AuditTrail.WriteAsync("room.change_status", nameof(Room), room.Id, oldStatusText, RoomStatusText(room.Status));
             return ServiceResult<Room>.Success(room, "Đã đổi trạng thái phòng.");
         }
 
@@ -268,12 +272,14 @@ namespace Services
                 room.IsActive = false;
                 room.RoomType = null!;
                 await _roomRepository.UpdateAsync(room);
+                await AuditTrail.WriteAsync("room.delete", nameof(Room), id, $"Phòng {room.RoomNumber}", "Chuyển sang Ngừng dùng");
                 return ServiceResult.Success(
                     "Phòng đã có lịch sử đặt nên được chuyển sang ngừng dùng thay vì xoá.");
             }
 
             room.RoomType = null!;
             await _roomRepository.DeleteAsync(room);
+            await AuditTrail.WriteAsync("room.delete", nameof(Room), id, $"Phòng {room.RoomNumber}", "Đã xoá hẳn");
             return ServiceResult.Success("Đã xoá phòng.");
         }
 

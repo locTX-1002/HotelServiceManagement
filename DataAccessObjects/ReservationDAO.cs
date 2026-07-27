@@ -32,6 +32,16 @@ public sealed class ReservationDAO
             .OrderByDescending(r => r.CheckInDate).ToListAsync();
     }
 
+    public async Task<List<Reservation>> GetRecentByRoomAsync(int roomId, int count = 5)
+    {
+        await using var context = HotelDbContextFactory.Create();
+        return await Query(context).Include(r => r.Stay)
+            .Where(r => r.RoomId == roomId)
+            .OrderByDescending(r => r.CheckInDate)
+            .Take(count)
+            .ToListAsync();
+    }
+
     public async Task<Reservation?> GetByIdAsync(int id)
     {
         await using var context = HotelDbContextFactory.Create();

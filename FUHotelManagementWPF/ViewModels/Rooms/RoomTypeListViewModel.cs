@@ -81,17 +81,32 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
         /// <summary>An nut them/sua/xoa voi vai tro khong duoc phep - service van la lop chan cuoi.</summary>
         public bool CanManageRooms => AuthorizationPolicy.CanManageRooms;
 
+        private readonly Action<int>? _onViewRooms;
+
         public RelayCommand AddCommand { get; }
         public RelayCommand EditCommand { get; }
         public AsyncRelayCommand DeleteCommand { get; }
+        public RelayCommand ViewRoomsCommand { get; }
 
-        public RoomTypeListViewModel(Func<Task> refreshAll)
+        public RoomTypeListViewModel(Func<Task> refreshAll, Action<int>? onViewRooms = null)
         {
             _refreshAll = refreshAll;
+            _onViewRooms = onViewRooms;
             RowsView = new ListCollectionView(Rows) { Filter = FilterRow };
             AddCommand = new RelayCommand(_ => OpenEditDialog(null));
             EditCommand = new RelayCommand(p => OpenEditDialog(p as RoomTypeRow));
             DeleteCommand = new AsyncRelayCommand(DeleteAsync);
+            ViewRoomsCommand = new RelayCommand(p =>
+            {
+                if (p is RoomTypeRow row)
+                {
+                    _onViewRooms?.Invoke(row.RoomType.Id);
+                }
+                else if (p is int id)
+                {
+                    _onViewRooms?.Invoke(id);
+                }
+            });
         }
 
         private bool FilterRow(object item)

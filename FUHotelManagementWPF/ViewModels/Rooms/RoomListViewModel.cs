@@ -20,6 +20,7 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
     public class RoomListViewModel : ViewModelBase
     {
         private readonly IRoomService _roomService = new RoomService();
+        private readonly IReservationService _reservationService = new ReservationService();
         private readonly Func<Task> _refreshAll;
 
         public ObservableCollection<RoomRow> Rows { get; } = [];
@@ -56,6 +57,7 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
                 {
                     OnPropertyChanged(nameof(HasSelection));
                     ResetGallery();
+                    _ = LoadRecentReservationsAsync();
                 }
             }
         }
@@ -93,6 +95,38 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
             OnPropertyChanged(nameof(GalleryCounter));
         }
 
+        // --- Lịch sử đặt phòng gần đây ---
+        public ObservableCollection<RecentReservationRow> RecentReservations { get; } = [];
+        private bool _isLoadingHistory;
+        public bool IsLoadingHistory
+        {
+            get => _isLoadingHistory;
+            set => SetProperty(ref _isLoadingHistory, value);
+        }
+
+        private async Task LoadRecentReservationsAsync()
+        {
+            RecentReservations.Clear();
+            if (_selectedRow == null || !CanViewReservations) return;
+            IsLoadingHistory = true;
+            try
+            {
+                var list = await _reservationService.GetRecentByRoomAsync(_selectedRow.Room.Id);
+                foreach (var r in list)
+                {
+                    RecentReservations.Add(new RecentReservationRow(r));
+                }
+            }
+            catch
+            {
+                // Soft failure for history load
+            }
+            finally
+            {
+                IsLoadingHistory = false;
+            }
+        }
+
         private string _searchText = string.Empty;
         public string SearchText
         {
@@ -105,6 +139,86 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
                     OnPropertyChanged(nameof(IsEmpty));
                     OnPropertyChanged(nameof(EmptyText));
                 }
+            }
+        }
+
+        // --- Bộ lọc Tầng ---
+        public ObservableCollection<string> FloorOptions { get; } = [];
+        private string _selectedFloor = "Tất cả tầng";
+        public string SelectedFloor
+        {
+            get => _selectedFloor;
+            set
+            {
+                if (SetProperty(ref _selectedFloor, value))
+                {
+                    RowsView.Refresh();
+                    OnPropertyChanged(nameof(IsEmpty));
+                    OnPropertyChanged(nameof(EmptyText));
+                }
+            }
+        }
+
+        // --- Bộ lọc Loại phòng ---
+        public ObservableCollection<RoomTypeOption> RoomTypeOptions { get; } = [];
+        private RoomTypeOption? _selectedRoomType;
+        public RoomTypeOption? SelectedRoomType
+        {
+            get => _selectedRoomType;
+            set
+            {
+                if (SetProperty(ref _selectedRoomType, value))
+                {
+                    RowsView.Refresh();
+                    OnPropertyChanged(nameof(IsEmpty));
+                    OnPropertyChanged(nameof(EmptyText));
+                }
+            }
+        }
+
+        // --- Sắp xếp ---
+        public ObservableCollection<RoomSortOption> SortOptions { get; } = [];
+        private RoomSortOption? _selectedSortOption;
+        public RoomSortOption? SelectedSortOption
+        {
+            get => _selectedSortOption;
+            set
+            {
+                if (SetProperty(ref _selectedSortOption, value))
+                {
+                    ApplySort();
+                }
+            }
+        }
+
+        private void ApplySort()
+        {
+            RowsView.SortDescriptions.Clear();
+            if (_selectedSortOption == null) return;
+
+            switch (_selectedSortOption.Key)
+            {
+                case 1:
+                    RowsView.SortDescriptions.Add(new SortDescription("Room.RoomNumber", ListSortDirection.Ascending));
+                    break;
+                case 2:
+                    RowsView.SortDescriptions.Add(new SortDescription("Room.RoomNumber", ListSortDirection.Descending));
+                    break;
+                case 3:
+                    RowsView.SortDescriptions.Add(new SortDescription("BasePrice", ListSortDirection.Ascending));
+                    break;
+                case 4:
+                    RowsView.SortDescriptions.Add(new SortDescription("BasePrice", ListSortDirection.Descending));
+                    break;
+            }
+        }
+
+        public void SelectRoomTypeFilter(int roomTypeId)
+        {
+            var target = RoomTypeOptions.FirstOrDefault(t => t.Id == roomTypeId);
+            if (target != null)
+            {
+                SelectedRoomType = target;
             }
         }
 
@@ -141,6 +255,7 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
 
         /// <summary>An nut them/sua/xoa/doi trang thai voi vai tro khong duoc phep - service van la lop chan cuoi.</summary>
         public bool CanManageRooms => AuthorizationPolicy.CanManageRooms;
+        public bool CanViewReservations => AuthorizationPolicy.CanViewReservations;
 
         public RelayCommand PickStatusCommand { get; }
         public RelayCommand AddCommand { get; }
@@ -161,6 +276,16 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
             _selectedChip = StatusChips[0];
             _selectedChip.IsSelected = true;
             PickStatusCommand = new RelayCommand(p => { if (p is RoomStatusChip chip) { PickChip(chip); } });
+
+            RoomTypeOptions.Add(new RoomTypeOption(null, "Tất cả loại phòng"));
+            _selectedRoomType = RoomTypeOptions[0];
+
+            SortOptions.Add(new RoomSortOption(1, "Số phòng (A-Z)"));
+            SortOptions.Add(new RoomSortOption(2, "Số phòng (Z-A)"));
+            SortOptions.Add(new RoomSortOption(3, "Giá phòng (thấp -> cao)"));
+            SortOptions.Add(new RoomSortOption(4, "Giá phòng (cao -> thấp)"));
+            _selectedSortOption = SortOptions[0];
+            ApplySort();
 
             AddCommand = new RelayCommand(_ => OpenEditDialog(null));
             EditCommand = new RelayCommand(p => OpenEditDialog(p as RoomRow));
@@ -201,6 +326,22 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
                 {
                     Rows.Add(new RoomRow(room));
                 }
+
+                // Cập nhật bộ lọc Tầng
+                var floors = rooms.Select(r => r.Floor).Distinct().OrderBy(f => f).Select(f => $"Tầng {f}").ToList();
+                FloorOptions.Clear();
+                FloorOptions.Add("Tất cả tầng");
+                foreach (var f in floors) FloorOptions.Add(f);
+                if (!FloorOptions.Contains(SelectedFloor)) SelectedFloor = "Tất cả tầng";
+
+                // Cập nhật bộ lọc Loại phòng
+                var types = rooms.Where(r => r.RoomType != null).Select(r => r.RoomType!).GroupBy(t => t.Id).Select(g => g.First()).OrderBy(t => t.TypeName).ToList();
+                var currentTypeId = SelectedRoomType?.Id;
+                RoomTypeOptions.Clear();
+                RoomTypeOptions.Add(new RoomTypeOption(null, "Tất cả loại phòng"));
+                foreach (var t in types) RoomTypeOptions.Add(new RoomTypeOption(t.Id, t.TypeName));
+                SelectedRoomType = RoomTypeOptions.FirstOrDefault(t => t.Id == currentTypeId) ?? RoomTypeOptions[0];
+
                 RefreshChipCounts();
                 OnPropertyChanged(nameof(TotalText));
                 OnPropertyChanged(nameof(IsEmpty));
@@ -221,11 +362,25 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
             {
                 return false;
             }
-            // Chip trang thai va o tim kiem cong don voi nhau
+            // Chip trang thai
             if (_selectedChip.Status != null && row.Room.Status != _selectedChip.Status)
             {
                 return false;
             }
+
+            // Lọc theo Tầng
+            if (SelectedFloor != "Tất cả tầng" && $"Tầng {row.Room.Floor}" != SelectedFloor)
+            {
+                return false;
+            }
+
+            // Lọc theo Loại phòng
+            if (SelectedRoomType?.Id != null && row.Room.RoomTypeId != SelectedRoomType.Id)
+            {
+                return false;
+            }
+
+            // Tìm kiếm theo từ khoá
             if (string.IsNullOrWhiteSpace(SearchText))
             {
                 return true;
