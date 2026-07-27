@@ -51,7 +51,30 @@ namespace FUHotelManagementWPF.ViewModels.AuditLogs
             var (cu, moi) => $"{cu}  →  {moi}",
         };
 
+        public string SummaryText
+        {
+            get
+            {
+                if (string.IsNullOrWhiteSpace(ChangeText) || ChangeText == "—")
+                    return $"{ActionText} · {TargetText}";
+                return $"{ActionText} · {ChangeText}";
+            }
+        }
+
         public string ResultText => Log.Succeeded ? "Thành công" : "Thất bại";
+        public bool IsSuccess => Log.Succeeded;
+
+        public string ActorName => Log.User?.FullName ?? "Hệ thống";
+        public string ActorRole => Log.User == null ? "Hệ thống" : RoleText(Log.User.Role?.RoleName);
+        public string ActorInitial => string.IsNullOrWhiteSpace(ActorName) ? "?" : ActorName.Trim()[..1].ToUpper();
+
+        public string ActionKind => Log.ActionCode switch
+        {
+            "user.create" or "user.unlock" or "approval.approve" => "Success",
+            "user.lock" or "approval.reject" => "Danger",
+            "user.reset_password" or "permission.update" => "Warning",
+            _ => "Info"
+        };
 
         private static string RoleText(string? roleName) => roleName switch
         {

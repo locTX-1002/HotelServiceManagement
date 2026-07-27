@@ -6,6 +6,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
@@ -14,7 +15,7 @@
         <DockPanel Grid.Row="0" Margin="0,0,0,16">
             <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" VerticalAlignment="Center">
                 <Button Content="Tải lại" Command="{Binding RefreshCommand}" Style="{StaticResource GhostButton}" Margin="0,0,8,0" />
-                <Button Content="Lưu phân quyền" Command="{Binding SaveCommand}" Style="{StaticResource PrimaryButton}" Padding="18,8" />
+                <Button Content="Lưu phân quyền" Command="{Binding SaveCommand}" Style="{StaticResource PrimaryButton}" Padding="20,8" />
             </StackPanel>
             <StackPanel>
                 <TextBlock Text="Phân quyền vai trò" Style="{StaticResource PageTitleText}" />
@@ -22,40 +23,129 @@
             </StackPanel>
         </DockPanel>
 
-        <!-- Thanh chon vai tro & thanh tim kiem -->
-        <Border Grid.Row="1" Style="{StaticResource Card}" Padding="14,12" Margin="0,0,0,14">
+        <!-- Thanh chon vai tro & Tim kiem -->
+        <Border Grid.Row="1" Style="{StaticResource Card}" Padding="16,12" Margin="0,0,0,10">
             <DockPanel>
                 <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" VerticalAlignment="Center">
-                    <hc:TextBox Width="240" hc:InfoElement.Placeholder="Tìm module, tên quyền..."
+                    <hc:TextBox Width="260" hc:InfoElement.Placeholder="Tìm kiếm quyền hạn..."
                                 Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
                                 hc:InfoElement.ShowClearButton="True" VerticalAlignment="Center" />
-                    <Button Content="Chọn tất cả" Command="{Binding SelectAllCommand}" Style="{StaticResource GhostButton}" Margin="10,0,4,0" Padding="10,6" />
-                    <Button Content="Bỏ chọn tất cả" Command="{Binding DeselectAllCommand}" Style="{StaticResource GhostButton}" Padding="10,6" />
+                    <Button Content="Cấp tất cả" Command="{Binding SelectAllCommand}" Style="{StaticResource GhostButton}" Margin="10,0,4,0" Padding="12,6" />
+                    <Button Content="Bỏ tất cả" Command="{Binding DeselectAllCommand}" Style="{StaticResource GhostButton}" Padding="12,6" />
                 </StackPanel>
 
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock Text="VAI TRÒ HỆ THỐNG:" Style="{StaticResource FieldLabel}" VerticalAlignment="Center" Margin="0,0,10,0" />
+                    <TextBlock Text="VAI TRÒ:" Style="{StaticResource FieldLabel}" VerticalAlignment="Center" Margin="0,0,10,0" />
                     <ComboBox ItemsSource="{Binding Roles}" SelectedItem="{Binding SelectedRole}"
-                              DisplayMemberPath="DisplayName" Width="220" VerticalAlignment="Center" />
-                    <TextBlock Text="{Binding GrantedCountText}" Style="{StaticResource CaptionText}"
-                               FontSize="12.5" FontWeight="SemiBold" VerticalAlignment="Center" Margin="16,0,0,0" />
+                              DisplayMemberPath="DisplayName" Width="200" VerticalAlignment="Center" />
+                    <Border Background="{StaticResource BrandSoftBrush}" CornerRadius="12" Padding="10,4" Margin="16,0,0,0" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding GrantedCountText}" Style="{StaticResource CaptionText}"
+                                   Foreground="{StaticResource BrandDarkBrush}" FontWeight="Bold" FontSize="12" />
+                    </Border>
                 </StackPanel>
             </DockPanel>
         </Border>
 
-        <!-- Bang danh sach quyen -->
-        <Border Grid.Row="2" Style="{StaticResource Card}" Padding="0">
+        <!-- Thanh Chip loc Module -->
+        <Border Grid.Row="2" Style="{StaticResource Card}" Padding="10,8" Margin="0,0,0,12">
+            <DockPanel>
+                <TextBlock Text="MODULE:" Style="{StaticResource FieldLabel}" VerticalAlignment="Center" Margin="4,0,10,0" DockPanel.Dock="Left" />
+                <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Focusable="False">
+                    <ItemsControl ItemsSource="{Binding ModuleFilters}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Button Content="{Binding Label}" Command="{Binding DataContext.FilterModuleCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                        CommandParameter="{Binding}" Margin="0,0,5,0" Padding="8,4" FontSize="11.5">
+                                    <Button.Style>
+                                        <Style TargetType="Button" BasedOn="{StaticResource QuickChip}">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                    <Setter Property="FontWeight" Value="Bold" />
+                                                    <Setter Property="Foreground" Value="{StaticResource BrandDarkBrush}" />
+                                                    <Setter Property="Background" Value="{StaticResource BrandSoftBrush}" />
+                                                    <Setter Property="BorderBrush" Value="{StaticResource BrandBrush}" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </DockPanel>
+        </Border>
+
+        <!-- Danh sach quyen -->
+        <Border Grid.Row="3" Style="{StaticResource Card}" Padding="0">
             <Grid>
                 <DataGrid ItemsSource="{Binding FilteredPermissions}" AutoGenerateColumns="False"
                           CanUserAddRows="False" HeadersVisibility="Column"
-                          GridLinesVisibility="Horizontal" BorderThickness="0"
-                          CanUserSortColumns="True">
+                          GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="{StaticResource LineBrush}"
+                          BorderThickness="0" RowHeight="48" CanUserSortColumns="True">
                     <DataGrid.Columns>
-                        <DataGridCheckBoxColumn Header="CẤP QUYỀN" Binding="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                Width="110" />
-                        <DataGridTextColumn Header="MODULE" Binding="{Binding Module}" Width="160" IsReadOnly="True" />
-                        <DataGridTextColumn Header="TÊN QUYỀN HẠN" Binding="{Binding DisplayName}" Width="280" IsReadOnly="True" />
-                        <DataGridTextColumn Header="MÃ QUYỀN (CODE)" Binding="{Binding Code}" Width="*" IsReadOnly="True" />
+                        <!-- MODULE -->
+                        <DataGridTemplateColumn Header="MODULE" Width="170">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border Background="{StaticResource SurfaceAltBrush}" CornerRadius="6" Padding="10,4" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="12,0,0,0">
+                                        <TextBlock Text="{Binding Module}" FontWeight="Bold" FontSize="12" Foreground="{StaticResource InkBrush}" />
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <!-- TÊN QUYỀN HẠN -->
+                        <DataGridTemplateColumn Header="TÊN QUYỀN HẠN &amp; MÃ HỆ THỐNG" Width="*">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel VerticalAlignment="Center" Margin="8,0">
+                                        <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" FontSize="13" Foreground="{StaticResource InkBrush}" />
+                                        <TextBlock Text="{Binding Code}" Style="{StaticResource CaptionText}" FontSize="11" Foreground="{StaticResource InkSoftBrush}" Margin="0,2,0,0" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <!-- TRẠNG THÁI -->
+                        <DataGridTemplateColumn Header="TRẠNG THÁI CẤP QUYỀN" Width="180">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                              VerticalAlignment="Center" Margin="12,0,0,0">
+                                        <CheckBox.Style>
+                                            <Style TargetType="CheckBox">
+                                                <Setter Property="Template">
+                                                    <Setter.Value>
+                                                        <ControlTemplate TargetType="CheckBox">
+                                                            <Border x:Name="bd" CornerRadius="12" Padding="12,4" Background="{StaticResource SurfaceAltBrush}" Cursor="Hand">
+                                                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                                    <Ellipse x:Name="dot" Width="8" Height="8" Fill="{StaticResource InkSoftBrush}" Margin="0,0,8,0" />
+                                                                    <TextBlock x:Name="txt" Text="Bị cấm" FontWeight="SemiBold" FontSize="12" Foreground="{StaticResource InkSoftBrush}" />
+                                                                </StackPanel>
+                                                            </Border>
+                                                            <ControlTemplate.Triggers>
+                                                                <Trigger Property="IsChecked" Value="True">
+                                                                    <Setter TargetName="bd" Property="Background" Value="{StaticResource SuccessSoftBrush}" />
+                                                                    <Setter TargetName="dot" Property="Fill" Value="{StaticResource SuccessBrush}" />
+                                                                    <Setter TargetName="txt" Property="Text" Value="Cho phép" />
+                                                                    <Setter TargetName="txt" Property="Foreground" Value="{StaticResource SuccessBrush}" />
+                                                                </Trigger>
+                                                            </ControlTemplate.Triggers>
+                                                        </ControlTemplate>
+                                                    </Setter.Value>
+                                                </Setter>
+                                            </Style>
+                                        </CheckBox.Style>
+                                    </CheckBox>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
                     </DataGrid.Columns>
                 </DataGrid>
 
@@ -65,11 +155,11 @@
         </Border>
 
         <!-- Footer -->
-        <DockPanel Grid.Row="3" Margin="0,12,0,0">
-            <TextBlock Text="* Quyền hạn mới sẽ được áp dụng khi người dùng thuộc vai trò tương ứng đăng nhập lại."
+        <DockPanel Grid.Row="4" Margin="0,14,0,0">
+            <TextBlock Text="💡 Quyền hạn mới sẽ có hiệu lực sau khi tài khoản thuộc vai trò này đăng nhập lại."
                        Style="{StaticResource CaptionText}" FontSize="12" VerticalAlignment="Center" />
             <Button Content="Lưu phân quyền" Command="{Binding SaveCommand}" Style="{StaticResource PrimaryButton}"
-                    HorizontalAlignment="Right" Padding="20,8" />
+                    HorizontalAlignment="Right" Padding="24,9" />
         </DockPanel>
     </Grid>
 </UserControl>
