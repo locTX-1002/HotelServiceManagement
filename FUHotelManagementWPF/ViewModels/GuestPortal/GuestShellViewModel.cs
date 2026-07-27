@@ -59,6 +59,7 @@ public class GuestShellViewModel : ViewModelBase
         Menu =
         [
             new("", "Đặt phòng của tôi", () => new MyReservationsViewModel()),
+            new("", "Dịch vụ phòng", () => new MyServicesViewModel()),
             new("", "Hoá đơn của tôi", () => new MyInvoicesViewModel()),
             new("", "Hồ sơ của tôi", () => new MyProfileViewModel()),
         ];

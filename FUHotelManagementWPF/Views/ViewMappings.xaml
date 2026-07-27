@@ -102,6 +102,10 @@
         <viewsGuestPortal:MyReservationsView />
     </DataTemplate>
 
+    <DataTemplate DataType="{x:Type vmGuestPortal:MyServicesViewModel}">
+        <viewsGuestPortal:MyServicesView />
+    </DataTemplate>
+
     <DataTemplate DataType="{x:Type vmGuestPortal:MyInvoicesViewModel}">
         <viewsGuestPortal:MyInvoicesView />
     </DataTemplate>
