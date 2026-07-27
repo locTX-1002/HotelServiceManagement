@@ -74,9 +74,6 @@ namespace DataAccessObjects
                 admin.RoleId = adminRole.Id;
                 admin.IsActive = true;
             }
-            var demoEmails = new[] { "manager@hotel.com", "receptionist@hotel.com", "service@hotel.com" };
-            var demoUsers = await c.Users.Where(u => demoEmails.Contains(u.Email)).ToListAsync();
-            foreach (var demoUser in demoUsers) demoUser.IsActive = false;
             await c.SaveChangesAsync();
         }
     }

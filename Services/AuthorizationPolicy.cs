@@ -40,6 +40,7 @@ public static class AuthorizationPolicy
     public static bool CanApprovePaymentVoid => HasPermission(PermissionCodes.PaymentVoidApprove);
     public static bool CanRequestInvoiceCancel => HasPermission(PermissionCodes.InvoiceCancelRequest);
     public static bool CanApproveInvoiceCancel => HasPermission(PermissionCodes.InvoiceCancelApprove);
+    public static bool CanApproveReservationCancel => HasPermission(PermissionCodes.ReservationCancelApprove);
     public static bool CanViewReports => HasPermission(PermissionCodes.ReportView);
     public static bool CanExportReports => HasPermission(PermissionCodes.ReportExport);
 

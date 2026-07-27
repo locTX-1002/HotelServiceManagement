@@ -126,6 +126,43 @@
                 </Grid>
             </Border>
 
+            <!-- ======= KHU QUẢN LÝ VẬN HÀNH (Manager Dashboard) ======= -->
+            <Border Style="{StaticResource Card}" Margin="40,-30,40,0" Padding="20,18"
+                    Effect="{StaticResource SoftShadowLarge}"
+                    Visibility="{Binding IsManager, Converter={StaticResource BoolToVis}}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Margin="0,0,32,0">
+                        <TextBlock Text="CÔNG SUẤT PHÒNG HÔM NAY" Style="{StaticResource FieldLabel}" />
+                        <TextBlock Text="{Binding OccupancyRateText}" Style="{StaticResource PageTitleText}" Foreground="{StaticResource BrandBrush}" Margin="0,2,0,0" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" Margin="0,0,32,0">
+                        <TextBlock Text="YÊU CẦU CHỜ PHÊ DUYỆT" Style="{StaticResource FieldLabel}" />
+                        <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                            <TextBlock Text="{Binding PendingApprovalsCount}" Style="{StaticResource PageTitleText}" Foreground="{StaticResource WarningBrush}" />
+                            <TextBlock Text="yêu cầu" Style="{StaticResource CaptionText}" VerticalAlignment="Bottom" Margin="6,0,0,4" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                        <TextBlock Text="VẬN HÀNH &amp; BÁO CÁO" Style="{StaticResource FieldLabel}" />
+                        <TextBlock Text="Giám sát doanh thu, duyệt yêu cầu hủy/giảm giá và xuất báo cáo hệ thống." Style="{StaticResource BodyText}" TextWrapping="Wrap" Margin="0,4,0,0" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Content="Xem Báo cáo" Command="{Binding OpenReportsCommand}" Style="{StaticResource GhostButton}" />
+                        <Button Content="Xử lý Phê duyệt" Command="{Binding OpenApprovalsCommand}" Style="{StaticResource PrimaryButton}" Margin="10,0,0,0" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
             <!-- Vai thao tac quan tri gan nhat - doc luot la biet co ai vua doi gi khong -->
             <Border Margin="40,14,40,0" Padding="20,16">
                 <Border.Style>

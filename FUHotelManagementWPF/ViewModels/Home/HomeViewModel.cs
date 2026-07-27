@@ -324,6 +324,31 @@ namespace FUHotelManagementWPF.ViewModels.Home
         public RelayCommand OpenUsersCommand { get; }
         public RelayCommand OpenAuditLogCommand { get; }
 
+        // ---- Khu dành cho vai trò Quản lý (Manager Dashboard) ----
+        public bool IsManager => !IsSystemAdmin
+                                 && (AuthorizationPolicy.CanViewReports
+                                     || AuthorizationPolicy.CanApprovePaymentVoid
+                                     || AuthorizationPolicy.CanApproveInvoiceCancel
+                                     || AuthorizationPolicy.CanApproveReservationCancel);
+
+        private int _pendingApprovalsCount;
+        public int PendingApprovalsCount
+        {
+            get => _pendingApprovalsCount;
+            private set
+            {
+                if (SetProperty(ref _pendingApprovalsCount, value))
+                    OnPropertyChanged(nameof(HasPendingApprovals));
+            }
+        }
+
+        public bool HasPendingApprovals => _pendingApprovalsCount > 0;
+
+        public string OccupancyRateText => RoomCount > 0 ? $"{(StayingRooms * 100.0 / RoomCount):F0}%" : "0%";
+
+        public RelayCommand OpenReportsCommand { get; }
+        public RelayCommand OpenApprovalsCommand { get; }
+
         public HomeViewModel()
         {
             PrevHeroCommand = new RelayCommand(_ => MoveHero(-1));
@@ -338,6 +363,11 @@ namespace FUHotelManagementWPF.ViewModels.Home
                 _ => NavigationService.NavigateTo("Người dùng"), _ => AuthorizationPolicy.CanManageUsers);
             OpenAuditLogCommand = new RelayCommand(
                 _ => NavigationService.NavigateTo("Nhật ký hệ thống"), _ => AuthorizationPolicy.CanViewAuditLog);
+            OpenReportsCommand = new RelayCommand(
+                _ => NavigationService.NavigateTo("Báo cáo"), _ => AuthorizationPolicy.CanViewReports);
+            OpenApprovalsCommand = new RelayCommand(
+                _ => NavigationService.NavigateTo("Phê duyệt"),
+                _ => AuthorizationPolicy.CanApprovePaymentVoid || AuthorizationPolicy.CanApproveInvoiceCancel || AuthorizationPolicy.CanApproveReservationCancel);
             RefreshCommand = new AsyncRelayCommand(_ => LoadAsync());
             _ = LoadAsync();
         }
@@ -361,6 +391,8 @@ namespace FUHotelManagementWPF.ViewModels.Home
                 OverdueTasks = arrivals.Count(r => r.CheckInDate.Date < DateTime.Today)
                                + stays.Count(s => s.Reservation.CheckOutDate.Date < DateTime.Today);
 
+                OnPropertyChanged(nameof(OccupancyRateText));
+
                 // Hang dat tien nhat lam o lon, phan con lai xep vao 3 o phu
                 var ordered = types.OrderByDescending(t => t.BasePrice).ToList();
                 _cheapestPrice = ordered.Count > 0 ? ordered.Min(t => t.BasePrice) : 0;
@@ -375,6 +407,10 @@ namespace FUHotelManagementWPF.ViewModels.Home
                 {
                     await LoadAdminSummaryAsync();
                 }
+                if (IsManager)
+                {
+                    await LoadManagerSummaryAsync();
+                }
             }
             catch (Exception)
             {
@@ -383,6 +419,22 @@ namespace FUHotelManagementWPF.ViewModels.Home
             finally
             {
                 IsLoading = false;
+            }
+        }
+
+        private async Task LoadManagerSummaryAsync()
+        {
+            try
+            {
+                var pendingResult = await new ApprovalService().GetPendingAsync();
+                if (pendingResult.Ok && pendingResult.Data != null)
+                {
+                    PendingApprovalsCount = pendingResult.Data.Count;
+                }
+            }
+            catch (Exception)
+            {
+                Notify.Error("Không tải được số liệu phê duyệt quản lý.");
             }
         }
 

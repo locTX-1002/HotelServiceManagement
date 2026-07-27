@@ -195,6 +195,8 @@ public sealed class ReservationService : IReservationService
 
     public async Task<ServiceResult<Reservation>> NoShowAsync(int id)
     {
+        if (!AuthorizationPolicy.CanOperateFrontDesk)
+            return ServiceResult<Reservation>.Failure("Bạn không có quyền chuyển trạng thái Không đến.");
         var reservation = await _reservations.GetByIdAsync(id);
         if (reservation == null) return ServiceResult<Reservation>.Failure("Không tìm thấy đặt phòng.");
         // Nhan ca don CHO xac nhan: don rac thi le tan phai xac nhan mot cai vo nghia roi

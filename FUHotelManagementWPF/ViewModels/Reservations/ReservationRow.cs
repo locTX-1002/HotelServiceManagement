@@ -1,3 +1,4 @@
+using BusinessObjects;
 using BusinessObjects.Entities;
 using BusinessObjects.Enums;
 using FUHotelManagementWPF.ViewModels.Rooms;
@@ -38,10 +39,10 @@ namespace FUHotelManagementWPF.ViewModels.Reservations
         public bool HasSpecialRequests => !string.IsNullOrWhiteSpace(Reservation.SpecialRequests);
 
         public ReservationStatus Status => Reservation.Status;
-        public bool CanConfirm => Reservation.Status == ReservationStatus.Pending;
-        public bool CanEdit => Reservation.Status is ReservationStatus.Pending or ReservationStatus.Confirmed;
-        public bool CanCancel => CanEdit;
-        public bool CanNoShow => Reservation.Status == ReservationStatus.Confirmed;
+        public bool CanConfirm => AuthorizationPolicy.CanOperateFrontDesk && Reservation.Status == ReservationStatus.Pending;
+        public bool CanEdit => AuthorizationPolicy.CanOperateFrontDesk && Reservation.Status is ReservationStatus.Pending or ReservationStatus.Confirmed;
+        public bool CanCancel => (AuthorizationPolicy.CanOperateFrontDesk || AuthorizationPolicy.HasPermission(PermissionCodes.ReservationCancelApprove)) && CanEdit;
+        public bool CanNoShow => AuthorizationPolicy.CanOperateFrontDesk && (Reservation.Status is ReservationStatus.Confirmed or ReservationStatus.Pending);
 
         public ReservationRow(Reservation reservation)
         {
