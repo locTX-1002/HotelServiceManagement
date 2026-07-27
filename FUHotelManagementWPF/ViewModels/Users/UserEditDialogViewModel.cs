@@ -80,9 +80,19 @@ namespace FUHotelManagementWPF.ViewModels.Users
             set => SetProperty(ref _isBusy, value);
         }
 
+        private bool _isPasswordVisible;
+        public bool IsPasswordVisible
+        {
+            get => _isPasswordVisible;
+            set => SetProperty(ref _isPasswordVisible, value);
+        }
+
+        public RelayCommand TogglePasswordCommand { get; }
+
         public UserEditDialogViewModel(User? existing)
         {
             _existing = existing;
+            TogglePasswordCommand = new RelayCommand(_ => IsPasswordVisible = !IsPasswordVisible);
 
             if (existing != null)
             {
@@ -104,6 +114,10 @@ namespace FUHotelManagementWPF.ViewModels.Users
             }
 
             RoleOptions.Clear();
+            if (_existing?.Role?.RoleName == RoleNames.Admin)
+            {
+                RoleOptions.Add(new RoleOption(_existing.RoleId, "Quản trị viên (Admin)"));
+            }
             foreach (var role in result.Data)
             {
                 RoleOptions.Add(new RoleOption(role.Id, Describe(role.RoleName)));

@@ -11,9 +11,83 @@ public partial class App : Application
 {
     protected override void OnStartup(StartupEventArgs e)
     {
+        DispatcherUnhandledException += App_DispatcherUnhandledException;
+        AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
+        System.Threading.Tasks.TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
+
         ForceVietnamese();
         base.OnStartup(e);
         _ = StartupAsync();
+    }
+
+    private static bool _isDisplayingExceptionDialog;
+    private static string _lastExceptionMessage = string.Empty;
+    private static DateTime _lastExceptionTime = DateTime.MinValue;
+
+    private void App_DispatcherUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
+    {
+        var fullDetail = e.Exception.ToString();
+        System.Diagnostics.Debug.WriteLine($"[Unhandled UI Exception] {fullDetail}");
+        WriteCrashLog(fullDetail);
+
+        e.Handled = true;
+
+        var now = DateTime.Now;
+        if (_isDisplayingExceptionDialog || (e.Exception.Message == _lastExceptionMessage && (now - _lastExceptionTime).TotalSeconds < 3))
+        {
+            return;
+        }
+
+        _lastExceptionMessage = e.Exception.Message;
+        _lastExceptionTime = now;
+        _isDisplayingExceptionDialog = true;
+        try
+        {
+            var innerMsg = e.Exception.InnerException?.Message;
+            var displayMsg = string.IsNullOrEmpty(innerMsg) ? e.Exception.Message : $"{e.Exception.Message}\n({innerMsg})";
+            MessageBox.Show(
+                $"Đã xảy ra lỗi hệ thống không mong muốn:\n\n{displayMsg}\n\nỨng dụng sẽ tiếp tục chạy.",
+                "Lỗi ứng dụng",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+        }
+        finally
+        {
+            _isDisplayingExceptionDialog = false;
+        }
+    }
+
+    /// <summary>
+    /// Ghi loi ra file loi.log NAM CANH FILE CHAY. Khong dung duong dan tuyet doi cua
+    /// mot may nao ca - moi nguoi trong nhom chay tren o dia khac nhau.
+    /// Ghi log ma hong thi bo qua: dang xu ly su co roi, khong duoc de no de ra su co moi.
+    /// </summary>
+    private static void WriteCrashLog(string detail)
+    {
+        try
+        {
+            var path = System.IO.Path.Combine(AppContext.BaseDirectory, "loi.log");
+            System.IO.File.AppendAllText(path, $"[{DateTime.Now:dd/MM/yyyy HH:mm:ss}] {detail}\n\n----------\n\n");
+        }
+        catch (Exception)
+        {
+            // Het cho ghi / khong co quyen ghi - chiu, van de app chay tiep.
+        }
+    }
+
+    private void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
+    {
+        if (e.ExceptionObject is Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[Unhandled Domain Exception] {ex}");
+            WriteCrashLog(ex.ToString());
+        }
+    }
+
+    private void TaskScheduler_UnobservedTaskException(object? sender, System.Threading.Tasks.UnobservedTaskExceptionEventArgs e)
+    {
+        System.Diagnostics.Debug.WriteLine($"[Unobserved Task Exception] {e.Exception}");
+        e.SetObserved();
     }
 
     /// <summary>

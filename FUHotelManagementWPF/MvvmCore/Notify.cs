@@ -40,12 +40,32 @@ namespace FUHotelManagementWPF.MvvmCore
                 return;
             }
 
-            show(new GrowlInfo
+            void ExecuteShow()
             {
-                Message = message,
-                WaitTime = waitSeconds,
-                ShowDateTime = true,
-            });
+                try
+                {
+                    show(new GrowlInfo
+                    {
+                        Message = message,
+                        WaitTime = waitSeconds,
+                        ShowDateTime = true,
+                    });
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[Notify Error] {ex.Message}");
+                }
+            }
+
+            var app = System.Windows.Application.Current;
+            if (app?.Dispatcher != null && !app.Dispatcher.CheckAccess())
+            {
+                app.Dispatcher.BeginInvoke((Action)ExecuteShow);
+            }
+            else
+            {
+                ExecuteShow();
+            }
         }
 
         public static void Success(string message) => Show(message, Growl.Success, 3);

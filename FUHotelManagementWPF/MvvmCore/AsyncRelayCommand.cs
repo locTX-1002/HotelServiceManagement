@@ -24,8 +24,6 @@ namespace FUHotelManagementWPF.MvvmCore
         public bool CanExecute(object? parameter)
             => !_isExecuting && (_canExecute == null || _canExecute(parameter));
 
-        // async void la dang chuan cho ICommand.Execute; ham async cua ViewModel
-        // phai tu try/catch loi cua chinh no (xem LoginViewModel lam mau).
         public async void Execute(object? parameter)
         {
             _isExecuting = true;
@@ -33,6 +31,11 @@ namespace FUHotelManagementWPF.MvvmCore
             try
             {
                 await _execute(parameter);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[AsyncRelayCommand Exception] {ex}");
+                Notify.Error($"Lỗi: {ex.Message}");
             }
             finally
             {

@@ -42,10 +42,100 @@
                      "Dat lai mat khau" ben ngoai cho ro rang. -->
                 <StackPanel Visibility="{Binding IsCreate, Converter={StaticResource BoolToVis}}">
                     <TextBlock Text="MẬT KHẨU" Style="{StaticResource FieldLabel}" Margin="0,13,0,5" />
-                    <PasswordBox x:Name="PasswordInput" Style="{StaticResource InputPasswordBox}" />
+                    <Grid Margin="0,0,0,12">
+                        <PasswordBox x:Name="PasswordInput" Padding="12,9,42,9"
+                                     PasswordChanged="PasswordInput_PasswordChanged">
+                            <PasswordBox.Style>
+                                <Style TargetType="PasswordBox" BasedOn="{StaticResource InputPasswordBox}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsPasswordVisible}" Value="True">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </PasswordBox.Style>
+                        </PasswordBox>
 
-                    <TextBlock Text="XÁC NHẬN MẬT KHẨU" Style="{StaticResource FieldLabel}" Margin="0,13,0,5" />
-                    <PasswordBox x:Name="ConfirmInput" Style="{StaticResource InputPasswordBox}" />
+                        <TextBox x:Name="PlainPasswordInput" Style="{StaticResource InputBox}" Padding="12,9,42,9"
+                                 TextChanged="PlainPasswordInput_TextChanged"
+                                 Visibility="{Binding IsPasswordVisible, Converter={StaticResource BoolToVis}}" />
+
+                        <Button HorizontalAlignment="Right" VerticalAlignment="Center"
+                                Width="34" Height="32" Margin="0,0,4,0"
+                                Cursor="Hand" Focusable="False"
+                                Command="{Binding TogglePasswordCommand}"
+                                ToolTip="Hiện / ẩn mật khẩu">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border Background="Transparent">
+                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Border>
+                                </ControlTemplate>
+                            </Button.Template>
+                            <TextBlock Foreground="{StaticResource InkSoftBrush}">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock" BasedOn="{StaticResource IconText}">
+                                        <Setter Property="FontSize" Value="15" />
+                                        <Setter Property="Text" Value="&#xE7B3;" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsPasswordVisible}" Value="True">
+                                                <Setter Property="Text" Value="&#xED1A;" />
+                                                <Setter Property="Foreground" Value="{StaticResource BrandBrush}" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </Button>
+                    </Grid>
+
+                    <TextBlock Text="XÁC NHẬN MẬT KHẨU" Style="{StaticResource FieldLabel}" Margin="0,0,0,5" />
+                    <Grid>
+                        <PasswordBox x:Name="ConfirmInput" Padding="12,9,42,9"
+                                     PasswordChanged="ConfirmInput_PasswordChanged">
+                            <PasswordBox.Style>
+                                <Style TargetType="PasswordBox" BasedOn="{StaticResource InputPasswordBox}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsPasswordVisible}" Value="True">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </PasswordBox.Style>
+                        </PasswordBox>
+
+                        <TextBox x:Name="PlainConfirmInput" Style="{StaticResource InputBox}" Padding="12,9,42,9"
+                                 TextChanged="PlainConfirmInput_TextChanged"
+                                 Visibility="{Binding IsPasswordVisible, Converter={StaticResource BoolToVis}}" />
+
+                        <Button HorizontalAlignment="Right" VerticalAlignment="Center"
+                                Width="34" Height="32" Margin="0,0,4,0"
+                                Cursor="Hand" Focusable="False"
+                                Command="{Binding TogglePasswordCommand}"
+                                ToolTip="Hiện / ẩn mật khẩu">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border Background="Transparent">
+                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Border>
+                                </ControlTemplate>
+                            </Button.Template>
+                            <TextBlock Foreground="{StaticResource InkSoftBrush}">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock" BasedOn="{StaticResource IconText}">
+                                        <Setter Property="FontSize" Value="15" />
+                                        <Setter Property="Text" Value="&#xE7B3;" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsPasswordVisible}" Value="True">
+                                                <Setter Property="Text" Value="&#xED1A;" />
+                                                <Setter Property="Foreground" Value="{StaticResource BrandBrush}" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </Button>
+                    </Grid>
 
                     <TextBlock Text="{Binding PasswordHint}" Style="{StaticResource CaptionText}"
                                FontSize="11.5" TextWrapping="Wrap" Margin="0,6,0,0" />

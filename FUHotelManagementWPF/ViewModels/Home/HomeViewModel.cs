@@ -1,10 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
+using BusinessObjects;
 using BusinessObjects.Entities;
 using BusinessObjects.Enums;
 using FUHotelManagementWPF.MvvmCore;
+using FUHotelManagementWPF.ViewModels.AuditLogs;
 using FUHotelManagementWPF.ViewModels.Reservations;
 using FUHotelManagementWPF.ViewModels.Rooms;
 using FUHotelManagementWPF.Views.Dialogs;
@@ -153,20 +156,27 @@ namespace FUHotelManagementWPF.ViewModels.Home
 
         private async void OpenBookDialog(RoomType? preferredType)
         {
-            var viewModel = new CreateReservationDialogViewModel(null)
+            try
             {
-                CheckIn = CheckIn,
-                CheckOut = CheckOut > CheckIn ? CheckOut : CheckIn.AddDays(1),
-                NumberOfGuests = preferredType != null ? Math.Min(Guests, preferredType.Capacity) : Guests,
-            };
-            var dialog = new CreateReservationDialog(viewModel)
+                var viewModel = new CreateReservationDialogViewModel(null)
+                {
+                    CheckIn = CheckIn,
+                    CheckOut = CheckOut > CheckIn ? CheckOut : CheckIn.AddDays(1),
+                    NumberOfGuests = preferredType != null ? Math.Min(Guests, preferredType.Capacity) : Guests,
+                };
+                var dialog = new CreateReservationDialog(viewModel)
+                {
+                    Owner = RoomMapViewModel.ActiveWindow(),
+                };
+                if (dialog.ShowDialog() == true)
+                {
+                    // Dialog da bao thanh cong roi - bao them o day thi hien 2 toast chong nhau.
+                    await LoadAsync();
+                }
+            }
+            catch (Exception ex)
             {
-                Owner = RoomMapViewModel.ActiveWindow(),
-            };
-            if (dialog.ShowDialog() == true)
-            {
-                // Dialog da bao thanh cong roi - bao them o day thi hien 2 toast chong nhau.
-                await LoadAsync();
+                Notify.Error($"Lỗi: {ex.Message}");
             }
         }
 
@@ -274,14 +284,60 @@ namespace FUHotelManagementWPF.ViewModels.Home
             private set => SetProperty(ref _isLoading, value);
         }
 
+        public bool CanOperateFrontDesk => AuthorizationPolicy.CanOperateFrontDesk;
+
+        // ---- Khu danh cho tai khoan quan tri he thong ----
+
+        /// <summary>
+        /// Nguoi quan tri he thong khong lam nghiep vu khach san, nen cac the "phong trong",
+        /// "khach den hom nay" voi ho la so lieu vo nghia. Doi sang khu so lieu tai khoan.
+        /// </summary>
+        public bool IsSystemAdmin => !CanOperateFrontDesk
+                                     && (AuthorizationPolicy.CanManageUsers || AuthorizationPolicy.CanViewAuditLog);
+
+        private int _activeUserCount;
+        public int ActiveUserCount
+        {
+            get => _activeUserCount;
+            private set => SetProperty(ref _activeUserCount, value);
+        }
+
+        private int _lockedUserCount;
+        public int LockedUserCount
+        {
+            get => _lockedUserCount;
+            private set => SetProperty(ref _lockedUserCount, value);
+        }
+
+        private string _roleSummaryText = string.Empty;
+        public string RoleSummaryText
+        {
+            get => _roleSummaryText;
+            private set => SetProperty(ref _roleSummaryText, value);
+        }
+
+        /// <summary>Vai dong nhat ky gan nhat - de mo app la thay ngay co ai vua dong gi khong.</summary>
+        public ObservableCollection<AuditLogRow> RecentLogs { get; } = [];
+
+        public bool HasRecentLogs => RecentLogs.Count > 0;
+
+        public RelayCommand OpenUsersCommand { get; }
+        public RelayCommand OpenAuditLogCommand { get; }
+
         public HomeViewModel()
         {
             PrevHeroCommand = new RelayCommand(_ => MoveHero(-1));
             NextHeroCommand = new RelayCommand(_ => MoveHero(1));
-            SearchCommand = new AsyncRelayCommand(SearchAsync);
-            BookCommand = new RelayCommand(p => OpenBookDialog(p as RoomType));
-            OpenRoomTypesCommand = new RelayCommand(_ => NavigationService.NavigateTo("Sơ đồ phòng"));
-            OpenCheckInOutCommand = new RelayCommand(_ => NavigationService.NavigateTo("Nhận / Trả phòng"));
+            SearchCommand = new AsyncRelayCommand(SearchAsync, _ => CanOperateFrontDesk);
+            BookCommand = new RelayCommand(p => OpenBookDialog(p as RoomType), _ => CanOperateFrontDesk);
+            OpenRoomTypesCommand = new RelayCommand(
+                _ => NavigationService.NavigateTo("Sơ đồ phòng"),
+                _ => AuthorizationPolicy.CanViewRooms);
+            OpenCheckInOutCommand = new RelayCommand(_ => NavigationService.NavigateTo("Nhận / Trả phòng"), _ => CanOperateFrontDesk);
+            OpenUsersCommand = new RelayCommand(
+                _ => NavigationService.NavigateTo("Người dùng"), _ => AuthorizationPolicy.CanManageUsers);
+            OpenAuditLogCommand = new RelayCommand(
+                _ => NavigationService.NavigateTo("Nhật ký hệ thống"), _ => AuthorizationPolicy.CanViewAuditLog);
             RefreshCommand = new AsyncRelayCommand(_ => LoadAsync());
             _ = LoadAsync();
         }
@@ -314,6 +370,11 @@ namespace FUHotelManagementWPF.ViewModels.Home
                 SecondTile = Tile(ordered, 1);
                 ThirdTile = Tile(ordered, 2);
                 WideTile = Tile(ordered, 3);
+
+                if (IsSystemAdmin)
+                {
+                    await LoadAdminSummaryAsync();
+                }
             }
             catch (Exception)
             {
@@ -324,6 +385,52 @@ namespace FUHotelManagementWPF.ViewModels.Home
                 IsLoading = false;
             }
         }
+
+        /// <summary>
+        /// Do so lieu tai khoan + vai dong nhat ky moi nhat. Loi o day chi lam trong khu quan tri,
+        /// khong duoc keo do ca trang chu - nen bat rieng thay vi de LoadAsync bat chung.
+        /// </summary>
+        private async Task LoadAdminSummaryAsync()
+        {
+            try
+            {
+                var users = await new UserManagementService().GetAllAsync();
+                if (users.Ok && users.Data != null)
+                {
+                    ActiveUserCount = users.Data.Count(u => u.IsActive);
+                    LockedUserCount = users.Data.Count(u => !u.IsActive);
+                    RoleSummaryText = string.Join("  ·  ", users.Data
+                        .GroupBy(u => u.Role?.RoleName)
+                        .OrderBy(g => g.Key)
+                        .Select(g => $"{RoleLabel(g.Key)}: {g.Count()}"));
+                }
+
+                RecentLogs.Clear();
+                var logs = await new AuditLogService()
+                    .SearchAsync(DateTime.Today.AddDays(-29), DateTime.Today, null, null);
+                if (logs.Ok && logs.Data != null)
+                {
+                    foreach (var log in logs.Data.Take(5))
+                    {
+                        RecentLogs.Add(new AuditLogRow(log));
+                    }
+                }
+                OnPropertyChanged(nameof(HasRecentLogs));
+            }
+            catch (Exception)
+            {
+                Notify.Error("Không tải được số liệu quản trị.");
+            }
+        }
+
+        private static string RoleLabel(string? roleName) => roleName switch
+        {
+            RoleNames.Admin => "Quản trị viên",
+            RoleNames.Manager => "Quản lý",
+            RoleNames.Receptionist => "Lễ tân",
+            RoleNames.ServiceStaff => "Nhân viên dịch vụ",
+            _ => "Khác",
+        };
 
         private static RoomTypeTile? Tile(List<RoomType> types, int index)
             => index < types.Count ? new RoomTypeTile(types[index]) : null;
