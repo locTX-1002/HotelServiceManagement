@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.ObjectModel;
+using System.Windows;
 using System.Windows.Data;
 using BusinessObjects.Entities;
 using FUHotelManagementWPF.MvvmCore;
@@ -156,6 +157,18 @@ public sealed class PermissionsViewModel : ViewModelBase
     private async Task SaveAsync()
     {
         if (SelectedRole == null) return;
+
+        // Doi quyen anh huong toi TAT CA nguoi mang vai tro do, va chi thay hau qua sau khi
+        // ho dang nhap lai - nen hoi truoc, giong quy uoc hoi truoc khi xoa.
+        var granted = Permissions.Count(x => x.IsSelected);
+        var question = $"Lưu {granted}/{Permissions.Count} quyền cho vai trò \"{SelectedRole.DisplayName}\"?\n\n"
+                     + "Mọi tài khoản thuộc vai trò này sẽ áp dụng quyền mới sau khi đăng nhập lại.";
+        if (MessageBox.Show(question, "Lưu phân quyền", MessageBoxButton.YesNo, MessageBoxImage.Question)
+            != MessageBoxResult.Yes)
+        {
+            return;
+        }
+
         IsBusy = true;
         try
         {

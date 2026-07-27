@@ -84,6 +84,83 @@ public class DynamicAuthorizationTests
         Assert.False(repository.Saved);
     }
 
+    /// <summary>
+    /// Man cau hinh quyen la man duy nhat sua duoc bang chinh quyen permission.manage.
+    /// Go quyen do khoi vai tro cuoi cung giu no la khong ai mo lai duoc, phai vao SQL go tay.
+    /// </summary>
+    [Fact]
+    public async Task GoQuyenCauHinhKhoiVaiTroCuoiCung_BiChan()
+    {
+        TestUsers.SignInWithPermissions(PermissionCodes.PermissionManage);
+        var config = new Permission { Id = 1, PermissionCode = PermissionCodes.PermissionManage, IsActive = true };
+        var view = new Permission { Id = 2, PermissionCode = PermissionCodes.UserView, IsActive = true };
+        var admin = new Role
+        {
+            Id = 1, RoleName = RoleNames.Admin, DisplayName = "Quản trị viên",
+            IsSystemRole = true, IsActive = true,
+            RolePermissions = [new RolePermission { Permission = config, IsAllowed = true }]
+        };
+        var repository = new FakeAuthorizationRepository([config, view], [admin]);
+
+        // Chi giu lai user.view, bo permission.manage
+        var result = await new PermissionManagementService(repository).SaveRolePermissionsAsync(1, [2]);
+
+        Assert.False(result.Ok);
+        Assert.Contains("cấu hình phân quyền", result.Message);
+        Assert.False(repository.Saved);
+    }
+
+    /// <summary>Con vai tro khac giu quyen cau hinh thi go duoc, khong chan oan.</summary>
+    [Fact]
+    public async Task GoQuyenCauHinhKhiVaiTroKhacVanGiu_ChoPhep()
+    {
+        TestUsers.SignInWithPermissions(PermissionCodes.PermissionManage);
+        var config = new Permission { Id = 1, PermissionCode = PermissionCodes.PermissionManage, IsActive = true };
+        var view = new Permission { Id = 2, PermissionCode = PermissionCodes.UserView, IsActive = true };
+        var admin = new Role
+        {
+            Id = 1, RoleName = RoleNames.Admin, DisplayName = "Quản trị viên",
+            IsSystemRole = true, IsActive = true,
+            RolePermissions = [new RolePermission { Permission = config, IsAllowed = true }]
+        };
+        var phu = new Role
+        {
+            Id = 5, RoleName = "AdminPhu", DisplayName = "Quản trị phụ", IsActive = true,
+            RolePermissions = [new RolePermission { Permission = config, IsAllowed = true }]
+        };
+        var repository = new FakeAuthorizationRepository([config, view], [admin, phu]);
+
+        var result = await new PermissionManagementService(repository).SaveRolePermissionsAsync(1, [2]);
+
+        Assert.True(result.Ok);
+        Assert.True(repository.Saved);
+    }
+
+    [Fact]
+    public async Task VaiTroHeThongBoHetQuyen_BiChan()
+    {
+        TestUsers.SignInWithPermissions(PermissionCodes.PermissionManage);
+        var config = new Permission { Id = 1, PermissionCode = PermissionCodes.PermissionManage, IsActive = true };
+        var admin = new Role
+        {
+            Id = 1, RoleName = RoleNames.Admin, DisplayName = "Quản trị viên",
+            IsSystemRole = true, IsActive = true,
+            RolePermissions = [new RolePermission { Permission = config, IsAllowed = true }]
+        };
+        var letan = new Role
+        {
+            Id = 3, RoleName = RoleNames.Receptionist, DisplayName = "Lễ tân",
+            IsSystemRole = true, IsActive = true, RolePermissions = []
+        };
+        var repository = new FakeAuthorizationRepository([config], [admin, letan]);
+
+        var result = await new PermissionManagementService(repository).SaveRolePermissionsAsync(3, []);
+
+        Assert.False(result.Ok);
+        Assert.Contains("ít nhất một quyền", result.Message);
+        Assert.False(repository.Saved);
+    }
+
     private sealed class FakeApprovalRepository(ApprovalRequest request)
         : IApprovalRequestRepository
     {
@@ -95,11 +172,11 @@ public class DynamicAuthorizationTests
         public Task AddAuditAsync(AuditLog log) => Task.CompletedTask;
     }
 
-    private sealed class FakeAuthorizationRepository(List<Permission> permissions)
+    private sealed class FakeAuthorizationRepository(List<Permission> permissions, List<Role>? roles = null)
         : IAuthorizationRepository
     {
         public bool Saved { get; private set; }
-        public Task<List<Role>> GetRolesWithPermissionsAsync() => Task.FromResult(new List<Role>());
+        public Task<List<Role>> GetRolesWithPermissionsAsync() => Task.FromResult(roles ?? []);
         public Task<List<Permission>> GetPermissionsAsync() => Task.FromResult(permissions);
         public Task<bool> ReplaceRolePermissionsAsync(int roleId, IReadOnlyCollection<int> permissionIds)
         {

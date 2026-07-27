@@ -33,8 +33,14 @@ public sealed class PermissionManagementService : IPermissionManagementService
 
         // Doc quyen cu TRUOC khi ghi de: doi quyen la thao tac nhay cam nhat cua Admin,
         // nhat ky phai noi duoc vai tro do truoc do co nhung quyen gi.
-        var role = (await _repository.GetRolesWithPermissionsAsync()).FirstOrDefault(x => x.Id == roleId);
-        var before = role == null ? null : Describe(role.RolePermissions.Select(x => x.Permission?.PermissionCode));
+        var roles = await _repository.GetRolesWithPermissionsAsync();
+        var role = roles.FirstOrDefault(x => x.Id == roleId);
+        if (role == null) return ServiceResult.Failure("Vai trò không tồn tại.");
+
+        var lockout = ValidateNoLockout(roles, role, selected, permissionIds.Count);
+        if (lockout != null) return ServiceResult.Failure(lockout);
+
+        var before = Describe(role.RolePermissions.Select(x => x.Permission?.PermissionCode));
 
         if (!await _repository.ReplaceRolePermissionsAsync(roleId, permissionIds))
             return ServiceResult.Failure("Không lưu được quyền vì vai trò hoặc quyền không hợp lệ.");
@@ -46,6 +52,30 @@ public sealed class PermissionManagementService : IPermissionManagementService
     /// <summary>Danh sach ma quyen sap xep san de so hai ban nhat ky doc duoc bang mat.</summary>
     private static string Describe(IEnumerable<string?> codes)
         => string.Join(", ", codes.Where(x => !string.IsNullOrEmpty(x)).OrderBy(x => x));
+
+    /// <summary>
+    /// Chan cau hinh tu khoa chinh minh. Man cau hinh quyen la man DUY NHAT sua duoc
+    /// bang quyen <c>permission.manage</c>; go het quyen do khoi moi vai tro la khong con
+    /// tai khoan nao mo lai duoc man nay, phai vao SQL Server go tay moi cuu duoc.
+    /// Seed mac dinh chi Quan tri vien giu quyen nay nen bo tick mot lan la mat.
+    /// </summary>
+    internal static string? ValidateNoLockout(
+        List<Role> roles, Role target, IReadOnlySet<string> selected, int selectedCount)
+    {
+        if (target.IsSystemRole && selectedCount == 0)
+            return $"Vai trò \"{target.DisplayName}\" là vai trò hệ thống, phải giữ ít nhất một quyền.";
+
+        if (selected.Contains(PermissionCodes.PermissionManage)) return null;
+
+        var conguoiKhacGiu = roles.Any(x => x.Id != target.Id && x.IsActive
+            && x.RolePermissions.Any(p => p.IsAllowed
+                && string.Equals(p.Permission?.PermissionCode, PermissionCodes.PermissionManage,
+                                 StringComparison.OrdinalIgnoreCase)));
+        if (conguoiKhacGiu) return null;
+
+        return "Phải còn ít nhất một vai trò giữ quyền cấu hình phân quyền. "
+               + "Bỏ quyền này khỏi vai trò cuối cùng thì không tài khoản nào mở lại được màn hình phân quyền.";
+    }
 
     internal static string? ValidateSeparation(IReadOnlySet<string> selected)
     {
