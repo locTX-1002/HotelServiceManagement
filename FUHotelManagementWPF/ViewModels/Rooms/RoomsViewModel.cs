@@ -14,12 +14,25 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
         public RoomListViewModel RoomList { get; }
         public RoomTypeListViewModel RoomTypeList { get; }
 
+        private int _selectedTabIndex;
+        public int SelectedTabIndex
+        {
+            get => _selectedTabIndex;
+            set => SetProperty(ref _selectedTabIndex, value);
+        }
+
         public RoomsViewModel()
         {
             Map = new RoomMapViewModel(RefreshAllAsync);
             RoomList = new RoomListViewModel(RefreshAllAsync);
-            RoomTypeList = new RoomTypeListViewModel(RefreshAllAsync);
+            RoomTypeList = new RoomTypeListViewModel(RefreshAllAsync, ViewRoomsOfType);
             _ = RefreshAllAsync();
+        }
+
+        private void ViewRoomsOfType(int roomTypeId)
+        {
+            RoomList.SelectRoomTypeFilter(roomTypeId);
+            SelectedTabIndex = 1;
         }
 
         public Task RefreshAllAsync()

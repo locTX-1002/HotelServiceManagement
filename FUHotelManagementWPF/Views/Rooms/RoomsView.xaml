@@ -12,7 +12,7 @@
         <TextBlock Grid.Row="0" Text="Sơ đồ phòng" Style="{StaticResource PageTitleText}"
                    Margin="0,0,0,12" />
 
-        <TabControl Grid.Row="1" Background="Transparent" BorderThickness="0">
+        <TabControl Grid.Row="1" SelectedIndex="{Binding SelectedTabIndex}" Background="Transparent" BorderThickness="0">
             <TabItem Header="Sơ đồ">
                 <rooms:RoomMapView DataContext="{Binding Map}" />
             </TabItem>

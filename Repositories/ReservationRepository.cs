@@ -7,6 +7,7 @@ public sealed class ReservationRepository : IReservationRepository
 {
     public Task<List<Reservation>> GetAllAsync() => ReservationDAO.Instance.GetAllAsync();
     public Task<List<Reservation>> GetByGuestAsync(int guestId) => ReservationDAO.Instance.GetByGuestAsync(guestId);
+    public Task<List<Reservation>> GetRecentByRoomAsync(int roomId, int count = 5) => ReservationDAO.Instance.GetRecentByRoomAsync(roomId, count);
     public Task<Reservation?> GetByIdAsync(int id) => ReservationDAO.Instance.GetByIdAsync(id);
     public Task<bool> BookingCodeExistsAsync(string code) => ReservationDAO.Instance.BookingCodeExistsAsync(code);
     public Task<bool> HasOverlapAsync(int roomId, DateTime checkIn, DateTime checkOut, int? excludeId = null)

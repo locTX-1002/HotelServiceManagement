@@ -20,6 +20,7 @@ public sealed class ReservationService : IReservationService
     }
 
     public Task<List<Reservation>> GetAllAsync() => _reservations.GetAllAsync();
+    public Task<List<Reservation>> GetRecentByRoomAsync(int roomId, int count = 5) => _reservations.GetRecentByRoomAsync(roomId, count);
 
     public async Task<ServiceResult<List<Reservation>>> GetMyReservationsAsync()
     {
