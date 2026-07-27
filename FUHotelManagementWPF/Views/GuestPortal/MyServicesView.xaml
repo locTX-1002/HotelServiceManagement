@@ -96,7 +96,7 @@
                                        Visibility="{Binding MenuIsEmpty, Converter={StaticResource BoolToVis}}" />
 
                             <ScrollViewer VerticalScrollBarVisibility="Auto">
-                                <ItemsControl ItemsSource="{Binding Menu}">
+                                <ItemsControl ItemsSource="{Binding Menu}" Margin="0,0,10,0">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
                                             <StackPanel Margin="0,0,0,14">
@@ -160,7 +160,7 @@
                                                     </Grid.ColumnDefinitions>
                                                     <StackPanel Margin="0,0,12,0">
                                                         <TextBlock>
-                                                            <Run Text="{Binding TotalText}" FontWeight="SemiBold" /><Run Text="  ·  "/><Run Text="{Binding TimeText}" />
+                                                            <Run Text="{Binding TotalText, Mode=OneWay}" FontWeight="SemiBold" /><Run Text="  ·  "/><Run Text="{Binding TimeText, Mode=OneWay}" />
                                                         </TextBlock>
                                                         <TextBlock Text="{Binding ItemsText}" Style="{StaticResource CaptionText}"
                                                                    TextWrapping="Wrap" Margin="0,3,0,0" />

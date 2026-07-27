@@ -32,12 +32,12 @@
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0">
                             <TextBlock Text="Nhận phòng" Style="{StaticResource CaptionText}" />
-                            <DatePicker DisplayDateStart="{Binding MinCheckIn}"
+                            <DatePicker DisplayDateStart="{Binding MinCheckIn, Mode=OneWay}"
                                         SelectedDate="{Binding CheckIn}" />
                         </StackPanel>
                         <StackPanel Grid.Column="2">
                             <TextBlock Text="Trả phòng" Style="{StaticResource CaptionText}" />
-                            <DatePicker DisplayDateStart="{Binding MinCheckIn}"
+                            <DatePicker DisplayDateStart="{Binding MinCheckIn, Mode=OneWay}"
                                         SelectedDate="{Binding CheckOut}" />
                         </StackPanel>
                     </Grid>
