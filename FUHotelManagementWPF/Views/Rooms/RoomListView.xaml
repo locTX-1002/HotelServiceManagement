@@ -78,6 +78,21 @@
                          ToolTip="Tìm theo số phòng hoặc tên loại phòng" />
                 <Button Style="{StaticResource SearchButton}"
                         mvvm:SearchBoxAssist.SubmitFor="{Binding ElementName=roomSearch}" />
+
+                <ComboBox ItemsSource="{Binding FloorOptions}"
+                          SelectedItem="{Binding SelectedFloor}"
+                          Width="110" Margin="10,0,0,0" VerticalAlignment="Center" />
+
+                <ComboBox ItemsSource="{Binding RoomTypeOptions}"
+                          SelectedItem="{Binding SelectedRoomType}"
+                          DisplayMemberPath="Name"
+                          Width="145" Margin="8,0,0,0" VerticalAlignment="Center" />
+
+                <ComboBox ItemsSource="{Binding SortOptions}"
+                          SelectedItem="{Binding SelectedSortOption}"
+                          DisplayMemberPath="Label"
+                          Width="165" Margin="8,0,0,0" VerticalAlignment="Center" />
+
                 <TextBlock Text="{Binding TotalText}" Style="{StaticResource CaptionText}"
                            FontSize="12.5" VerticalAlignment="Center" Margin="14,0,0,0" />
             </StackPanel>
@@ -121,13 +136,22 @@
 
             <!-- MASTER: card-row list -->
             <ListBox Grid.Column="0" ItemsSource="{Binding RowsView}"
-                     SelectedItem="{Binding SelectedRow}"
-                     ItemContainerStyle="{StaticResource RoomRowItem}"
-                     Background="Transparent" BorderThickness="0"
-                     ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                      SelectedItem="{Binding SelectedRow}"
+                      ItemContainerStyle="{StaticResource RoomRowItem}"
+                      Background="Transparent" BorderThickness="0"
+                      ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                 <ListBox.ItemTemplate>
                     <DataTemplate>
                         <Grid>
+                            <Grid.Style>
+                                <Style TargetType="Grid">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsActive}" Value="False">
+                                            <Setter Property="Opacity" Value="0.6" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Grid.Style>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="*" />
@@ -140,7 +164,14 @@
                                 </Border.Background>
                             </Border>
                             <StackPanel Grid.Column="1" Margin="12,0,10,0" VerticalAlignment="Center">
-                                <TextBlock Text="{Binding Room.RoomNumber}" FontSize="14" FontWeight="SemiBold" />
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{Binding Room.RoomNumber}" FontSize="14" FontWeight="SemiBold" />
+                                    <Border CornerRadius="3" Background="{StaticResource SurfaceAltBrush}" Padding="6,2" Margin="6,0,0,0"
+                                            VerticalAlignment="Center"
+                                            Visibility="{Binding IsActive, Converter={StaticResource InverseBoolToVis}}">
+                                        <TextBlock Text="Ngừng dùng" Foreground="{StaticResource InkSoftBrush}" FontSize="10.5" FontWeight="SemiBold" />
+                                    </Border>
+                                </StackPanel>
                                 <TextBlock Text="{Binding SubText}" Style="{StaticResource CaptionText}"
                                            FontSize="11.5" TextTrimming="CharacterEllipsis" Margin="0,2,0,0" />
                             </StackPanel>
@@ -249,6 +280,51 @@
                             <TextBlock Text="{Binding DescriptionText}" Style="{StaticResource CaptionText}"
                                        FontSize="12" TextWrapping="Wrap" Margin="0,12,0,0"
                                        Visibility="{Binding HasDescription, Converter={StaticResource BoolToVis}}" />
+
+                            <!-- Lịch sử đặt phòng gần đây (Chỉ hiển thị với vai trò có quyền reservation.view) -->
+                            <StackPanel Visibility="{Binding DataContext.CanViewReservations,
+                                                     RelativeSource={RelativeSource AncestorType=UserControl},
+                                                     Converter={StaticResource BoolToVis}}">
+                                <Border Height="1" Background="{StaticResource LineBrush}" Margin="0,14,0,12" />
+                                <TextBlock Text="LỊCH SỬ ĐẶT GẦN ĐÂY" Style="{StaticResource FieldLabel}" Margin="0,0,0,8" />
+
+                                <hc:LoadingCircle Width="20" Height="20" Foreground="{StaticResource BrandBrush}"
+                                                  Visibility="{Binding DataContext.IsLoadingHistory, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BoolToVis}}" />
+
+                                <TextBlock Text="Chưa có lịch sử đặt phòng." FontSize="11.5"
+                                           Margin="0,2,0,4">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock" BasedOn="{StaticResource CaptionText}">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                            <Style.Triggers>
+                                                <MultiDataTrigger>
+                                                    <MultiDataTrigger.Conditions>
+                                                        <Condition Binding="{Binding DataContext.RecentReservations.Count, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="0" />
+                                                        <Condition Binding="{Binding DataContext.IsLoadingHistory, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="False" />
+                                                    </MultiDataTrigger.Conditions>
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                </MultiDataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+
+                                <ItemsControl ItemsSource="{Binding DataContext.RecentReservations, RelativeSource={RelativeSource AncestorType=UserControl}}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Background="{StaticResource SurfaceAltBrush}" CornerRadius="4" Padding="10,6" Margin="0,0,0,6">
+                                                <DockPanel>
+                                                    <TextBlock DockPanel.Dock="Right" Text="{Binding StatusText}" Style="{StaticResource CaptionText}" FontSize="11" VerticalAlignment="Center" />
+                                                    <StackPanel>
+                                                        <TextBlock Text="{Binding GuestName}" FontWeight="SemiBold" FontSize="12" />
+                                                        <TextBlock Text="{Binding DateRangeText}" Style="{StaticResource CaptionText}" FontSize="11" Margin="0,1,0,0" />
+                                                    </StackPanel>
+                                                </DockPanel>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
 
                             <!-- Ca 3 nut deu can quyen quan ly phong -> an luon duong ke cho khoi tro -->
                             <Border Height="1" Background="{StaticResource LineBrush}" Margin="0,16,0,14"

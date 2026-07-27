@@ -16,6 +16,7 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
         public int Capacity => Room.RoomType?.Capacity ?? 0;
         public decimal BasePrice => Room.RoomType?.BasePrice ?? 0;
         public string ActiveText => Room.IsActive ? "Đang dùng" : "Ngừng dùng";
+        public bool IsActive => Room.IsActive;
 
         /// <summary>Dong phu tren card-row: "Standard · Tầng 1 · 2 khách".</summary>
         public string SubText => $"{TypeName} · Tầng {Room.Floor} · {Capacity} khách";
@@ -39,6 +40,29 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
 
     /// <summary>Lua chon trang thai cho combobox/danh sach.</summary>
     public record StatusOption(BusinessObjects.Enums.RoomStatus Status, string Label);
+
+    /// <summary>Lua chon loai phong cho combobox loc.</summary>
+    public record RoomTypeOption(int? Id, string Name);
+
+    /// <summary>Lua chon sap xep cho combobox.</summary>
+    public record RoomSortOption(int Key, string Label);
+
+    /// <summary>Dong hien thi lich su dat phong gan đây trong panel chi tiet.</summary>
+    public class RecentReservationRow
+    {
+        public string BookingCode { get; }
+        public string GuestName { get; }
+        public string DateRangeText { get; }
+        public string StatusText { get; }
+
+        public RecentReservationRow(Reservation r)
+        {
+            BookingCode = r.BookingCode;
+            GuestName = r.Guest?.FullName ?? "Khách vãng lai";
+            DateRangeText = $"{r.CheckInDate:dd/MM} - {r.CheckOutDate:dd/MM/yyyy}";
+            StatusText = ReservationService.StatusText(r.Status);
+        }
+    }
 
     /// <summary>
     /// Chip loc trang thai tren thanh cong cu. Status = null nghia la "Tat ca".
