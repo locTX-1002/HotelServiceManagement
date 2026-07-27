@@ -89,7 +89,13 @@ namespace FUHotelManagementWPF.ViewModels.AuditLogs
 
         public bool IsEmpty => HasPermission && !IsLoading && !HasError && Rows.Count == 0;
 
-        public string TotalText => Rows.Count == 0 ? "Chưa có dòng nào" : $"{Rows.Count} dòng";
+        public bool IsCapped => Rows.Count >= AuditLogService.MaxRows;
+
+        public string CappedNoticeText => $"Hiển thị {AuditLogService.MaxRows} dòng gần nhất. Vui lòng thu hẹp khoảng ngày hoặc dùng bộ lọc để xem đầy đủ nhật ký.";
+
+        public string TotalText => Rows.Count >= AuditLogService.MaxRows
+            ? $"{AuditLogService.MaxRows} dòng (đã đạt giới hạn)"
+            : (Rows.Count == 0 ? "Chưa có dòng nào" : $"{Rows.Count} dòng");
 
         public AsyncRelayCommand SearchCommand { get; }
         public RelayCommand ResetFilterCommand { get; }
@@ -166,6 +172,7 @@ namespace FUHotelManagementWPF.ViewModels.AuditLogs
                 IsLoading = false;
                 OnPropertyChanged(nameof(TotalText));
                 OnPropertyChanged(nameof(IsEmpty));
+                OnPropertyChanged(nameof(IsCapped));
             }
         }
 

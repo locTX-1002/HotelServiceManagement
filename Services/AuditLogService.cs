@@ -10,10 +10,10 @@ namespace Services;
 public sealed class AuditLogService : IAuditLogService
 {
     /// <summary>
-    /// Tran so dong tra ve. Mot man hinh khong ai doc het 500 dong; lay khong gioi han
-    /// thi den cuoi ky bang nay vai chuc nghin dong, mo man la treo.
+    /// Tràn số dòng trả về. Một màn hình không ai đọc hết 500 dòng; lấy không giới hạn
+    /// thì đến cuối kỳ bảng này vài chục nghìn dòng, mở màn là treo.
     /// </summary>
-    private const int MaxRows = 500;
+    public const int MaxRows = 500;
 
     private readonly IAuditLogRepository _repository;
     public AuditLogService() : this(new AuditLogRepository()) { }
