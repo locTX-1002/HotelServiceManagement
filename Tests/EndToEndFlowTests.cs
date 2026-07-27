@@ -137,6 +137,35 @@ public class EndToEndFlowTests
         finally { AppSession.SignOut(); }
     }
 
+    // ------------------------------------------------- 1b. Don tao tai quay vao thang Da xac nhan
+
+    /// <summary>
+    /// Le tan dat phong TAI QUAY cho khach dang co mat thi khong can buoc "cho xac nhan" rieng -
+    /// chinh le tan la nguoi xac nhan ngay luc tao. Chi luong tu dat online (chua co trong ung
+    /// dung nay) moi can giu Pending cho toi khi co nguoi xac minh.
+    /// </summary>
+    [DbFact]
+    public async Task DatPhongTaiQuay_VaoThangDaXacNhan_CheckInDuocNgayKhongCanGoiConfirm()
+    {
+        await using var sandbox = await Sandbox.CreateAsync();
+        try
+        {
+            await SignInAsync(RoleNames.Receptionist);
+            var guest = await sandbox.CreateGuestAsync(withIdentity: true);
+
+            var booking = await new ReservationService().CreateAsync(
+                guest.Id, sandbox.RoomId, 1, DateTime.Today, DateTime.Today.AddDays(1),
+                null, null, null, ReservationStatus.Confirmed);
+            Assert.True(booking.Ok, booking.Message);
+            Assert.Equal(ReservationStatus.Confirmed, booking.Data!.Status);
+
+            // Khong goi ConfirmAsync - check-in phai thanh cong ngay tu trang thai vua tao.
+            var checkIn = await new StayService().CheckInAsync(booking.Data.Id, DateTime.Now);
+            Assert.True(checkIn.Ok, checkIn.Message);
+        }
+        finally { AppSession.SignOut(); }
+    }
+
     // ------------------------------------------------- 2. Chan check-in khi thieu giay to
 
     [DbFact]
