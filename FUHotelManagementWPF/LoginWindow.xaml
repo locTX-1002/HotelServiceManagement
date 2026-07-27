@@ -144,6 +144,14 @@
                         HorizontalContentAlignment="Center"
                         Command="{Binding LoginCommand}" />
 
+                <StackPanel Margin="0,14,0,0">
+                    <TextBlock Text="Bạn là khách mới?" HorizontalAlignment="Center"
+                               Foreground="{StaticResource InkSoftBrush}" FontSize="12.5" />
+                    <Button Content="Đăng ký tài khoản khách hàng" Style="{StaticResource GhostButton}"
+                            Margin="0,7,0,0" HorizontalContentAlignment="Center"
+                            Click="RegisterGuest_Click" />
+                </StackPanel>
+
                 <!-- Khong bay mat khau ra man dang nhap nua: mat khau admin gio lay tu
                      appsettings.Local.json rieng tung may nen ghi cung o day la sai. -->
                 <!-- Tai khoan demo cua do an, de san cho ca nhom vao nhanh.

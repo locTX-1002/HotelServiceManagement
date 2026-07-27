@@ -26,6 +26,14 @@ public sealed class GuestDAO
         return await context.Guests.AsNoTracking().FirstOrDefaultAsync(g => g.Id == id);
     }
 
+    public async Task<Guest?> GetByPhoneAsync(string phoneNumber)
+    {
+        var phone = phoneNumber.Trim();
+        await using var context = HotelDbContextFactory.Create();
+        return await context.Guests.AsNoTracking()
+            .FirstOrDefaultAsync(g => g.PhoneNumber == phone);
+    }
+
     public async Task<List<Guest>> SearchAsync(string keyword)
     {
         var term = keyword.Trim();

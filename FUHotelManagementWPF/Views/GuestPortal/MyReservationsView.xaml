@@ -35,12 +35,16 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <!-- Hang dau: tieu de + dong phu, nut Tai lai goc phai -->
+        <!-- Hang dau: tieu de + hanh dong tu phuc vu cua khach -->
         <DockPanel Grid.Row="0" Margin="0,0,0,14">
-            <Button DockPanel.Dock="Right" Content="Tải lại" Style="{StaticResource GhostButton}"
-                    Padding="16,7" VerticalAlignment="Top"
-                    ToolTip="Lấy lại danh sách đặt phòng mới nhất"
-                    Command="{Binding ReloadCommand}" />
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Top">
+                <Button Content="Tải lại" Style="{StaticResource GhostButton}"
+                        Padding="16,7" ToolTip="Lấy lại danh sách đặt phòng mới nhất"
+                        Command="{Binding ReloadCommand}" />
+                <Button Content="Đặt phòng mới" Style="{StaticResource PrimaryButton}"
+                        Padding="16,7" Margin="8,0,0,0"
+                        Command="{Binding NewBookingCommand}" />
+            </StackPanel>
             <StackPanel>
                 <TextBlock Text="Đặt phòng của tôi" Style="{StaticResource PageTitleText}" />
                 <TextBlock Text="Toàn bộ đơn đặt phòng của bạn tại khách sạn."
@@ -82,7 +86,7 @@
                           Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}" />
 
         <!-- Trang thai rong -->
-        <TextBlock Grid.Row="3" Text="Bạn chưa có đơn đặt phòng nào — liên hệ lễ tân để được đặt phòng."
+        <TextBlock Grid.Row="3" Text="Bạn chưa có đơn đặt phòng nào — bấm Đặt phòng mới để gửi yêu cầu."
                    Style="{StaticResource CaptionText}"
                    HorizontalAlignment="Center" VerticalAlignment="Center"
                    Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVis}}" />
@@ -133,13 +137,27 @@
                                     </StackPanel>
                                 </StackPanel>
 
-                                <!-- Tien coc chi hien khi don co thu coc -->
-                                <StackPanel Grid.Column="1" VerticalAlignment="Top"
-                                            Visibility="{Binding HasDeposit, Converter={StaticResource BoolToVis}}">
-                                    <TextBlock Text="TIỀN CỌC" Style="{StaticResource FieldLabel}"
-                                               HorizontalAlignment="Right" />
-                                    <TextBlock Text="{Binding DepositAmount, Converter={StaticResource Money}}"
-                                               FontWeight="SemiBold" HorizontalAlignment="Right" />
+                                <!-- Cot hanh dong ben phai: tien coc + yeu cau huy. -->
+                                <StackPanel Grid.Column="1" VerticalAlignment="Top" HorizontalAlignment="Right">
+                                    <StackPanel Visibility="{Binding HasDeposit, Converter={StaticResource BoolToVis}}">
+                                        <TextBlock Text="TIỀN CỌC" Style="{StaticResource FieldLabel}"
+                                                   HorizontalAlignment="Right" />
+                                        <TextBlock Text="{Binding DepositAmount, Converter={StaticResource Money}}"
+                                                   FontWeight="SemiBold" HorizontalAlignment="Right" />
+                                    </StackPanel>
+
+                                    <Button Content="Yêu cầu huỷ" Style="{StaticResource GhostButton}"
+                                            Foreground="{StaticResource DangerBrush}" Margin="0,12,0,0"
+                                            Visibility="{Binding CanRequestCancel, Converter={StaticResource BoolToVis}}"
+                                            Command="{Binding DataContext.RequestCancelCommand, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}"
+                                            CommandParameter="{Binding}" />
+
+                                    <Border Background="{StaticResource WarningSoftBrush}" CornerRadius="4"
+                                            Padding="8,5" Margin="0,12,0,0"
+                                            Visibility="{Binding CancelRequestSent, Converter={StaticResource BoolToVis}}">
+                                        <TextBlock Text="Đã gửi yêu cầu huỷ" Foreground="{StaticResource WarningBrush}"
+                                                   FontSize="11" FontWeight="SemiBold" />
+                                    </Border>
                                 </StackPanel>
                             </Grid>
                         </Border>

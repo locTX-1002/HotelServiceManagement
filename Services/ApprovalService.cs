@@ -24,13 +24,43 @@ public sealed class ApprovalService : IApprovalService
         _payments = payments;
     }
 
-    public async Task<ServiceResult<List<ApprovalRequest>>> GetPendingAsync()
+    public Task<ServiceResult<List<ApprovalListItem>>> GetPendingAsync()
+        => SearchAsync(ApprovalRequestStatus.Pending);
+
+    public async Task<ServiceResult<List<ApprovalListItem>>> SearchAsync(
+        ApprovalRequestStatus status,
+        ApprovalRequestType? type = null,
+        string? requesterKeyword = null,
+        DateTime? fromDate = null,
+        DateTime? toDate = null)
     {
+        if (status is not (ApprovalRequestStatus.Pending
+            or ApprovalRequestStatus.Approved
+            or ApprovalRequestStatus.Rejected))
+            return ServiceResult<List<ApprovalListItem>>.Failure("Trạng thái phê duyệt không hợp lệ.");
         if (!Enum.GetValues<ApprovalRequestType>().Any(HasApprovePermission))
-            return ServiceResult<List<ApprovalRequest>>.Failure("Bạn không có quyền xem danh sách phê duyệt.");
-        var all = await _requests.GetPendingAsync();
-        return ServiceResult<List<ApprovalRequest>>.Success(
-            all.Where(x => HasApprovePermission(x.RequestType)).ToList());
+            return ServiceResult<List<ApprovalListItem>>.Failure("Bạn không có quyền xem danh sách phê duyệt.");
+        if (type.HasValue && !HasApprovePermission(type.Value))
+            return ServiceResult<List<ApprovalListItem>>.Failure("Bạn không có quyền xem loại yêu cầu này.");
+        if (!string.IsNullOrWhiteSpace(requesterKeyword) && requesterKeyword.Trim().Length > 100)
+            return ServiceResult<List<ApprovalListItem>>.Failure("Từ khóa người gửi tối đa 100 ký tự.");
+        if (fromDate.HasValue && toDate.HasValue && fromDate.Value.Date > toDate.Value.Date)
+            return ServiceResult<List<ApprovalListItem>>.Failure("Từ ngày không được sau đến ngày.");
+
+        var all = await _requests.SearchAsync(
+            status, type, requesterKeyword, fromDate, toDate);
+        var visible = all.Where(x => HasApprovePermission(x.RequestType)).ToList();
+        var targetNames = await _requests.GetTargetDisplayNamesAsync(visible);
+        var items = visible.Select(request =>
+        {
+            var key = (request.RequestType, request.TargetId);
+            var displayName = targetNames.TryGetValue(key, out var name)
+                ? name
+                : "Đối tượng không còn tồn tại";
+            return new ApprovalListItem(request, displayName);
+        }).ToList();
+
+        return ServiceResult<List<ApprovalListItem>>.Success(items);
     }
 
     public async Task<ServiceResult<ApprovalRequest>> RequestAsync(
@@ -45,21 +75,84 @@ public sealed class ApprovalService : IApprovalService
             return ServiceResult<ApprovalRequest>.Failure("Lý do phải có từ 1 đến 500 ký tự.");
         if (type == ApprovalRequestType.InvoiceDiscount && requestedValue is not > 0)
             return ServiceResult<ApprovalRequest>.Failure("Số tiền giảm phải lớn hơn 0.");
-        if (await _requests.HasPendingAsync(type, targetId))
-            return ServiceResult<ApprovalRequest>.Failure("Đối tượng này đã có yêu cầu đang chờ duyệt.");
 
-        var request = new ApprovalRequest
+        // Tao request va ghi audit trong CUNG transaction. Neu insert AuditLog that bai,
+        // ApprovalRequest cung rollback, tranh request ton tai ma khong co dau vet truy vet.
+        return await _requests.ExecuteSerializableAsync(async () =>
         {
-            RequestType = type,
-            TargetId = targetId,
-            RequestedValue = requestedValue,
-            Reason = reason.Trim(),
-            RequestedByUserId = user.Id,
-            RequestedAt = DateTime.Now
-        };
-        await _requests.SaveAsync(request, true);
-        await AuditAsync("approval.request", request, null, request.Status.ToString(), true);
-        return ServiceResult<ApprovalRequest>.Success(request, "Đã gửi yêu cầu cho Quản lý phê duyệt.");
+            if (await _requests.HasPendingAsync(type, targetId))
+                return ServiceResult<ApprovalRequest>.Failure("Đối tượng này đã có yêu cầu đang chờ duyệt.");
+
+            var request = new ApprovalRequest
+            {
+                RequestType = type,
+                TargetId = targetId,
+                RequestedValue = requestedValue,
+                Reason = reason.Trim(),
+                RequestedByUserId = user.Id,
+                RequestedAt = DateTime.Now
+            };
+            await _requests.SaveAsync(request, true);
+            await AuditAsync("approval.request", request, null, request.Status.ToString(), true);
+            return ServiceResult<ApprovalRequest>.Success(request, "Đã gửi yêu cầu cho Quản lý phê duyệt.");
+        });
+    }
+
+    public async Task<ServiceResult<ApprovalRequest>> RequestGuestReservationCancellationAsync(
+        int reservationId, string reason)
+    {
+        var guestId = AppSession.CurrentGuestId;
+        if (guestId == null)
+            return ServiceResult<ApprovalRequest>.Failure("Chưa đăng nhập bằng tài khoản khách hàng.");
+        if (reservationId <= 0)
+            return ServiceResult<ApprovalRequest>.Failure("Đơn đặt phòng không hợp lệ.");
+        if (string.IsNullOrWhiteSpace(reason) || reason.Trim().Length > 500)
+            return ServiceResult<ApprovalRequest>.Failure("Lý do phải có từ 1 đến 500 ký tự.");
+
+        // Ownership + status + duplicate check cung nam trong transaction Serializable.
+        // Khong nhan guestId tu UI, nen khach A khong the truyen id don cua khach B.
+        return await _requests.ExecuteSerializableAsync(async () =>
+        {
+            var mine = await _reservations.GetMyReservationsAsync();
+            if (!mine.Ok || mine.Data == null)
+                return ServiceResult<ApprovalRequest>.Failure(mine.Message);
+
+            var reservation = mine.Data.FirstOrDefault(x => x.Id == reservationId);
+            if (reservation == null)
+                return ServiceResult<ApprovalRequest>.Failure("Không tìm thấy đơn đặt phòng của bạn.");
+            if (reservation.Status is not (ReservationStatus.Pending or ReservationStatus.Confirmed))
+                return ServiceResult<ApprovalRequest>.Failure(
+                    "Chỉ đơn đang chờ hoặc đã xác nhận mới có thể yêu cầu huỷ.");
+
+            if (await _requests.HasPendingAsync(ApprovalRequestType.ReservationCancel, reservationId))
+                return ServiceResult<ApprovalRequest>.Failure(
+                    "Đơn này đã có yêu cầu huỷ đang chờ Quản lý xử lý.");
+
+            var request = new ApprovalRequest
+            {
+                RequestType = ApprovalRequestType.ReservationCancel,
+                TargetId = reservationId,
+                Reason = reason.Trim(),
+                RequestedByGuestId = guestId.Value,
+                RequestedAt = DateTime.Now
+            };
+            await _requests.SaveAsync(request, true);
+            await AuditAsync("approval.request", request, null,
+                $"{request.Status};guestId={guestId.Value}", true);
+            return ServiceResult<ApprovalRequest>.Success(
+                request, "Đã gửi yêu cầu huỷ. Vui lòng chờ Quản lý phê duyệt.");
+        });
+    }
+
+    public async Task<ServiceResult<HashSet<int>>> GetMyPendingReservationCancellationIdsAsync()
+    {
+        var guestId = AppSession.CurrentGuestId;
+        if (guestId == null)
+            return ServiceResult<HashSet<int>>.Failure("Chưa đăng nhập bằng tài khoản khách hàng.");
+
+        var ids = await _requests.GetPendingTargetIdsForGuestAsync(
+            ApprovalRequestType.ReservationCancel, guestId.Value);
+        return ServiceResult<HashSet<int>>.Success(ids.ToHashSet());
     }
 
     public async Task<ServiceResult<ApprovalRequest>> ReviewAsync(
@@ -67,41 +160,51 @@ public sealed class ApprovalService : IApprovalService
     {
         var reviewer = AppSession.CurrentUser;
         if (reviewer == null) return ServiceResult<ApprovalRequest>.Failure("Phiên đăng nhập không hợp lệ.");
-        var request = await _requests.GetByIdAsync(requestId);
-        if (request == null) return ServiceResult<ApprovalRequest>.Failure("Không tìm thấy yêu cầu.");
-        if (!HasApprovePermission(request.RequestType))
-            return ServiceResult<ApprovalRequest>.Failure("Bạn không có quyền phê duyệt yêu cầu này.");
-        if (request.Status != ApprovalRequestStatus.Pending)
-            return ServiceResult<ApprovalRequest>.Failure("Yêu cầu này đã được xử lý.");
-        if (request.RequestedByUserId == reviewer.Id)
-            return ServiceResult<ApprovalRequest>.Failure("Người tạo yêu cầu không được tự phê duyệt.");
+        if (requestId <= 0) return ServiceResult<ApprovalRequest>.Failure("Yêu cầu không hợp lệ.");
         if (!approve && string.IsNullOrWhiteSpace(reviewNote))
             return ServiceResult<ApprovalRequest>.Failure("Phải nhập lý do khi từ chối.");
+        if (!string.IsNullOrWhiteSpace(reviewNote) && reviewNote.Trim().Length > 500)
+            return ServiceResult<ApprovalRequest>.Failure("Ghi chú duyệt tối đa 500 ký tự.");
 
-        var oldStatus = request.Status.ToString();
-        if (approve)
+        // Toan bo review chay trong cung transaction Serializable. GetByIdForReviewAsync
+        // giu UPDLOCK tren request Pending, nen reviewer thu hai phai cho transaction dau
+        // tien ket thuc va se doc lai Approved/Rejected thay vi thuc thi nghiep vu lan 2.
+        return await _requests.ExecuteSerializableAsync(async () =>
         {
-            var action = await ExecuteApprovedActionAsync(request);
-            if (!action.Ok)
+            var request = await _requests.GetByIdForReviewAsync(requestId);
+            if (request == null) return ServiceResult<ApprovalRequest>.Failure("Không tìm thấy yêu cầu.");
+            if (!HasApprovePermission(request.RequestType))
+                return ServiceResult<ApprovalRequest>.Failure("Bạn không có quyền phê duyệt yêu cầu này.");
+            if (request.Status != ApprovalRequestStatus.Pending)
+                return ServiceResult<ApprovalRequest>.Failure("Yêu cầu này đã được xử lý.");
+            if (request.RequestedByUserId.HasValue && request.RequestedByUserId.Value == reviewer.Id)
+                return ServiceResult<ApprovalRequest>.Failure("Người tạo yêu cầu không được tự phê duyệt.");
+
+            var oldStatus = request.Status.ToString();
+            if (approve)
             {
-                await AuditAsync("approval.execute", request, oldStatus, action.Message, false);
-                return ServiceResult<ApprovalRequest>.Failure(action.Message);
+                var action = await ExecuteApprovedActionAsync(request);
+                if (!action.Ok)
+                {
+                    await AuditAsync("approval.execute", request, oldStatus, action.Message, false);
+                    return ServiceResult<ApprovalRequest>.Failure(action.Message);
+                }
+                request.Status = ApprovalRequestStatus.Approved;
             }
-            request.Status = ApprovalRequestStatus.Approved;
-        }
-        else
-        {
-            request.Status = ApprovalRequestStatus.Rejected;
-        }
+            else
+            {
+                request.Status = ApprovalRequestStatus.Rejected;
+            }
 
-        request.ReviewedByUserId = reviewer.Id;
-        request.ReviewedAt = DateTime.Now;
-        request.ReviewNote = string.IsNullOrWhiteSpace(reviewNote) ? null : reviewNote.Trim();
-        await _requests.SaveAsync(request, false);
-        await AuditAsync(approve ? "approval.approve" : "approval.reject",
-            request, oldStatus, request.Status.ToString(), true);
-        return ServiceResult<ApprovalRequest>.Success(request,
-            approve ? "Đã duyệt và thực hiện yêu cầu." : "Đã từ chối yêu cầu.");
+            request.ReviewedByUserId = reviewer.Id;
+            request.ReviewedAt = DateTime.Now;
+            request.ReviewNote = string.IsNullOrWhiteSpace(reviewNote) ? null : reviewNote.Trim();
+            await _requests.SaveAsync(request, false);
+            await AuditAsync(approve ? "approval.approve" : "approval.reject",
+                request, oldStatus, request.Status.ToString(), true);
+            return ServiceResult<ApprovalRequest>.Success(request,
+                approve ? "Đã duyệt và thực hiện yêu cầu." : "Đã từ chối yêu cầu.");
+        });
     }
 
     private async Task<ServiceResult> ExecuteApprovedActionAsync(ApprovalRequest request)

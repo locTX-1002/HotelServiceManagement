@@ -62,6 +62,19 @@ public partial class LoginWindow : Window
     /// khong binding duoc, nen mat khau nho san hoac go ben o hien chu se khong tu
     /// chay vao day.
     /// </summary>
+    private void RegisterGuest_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new RegisterGuestWindow { Owner = this };
+        if (dialog.ShowDialog() != true || dialog.RegisteredAccount == null)
+        {
+            return;
+        }
+
+        Services.AppSession.SignInGuest(dialog.RegisteredAccount);
+        new GuestWindow().Show();
+        Close();
+    }
+
     private void PushToPasswordBox()
     {
         if (_syncing || PasswordInput.Password == _viewModel.Password)

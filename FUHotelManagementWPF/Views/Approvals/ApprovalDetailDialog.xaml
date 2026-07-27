@@ -1,0 +1,97 @@
+<Window x:Class="FUHotelManagementWPF.Views.Approvals.ApprovalDetailDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Chi tiết phê duyệt"
+        Width="560" SizeToContent="Height" MaxHeight="680"
+        WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        ShowInTaskbar="False">
+    <Border Background="{StaticResource CardBrush}" CornerRadius="6" Margin="14"
+            BorderBrush="{StaticResource LineBrush}" BorderThickness="1"
+            Effect="{StaticResource SoftShadowLarge}">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <Border Height="4" Background="{StaticResource BrandBrush}" CornerRadius="6,6,0,0" />
+
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" MaxHeight="560">
+                <StackPanel Margin="24,20,24,8">
+                    <TextBlock Text="{Binding HistoryTitleText}" Style="{StaticResource SectionTitleText}"
+                               FontSize="18" />
+                    <TextBlock Text="{Binding ActionSummaryText}" Style="{StaticResource BodyText}"
+                               FontSize="14" FontWeight="SemiBold" Margin="0,8,0,0"
+                               TextWrapping="Wrap" />
+
+                    <Border Background="{StaticResource SurfaceAltBrush}" CornerRadius="4"
+                            Padding="14,12" Margin="0,18,0,0">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="130" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Text="Loại yêu cầu" Style="{StaticResource CaptionText}" />
+                            <TextBlock Grid.Column="1" Text="{Binding TypeText}" Style="{StaticResource BodyText}"
+                                       FontWeight="SemiBold" />
+
+                            <TextBlock Grid.Row="1" Text="Đối tượng" Style="{StaticResource CaptionText}"
+                                       Margin="0,9,0,0" />
+                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding TargetText}"
+                                       Style="{StaticResource BodyText}" FontWeight="SemiBold" Margin="0,9,0,0" />
+
+                            <TextBlock Grid.Row="2" Text="Số tiền đề nghị giảm"
+                                       Style="{StaticResource CaptionText}" Margin="0,9,0,0"
+                                       Visibility="{Binding IsInvoiceDiscount, Converter={StaticResource BoolToVis}}" />
+                            <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding ValueText}"
+                                       Style="{StaticResource BodyText}" Margin="0,9,0,0"
+                                       Visibility="{Binding IsInvoiceDiscount, Converter={StaticResource BoolToVis}}" />
+
+                            <TextBlock Grid.Row="3" Text="Lý do" Style="{StaticResource CaptionText}"
+                                       Margin="0,9,0,0" />
+                            <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding Reason}"
+                                       Style="{StaticResource BodyText}" TextWrapping="Wrap" Margin="0,9,0,0" />
+                        </Grid>
+                    </Border>
+
+                    <TextBlock Text="Người gửi" Style="{StaticResource CaptionText}" Margin="0,18,0,0" />
+                    <TextBlock Style="{StaticResource BodyText}" Margin="0,4,0,0" TextWrapping="Wrap">
+                        <Run Text="{Binding RequesterText, Mode=OneWay}" FontWeight="SemiBold" />
+                        <Run Text="   •   " />
+                        <Run Text="{Binding RequestedAtText, Mode=OneWay}" />
+                    </TextBlock>
+
+                    <TextBlock Text="Xử lý phê duyệt" Style="{StaticResource CaptionText}" Margin="0,18,0,0" />
+                    <TextBlock Style="{StaticResource BodyText}" Margin="0,4,0,0" TextWrapping="Wrap">
+                        <Run Text="{Binding ReviewerText, Mode=OneWay}" FontWeight="SemiBold" />
+                        <Run Text="   •   " />
+                        <Run Text="{Binding ReviewedAtText, Mode=OneWay}" />
+                    </TextBlock>
+
+                    <TextBlock Text="Ghi chú duyệt" Style="{StaticResource CaptionText}" Margin="0,14,0,0" />
+                    <TextBlock Text="{Binding ReviewNoteText}" Style="{StaticResource BodyText}"
+                               Margin="0,4,0,0" TextWrapping="Wrap" />
+
+                    <TextBlock Text="Dữ liệu bị ảnh hưởng" Style="{StaticResource CaptionText}" Margin="0,14,0,0" />
+                    <TextBlock Text="{Binding AffectedDataText}" Style="{StaticResource BodyText}"
+                               Margin="0,4,0,0" TextWrapping="Wrap" />
+                </StackPanel>
+            </ScrollViewer>
+
+            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right"
+                        Margin="24,8,24,20">
+                <Button Content="Đóng" Style="{StaticResource GhostButton}" Padding="20,8"
+                        IsDefault="True" Click="Close_Click" />
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>

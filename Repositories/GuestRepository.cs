@@ -7,6 +7,7 @@ public sealed class GuestRepository : IGuestRepository
 {
     public Task<List<Guest>> GetAllAsync() => GuestDAO.Instance.GetAllAsync();
     public Task<Guest?> GetByIdAsync(int id) => GuestDAO.Instance.GetByIdAsync(id);
+    public Task<Guest?> GetByPhoneAsync(string phoneNumber) => GuestDAO.Instance.GetByPhoneAsync(phoneNumber);
     public Task<List<Guest>> SearchAsync(string keyword) => GuestDAO.Instance.SearchAsync(keyword);
     public Task<bool> IdentityNumberExistsAsync(string value, int? excludeId = null)
         => GuestDAO.Instance.IdentityNumberExistsAsync(value, excludeId);

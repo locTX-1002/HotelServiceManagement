@@ -1,9 +1,9 @@
 <UserControl x:Class="FUHotelManagementWPF.Views.Approvals.ApprovalsView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:hc="https://handyorg.github.io/handycontrol">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Grid Margin="28,24">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
@@ -11,52 +11,134 @@
         <Grid>
             <StackPanel>
                 <TextBlock Text="Phê duyệt nghiệp vụ" Style="{StaticResource PageTitleText}" />
-                <TextBlock Text="Kiểm tra yêu cầu của nhân viên trước khi thực hiện thao tác nhạy cảm."
+                <TextBlock Text="Theo dõi yêu cầu chờ xử lý và lịch sử đã duyệt / đã từ chối."
                            Style="{StaticResource CaptionText}" Margin="0,5,0,0" />
             </StackPanel>
             <Button Content="Tải lại" Command="{Binding RefreshCommand}"
                     Style="{StaticResource GhostButton}" HorizontalAlignment="Right" />
         </Grid>
 
-        <Border Grid.Row="1" Style="{StaticResource Card}" Margin="0,20,0,0">
+        <Border Grid.Row="1" Style="{StaticResource Card}" Margin="0,18,0,0" Padding="16,14">
+            <StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <RadioButton Content="Chờ duyệt" GroupName="ApprovalStatus"
+                                 IsChecked="{Binding IsPendingSelected}"
+                                 Margin="0,0,22,0" FontWeight="SemiBold" />
+                    <RadioButton Content="Đã duyệt" GroupName="ApprovalStatus"
+                                 IsChecked="{Binding IsApprovedSelected}"
+                                 Margin="0,0,22,0" FontWeight="SemiBold" />
+                    <RadioButton Content="Đã từ chối" GroupName="ApprovalStatus"
+                                 IsChecked="{Binding IsRejectedSelected}"
+                                 FontWeight="SemiBold" />
+                </StackPanel>
+
+                <Grid Margin="0,14,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="180" />
+                        <ColumnDefinition Width="230" />
+                        <ColumnDefinition Width="150" />
+                        <ColumnDefinition Width="150" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Margin="0,0,10,0">
+                        <TextBlock Text="Loại yêu cầu" Style="{StaticResource CaptionText}" />
+                        <ComboBox ItemsSource="{Binding TypeOptions}"
+                                  SelectedItem="{Binding SelectedType}"
+                                  DisplayMemberPath="Text" Height="34" Margin="0,4,0,0" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" Margin="0,0,10,0">
+                        <TextBlock Text="Tìm người gửi" Style="{StaticResource CaptionText}" />
+                        <TextBox Style="{StaticResource SearchBox}"
+                                 Width="220" Height="34" Margin="0,4,0,0"
+                                 Text="{Binding RequesterKeyword, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Delay=350}"
+                                 ToolTip="Nhập tên hoặc email người gửi. Danh sách tự lọc sau khi bạn ngừng gõ." />
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2" Margin="0,0,10,0">
+                        <TextBlock Text="Từ ngày" Style="{StaticResource CaptionText}" />
+                        <DatePicker SelectedDate="{Binding FromDate}" Height="34" Margin="0,4,0,0" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="3" Margin="0,0,10,0">
+                        <TextBlock Text="Đến ngày" Style="{StaticResource CaptionText}" />
+                        <DatePicker SelectedDate="{Binding ToDate}" Height="34" Margin="0,4,0,0" />
+                    </StackPanel>
+                    <Button Grid.Column="4" Content="Lọc" Command="{Binding ApplyFilterCommand}"
+                            Style="{StaticResource PrimaryButton}" VerticalAlignment="Bottom"
+                            Margin="0,0,8,0" />
+                    <Button Grid.Column="5" Content="Xóa lọc" Command="{Binding ClearFilterCommand}"
+                            Style="{StaticResource GhostButton}" VerticalAlignment="Bottom" />
+                </Grid>
+            </StackPanel>
+        </Border>
+
+        <Border Grid.Row="2" Style="{StaticResource Card}" Margin="0,16,0,0">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*" />
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
-                <DataGrid ItemsSource="{Binding Requests}" SelectedItem="{Binding SelectedRequest}"
-                          AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column"
-                          GridLinesVisibility="Horizontal" BorderThickness="0">
-                    <DataGrid.Columns>
-                        <DataGridTextColumn Header="LOẠI YÊU CẦU" Binding="{Binding TypeText}" Width="180" />
-                        <DataGridTextColumn Header="ĐỐI TƯỢNG" Binding="{Binding TargetText}" Width="100" />
-                        <DataGridTextColumn Header="GIÁ TRỊ" Binding="{Binding ValueText}" Width="130" />
-                        <DataGridTextColumn Header="NGƯỜI YÊU CẦU" Binding="{Binding RequesterText}" Width="180" />
-                        <DataGridTextColumn Header="THỜI GIAN" Binding="{Binding RequestedAt, StringFormat=dd/MM/yyyy HH:mm}" Width="150" />
-                        <DataGridTextColumn Header="LÝ DO" Binding="{Binding Reason}" Width="*" />
-                    </DataGrid.Columns>
-                </DataGrid>
-                <TextBlock Text="Không có yêu cầu đang chờ duyệt."
-                           HorizontalAlignment="Center" VerticalAlignment="Center">
-                    <TextBlock.Style>
-                        <Style TargetType="TextBlock" BasedOn="{StaticResource BodyText}">
-                            <Setter Property="Visibility" Value="Collapsed" />
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding IsEmpty}" Value="True">
-                                    <Setter Property="Visibility" Value="Visible" />
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </TextBlock.Style>
-                </TextBlock>
-                <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right"
-                            Margin="16,14">
-                    <Button Content="Từ chối" Command="{Binding RejectCommand}"
-                            IsEnabled="{Binding HasSelection}" Style="{StaticResource GhostButton}" />
-                    <Button Content="Duyệt yêu cầu" Command="{Binding ApproveCommand}"
-                            IsEnabled="{Binding HasSelection}" Style="{StaticResource PrimaryButton}"
-                            Margin="10,0,0,0" />
-                </StackPanel>
+
+                <Grid>
+                    <DataGrid x:Name="RequestsGrid"
+                              ItemsSource="{Binding Requests}"
+                              SelectedItem="{Binding SelectedRequest}"
+                              SelectionChanged="RequestsGrid_SelectionChanged"
+                              SelectionMode="Single"
+                              AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column"
+                              GridLinesVisibility="Horizontal" BorderThickness="0">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="LOẠI YÊU CẦU" Binding="{Binding TypeText}" Width="190" />
+                            <DataGridTextColumn Header="ĐỐI TƯỢNG" Binding="{Binding TargetText}" Width="190" />
+                            <DataGridTextColumn Header="NGƯỜI GỬI" Binding="{Binding RequesterText}" Width="180" />
+                            <DataGridTextColumn Header="THỜI GIAN GỬI" Binding="{Binding RequestedAt, StringFormat=dd/MM/yyyy HH:mm}" Width="155" />
+                            <DataGridTextColumn Header="LÝ DO" Binding="{Binding Reason}" Width="*" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock" BasedOn="{StaticResource BodyText}">
+                                <Setter Property="Text" Value="Không có yêu cầu phù hợp." />
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsEmpty}" Value="True">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </Grid>
+
+                <!-- Chi hien khi dang o tab Cho duyet VA nguoi dung da click chon mot request. -->
+                <Border Grid.Row="1" BorderThickness="0,1,0,0" BorderBrush="#22000000"
+                        Padding="16,12"
+                        Visibility="{Binding CanReviewSelection, Converter={StaticResource BoolToVis}}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Yêu cầu đang chọn" Style="{StaticResource CaptionText}" />
+                            <TextBlock Text="{Binding SelectedRequest.ActionSummaryText}"
+                                       Style="{StaticResource BodyText}" FontWeight="SemiBold"
+                                       Margin="0,3,0,0" TextWrapping="Wrap" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center"
+                                    Margin="18,0,0,0">
+                            <Button Content="Từ chối" Command="{Binding RejectCommand}"
+                                    Style="{StaticResource GhostButton}" />
+                            <Button Content="Duyệt yêu cầu" Command="{Binding ApproveCommand}"
+                                    Style="{StaticResource PrimaryButton}" Margin="10,0,0,0" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
             </Grid>
         </Border>
     </Grid>
