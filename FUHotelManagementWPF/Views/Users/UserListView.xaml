@@ -135,10 +135,14 @@
                               Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}" />
 
             <!-- Trang thai rong -->
-            <TextBlock Grid.Row="3" Text="Không có tài khoản nào khớp — thử từ khoá khác, bỏ lọc vai trò hoặc thêm tài khoản mới."
-                       Style="{StaticResource CaptionText}" FontSize="13"
-                       HorizontalAlignment="Center" VerticalAlignment="Center"
-                       Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVis}}" />
+            <Border Grid.Row="3" Background="{StaticResource CardBrush}" BorderBrush="{StaticResource LineBrush}" BorderThickness="1" CornerRadius="6" Padding="32,24" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVis}}">
+                <StackPanel HorizontalAlignment="Center">
+                    <TextBlock Text="&#xE721;" Style="{StaticResource IconText}" FontSize="32" Foreground="{StaticResource InkSoftBrush}" HorizontalAlignment="Center" />
+                    <TextBlock Text="Không tìm thấy tài khoản nhân viên nào" Style="{StaticResource SectionTitleText}" FontSize="15" HorizontalAlignment="Center" Margin="0,10,0,0" />
+                    <TextBlock Text="Thử thay đổi từ khoá tìm kiếm hoặc bỏ chọn lọc vai trò hiện tại." Style="{StaticResource CaptionText}" FontSize="12" HorizontalAlignment="Center" Margin="0,4,0,0" />
+                    <Button Content="Bỏ bộ lọc" Style="{StaticResource GhostButton}" HorizontalAlignment="Center" Margin="0,14,0,0" Padding="16,6" Command="{Binding ClearFilterCommand}" />
+                </StackPanel>
+            </Border>
 
             <!-- Trang thai loi -->
             <Border Grid.Row="3" Background="{StaticResource DangerSoftBrush}" CornerRadius="4"
@@ -174,8 +178,9 @@
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
-                                <!-- Avatar chu cai dau (hinh tron - ngoai le cua he bo goc 4px) -->
+                                <!-- Avatar chu cai dau -->
                                 <Border Grid.Column="0" Width="40" Height="40" CornerRadius="999"
                                         Background="{StaticResource BrandSoftBrush}">
                                     <TextBlock Text="{Binding Initial}" FontWeight="Bold" FontSize="15"
@@ -192,16 +197,48 @@
                                     <TextBlock Text="{Binding RoleDisplay}" />
                                 </Border>
                                 <Border Grid.Column="3" Style="{StaticResource UserStatusBadge}"
-                                        VerticalAlignment="Center">
+                                        VerticalAlignment="Center" Margin="0,0,10,0">
                                     <TextBlock Text="{Binding StatusText}" />
                                 </Border>
+
+                                <!-- Nút thao tác nhanh trên từng dòng -->
+                                <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Button Style="{StaticResource IconGhostButton}" ToolTip="Sửa thông tin tài khoản"
+                                            Command="{Binding DataContext.EditCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            CommandParameter="{Binding}" Margin="0,0,4,0">
+                                        <TextBlock Text="&#xE70F;" Style="{StaticResource IconText}" FontSize="13" />
+                                    </Button>
+                                    <Button Style="{StaticResource IconGhostButton}" ToolTip="Đặt lại mật khẩu"
+                                            Command="{Binding DataContext.ResetPasswordCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            CommandParameter="{Binding}" Margin="0,0,4,0">
+                                        <TextBlock Text="&#xE8D7;" Style="{StaticResource IconText}" FontSize="13" />
+                                    </Button>
+                                    <Button Style="{StaticResource IconGhostButton}" ToolTip="{Binding ToggleActiveToolTip}"
+                                            Command="{Binding DataContext.ToggleActiveCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            CommandParameter="{Binding}" IsEnabled="{Binding CanToggleActive}">
+                                        <TextBlock FontSize="13">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock" BasedOn="{StaticResource IconText}">
+                                                    <Setter Property="Text" Value="&#xE72E;" />
+                                                    <Setter Property="Foreground" Value="{StaticResource DangerBrush}" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsActive}" Value="False">
+                                                            <Setter Property="Text" Value="&#xE785;" />
+                                                            <Setter Property="Foreground" Value="{StaticResource SuccessBrush}" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </Button>
+                                </StackPanel>
                             </Grid>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>
 
                 <Border Grid.Column="2" Style="{StaticResource Card}" Effect="{StaticResource SoftShadow}"
-                        VerticalAlignment="Top">
+                        VerticalAlignment="Top" Padding="18">
                     <Grid>
                         <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Margin="20,50"
                                     TextElement.Foreground="{StaticResource InkSoftBrush}">
@@ -256,57 +293,40 @@
 
                             <TextBlock Text="EMAIL ĐĂNG NHẬP" Style="{StaticResource FieldLabel}" />
                             <TextBlock Text="{Binding Email}" FontWeight="SemiBold"
-                                       TextTrimming="CharacterEllipsis" Margin="0,0,0,10" />
+                                       TextTrimming="CharacterEllipsis" Margin="0,2,0,10" />
 
-                            <TextBlock Text="VAI TRÒ" Style="{StaticResource FieldLabel}" />
-                            <TextBlock Text="{Binding RoleDisplay}" FontWeight="SemiBold" Margin="0,0,0,10" />
+                            <TextBlock Text="VAI TRÒ HỆ THỐNG" Style="{StaticResource FieldLabel}" />
+                            <TextBlock Text="{Binding RoleDisplay}" FontWeight="SemiBold" Margin="0,2,0,10" />
 
-                            <TextBlock Text="TRẠNG THÁI" Style="{StaticResource FieldLabel}" />
-                            <TextBlock Text="{Binding StatusText}" FontWeight="SemiBold" />
+                            <TextBlock Text="TRẠNG THÁI TÀI KHOẢN" Style="{StaticResource FieldLabel}" />
+                            <TextBlock Text="{Binding StatusText}" FontWeight="SemiBold" Margin="0,2,0,0" />
 
                             <Border Height="1" Background="{StaticResource LineBrush}" Margin="0,16,0,14" />
 
-                            <!-- Ca ba nut cung mot khoi WrapPanel, chieu rong bang nhau. De hai
-                                 nut o StackPanel ngang roi nut Khoa nam rieng ben duoi thi no
-                                 rot xuong mot minh mot dong, nhin nhu bi vang ra ngoai. -->
-                            <WrapPanel>
-                                <WrapPanel.Resources>
-                                    <Style TargetType="Button" BasedOn="{StaticResource GhostButton}">
-                                        <Setter Property="Padding" Value="16,7" />
-                                        <Setter Property="MinWidth" Value="148" />
-                                        <Setter Property="Margin" Value="0,0,10,10" />
-                                    </Style>
-                                </WrapPanel.Resources>
-
+                            <StackPanel Orientation="Vertical">
                                 <Button Content="Sửa thông tin" Style="{StaticResource PrimaryButton}"
-                                        Padding="16,7" MinWidth="148" Margin="0,0,10,10"
-                                        Visibility="{Binding CanEdit, Converter={StaticResource BoolToVis}}"
-                                        Command="{Binding DataContext.EditCommand,
-                                                  RelativeSource={RelativeSource AncestorType=UserControl}}" />
-                                <Button Content="Đặt lại mật khẩu"
+                                        Padding="16,8" Margin="0,0,0,8" HorizontalAlignment="Stretch"
+                                        Command="{Binding DataContext.EditCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                        CommandParameter="{Binding}" />
+                                <Button Content="Đặt lại mật khẩu" Style="{StaticResource GhostButton}"
+                                        Padding="16,8" Margin="0,0,0,8" HorizontalAlignment="Stretch"
                                         ToolTip="Đặt mật khẩu mới cho nhân viên này"
-                                        Visibility="{Binding CanResetPassword, Converter={StaticResource BoolToVis}}"
-                                        Command="{Binding DataContext.ResetPasswordCommand,
-                                                  RelativeSource={RelativeSource AncestorType=UserControl}}" />
-
-                                <!-- Nut khoa tat khi dang chon chinh minh - tu khoa thi khong con ai
-                                     vao duoc bang Admin nua (service cung chan them mot lop). -->
+                                        Command="{Binding DataContext.ResetPasswordCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                        CommandParameter="{Binding}" />
                                 <Button Content="{Binding ToggleActiveText}"
+                                        Style="{StaticResource GhostButton}"
                                         Foreground="{StaticResource DangerBrush}"
+                                        Padding="16,8" HorizontalAlignment="Stretch"
                                         IsEnabled="{Binding CanToggleActive}"
-                                        Visibility="{Binding CanToggleActive, Converter={StaticResource BoolToVis}}"
                                         ToolTip="{Binding ToggleActiveToolTip}"
-                                        Command="{Binding DataContext.ToggleActiveCommand,
-                                                  RelativeSource={RelativeSource AncestorType=UserControl}}" />
-                            </WrapPanel>
+                                        Command="{Binding DataContext.ToggleActiveCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                        CommandParameter="{Binding}" />
+                            </StackPanel>
 
-                            <!-- Tai khoan Admin: khong co nut nao, thay bang dong giai thich -->
-                            <Border Background="{StaticResource SurfaceAltBrush}" CornerRadius="4"
-                                    Padding="12,10"
-                                    Visibility="{Binding ShowAdminLockNote, Converter={StaticResource BoolToVis}}">
-                                <TextBlock TextWrapping="Wrap" FontSize="12.5"
-                                           Foreground="{StaticResource InkSoftBrush}"
-                                           Text="Tài khoản Quản trị viên do cấu hình triển khai tạo ra. Ứng dụng không cho sửa, khoá hay đổi mật khẩu tài khoản này, và cũng không cấp vai trò Quản trị viên cho tài khoản khác." />
+                            <Border Background="{StaticResource InfoSoftBrush}" CornerRadius="4" Padding="12,10" Margin="0,10,0,0"
+                                    Visibility="{Binding IsSelf, Converter={StaticResource BoolToVis}}">
+                                <TextBlock TextWrapping="Wrap" FontSize="11.5" Foreground="{StaticResource InfoBrush}"
+                                           Text="Bạn đang đăng nhập bằng tài khoản này. Để đảm bảo an toàn, hệ thống không cho phép tự khoá phiên làm việc hiện tại." />
                             </Border>
                         </StackPanel>
                     </Grid>
