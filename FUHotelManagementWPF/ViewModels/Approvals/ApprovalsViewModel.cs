@@ -153,7 +153,7 @@ public sealed class ApprovalsViewModel : ViewModelBase
                 Notify.Error(result.Message);
                 return;
             }
-            foreach (var request in result.Data) Requests.Add(new ApprovalRow(request));
+            foreach (var item in result.Data) Requests.Add(new ApprovalRow(item.Request, item.TargetDisplayName));
             OnPropertyChanged(nameof(IsEmpty));
         }
         catch

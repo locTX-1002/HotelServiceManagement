@@ -12,6 +12,8 @@ public interface IApprovalRequestRepository
         string? requesterKeyword,
         DateTime? fromDate,
         DateTime? toDate);
+    Task<Dictionary<(ApprovalRequestType Type, int TargetId), string>>
+        GetTargetDisplayNamesAsync(IReadOnlyCollection<ApprovalRequest> requests);
     Task<ApprovalRequest?> GetByIdAsync(int id);
     Task<ApprovalRequest?> GetByIdForReviewAsync(int id);
     Task<bool> HasPendingAsync(ApprovalRequestType type, int targetId);

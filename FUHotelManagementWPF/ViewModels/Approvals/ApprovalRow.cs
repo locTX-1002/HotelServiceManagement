@@ -26,10 +26,8 @@ public sealed class ApprovalRow
         _ => Request.Status.ToString()
     };
 
-    // TargetId la khoa noi bo. UI uu tien ten nguoi/phong de nguoi duyet hieu ngay doi tuong.
-    public string TargetText => string.IsNullOrWhiteSpace(Request.TargetDisplayName)
-        ? "Đối tượng không còn tồn tại"
-        : Request.TargetDisplayName;
+    // TargetId la khoa noi bo. Ten hien thi thuoc read model/UI, khong thuoc EF entity.
+    public string TargetText { get; }
 
     public bool IsInvoiceDiscount => Request.RequestType == ApprovalRequestType.InvoiceDiscount;
 
@@ -76,5 +74,11 @@ public sealed class ApprovalRow
     public string RequestedAtText => Request.RequestedAt.ToString("dd/MM/yyyy HH:mm");
     public string Reason => Request.Reason;
 
-    public ApprovalRow(ApprovalRequest request) => Request = request;
+    public ApprovalRow(ApprovalRequest request, string targetDisplayName)
+    {
+        Request = request;
+        TargetText = string.IsNullOrWhiteSpace(targetDisplayName)
+            ? "Đối tượng không còn tồn tại"
+            : targetDisplayName;
+    }
 }

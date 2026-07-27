@@ -5,8 +5,8 @@ namespace Services;
 
 public interface IApprovalService
 {
-    Task<ServiceResult<List<ApprovalRequest>>> GetPendingAsync();
-    Task<ServiceResult<List<ApprovalRequest>>> SearchAsync(
+    Task<ServiceResult<List<ApprovalListItem>>> GetPendingAsync();
+    Task<ServiceResult<List<ApprovalListItem>>> SearchAsync(
         ApprovalRequestStatus status,
         ApprovalRequestType? type = null,
         string? requesterKeyword = null,

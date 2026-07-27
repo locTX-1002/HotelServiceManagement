@@ -92,6 +92,12 @@ public class DynamicAuthorizationTests
         public Task<List<ApprovalRequest>> SearchAsync(ApprovalRequestStatus status, ApprovalRequestType? type,
             string? requesterKeyword, DateTime? fromDate, DateTime? toDate)
             => Task.FromResult(new List<ApprovalRequest> { request });
+        public Task<Dictionary<(ApprovalRequestType Type, int TargetId), string>>
+            GetTargetDisplayNamesAsync(IReadOnlyCollection<ApprovalRequest> requests)
+            => Task.FromResult(new Dictionary<(ApprovalRequestType Type, int TargetId), string>
+            {
+                [(request.RequestType, request.TargetId)] = "Test target"
+            });
         public Task<ApprovalRequest?> GetByIdAsync(int id) => Task.FromResult<ApprovalRequest?>(request);
         public Task<ApprovalRequest?> GetByIdForReviewAsync(int id) => Task.FromResult<ApprovalRequest?>(request);
         public Task<bool> HasPendingAsync(ApprovalRequestType type, int targetId) => Task.FromResult(false);

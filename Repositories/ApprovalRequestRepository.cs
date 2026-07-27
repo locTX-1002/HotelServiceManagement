@@ -14,6 +14,9 @@ public sealed class ApprovalRequestRepository : IApprovalRequestRepository
         DateTime? fromDate,
         DateTime? toDate)
         => ApprovalRequestDAO.Instance.SearchAsync(status, type, requesterKeyword, fromDate, toDate);
+    public Task<Dictionary<(ApprovalRequestType Type, int TargetId), string>>
+        GetTargetDisplayNamesAsync(IReadOnlyCollection<ApprovalRequest> requests)
+        => ApprovalRequestDAO.Instance.GetTargetDisplayNamesAsync(requests);
     public Task<ApprovalRequest?> GetByIdAsync(int id) => ApprovalRequestDAO.Instance.GetByIdAsync(id);
     public Task<ApprovalRequest?> GetByIdForReviewAsync(int id)
         => ApprovalRequestDAO.Instance.GetByIdForReviewAsync(id);

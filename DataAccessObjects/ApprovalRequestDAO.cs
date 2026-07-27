@@ -59,15 +59,15 @@ public sealed class ApprovalRequestDAO
             ? await query.OrderBy(x => x.RequestedAt).ToListAsync()
             : await query.OrderByDescending(x => x.ReviewedAt ?? x.RequestedAt).ToListAsync();
 
-        await PopulateTargetDisplayNamesAsync(db, requests);
         return requests;
     }
 
-    private static async Task PopulateTargetDisplayNamesAsync(
-        HotelDbContext db, IReadOnlyCollection<ApprovalRequest> requests)
+    public async Task<Dictionary<(ApprovalRequestType Type, int TargetId), string>>
+        GetTargetDisplayNamesAsync(IReadOnlyCollection<ApprovalRequest> requests)
     {
-        if (requests.Count == 0) return;
+        if (requests.Count == 0) return [];
 
+        await using var db = HotelDbContextFactory.Create();
         var names = new Dictionary<(ApprovalRequestType Type, int TargetId), string>();
 
         var reservationIds = requests
@@ -140,10 +140,11 @@ public sealed class ApprovalRequestDAO
 
         foreach (var request in requests)
         {
-            request.TargetDisplayName = names.TryGetValue((request.RequestType, request.TargetId), out var name)
-                ? name
-                : "Đối tượng không còn tồn tại";
+            var key = (request.RequestType, request.TargetId);
+            if (!names.ContainsKey(key)) names[key] = "Đối tượng không còn tồn tại";
         }
+
+        return names;
     }
 
     public async Task<ApprovalRequest?> GetByIdAsync(int id)

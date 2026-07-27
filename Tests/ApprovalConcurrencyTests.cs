@@ -178,7 +178,7 @@ public class ApprovalConcurrencyTests
 
             Assert.True(result.Ok, result.Message);
             Assert.NotNull(result.Data);
-            var item = Assert.Single(result.Data!, x => x.Id == requestId);
+            var item = Assert.Single(result.Data!, x => x.Request.Id == requestId);
             Assert.Equal($"Phòng {roomNumber}", item.TargetDisplayName);
         }
         finally

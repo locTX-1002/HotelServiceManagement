@@ -24,10 +24,10 @@ public sealed class ApprovalService : IApprovalService
         _payments = payments;
     }
 
-    public Task<ServiceResult<List<ApprovalRequest>>> GetPendingAsync()
+    public Task<ServiceResult<List<ApprovalListItem>>> GetPendingAsync()
         => SearchAsync(ApprovalRequestStatus.Pending);
 
-    public async Task<ServiceResult<List<ApprovalRequest>>> SearchAsync(
+    public async Task<ServiceResult<List<ApprovalListItem>>> SearchAsync(
         ApprovalRequestStatus status,
         ApprovalRequestType? type = null,
         string? requesterKeyword = null,
@@ -37,20 +37,30 @@ public sealed class ApprovalService : IApprovalService
         if (status is not (ApprovalRequestStatus.Pending
             or ApprovalRequestStatus.Approved
             or ApprovalRequestStatus.Rejected))
-            return ServiceResult<List<ApprovalRequest>>.Failure("Trạng thái phê duyệt không hợp lệ.");
+            return ServiceResult<List<ApprovalListItem>>.Failure("Trạng thái phê duyệt không hợp lệ.");
         if (!Enum.GetValues<ApprovalRequestType>().Any(HasApprovePermission))
-            return ServiceResult<List<ApprovalRequest>>.Failure("Bạn không có quyền xem danh sách phê duyệt.");
+            return ServiceResult<List<ApprovalListItem>>.Failure("Bạn không có quyền xem danh sách phê duyệt.");
         if (type.HasValue && !HasApprovePermission(type.Value))
-            return ServiceResult<List<ApprovalRequest>>.Failure("Bạn không có quyền xem loại yêu cầu này.");
+            return ServiceResult<List<ApprovalListItem>>.Failure("Bạn không có quyền xem loại yêu cầu này.");
         if (!string.IsNullOrWhiteSpace(requesterKeyword) && requesterKeyword.Trim().Length > 100)
-            return ServiceResult<List<ApprovalRequest>>.Failure("Từ khóa người gửi tối đa 100 ký tự.");
+            return ServiceResult<List<ApprovalListItem>>.Failure("Từ khóa người gửi tối đa 100 ký tự.");
         if (fromDate.HasValue && toDate.HasValue && fromDate.Value.Date > toDate.Value.Date)
-            return ServiceResult<List<ApprovalRequest>>.Failure("Từ ngày không được sau đến ngày.");
+            return ServiceResult<List<ApprovalListItem>>.Failure("Từ ngày không được sau đến ngày.");
 
         var all = await _requests.SearchAsync(
             status, type, requesterKeyword, fromDate, toDate);
-        return ServiceResult<List<ApprovalRequest>>.Success(
-            all.Where(x => HasApprovePermission(x.RequestType)).ToList());
+        var visible = all.Where(x => HasApprovePermission(x.RequestType)).ToList();
+        var targetNames = await _requests.GetTargetDisplayNamesAsync(visible);
+        var items = visible.Select(request =>
+        {
+            var key = (request.RequestType, request.TargetId);
+            var displayName = targetNames.TryGetValue(key, out var name)
+                ? name
+                : "Đối tượng không còn tồn tại";
+            return new ApprovalListItem(request, displayName);
+        }).ToList();
+
+        return ServiceResult<List<ApprovalListItem>>.Success(items);
     }
 
     public async Task<ServiceResult<ApprovalRequest>> RequestAsync(
