@@ -26,6 +26,8 @@ public static class AuthorizationPolicy
            || HasPermission(PermissionCodes.ReservationUpdate)
            || HasPermission(PermissionCodes.StayCheckIn)
            || HasPermission(PermissionCodes.StayCheckOut);
+    public static bool CanViewReservations => HasPermission(PermissionCodes.ReservationView);
+    public static bool CanViewGuests => HasPermission(PermissionCodes.GuestView);
     public static bool CanManageGuests => HasPermission(PermissionCodes.GuestManage);
     public static bool CanManageServiceCatalog => HasPermission(PermissionCodes.ServiceCatalogManage);
     public static bool CanCreateServiceOrder => HasPermission(PermissionCodes.ServiceOrderCreate);
@@ -40,6 +42,8 @@ public static class AuthorizationPolicy
     public static bool CanApprovePaymentVoid => HasPermission(PermissionCodes.PaymentVoidApprove);
     public static bool CanRequestInvoiceCancel => HasPermission(PermissionCodes.InvoiceCancelRequest);
     public static bool CanApproveInvoiceCancel => HasPermission(PermissionCodes.InvoiceCancelApprove);
+    public static bool CanRequestReservationCancel => HasPermission(PermissionCodes.ReservationCancelRequest);
+    public static bool CanApproveReservationCancel => HasPermission(PermissionCodes.ReservationCancelApprove);
     public static bool CanViewReports => HasPermission(PermissionCodes.ReportView);
     public static bool CanExportReports => HasPermission(PermissionCodes.ReportExport);
 

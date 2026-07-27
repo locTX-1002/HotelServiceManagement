@@ -33,10 +33,13 @@ public sealed class ReservationService : IReservationService
 
     public async Task<ServiceResult<Reservation>> CreateAsync(int guestId, int roomId,
         int numberOfGuests, DateTime checkInDate, DateTime checkOutDate, string? specialRequests,
-        decimal? depositAmount, PaymentMethod? depositPaymentMethod)
+        decimal? depositAmount, PaymentMethod? depositPaymentMethod,
+        ReservationStatus initialStatus = ReservationStatus.Pending)
     {
         if (!AuthorizationPolicy.HasPermission(PermissionCodes.ReservationCreate))
             return ServiceResult<Reservation>.Failure("Bạn không có quyền tạo đặt phòng.");
+        if (initialStatus is not (ReservationStatus.Pending or ReservationStatus.Confirmed))
+            return ServiceResult<Reservation>.Failure("Trạng thái khởi tạo không hợp lệ.");
         var error = Validate(numberOfGuests, checkInDate, checkOutDate, specialRequests,
             depositAmount, depositPaymentMethod);
         if (error != null) return ServiceResult<Reservation>.Failure(error);
@@ -69,7 +72,7 @@ public sealed class ReservationService : IReservationService
             NumberOfGuests = numberOfGuests,
             CheckInDate = checkInDate,
             CheckOutDate = checkOutDate,
-            Status = ReservationStatus.Pending,
+            Status = initialStatus,
             SpecialRequests = Normalize(specialRequests),
             DepositAmount = depositAmount,
             DepositPaymentMethod = depositAmount > 0 ? depositPaymentMethod : null,
@@ -195,6 +198,8 @@ public sealed class ReservationService : IReservationService
 
     public async Task<ServiceResult<Reservation>> NoShowAsync(int id)
     {
+        if (!AuthorizationPolicy.CanOperateFrontDesk)
+            return ServiceResult<Reservation>.Failure("Bạn không có quyền chuyển trạng thái Không đến.");
         var reservation = await _reservations.GetByIdAsync(id);
         if (reservation == null) return ServiceResult<Reservation>.Failure("Không tìm thấy đặt phòng.");
         // Nhan ca don CHO xac nhan: don rac thi le tan phai xac nhan mot cai vo nghia roi

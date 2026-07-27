@@ -395,7 +395,10 @@ public class GuestReservationFlowTests : IAsyncLifetime
         // Tai khoan demo (receptionist@hotel.com...) bi app khoa moi lan khoi dong nen KHONG chac ton tai
         // -> uu tien dung no neu con active, khong thi nho TestUsers tao tai khoan cung vai tro.
         await using var db = HotelDbContextFactory.Create();
-        var user = await db.Users.AsNoTracking().Include(u => u.Role)
+        var user = await db.Users.AsNoTracking()
+            .Include(u => u.Role)
+                .ThenInclude(r => r.RolePermissions)
+                .ThenInclude(rp => rp.Permission)
             .FirstOrDefaultAsync(u => u.Email == email && u.IsActive);
         if (user != null) { AppSession.SignIn(user); return; }
 

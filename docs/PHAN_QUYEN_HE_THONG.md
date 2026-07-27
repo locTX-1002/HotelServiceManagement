@@ -63,8 +63,8 @@ Quản lý chịu trách nhiệm kiểm soát và phê duyệt:
 - duyệt hủy hóa đơn theo quy trình;
 - theo dõi hoạt động vận hành.
 
-Quản lý không quản trị tài khoản hệ thống và không trực tiếp ghi nhận khoản thanh
-toán hằng ngày thay lễ tân.
+Quản lý không quản trị tài khoản hệ thống, không trực tiếp lập hóa đơn và không
+ghi nhận khoản thanh toán hằng ngày thay lễ tân.
 
 ### 3.3. Lễ tân
 
@@ -122,7 +122,8 @@ Ký hiệu:
 | Phụ thu | Quản lý danh mục phụ thu | Không | Có | Không | Không |
 | Phụ thu | Thêm phụ thu vào lượt ở | Không | Không | Có | Không |
 | Khuyến mãi | Quản lý chương trình khuyến mãi | Không | Có | Không | Không |
-| Hóa đơn | Xem/lập/tính lại hóa đơn | Không | Có | Có | Không |
+| Hóa đơn | Xem hóa đơn | Không | Có | Có | Không |
+| Hóa đơn | Lập và tính lại hóa đơn | Không | Không | Có | Không |
 | Hóa đơn | Nhập giảm giá thủ công | Không | Duyệt | Yêu cầu | Không |
 | Hóa đơn | Hủy hóa đơn | Không | Duyệt | Yêu cầu | Không |
 | Thanh toán | Ghi nhận thanh toán | Không | Không | Có | Không |
