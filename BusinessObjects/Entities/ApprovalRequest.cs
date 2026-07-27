@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations.Schema;
 using BusinessObjects.Common;
 using BusinessObjects.Enums;
 
@@ -19,4 +20,8 @@ public class ApprovalRequest : BaseEntity
     public virtual User? ReviewedByUser { get; set; }
     public DateTime? ReviewedAt { get; set; }
     public string? ReviewNote { get; set; }
+
+    // Gia tri hien thi tam thoi cho UI phe duyet. Khong luu DB; duoc nap theo RequestType + TargetId.
+    [NotMapped]
+    public string TargetDisplayName { get; set; } = string.Empty;
 }
