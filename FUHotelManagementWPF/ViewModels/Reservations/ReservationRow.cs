@@ -41,7 +41,7 @@ namespace FUHotelManagementWPF.ViewModels.Reservations
         public ReservationStatus Status => Reservation.Status;
         public bool CanConfirm => AuthorizationPolicy.CanOperateFrontDesk && Reservation.Status == ReservationStatus.Pending;
         public bool CanEdit => AuthorizationPolicy.CanOperateFrontDesk && Reservation.Status is ReservationStatus.Pending or ReservationStatus.Confirmed;
-        public bool CanCancel => (AuthorizationPolicy.CanOperateFrontDesk || AuthorizationPolicy.HasPermission(PermissionCodes.ReservationCancelApprove)) && CanEdit;
+        public bool CanCancel => (AuthorizationPolicy.CanOperateFrontDesk || AuthorizationPolicy.CanRequestReservationCancel) && CanEdit;
         public bool CanNoShow => AuthorizationPolicy.CanOperateFrontDesk && (Reservation.Status is ReservationStatus.Confirmed or ReservationStatus.Pending);
 
         public ReservationRow(Reservation reservation)
