@@ -64,8 +64,24 @@ namespace FUHotelManagementWPF.ViewModels.AuditLogs
             get
             {
                 if (string.IsNullOrWhiteSpace(ChangeText) || ChangeText == "—")
-                    return $"{ActionText} · {TargetText}";
-                return $"{ActionText} · {ChangeText}";
+                    return TargetText;
+                return ChangeText;
+            }
+        }
+
+        /// <summary>Chi tiet thao tac da lam sach trung lap va ma ky thuat cho nguoi dung de doc.</summary>
+        public string DetailText
+        {
+            get
+            {
+                var text = SummaryText;
+                if (!string.IsNullOrWhiteSpace(Log.ActionCode) && text.StartsWith(Log.ActionCode, StringComparison.OrdinalIgnoreCase))
+                {
+                    var idx = text.IndexOfAny(new[] { '-', '·', ':' });
+                    if (idx >= 0 && idx < text.Length - 1)
+                        text = text[(idx + 1)..].Trim();
+                }
+                return text;
             }
         }
 
