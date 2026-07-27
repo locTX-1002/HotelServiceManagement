@@ -66,9 +66,15 @@ namespace FUHotelManagementWPF.ViewModels.Users
 
         public ObservableCollection<UserRow> Rows { get; } = [];
 
-        /// <summary>Toan module chi danh cho Admin - vai tro khac chi thay dong thong bao.</summary>
-        public bool IsAdmin => AuthorizationPolicy.CanManageUsers;
-        public bool IsNotAdmin => !IsAdmin;
+        /// <summary>
+        /// Mo duoc man: dung DUNG dieu kien ma menu dung (<c>user.view</c>), khong thi
+        /// muc menu hien ra ma bam vao lai bao khong co quyen.
+        /// </summary>
+        public bool CanViewUsers => AuthorizationPolicy.CanViewUsers;
+        public bool NoUserAccess => !CanViewUsers;
+
+        /// <summary>Them / sua / khoa / dat lai mat khau - chat hon xem, doi <c>user.manage</c>.</summary>
+        public bool CanManageUsers => AuthorizationPolicy.CanManageUsers;
 
         public List<RoleFilterOption> RoleFilters { get; } =
         [
@@ -120,7 +126,7 @@ namespace FUHotelManagementWPF.ViewModels.Users
         }
         public bool HasError => !string.IsNullOrWhiteSpace(_errorMessage);
 
-        public bool IsEmpty => IsAdmin && !IsLoading && !HasError && Rows.Count == 0;
+        public bool IsEmpty => CanViewUsers && !IsLoading && !HasError && Rows.Count == 0;
 
         public string TotalText
         {
@@ -155,7 +161,7 @@ namespace FUHotelManagementWPF.ViewModels.Users
 
             RoleFilters[0].IsSelected = true;
 
-            if (IsAdmin)
+            if (CanViewUsers)
             {
                 _ = LoadAsync();
             }

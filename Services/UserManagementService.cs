@@ -18,7 +18,11 @@ public sealed class UserManagementService : IUserManagementService
     public UserManagementService(IUserRepository r) => _r = r;
     private static bool CanManageUsers => AuthorizationPolicy.CanManageUsers;
 
-    public async Task<ServiceResult<List<User>>> GetAllAsync() => !CanManageUsers ? ServiceResult<List<User>>.Failure("Bạn không có quyền quản lý nhân viên.") : ServiceResult<List<User>>.Success(await _r.GetAllAsync());
+    // Doc danh sach chi can quyen XEM; moi ham ghi ben duoi van doi quyen QUAN LY.
+    // Tach ra de menu "Nguoi dung" (hien theo user.view) va man hinh khong lech nhau.
+    private static bool CanViewUsers => AuthorizationPolicy.CanViewUsers;
+
+    public async Task<ServiceResult<List<User>>> GetAllAsync() => !CanViewUsers ? ServiceResult<List<User>>.Failure("Bạn không có quyền xem danh sách nhân viên.") : ServiceResult<List<User>>.Success(await _r.GetAllAsync());
 
     /// <summary>Vai tro duoc phep gan qua giao dien - lay tu DB, tru Admin.</summary>
     public async Task<ServiceResult<List<Role>>> GetAssignableRolesAsync()
