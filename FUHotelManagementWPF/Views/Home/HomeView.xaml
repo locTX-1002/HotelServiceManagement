@@ -374,7 +374,7 @@
                     Command="{Binding OpenRoomTypesCommand}" />
 
             <!-- ================= DAI SO LIEU VAN HANH ================= -->
-            <Border Background="{StaticResource SurfaceAltBrush}" Margin="0,32,0,0" Padding="40,16">
+            <Border Visibility="Collapsed" Background="{StaticResource SurfaceAltBrush}" Margin="0,32,0,0" Padding="40,16">
                 <StackPanel>
                     <DockPanel Margin="0,0,0,10">
                         <Button DockPanel.Dock="Right" Content="Tải lại" Style="{StaticResource GhostButton}"
