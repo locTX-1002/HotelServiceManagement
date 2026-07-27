@@ -348,6 +348,8 @@ namespace FUHotelManagementWPF.ViewModels.Home
 
         public RelayCommand OpenReportsCommand { get; }
         public RelayCommand OpenApprovalsCommand { get; }
+        public RelayCommand OpenReservationsCommand { get; }
+        public RelayCommand OpenGuestsCommand { get; }
 
         public HomeViewModel()
         {
@@ -359,6 +361,10 @@ namespace FUHotelManagementWPF.ViewModels.Home
                 _ => NavigationService.NavigateTo("Sơ đồ phòng"),
                 _ => AuthorizationPolicy.CanViewRooms);
             OpenCheckInOutCommand = new RelayCommand(_ => NavigationService.NavigateTo("Nhận / Trả phòng"), _ => CanOperateFrontDesk);
+            OpenReservationsCommand = new RelayCommand(
+                _ => NavigationService.NavigateTo("Đặt phòng"), _ => AuthorizationPolicy.CanViewReservations);
+            OpenGuestsCommand = new RelayCommand(
+                _ => NavigationService.NavigateTo("Khách hàng"), _ => AuthorizationPolicy.CanViewGuests);
             OpenUsersCommand = new RelayCommand(
                 _ => NavigationService.NavigateTo("Người dùng"), _ => AuthorizationPolicy.CanManageUsers);
             OpenAuditLogCommand = new RelayCommand(
