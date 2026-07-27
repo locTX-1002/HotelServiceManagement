@@ -17,8 +17,6 @@
          nut=pill(999) | o nhap=8 | card/dialog=12 | nav item=10 | badge=pill -->
 
     <!-- Bong khuech tan mem cho card/dialog - CAM bong den gat -->
-    <!-- x:Shared="False" de moi cho dung mot the Effect rieng. Dung chung mot the cho
-         nhieu control thi WPF nem loi khi control nam o cua so khac luong dispatcher. -->
     <DropShadowEffect x:Key="SoftShadow" x:Shared="False" BlurRadius="26" ShadowDepth="2" Direction="270"
                       Opacity="0.10" Color="#1D231D" />
     <DropShadowEffect x:Key="SoftShadowLarge" x:Shared="False" BlurRadius="40" ShadowDepth="4" Direction="270"
@@ -99,6 +97,15 @@
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
+    </Style>
+
+    <!-- Nut icon vuong nho (chinh sua, dat lai mat khau, khoa/mo...) -->
+    <Style x:Key="IconGhostButton" TargetType="Button" BasedOn="{StaticResource GhostButton}">
+        <Setter Property="Padding" Value="6" />
+        <Setter Property="Width" Value="30" />
+        <Setter Property="Height" Value="30" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
     </Style>
 
     <!-- O nhap chu: ap TOAN APP (style ngam) de moi module dong nhat,
