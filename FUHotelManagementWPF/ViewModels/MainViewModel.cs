@@ -125,6 +125,8 @@ namespace FUHotelManagementWPF.ViewModels
                 AppSession.SignOut();
                 LoggedOut?.Invoke();
             });
+
+            FUHotelManagementWPF.ViewModels.Permissions.PermissionsViewModel.LogoutRequested = () => LogoutCommand.Execute(null);
         }
         /// <summary>
         /// Don don treo ngay khi vao app: don da qua ngay nhan phong ma khach khong den thi

@@ -5,18 +5,59 @@ using System.Threading.Tasks;
 using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Data;
+using BusinessObjects;
 using BusinessObjects.Entities;
 using FUHotelManagementWPF.MvvmCore;
 using Services;
 
 namespace FUHotelManagementWPF.ViewModels.Permissions;
 
+public class ModuleFilterOption : ViewModelBase
+{
+    public string ModuleName { get; }
+    public string RawLabel { get; }
+
+    private int _grantedCount;
+    public int GrantedCount
+    {
+        get => _grantedCount;
+        set { if (SetProperty(ref _grantedCount, value)) OnPropertyChanged(nameof(Label)); }
+    }
+
+    private int _totalCount;
+    public int TotalCount
+    {
+        get => _totalCount;
+        set { if (SetProperty(ref _totalCount, value)) OnPropertyChanged(nameof(Label)); }
+    }
+
+    public string Label => TotalCount > 0
+        ? (ModuleName.Length == 0 ? $"{RawLabel} ({TotalCount})" : $"{RawLabel} ({GrantedCount}/{TotalCount})")
+        : RawLabel;
+
+    private bool _isSelected;
+    public bool IsSelected
+    {
+        get => _isSelected;
+        set => SetProperty(ref _isSelected, value);
+    }
+
+    public ModuleFilterOption(string moduleName, string label)
+    {
+        ModuleName = moduleName;
+        RawLabel = label;
+    }
+}
+
 public sealed class PermissionsViewModel : ViewModelBase
 {
     private readonly IPermissionManagementService _service = new PermissionManagementService();
     public ObservableCollection<Role> Roles { get; } = [];
     public ObservableCollection<PermissionOption> Permissions { get; } = [];
+    public ObservableCollection<ModuleFilterOption> ModuleFilters { get; } = [];
     public ICollectionView FilteredPermissions { get; }
+
+    private string _selectedModule = string.Empty;
 
     private Role? _selectedRole;
     public Role? SelectedRole
@@ -70,6 +111,7 @@ public sealed class PermissionsViewModel : ViewModelBase
     public AsyncRelayCommand SaveCommand { get; }
     public RelayCommand SelectAllCommand { get; }
     public RelayCommand DeselectAllCommand { get; }
+    public RelayCommand FilterModuleCommand { get; }
 
     public PermissionsViewModel()
     {
@@ -78,6 +120,7 @@ public sealed class PermissionsViewModel : ViewModelBase
         SaveCommand = new AsyncRelayCommand(_ => SaveAsync(), _ => !IsBusy);
         SelectAllCommand = new RelayCommand(_ => SetAll(true));
         DeselectAllCommand = new RelayCommand(_ => SetAll(false));
+        FilterModuleCommand = new RelayCommand(SelectModuleFilter);
 
         _ = LoadAsync();
     }
@@ -85,6 +128,10 @@ public sealed class PermissionsViewModel : ViewModelBase
     private bool FilterPermission(object item)
     {
         if (item is not PermissionOption option) return false;
+
+        if (_selectedModule.Length > 0 && !string.Equals(option.Module, _selectedModule, StringComparison.OrdinalIgnoreCase))
+            return false;
+
         if (string.IsNullOrWhiteSpace(SearchText)) return true;
         var k = SearchText.Trim();
         return option.Module.Contains(k, StringComparison.OrdinalIgnoreCase)
@@ -92,13 +139,106 @@ public sealed class PermissionsViewModel : ViewModelBase
             || option.Code.Contains(k, StringComparison.OrdinalIgnoreCase);
     }
 
-    private void SetAll(bool selected)
+    private void SelectModuleFilter(object? parameter)
     {
-        foreach (PermissionOption option in FilteredPermissions)
+        if (parameter is not ModuleFilterOption option) return;
+        _selectedModule = option.ModuleName;
+        foreach (var item in ModuleFilters)
         {
-            option.IsSelected = selected;
+            item.IsSelected = ReferenceEquals(item, option);
+        }
+        FilteredPermissions.Refresh();
+    }
+
+    private void RefreshModuleCounters()
+    {
+        foreach (var filter in ModuleFilters)
+        {
+            if (filter.ModuleName.Length == 0)
+            {
+                filter.TotalCount = Permissions.Count;
+                filter.GrantedCount = Permissions.Count(p => p.IsSelected);
+            }
+            else
+            {
+                var perms = Permissions.Where(p => string.Equals(p.Module, filter.ModuleName, StringComparison.OrdinalIgnoreCase)).ToList();
+                filter.TotalCount = perms.Count;
+                filter.GrantedCount = perms.Count(p => p.IsSelected);
+            }
         }
         OnPropertyChanged(nameof(GrantedCountText));
+    }
+
+    public static Action? LogoutRequested { get; set; }
+
+    private void SetAll(bool selected)
+    {
+        if (!selected)
+        {
+            foreach (PermissionOption option in FilteredPermissions)
+            {
+                option.IsSelected = false;
+            }
+            RefreshModuleCounters();
+            return;
+        }
+
+        // Cấp tất cả thông minh
+        if (_selectedModule.Length > 0)
+        {
+            // Đang lọc theo Module cụ thể: cấp tất cả các quyền thuộc Module đang lọc
+            foreach (PermissionOption option in FilteredPermissions)
+            {
+                option.IsSelected = true;
+            }
+        }
+        else
+        {
+            // Đang xem "Tất cả": Cấp quyền an toàn theo quy định Tách nhiệm vụ (Separation of Duties)
+            var isSystemAdminRole = string.Equals(SelectedRole?.RoleName, RoleNames.Admin, StringComparison.OrdinalIgnoreCase)
+                || (SelectedRole?.RolePermissions.Any(x => x.IsAllowed && string.Equals(x.Permission?.PermissionCode, PermissionCodes.PermissionManage, StringComparison.OrdinalIgnoreCase)) ?? false);
+
+            if (isSystemAdminRole)
+            {
+                // Vai trò quản trị hệ thống: chỉ cấp quyền hệ thống (user, permission, audit)
+                foreach (var p in Permissions)
+                {
+                    var code = p.Code.ToLowerInvariant();
+                    p.IsSelected = code.StartsWith("user.") || code.StartsWith("permission.") || code.StartsWith("audit.");
+                }
+            }
+            else
+            {
+                // Vai trò nghiệp vụ: loại trừ các quyền phê duyệt trùng với quyền yêu cầu
+                var excludedConflictCodes = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+                {
+                    PermissionCodes.ReservationCancelApprove,
+                    PermissionCodes.InvoiceDiscountApprove,
+                    PermissionCodes.InvoiceCancelApprove,
+                    PermissionCodes.PaymentVoidApprove,
+                    PermissionCodes.RoomMaintenanceApprove
+                };
+
+                foreach (var p in Permissions)
+                {
+                    var code = p.Code.ToLowerInvariant();
+                    if (code == PermissionCodes.PermissionManage || code == PermissionCodes.UserManage)
+                    {
+                        p.IsSelected = false;
+                    }
+                    else if (excludedConflictCodes.Contains(p.Code))
+                    {
+                        p.IsSelected = false;
+                    }
+                    else
+                    {
+                        p.IsSelected = true;
+                    }
+                }
+            }
+        }
+
+        RefreshModuleCounters();
     }
 
     private async Task LoadAsync()
@@ -122,6 +262,7 @@ public sealed class PermissionsViewModel : ViewModelBase
             var selectedId = SelectedRole?.Id;
             Roles.Clear();
             foreach (var role in roles.Data) Roles.Add(role);
+
             Permissions.Clear();
             foreach (var permission in permissions.Data)
             {
@@ -129,10 +270,21 @@ public sealed class PermissionsViewModel : ViewModelBase
                 opt.PropertyChanged += (_, e) =>
                 {
                     if (e.PropertyName == nameof(PermissionOption.IsSelected))
-                        OnPropertyChanged(nameof(GrantedCountText));
+                        RefreshModuleCounters();
                 };
                 Permissions.Add(opt);
             }
+
+            // Build Module Chips
+            var modules = Permissions.Select(p => p.Module).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(m => m);
+            ModuleFilters.Clear();
+            ModuleFilters.Add(new ModuleFilterOption(string.Empty, "Tất cả") { IsSelected = true });
+            foreach (var mod in modules)
+            {
+                ModuleFilters.Add(new ModuleFilterOption(mod, mod));
+            }
+            _selectedModule = string.Empty;
+
             SelectedRole = Roles.FirstOrDefault(x => x.Id == selectedId) ?? Roles.FirstOrDefault();
             ApplySelectedRole();
         }
@@ -150,16 +302,15 @@ public sealed class PermissionsViewModel : ViewModelBase
             .ToHashSet() ?? [];
         foreach (var permission in Permissions)
             permission.IsSelected = selectedIds.Contains(permission.Id);
+
+        RefreshModuleCounters();
         FilteredPermissions.Refresh();
-        OnPropertyChanged(nameof(GrantedCountText));
     }
 
     private async Task SaveAsync()
     {
         if (SelectedRole == null) return;
 
-        // Doi quyen anh huong toi TAT CA nguoi mang vai tro do, va chi thay hau qua sau khi
-        // ho dang nhap lai - nen hoi truoc, giong quy uoc hoi truoc khi xoa.
         var granted = Permissions.Count(x => x.IsSelected);
         var question = $"Lưu {granted}/{Permissions.Count} quyền cho vai trò \"{SelectedRole.DisplayName}\"?\n\n"
                      + "Mọi tài khoản thuộc vai trò này sẽ áp dụng quyền mới sau khi đăng nhập lại.";
@@ -178,6 +329,14 @@ public sealed class PermissionsViewModel : ViewModelBase
             {
                 Notify.Success(result.Message);
                 await LoadAsync();
+
+                var logoutQuestion = "Đã lưu phân quyền thành công.\n\n"
+                                   + "Bạn có muốn đăng xuất ngay bây giờ để hệ thống áp dụng quyền mới không?";
+                if (MessageBox.Show(logoutQuestion, "Áp dụng quyền mới", MessageBoxButton.YesNo, MessageBoxImage.Question)
+                    == MessageBoxResult.Yes)
+                {
+                    LogoutRequested?.Invoke();
+                }
             }
             else
             {
