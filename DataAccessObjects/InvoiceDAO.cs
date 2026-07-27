@@ -15,7 +15,9 @@ public sealed class InvoiceDAO
     public async Task<bool> SaveAsync(Invoice invoice, bool add)
     {
         await using var c = HotelDbContextFactory.Create();
-        await using var transaction = await c.Database.BeginTransactionAsync(IsolationLevel.Serializable);
+        await using var localTransaction = c.Database.CurrentTransaction == null
+            ? await c.Database.BeginTransactionAsync(IsolationLevel.Serializable)
+            : null;
         var stayIsBillable = await c.Stays.AnyAsync(s => s.Id == invoice.StayId
             && (s.Status == StayStatus.Active || s.Status == StayStatus.Completed));
         if (!stayIsBillable) return false;
@@ -46,7 +48,10 @@ public sealed class InvoiceDAO
         }
 
         await c.SaveChangesAsync();
-        await transaction.CommitAsync();
+        if (localTransaction != null)
+        {
+            await localTransaction.CommitAsync();
+        }
         return true;
     }
     public async Task<bool> CancelAsync(int id) { await using var c = HotelDbContextFactory.Create(); var x = await c.Invoices.Include(i => i.Payments).FirstOrDefaultAsync(i => i.Id == id); if (x == null || x.Payments.Any(p => p.Status == PaymentStatus.Completed)) return false; x.Status = InvoiceStatus.Cancelled; await c.SaveChangesAsync(); return true; }
