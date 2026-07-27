@@ -1,0 +1,143 @@
+<Window x:Class="FUHotelManagementWPF.Views.GuestPortal.GuestBookingDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:hc="https://handyorg.github.io/handycontrol"
+        Title="Đặt phòng trực tuyến"
+        Width="660" Height="650" MinWidth="620" MinHeight="590"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="CanResizeWithGrip"
+        Style="{StaticResource BaseWindow}">
+    <Border Margin="18" Style="{StaticResource Card}" Effect="{StaticResource SoftShadow}">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <StackPanel Grid.Row="0" Margin="0,0,0,16">
+                <TextBlock Text="Đặt phòng mới" Style="{StaticResource PageTitleText}" />
+                <TextBlock Text="Chọn ngày và phòng còn trống. Đơn mới sẽ ở trạng thái Chờ xác nhận."
+                           Style="{StaticResource CaptionText}" Margin="0,4,0,0" TextWrapping="Wrap" />
+            </StackPanel>
+
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                <StackPanel>
+                    <TextBlock Text="THỜI GIAN LƯU TRÚ" Style="{StaticResource FieldLabel}" />
+                    <Grid Margin="0,6,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="14" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Nhận phòng" Style="{StaticResource CaptionText}" />
+                            <DatePicker DisplayDateStart="{Binding MinCheckIn, Mode=OneWay}"
+                                        SelectedDate="{Binding CheckIn}" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="Trả phòng" Style="{StaticResource CaptionText}" />
+                            <DatePicker DisplayDateStart="{Binding MinCheckIn, Mode=OneWay}"
+                                        SelectedDate="{Binding CheckOut}" />
+                        </StackPanel>
+                    </Grid>
+
+                    <StackPanel Orientation="Horizontal" Margin="0,9,0,0">
+                        <TextBlock Text="Nhanh:" Style="{StaticResource CaptionText}"
+                                   VerticalAlignment="Center" Margin="0,0,8,0" />
+                        <Button Content="1 đêm" Style="{StaticResource QuickChip}"
+                                Command="{Binding PickNightsCommand}" CommandParameter="1" />
+                        <Button Content="2 đêm" Style="{StaticResource QuickChip}"
+                                Command="{Binding PickNightsCommand}" CommandParameter="2" />
+                        <Button Content="3 đêm" Style="{StaticResource QuickChip}"
+                                Command="{Binding PickNightsCommand}" CommandParameter="3" />
+                        <Button Content="1 tuần" Style="{StaticResource QuickChip}"
+                                Command="{Binding PickNightsCommand}" CommandParameter="7" />
+                    </StackPanel>
+
+                    <Border Height="1" Background="{StaticResource LineBrush}" Margin="0,18,0,16" />
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="150" />
+                            <ColumnDefinition Width="14" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="SỐ KHÁCH" Style="{StaticResource FieldLabel}" />
+                            <hc:NumericUpDown Minimum="1" Maximum="20" Value="{Binding NumberOfGuests}" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <DockPanel Margin="0,0,0,5">
+                                <Button DockPanel.Dock="Right" Content="Làm mới"
+                                        Style="{StaticResource GhostButton}" Padding="10,4"
+                                        Command="{Binding RefreshRoomsCommand}" />
+                                <TextBlock Text="PHÒNG CÒN TRỐNG" Style="{StaticResource FieldLabel}"
+                                           VerticalAlignment="Center" />
+                            </DockPanel>
+                            <ComboBox ItemsSource="{Binding AvailableRooms}"
+                                      SelectedItem="{Binding SelectedRoom}">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel>
+                                            <TextBlock>
+                                                <Run Text="Phòng " />
+                                                <Run Text="{Binding RoomNumber}" FontWeight="SemiBold" />
+                                                <Run Text=" · " />
+                                                <Run Text="{Binding RoomType.TypeName}" />
+                                            </TextBlock>
+                                            <TextBlock Style="{StaticResource CaptionText}" FontSize="11">
+                                                <Run Text="Tối đa " />
+                                                <Run Text="{Binding RoomType.Capacity}" />
+                                                <Run Text=" khách · " />
+                                                <Run Text="{Binding RoomType.BasePrice, Converter={StaticResource Money}, ConverterParameter=raw}" />
+                                                <Run Text=" đ/đêm" />
+                                            </TextBlock>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                            <TextBlock Text="Đang tìm phòng trống..." Style="{StaticResource CaptionText}"
+                                       Margin="0,6,0,0"
+                                       Visibility="{Binding IsLoadingRooms, Converter={StaticResource BoolToVis}}" />
+                            <TextBlock Text="Không có phòng phù hợp với số khách và khoảng ngày đã chọn."
+                                       Style="{StaticResource CaptionText}" Margin="0,6,0,0"
+                                       TextWrapping="Wrap"
+                                       Visibility="{Binding HasNoRooms, Converter={StaticResource BoolToVis}}" />
+                        </StackPanel>
+                    </Grid>
+
+                    <TextBlock Text="YÊU CẦU ĐẶC BIỆT" Style="{StaticResource FieldLabel}" Margin="0,18,0,5" />
+                    <TextBox Text="{Binding SpecialRequests, UpdateSourceTrigger=PropertyChanged}"
+                             Height="72" MaxLength="500" TextWrapping="Wrap" AcceptsReturn="True"
+                             VerticalScrollBarVisibility="Auto"
+                             ToolTip="Ví dụ: tầng cao, phòng yên tĩnh..." />
+
+                    <Border Background="{StaticResource DangerSoftBrush}" CornerRadius="4"
+                            Padding="11,9" Margin="0,14,0,0">
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Setter Property="Visibility" Value="Visible" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ErrorMessage}" Value="">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                        <TextBlock Text="{Binding ErrorMessage}" Foreground="{StaticResource DangerBrush}"
+                                   TextWrapping="Wrap" />
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+
+            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right"
+                        Margin="0,16,0,0">
+                <Button Content="Đóng" Style="{StaticResource GhostButton}" IsCancel="True" />
+                <Button Content="Gửi đặt phòng" Style="{StaticResource PrimaryButton}"
+                        Margin="8,0,0,0" MinWidth="130" IsDefault="True"
+                        Command="{Binding SaveCommand}" />
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>
