@@ -14,5 +14,11 @@ public interface IApprovalService
         DateTime? toDate = null);
     Task<ServiceResult<ApprovalRequest>> RequestAsync(
         ApprovalRequestType type, int targetId, string reason, decimal? requestedValue = null);
+
+    /// <summary>Khach dang nhap tu gui yeu cau huy DON CUA CHINH MINH.</summary>
+    Task<ServiceResult<ApprovalRequest>> RequestGuestReservationCancellationAsync(
+        int reservationId, string reason);
+    Task<ServiceResult<HashSet<int>>> GetMyPendingReservationCancellationIdsAsync();
+
     Task<ServiceResult<ApprovalRequest>> ReviewAsync(int requestId, bool approve, string? reviewNote);
 }

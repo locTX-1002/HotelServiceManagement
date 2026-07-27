@@ -31,6 +31,56 @@ public sealed class ReservationService : IReservationService
         return ServiceResult<List<Reservation>>.Success(await _reservations.GetByGuestAsync(guestId.Value));
     }
 
+    public async Task<ServiceResult<Reservation>> CreateForCurrentGuestAsync(
+        int roomId, int numberOfGuests, DateTime checkInDate, DateTime checkOutDate,
+        string? specialRequests)
+    {
+        var guestId = AppSession.CurrentGuestId;
+        if (guestId == null)
+            return ServiceResult<Reservation>.Failure("Chưa đăng nhập bằng tài khoản khách hàng.");
+        if (checkInDate.Date < DateTime.Today)
+            return ServiceResult<Reservation>.Failure("Ngày nhận phòng không được ở quá khứ.");
+
+        var error = Validate(numberOfGuests, checkInDate, checkOutDate, specialRequests, null, null);
+        if (error != null) return ServiceResult<Reservation>.Failure(error);
+
+        var guest = await _guests.GetByIdAsync(guestId.Value);
+        if (guest == null)
+            return ServiceResult<Reservation>.Failure("Không tìm thấy hồ sơ khách hàng của bạn.");
+        if (guest.Tag == GuestTag.Blacklisted)
+            return ServiceResult<Reservation>.Failure(
+                "Tài khoản hiện không thể tự đặt phòng. Vui lòng liên hệ Lễ tân.");
+
+        var room = await _rooms.GetByIdAsync(roomId);
+        var roomError = ValidateRoom(room, numberOfGuests);
+        if (roomError != null) return ServiceResult<Reservation>.Failure(roomError);
+        if (await _reservations.HasOverlapAsync(roomId, checkInDate, checkOutDate))
+            return ServiceResult<Reservation>.Failure(
+                "Phòng vừa được đặt trong khoảng thời gian này. Vui lòng chọn phòng khác.");
+
+        var entity = new Reservation
+        {
+            BookingCode = await GenerateCodeAsync(),
+            GuestId = guestId.Value,
+            RoomId = roomId,
+            NumberOfGuests = numberOfGuests,
+            CheckInDate = checkInDate,
+            CheckOutDate = checkOutDate,
+            Status = ReservationStatus.Pending,
+            SpecialRequests = Normalize(specialRequests),
+            DepositAmount = null,
+            DepositPaymentMethod = null,
+            DepositPaidAt = null,
+            CreatedByUserId = null
+        };
+
+        await _reservations.AddAsync(entity);
+        entity.Guest = guest;
+        entity.Room = room!;
+        return ServiceResult<Reservation>.Success(
+            entity, "Đã gửi đặt phòng. Vui lòng chờ Lễ tân xác nhận.");
+    }
+
     public async Task<ServiceResult<Reservation>> CreateAsync(int guestId, int roomId,
         int numberOfGuests, DateTime checkInDate, DateTime checkOutDate, string? specialRequests,
         decimal? depositAmount, PaymentMethod? depositPaymentMethod)

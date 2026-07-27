@@ -35,8 +35,14 @@ public sealed class ApprovalRow
         ? $"{Request.RequestedValue:N0} đ"
         : "—";
 
-    public string RequesterText => Request.RequestedByUser?.FullName
-        ?? $"Người dùng #{Request.RequestedByUserId}";
+    public string RequesterText => Request.RequestedByGuest?.FullName is { Length: > 0 } guestName
+        ? $"{guestName} (Khách)"
+        : Request.RequestedByUser?.FullName
+          ?? (Request.RequestedByUserId.HasValue
+              ? $"Người dùng #{Request.RequestedByUserId.Value}"
+              : Request.RequestedByGuestId.HasValue
+                  ? $"Khách #{Request.RequestedByGuestId.Value}"
+                  : "Không xác định");
 
     public string ReviewerText => Request.ReviewedByUser?.FullName
         ?? (Request.ReviewedByUserId.HasValue ? $"Người dùng #{Request.ReviewedByUserId}" : "—");

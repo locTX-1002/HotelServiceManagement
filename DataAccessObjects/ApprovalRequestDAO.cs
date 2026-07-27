@@ -27,6 +27,7 @@ public sealed class ApprovalRequestDAO
         await using var db = HotelDbContextFactory.Create();
         var query = db.ApprovalRequests.AsNoTracking()
             .Include(x => x.RequestedByUser)
+            .Include(x => x.RequestedByGuest)
             .Include(x => x.ReviewedByUser)
             .Where(x => x.Status == status);
 
@@ -39,8 +40,14 @@ public sealed class ApprovalRequestDAO
         {
             var keyword = requesterKeyword.Trim();
             query = query.Where(x =>
-                x.RequestedByUser.FullName.Contains(keyword)
-                || x.RequestedByUser.Email.Contains(keyword));
+                (x.RequestedByUser != null
+                    && (x.RequestedByUser.FullName.Contains(keyword)
+                        || x.RequestedByUser.Email.Contains(keyword)))
+                || (x.RequestedByGuest != null
+                    && (x.RequestedByGuest.FullName.Contains(keyword)
+                        || x.RequestedByGuest.PhoneNumber.Contains(keyword)
+                        || (x.RequestedByGuest.Email != null
+                            && x.RequestedByGuest.Email.Contains(keyword)))));
         }
 
         if (fromDate.HasValue)
@@ -152,6 +159,7 @@ public sealed class ApprovalRequestDAO
         await using var db = HotelDbContextFactory.Create();
         return await db.ApprovalRequests.AsNoTracking()
             .Include(x => x.RequestedByUser)
+            .Include(x => x.RequestedByGuest)
             .Include(x => x.ReviewedByUser)
             .FirstOrDefaultAsync(x => x.Id == id);
     }
@@ -178,10 +186,24 @@ public sealed class ApprovalRequestDAO
             && x.Status == ApprovalRequestStatus.Pending);
     }
 
+    public async Task<List<int>> GetPendingTargetIdsForGuestAsync(
+        ApprovalRequestType type, int guestId)
+    {
+        await using var db = HotelDbContextFactory.Create();
+        return await db.ApprovalRequests.AsNoTracking()
+            .Where(x => x.RequestType == type
+                        && x.RequestedByGuestId == guestId
+                        && x.Status == ApprovalRequestStatus.Pending)
+            .Select(x => x.TargetId)
+            .Distinct()
+            .ToListAsync();
+    }
+
     public async Task SaveAsync(ApprovalRequest request, bool add)
     {
         await using var db = HotelDbContextFactory.Create();
-        request.RequestedByUser = null!;
+        request.RequestedByUser = null;
+        request.RequestedByGuest = null;
         request.ReviewedByUser = null;
         if (add) db.ApprovalRequests.Add(request); else db.ApprovalRequests.Update(request);
         await db.SaveChangesAsync();

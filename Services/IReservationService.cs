@@ -12,6 +12,11 @@ public interface IReservationService
     /// Khong nhan guestId tu ben ngoai - lay tu phien, de khong ai truyen id nguoi khac vao xem trom.
     /// </summary>
     Task<ServiceResult<List<Reservation>>> GetMyReservationsAsync();
+
+    /// <summary>Khach dang nhap tu tao don cho CHINH MINH; GuestId lay tu session.</summary>
+    Task<ServiceResult<Reservation>> CreateForCurrentGuestAsync(int roomId, int numberOfGuests,
+        DateTime checkInDate, DateTime checkOutDate, string? specialRequests);
+
     Task<ServiceResult<Reservation>> CreateAsync(int guestId, int roomId, int numberOfGuests,
         DateTime checkInDate, DateTime checkOutDate, string? specialRequests,
         decimal? depositAmount, PaymentMethod? depositPaymentMethod);

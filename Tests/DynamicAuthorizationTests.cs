@@ -101,6 +101,8 @@ public class DynamicAuthorizationTests
         public Task<ApprovalRequest?> GetByIdAsync(int id) => Task.FromResult<ApprovalRequest?>(request);
         public Task<ApprovalRequest?> GetByIdForReviewAsync(int id) => Task.FromResult<ApprovalRequest?>(request);
         public Task<bool> HasPendingAsync(ApprovalRequestType type, int targetId) => Task.FromResult(false);
+        public Task<List<int>> GetPendingTargetIdsForGuestAsync(ApprovalRequestType type, int guestId)
+            => Task.FromResult(new List<int>());
         public Task SaveAsync(ApprovalRequest value, bool add) { Saved = true; return Task.CompletedTask; }
         public Task AddAuditAsync(AuditLog log) => Task.CompletedTask;
         public Task<T> ExecuteSerializableAsync<T>(Func<Task<T>> operation) => operation();

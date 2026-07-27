@@ -22,6 +22,8 @@ public sealed class ApprovalRequestRepository : IApprovalRequestRepository
         => ApprovalRequestDAO.Instance.GetByIdForReviewAsync(id);
     public Task<bool> HasPendingAsync(ApprovalRequestType type, int targetId)
         => ApprovalRequestDAO.Instance.HasPendingAsync(type, targetId);
+    public Task<List<int>> GetPendingTargetIdsForGuestAsync(ApprovalRequestType type, int guestId)
+        => ApprovalRequestDAO.Instance.GetPendingTargetIdsForGuestAsync(type, guestId);
     public Task SaveAsync(ApprovalRequest request, bool add)
         => ApprovalRequestDAO.Instance.SaveAsync(request, add);
     public Task AddAuditAsync(AuditLog log) => ApprovalRequestDAO.Instance.AddAuditAsync(log);

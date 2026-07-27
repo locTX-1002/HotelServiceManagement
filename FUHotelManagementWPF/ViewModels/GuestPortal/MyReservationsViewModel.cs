@@ -2,6 +2,9 @@ using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
+using FUHotelManagementWPF.ViewModels.Rooms;
+using FUHotelManagementWPF.Views.Dialogs;
+using FUHotelManagementWPF.Views.GuestPortal;
 using FUHotelManagementWPF.MvvmCore;
 using Services;
 
@@ -15,6 +18,7 @@ namespace FUHotelManagementWPF.ViewModels.GuestPortal
     public class MyReservationsViewModel : ViewModelBase
     {
         private readonly IReservationService _service = new ReservationService();
+        private readonly IApprovalService _approvalService = new ApprovalService();
 
         public ObservableCollection<MyReservationRow> Rows { get; } = [];
 
@@ -50,10 +54,15 @@ namespace FUHotelManagementWPF.ViewModels.GuestPortal
         public string StayingText => $"{_stayingCount} đơn";
 
         public AsyncRelayCommand ReloadCommand { get; }
+        public RelayCommand NewBookingCommand { get; }
+        public AsyncRelayCommand RequestCancelCommand { get; }
 
         public MyReservationsViewModel()
         {
             ReloadCommand = new AsyncRelayCommand(ReloadAsync);
+            NewBookingCommand = new RelayCommand(_ => OpenBookingDialog());
+            RequestCancelCommand = new AsyncRelayCommand(RequestCancelAsync, p =>
+                p is MyReservationRow row && row.CanRequestCancel);
             _ = LoadAsync();
         }
 
@@ -71,6 +80,15 @@ namespace FUHotelManagementWPF.ViewModels.GuestPortal
                 }
 
                 var rows = (result.Data ?? []).Select(r => new MyReservationRow(r)).ToList();
+
+                // Neu guest da gui request huy va bam Tai lai, nut "Yeu cau huy" van phai
+                // bien mat. Lay pending ids theo mot query thay vi N+1 query cho tung dong.
+                var pendingCancel = await _approvalService.GetMyPendingReservationCancellationIdsAsync();
+                if (pendingCancel.Ok && pendingCancel.Data != null)
+                {
+                    foreach (var row in rows.Where(x => pendingCancel.Data.Contains(x.Reservation.Id)))
+                        row.MarkCancelRequestSent();
+                }
 
                 // Don dang o / sap toi len tren (gan ngay nhan phong nhat truoc),
                 // don da tra phong hoac da huy xuong duoi (moi nhat truoc).
@@ -103,6 +121,38 @@ namespace FUHotelManagementWPF.ViewModels.GuestPortal
             {
                 IsLoading = false;
             }
+        }
+
+        private void OpenBookingDialog()
+        {
+            var viewModel = new GuestBookingDialogViewModel();
+            var dialog = new GuestBookingDialog(viewModel)
+            {
+                Owner = RoomMapViewModel.ActiveWindow()
+            };
+            if (dialog.ShowDialog() == true)
+                _ = LoadAsync();
+        }
+
+        private async Task RequestCancelAsync(object? parameter)
+        {
+            if (parameter is not MyReservationRow row || !row.CanRequestCancel) return;
+
+            var reason = ReasonDialog.Prompt(
+                $"Yêu cầu huỷ {row.BookingCode}",
+                RoomMapViewModel.ActiveWindow());
+            if (reason == null) return;
+
+            var result = await _approvalService.RequestGuestReservationCancellationAsync(
+                row.Reservation.Id, reason);
+            if (!result.Ok)
+            {
+                Notify.Error(result.Message);
+                return;
+            }
+
+            row.MarkCancelRequestSent();
+            Notify.Success(result.Message);
         }
 
         // Nut "Tải lại": bao thanh cong de khach biet du lieu vua duoc lam moi;

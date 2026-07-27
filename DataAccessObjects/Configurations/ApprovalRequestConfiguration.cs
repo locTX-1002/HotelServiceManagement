@@ -15,10 +15,18 @@ public class ApprovalRequestConfiguration : IEntityTypeConfiguration<ApprovalReq
         builder.Property(x => x.Reason).IsRequired().HasMaxLength(500);
         builder.Property(x => x.ReviewNote).HasMaxLength(500);
         builder.HasIndex(x => new { x.RequestType, x.TargetId, x.Status });
+        builder.ToTable(t => t.HasCheckConstraint(
+            "CK_ApprovalRequest_Requester",
+            "([RequestedByUserId] IS NOT NULL AND [RequestedByGuestId] IS NULL) OR " +
+            "([RequestedByUserId] IS NULL AND [RequestedByGuestId] IS NOT NULL)"));
 
         builder.HasOne(x => x.RequestedByUser)
             .WithMany()
             .HasForeignKey(x => x.RequestedByUserId)
+            .OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne(x => x.RequestedByGuest)
+            .WithMany()
+            .HasForeignKey(x => x.RequestedByGuestId)
             .OnDelete(DeleteBehavior.Restrict);
         builder.HasOne(x => x.ReviewedByUser)
             .WithMany()

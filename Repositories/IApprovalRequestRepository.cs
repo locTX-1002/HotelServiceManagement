@@ -17,6 +17,7 @@ public interface IApprovalRequestRepository
     Task<ApprovalRequest?> GetByIdAsync(int id);
     Task<ApprovalRequest?> GetByIdForReviewAsync(int id);
     Task<bool> HasPendingAsync(ApprovalRequestType type, int targetId);
+    Task<List<int>> GetPendingTargetIdsForGuestAsync(ApprovalRequestType type, int guestId);
     Task SaveAsync(ApprovalRequest request, bool add);
     Task AddAuditAsync(AuditLog log);
     Task<T> ExecuteSerializableAsync<T>(Func<Task<T>> operation);

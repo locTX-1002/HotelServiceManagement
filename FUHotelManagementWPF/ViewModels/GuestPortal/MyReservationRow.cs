@@ -1,6 +1,7 @@
 using System;
 using BusinessObjects.Entities;
 using BusinessObjects.Enums;
+using FUHotelManagementWPF.MvvmCore;
 
 namespace FUHotelManagementWPF.ViewModels.GuestPortal
 {
@@ -8,7 +9,7 @@ namespace FUHotelManagementWPF.ViewModels.GuestPortal
     /// Mot dong don dat phong hien cho KHACH xem (chi doc). Gom san cac chuoi da dinh dang
     /// de View khong phai dung converter rieng cho tung o.
     /// </summary>
-    public class MyReservationRow
+    public class MyReservationRow : ViewModelBase
     {
         public Reservation Reservation { get; }
 
@@ -74,6 +75,24 @@ namespace FUHotelManagementWPF.ViewModels.GuestPortal
             or ReservationStatus.Pending;
 
         public bool IsStaying => Reservation.Status == ReservationStatus.CheckedIn;
+
+        private bool _cancelRequestSent;
+        public bool CancelRequestSent
+        {
+            get => _cancelRequestSent;
+            private set
+            {
+                if (SetProperty(ref _cancelRequestSent, value))
+                    OnPropertyChanged(nameof(CanRequestCancel));
+            }
+        }
+
+        /// <summary>Khach chi gui YEU CAU huy; khong tu doi status reservation.</summary>
+        public bool CanRequestCancel
+            => Reservation.Status is ReservationStatus.Pending or ReservationStatus.Confirmed
+               && !CancelRequestSent;
+
+        public void MarkCancelRequestSent() => CancelRequestSent = true;
 
         // Thu tu trong nhom "con hieu luc": dang o truoc, roi den don da xac nhan, cuoi la don cho duyet.
         public int SortRank => Reservation.Status switch

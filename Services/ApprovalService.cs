@@ -98,6 +98,63 @@ public sealed class ApprovalService : IApprovalService
         });
     }
 
+    public async Task<ServiceResult<ApprovalRequest>> RequestGuestReservationCancellationAsync(
+        int reservationId, string reason)
+    {
+        var guestId = AppSession.CurrentGuestId;
+        if (guestId == null)
+            return ServiceResult<ApprovalRequest>.Failure("Chưa đăng nhập bằng tài khoản khách hàng.");
+        if (reservationId <= 0)
+            return ServiceResult<ApprovalRequest>.Failure("Đơn đặt phòng không hợp lệ.");
+        if (string.IsNullOrWhiteSpace(reason) || reason.Trim().Length > 500)
+            return ServiceResult<ApprovalRequest>.Failure("Lý do phải có từ 1 đến 500 ký tự.");
+
+        // Ownership + status + duplicate check cung nam trong transaction Serializable.
+        // Khong nhan guestId tu UI, nen khach A khong the truyen id don cua khach B.
+        return await _requests.ExecuteSerializableAsync(async () =>
+        {
+            var mine = await _reservations.GetMyReservationsAsync();
+            if (!mine.Ok || mine.Data == null)
+                return ServiceResult<ApprovalRequest>.Failure(mine.Message);
+
+            var reservation = mine.Data.FirstOrDefault(x => x.Id == reservationId);
+            if (reservation == null)
+                return ServiceResult<ApprovalRequest>.Failure("Không tìm thấy đơn đặt phòng của bạn.");
+            if (reservation.Status is not (ReservationStatus.Pending or ReservationStatus.Confirmed))
+                return ServiceResult<ApprovalRequest>.Failure(
+                    "Chỉ đơn đang chờ hoặc đã xác nhận mới có thể yêu cầu huỷ.");
+
+            if (await _requests.HasPendingAsync(ApprovalRequestType.ReservationCancel, reservationId))
+                return ServiceResult<ApprovalRequest>.Failure(
+                    "Đơn này đã có yêu cầu huỷ đang chờ Quản lý xử lý.");
+
+            var request = new ApprovalRequest
+            {
+                RequestType = ApprovalRequestType.ReservationCancel,
+                TargetId = reservationId,
+                Reason = reason.Trim(),
+                RequestedByGuestId = guestId.Value,
+                RequestedAt = DateTime.Now
+            };
+            await _requests.SaveAsync(request, true);
+            await AuditAsync("approval.request", request, null,
+                $"{request.Status};guestId={guestId.Value}", true);
+            return ServiceResult<ApprovalRequest>.Success(
+                request, "Đã gửi yêu cầu huỷ. Vui lòng chờ Quản lý phê duyệt.");
+        });
+    }
+
+    public async Task<ServiceResult<HashSet<int>>> GetMyPendingReservationCancellationIdsAsync()
+    {
+        var guestId = AppSession.CurrentGuestId;
+        if (guestId == null)
+            return ServiceResult<HashSet<int>>.Failure("Chưa đăng nhập bằng tài khoản khách hàng.");
+
+        var ids = await _requests.GetPendingTargetIdsForGuestAsync(
+            ApprovalRequestType.ReservationCancel, guestId.Value);
+        return ServiceResult<HashSet<int>>.Success(ids.ToHashSet());
+    }
+
     public async Task<ServiceResult<ApprovalRequest>> ReviewAsync(
         int requestId, bool approve, string? reviewNote)
     {
@@ -120,7 +177,7 @@ public sealed class ApprovalService : IApprovalService
                 return ServiceResult<ApprovalRequest>.Failure("Bạn không có quyền phê duyệt yêu cầu này.");
             if (request.Status != ApprovalRequestStatus.Pending)
                 return ServiceResult<ApprovalRequest>.Failure("Yêu cầu này đã được xử lý.");
-            if (request.RequestedByUserId == reviewer.Id)
+            if (request.RequestedByUserId.HasValue && request.RequestedByUserId.Value == reviewer.Id)
                 return ServiceResult<ApprovalRequest>.Failure("Người tạo yêu cầu không được tự phê duyệt.");
 
             var oldStatus = request.Status.ToString();
