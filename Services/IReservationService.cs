@@ -14,7 +14,8 @@ public interface IReservationService
     Task<ServiceResult<List<Reservation>>> GetMyReservationsAsync();
     Task<ServiceResult<Reservation>> CreateAsync(int guestId, int roomId, int numberOfGuests,
         DateTime checkInDate, DateTime checkOutDate, string? specialRequests,
-        decimal? depositAmount, PaymentMethod? depositPaymentMethod);
+        decimal? depositAmount, PaymentMethod? depositPaymentMethod,
+        ReservationStatus initialStatus = ReservationStatus.Pending);
     Task<ServiceResult<Reservation>> UpdateAsync(int id, int roomId, int numberOfGuests,
         DateTime checkInDate, DateTime checkOutDate, string? specialRequests);
     Task<ServiceResult<Reservation>> ConfirmAsync(int id);

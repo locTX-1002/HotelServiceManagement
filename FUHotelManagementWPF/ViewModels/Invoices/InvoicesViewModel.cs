@@ -177,8 +177,11 @@ public sealed class InvoicesViewModel : ViewModelBase
         set => SetProperty(ref _manualDiscount, value);
     }
 
-    /// <summary>Le tan gui yeu cau giam tay; quan ly duyet va nhap truc tiep.</summary>
-    public bool CanGiveManualDiscount => AuthorizationPolicy.CanGiveManualDiscount;
+    /// <summary>
+    /// O nhap chi hien cho nguoi GUI yeu cau (Le tan). Quan ly khong go so tien o man nay -
+    /// duyet yeu cau da gui qua man Phe duyet, khong tu ap truc tiep tai day.
+    /// </summary>
+    public bool CanGiveManualDiscount => AuthorizationPolicy.CanRequestManualDiscount;
 
     private Invoice? _invoice;
     public Invoice? Invoice
