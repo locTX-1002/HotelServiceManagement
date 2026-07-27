@@ -10,5 +10,7 @@ public class AuditLogRepository : IAuditLogRepository
 
     public Task<List<string>> GetActionCodesAsync() => AuditLogDAO.Instance.GetActionCodesAsync();
 
+    public Task<List<User>> GetActorsAsync() => AuditLogDAO.Instance.GetActorsAsync();
+
     public Task AddAsync(AuditLog log) => AuditLogDAO.Instance.AddAsync(log);
 }

@@ -19,7 +19,6 @@ namespace FUHotelManagementWPF.ViewModels.AuditLogs
     public class AuditLogsViewModel : ViewModelBase
     {
         private readonly IAuditLogService _service = new AuditLogService();
-        private readonly IUserManagementService _users = new UserManagementService();
 
         public ObservableCollection<AuditLogRow> Rows { get; } = [];
 
@@ -125,12 +124,12 @@ namespace FUHotelManagementWPF.ViewModels.AuditLogs
                 }
             }
 
-            // Danh sach nguoi thao tac lay tu bang tai khoan: nhat ky chi luu Id nen
-            // khong tu do ra duoc ten cho o chon.
-            var users = await _users.GetAllAsync();
-            if (users.Ok && users.Data != null)
+            // Nguoi thao tac lay tu chinh bang nhat ky: chi liet ke ai da tung de lai dau vet,
+            // va khong doi them quyen quan ly nhan su.
+            var actors = await _service.GetActorsAsync();
+            if (actors.Ok && actors.Data != null)
             {
-                foreach (var user in users.Data)
+                foreach (var user in actors.Data)
                 {
                     Actors.Add(user);
                 }

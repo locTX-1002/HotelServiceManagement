@@ -35,6 +35,22 @@ public sealed class AuditLogDAO
         return await query.OrderByDescending(x => x.CreatedAt).Take(take).ToListAsync();
     }
 
+    /// <summary>
+    /// Nhung nguoi da tung de lai dau vet. Lay tu chinh bang nhat ky chu khong hoi bang
+    /// Users: doc bang Users doi quyen quan ly nhan su, ma nguoi chi co quyen xem nhat ky
+    /// thi khong co quyen do - se ra o loc rong ma khong hieu tai sao.
+    /// </summary>
+    public async Task<List<User>> GetActorsAsync()
+    {
+        await using var db = HotelDbContextFactory.Create();
+        return await db.AuditLogs.AsNoTracking()
+            .Where(x => x.User != null)
+            .Select(x => x.User!)
+            .Distinct()
+            .OrderBy(x => x.FullName)
+            .ToListAsync();
+    }
+
     /// <summary>Danh sach ma hanh dong da tung xuat hien - de do bo loc thay vi go tay.</summary>
     public async Task<List<string>> GetActionCodesAsync()
     {

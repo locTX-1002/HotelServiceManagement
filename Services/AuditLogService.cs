@@ -36,4 +36,9 @@ public sealed class AuditLogService : IAuditLogService
         => !AuthorizationPolicy.CanViewAuditLog
             ? ServiceResult<List<string>>.Failure("Bạn không có quyền xem nhật ký hệ thống.")
             : ServiceResult<List<string>>.Success(await _repository.GetActionCodesAsync());
+
+    public async Task<ServiceResult<List<User>>> GetActorsAsync()
+        => !AuthorizationPolicy.CanViewAuditLog
+            ? ServiceResult<List<User>>.Failure("Bạn không có quyền xem nhật ký hệ thống.")
+            : ServiceResult<List<User>>.Success(await _repository.GetActorsAsync());
 }
