@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using BusinessObjects;
 using BusinessObjects.Entities;
 using BusinessObjects.Enums;
 using FUHotelManagementWPF.MvvmCore;
@@ -153,20 +154,27 @@ namespace FUHotelManagementWPF.ViewModels.Home
 
         private async void OpenBookDialog(RoomType? preferredType)
         {
-            var viewModel = new CreateReservationDialogViewModel(null)
+            try
             {
-                CheckIn = CheckIn,
-                CheckOut = CheckOut > CheckIn ? CheckOut : CheckIn.AddDays(1),
-                NumberOfGuests = preferredType != null ? Math.Min(Guests, preferredType.Capacity) : Guests,
-            };
-            var dialog = new CreateReservationDialog(viewModel)
+                var viewModel = new CreateReservationDialogViewModel(null)
+                {
+                    CheckIn = CheckIn,
+                    CheckOut = CheckOut > CheckIn ? CheckOut : CheckIn.AddDays(1),
+                    NumberOfGuests = preferredType != null ? Math.Min(Guests, preferredType.Capacity) : Guests,
+                };
+                var dialog = new CreateReservationDialog(viewModel)
+                {
+                    Owner = RoomMapViewModel.ActiveWindow(),
+                };
+                if (dialog.ShowDialog() == true)
+                {
+                    // Dialog da bao thanh cong roi - bao them o day thi hien 2 toast chong nhau.
+                    await LoadAsync();
+                }
+            }
+            catch (Exception ex)
             {
-                Owner = RoomMapViewModel.ActiveWindow(),
-            };
-            if (dialog.ShowDialog() == true)
-            {
-                // Dialog da bao thanh cong roi - bao them o day thi hien 2 toast chong nhau.
-                await LoadAsync();
+                Notify.Error($"Lỗi: {ex.Message}");
             }
         }
 
@@ -274,14 +282,18 @@ namespace FUHotelManagementWPF.ViewModels.Home
             private set => SetProperty(ref _isLoading, value);
         }
 
+        public bool CanOperateFrontDesk => AuthorizationPolicy.CanOperateFrontDesk;
+
         public HomeViewModel()
         {
             PrevHeroCommand = new RelayCommand(_ => MoveHero(-1));
             NextHeroCommand = new RelayCommand(_ => MoveHero(1));
-            SearchCommand = new AsyncRelayCommand(SearchAsync);
-            BookCommand = new RelayCommand(p => OpenBookDialog(p as RoomType));
-            OpenRoomTypesCommand = new RelayCommand(_ => NavigationService.NavigateTo("Sơ đồ phòng"));
-            OpenCheckInOutCommand = new RelayCommand(_ => NavigationService.NavigateTo("Nhận / Trả phòng"));
+            SearchCommand = new AsyncRelayCommand(SearchAsync, _ => CanOperateFrontDesk);
+            BookCommand = new RelayCommand(p => OpenBookDialog(p as RoomType), _ => CanOperateFrontDesk);
+            OpenRoomTypesCommand = new RelayCommand(
+                _ => NavigationService.NavigateTo("Sơ đồ phòng"),
+                _ => AuthorizationPolicy.CanViewRooms);
+            OpenCheckInOutCommand = new RelayCommand(_ => NavigationService.NavigateTo("Nhận / Trả phòng"), _ => CanOperateFrontDesk);
             RefreshCommand = new AsyncRelayCommand(_ => LoadAsync());
             _ = LoadAsync();
         }
