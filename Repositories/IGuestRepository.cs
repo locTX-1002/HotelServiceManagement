@@ -6,6 +6,7 @@ public interface IGuestRepository
 {
     Task<List<Guest>> GetAllAsync();
     Task<Guest?> GetByIdAsync(int id);
+    Task<Guest?> GetByPhoneAsync(string phoneNumber);
     Task<List<Guest>> SearchAsync(string keyword);
     Task<bool> IdentityNumberExistsAsync(string value, int? excludeId = null);
     Task<bool> HasReservationsAsync(int guestId);
