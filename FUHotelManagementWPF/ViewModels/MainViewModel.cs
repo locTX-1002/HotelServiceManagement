@@ -96,6 +96,8 @@ namespace FUHotelManagementWPF.ViewModels
                 new("", "Người dùng", systemGroup, () => new Users.UserListViewModel(), [PermissionCodes.UserView]),
                 new("", "Phân quyền", systemGroup, () => new Permissions.PermissionsViewModel(),
                     [PermissionCodes.PermissionManage]),
+                new("", "Nhật ký hệ thống", systemGroup, () => new AuditLogs.AuditLogsViewModel(),
+                    [PermissionCodes.AuditView]),
             };
 
             // Loc NGAY luc dung danh sach thay vi dung Filter cua CollectionView: vai tro khong
@@ -123,6 +125,8 @@ namespace FUHotelManagementWPF.ViewModels
                 AppSession.SignOut();
                 LoggedOut?.Invoke();
             });
+
+            FUHotelManagementWPF.ViewModels.Permissions.PermissionsViewModel.LogoutRequested = () => LogoutCommand.Execute(null);
         }
         /// <summary>
         /// Don don treo ngay khi vao app: don da qua ngay nhan phong ma khach khong den thi

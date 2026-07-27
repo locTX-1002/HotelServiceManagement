@@ -14,8 +14,11 @@ public static class AuthorizationPolicy
 {
     public static bool HasPermission(string permissionCode) => AppSession.HasPermission(permissionCode);
 
+    /// <summary>Mo duoc man Nhan su. Thao tac tren tai khoan phai them CanManageUsers.</summary>
+    public static bool CanViewUsers => HasPermission(PermissionCodes.UserView);
     public static bool CanManageUsers => HasPermission(PermissionCodes.UserManage);
     public static bool CanManagePermissions => HasPermission(PermissionCodes.PermissionManage);
+    public static bool CanViewAuditLog => HasPermission(PermissionCodes.AuditView);
     public static bool CanViewRooms => HasPermission(PermissionCodes.RoomView);
     public static bool CanManageRooms => HasPermission(PermissionCodes.RoomManage);
     public static bool CanOperateFrontDesk

@@ -42,8 +42,15 @@ public partial class MyProfileView : UserControl
             return;
         }
 
-        await _viewModel.ChangePasswordAsync(
-            CurrentInput.Password, NewInput.Password, ConfirmInput.Password);
+        try
+        {
+            await _viewModel.ChangePasswordAsync(
+                CurrentInput.Password, NewInput.Password, ConfirmInput.Password);
+        }
+        catch (System.Exception ex)
+        {
+            MvvmCore.Notify.Error($"Lỗi: {ex.Message}");
+        }
     }
 
     private void ClearPasswordBoxes()
