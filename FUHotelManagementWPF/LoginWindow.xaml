@@ -151,12 +151,14 @@
                 <Border Background="{StaticResource SurfaceAltBrush}" CornerRadius="4"
                         Padding="11,8" Margin="0,16,0,0">
                     <StackPanel>
-                        <TextBlock Text="Tài khoản demo" Style="{StaticResource FieldLabel}"
-                                   HorizontalAlignment="Center" />
+                        <!-- Liet ke ca hai vi moi vai tro thay mot bo man khac han: admin chi
+                             quan tri tai khoan/quyen, manager moi la nguoi van hanh khach san. -->
+                        <TextBlock Text="Tài khoản demo · mật khẩu FuHotel@2026"
+                                   Style="{StaticResource FieldLabel}" HorizontalAlignment="Center" />
                         <TextBlock HorizontalAlignment="Center" Margin="0,4,0,0" FontSize="12.5">
                             <Run Text="admin@hotel.com" FontWeight="SemiBold" /><Run
                             Text="  ·  " Foreground="{StaticResource InkSoftBrush}" /><Run
-                            Text="FuHotel@2026" FontWeight="SemiBold" />
+                            Text="manager@hotel.com" FontWeight="SemiBold" />
                         </TextBlock>
                     </StackPanel>
                 </Border>
