@@ -20,6 +20,8 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
     /// Tab so do: thanh thong ke + luoi card phong (thumbnail theo loai) nhom theo tang
     /// bang CollectionView GroupDescriptions. Bam card de doi trang thai van hanh.
     /// </summary>
+    public record StatusFilterOption(string Label, RoomStatus? Status);
+
     public class RoomMapViewModel : ViewModelBase
     {
         private readonly IRoomService _roomService = new RoomService();
@@ -29,6 +31,34 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
 
         /// <summary>Ban nhom theo GroupTitle - moi tang 1 header tu dong, khong xep tay.</summary>
         public ICollectionView RoomsView { get; }
+
+        private string _searchText = string.Empty;
+        public string SearchText
+        {
+            get => _searchText;
+            set
+            {
+                if (SetProperty(ref _searchText, value))
+                {
+                    ApplyFilter();
+                }
+            }
+        }
+
+        private StatusFilterOption _selectedStatusOption;
+        public StatusFilterOption SelectedStatusOption
+        {
+            get => _selectedStatusOption;
+            set
+            {
+                if (SetProperty(ref _selectedStatusOption, value))
+                {
+                    ApplyFilter();
+                }
+            }
+        }
+
+        public List<StatusFilterOption> StatusOptions { get; }
 
         private List<StatusCount> _statusCounts = [];
         public List<StatusCount> StatusCounts
@@ -50,9 +80,15 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
             }
         }
 
-        public bool IsEmpty => !IsLoading && Rooms.Count == 0;
+        /// <summary>
+        /// Rong = khong con the nao SAU KHI loc, chu khong phai khach san khong co phong.
+        /// Dung ICollectionView.IsEmpty thay vi dem tay: dem tay phai duyet het view moi
+        /// lan binding doc property nay.
+        /// </summary>
+        public bool IsEmpty => !IsLoading && RoomsView.IsEmpty;
 
         public RelayCommand ChangeStatusCommand { get; }
+        public RelayCommand SelectStatusFilterCommand { get; }
 
         /// <summary>
         /// Khong the an the phong (an het thi so do trong tron), nen van cho bam - dialog se noi ro
@@ -66,9 +102,21 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
         public RoomMapViewModel(Func<Task> refreshAll)
         {
             _refreshAll = refreshAll;
+            StatusOptions =
+            [
+                new("Tất cả trạng thái", null),
+                new("Trống", RoomStatus.Available),
+                new("Đang ở", RoomStatus.Occupied),
+                new("Đã đặt", RoomStatus.Reserved),
+                new("Đang dọn", RoomStatus.Cleaning),
+                new("Bảo trì", RoomStatus.Maintenance),
+            ];
+            _selectedStatusOption = StatusOptions[0];
+
             RoomsView = new ListCollectionView(Rooms);
             RoomsView.GroupDescriptions.Add(new PropertyGroupDescription(nameof(RoomRow.GroupTitle)));
             ChangeStatusCommand = new RelayCommand(OpenStatusDialog);
+            SelectStatusFilterCommand = new RelayCommand(SelectStatusFilter);
         }
 
         public async Task LoadAsync()
@@ -80,7 +128,6 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
                     .Where(r => r.IsActive)
                     .ToList();
 
-                // Header nhom: "TẦNG {n} · {cac loai phong tren tang do}"
                 var typesByFloor = rooms
                     .GroupBy(r => r.Floor)
                     .ToDictionary(
@@ -107,7 +154,8 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
                     new(RoomStatus.Cleaning, "Đang dọn", rooms.Count(r => r.Status == RoomStatus.Cleaning)),
                     new(RoomStatus.Maintenance, "Bảo trì", rooms.Count(r => r.Status == RoomStatus.Maintenance)),
                 ];
-                OnPropertyChanged(nameof(IsEmpty));
+
+                ApplyFilter();
             }
             catch (Exception)
             {
@@ -119,6 +167,43 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
             }
         }
 
+        private void ApplyFilter()
+        {
+            var keyword = _searchText.Trim();
+            var targetStatus = _selectedStatusOption.Status;
+
+            RoomsView.Filter = item =>
+            {
+                if (item is not RoomRow row) return false;
+
+                if (targetStatus.HasValue && row.Room.Status != targetStatus.Value)
+                    return false;
+
+                if (!string.IsNullOrEmpty(keyword))
+                {
+                    return row.Room.RoomNumber.Contains(keyword, StringComparison.OrdinalIgnoreCase)
+                        || (row.Room.RoomType?.TypeName ?? "").Contains(keyword, StringComparison.OrdinalIgnoreCase)
+                        || row.StatusText.Contains(keyword, StringComparison.OrdinalIgnoreCase);
+                }
+
+                return true;
+            };
+
+            OnPropertyChanged(nameof(IsEmpty));
+        }
+
+        private void SelectStatusFilter(object? param)
+        {
+            if (param is StatusCount count)
+            {
+                var opt = StatusOptions.FirstOrDefault(o => o.Status == count.Status);
+                if (opt != null)
+                {
+                    SelectedStatusOption = opt;
+                }
+            }
+        }
+
         private async void OpenStatusDialog(object? parameter)
         {
             if (parameter is not RoomRow row)
@@ -126,16 +211,23 @@ namespace FUHotelManagementWPF.ViewModels.Rooms
                 return;
             }
 
-            var viewModel = new RoomStatusDialogViewModel(row.Room);
-            var dialog = new RoomStatusDialog(viewModel) { Owner = ActiveWindow() };
-            if (dialog.ShowDialog() == true)
+            try
             {
-                await _refreshAll();
+                var viewModel = new RoomStatusDialogViewModel(row.Room);
+                var dialog = new RoomStatusDialog(viewModel) { Owner = ActiveWindow() };
+                if (dialog.ShowDialog() == true)
+                {
+                    await _refreshAll();
+                }
+            }
+            catch (Exception ex)
+            {
+                Notify.Error($"Lỗi: {ex.Message}");
             }
         }
 
         internal static Window? ActiveWindow()
-            => Application.Current.Windows.OfType<Window>().FirstOrDefault(w => w.IsActive)
+            => Application.Current.Windows.OfType<Window>().FirstOrDefault(w => w.IsVisible && w.IsActive)
                ?? Application.Current.MainWindow;
     }
 }

@@ -74,24 +74,46 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <!-- Thanh thong ke tong quan -->
-        <Border Grid.Row="0" Style="{StaticResource Card}" Padding="6,10" Margin="0,0,0,14">
-            <ItemsControl ItemsSource="{Binding StatusCounts}">
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <StackPanel Orientation="Horizontal" />
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <StackPanel Orientation="Horizontal" Margin="18,0">
-                            <TextBlock Text="{Binding Count}" Style="{StaticResource StatusCountNumber}" />
-                            <TextBlock Text="{Binding Label}" Style="{StaticResource CaptionText}"
-                                       FontSize="12.5" VerticalAlignment="Center" Margin="7,1,0,0" />
-                        </StackPanel>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
+        <!-- Thanh tim kiem & loai loc + Thong ke tong quan -->
+        <Border Grid.Row="0" Style="{StaticResource Card}" Padding="12,10" Margin="0,0,0,14">
+            <DockPanel>
+                <!-- Phai: Cac chip thong ke dem so luong -->
+                <ItemsControl DockPanel.Dock="Right" ItemsSource="{Binding StatusCounts}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Cursor="Hand" Background="Transparent" ToolTip="Bấm để lọc theo trạng thái này">
+                                <Border.InputBindings>
+                                    <MouseBinding Gesture="LeftClick"
+                                                  Command="{Binding DataContext.SelectStatusFilterCommand,
+                                                            RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                  CommandParameter="{Binding}" />
+                                </Border.InputBindings>
+                                <StackPanel Orientation="Horizontal" Margin="14,0">
+                                    <TextBlock Text="{Binding Count}" Style="{StaticResource StatusCountNumber}" />
+                                    <TextBlock Text="{Binding Label}" Style="{StaticResource CaptionText}"
+                                               FontSize="12.5" VerticalAlignment="Center" Margin="6,1,0,0" />
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <!-- Trai: Thanh tim kiem & Combobox loc trang thai -->
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <hc:TextBox Width="200" hc:InfoElement.Placeholder="Tìm số phòng, loại phòng..."
+                                Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                                hc:InfoElement.ShowClearButton="True" VerticalAlignment="Center" />
+                    <ComboBox Width="160" Margin="10,0,0,0" VerticalAlignment="Center"
+                              ItemsSource="{Binding StatusOptions}"
+                              SelectedItem="{Binding SelectedStatusOption}"
+                              DisplayMemberPath="Label" />
+                </StackPanel>
+            </DockPanel>
         </Border>
 
         <!-- Dang tai / trong -->
