@@ -60,10 +60,13 @@
                                         <ImageBrush ImageSource="{Binding Thumbnail}" Stretch="UniformToFill" />
                                     </Border.Background>
                                     <Grid>
-                                        <Border CornerRadius="4" Background="{StaticResource ScrimBrush}" Padding="9,4"
-                                                HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10">
+                                        <Button Padding="9,4" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10"
+                                                Style="{StaticResource GhostButton}" Background="{StaticResource ScrimBrush}"
+                                                Command="{Binding DataContext.ViewRoomsCommand,
+                                                          RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                CommandParameter="{Binding}">
                                             <TextBlock Text="{Binding RoomCountText}" Foreground="White" FontSize="11" />
-                                        </Border>
+                                        </Button>
                                         <Border CornerRadius="4" Background="{StaticResource BrandBrush}" Padding="11,5"
                                                 HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="10">
                                             <TextBlock Text="{Binding PriceText}" Foreground="White"
@@ -101,12 +104,13 @@
                                                TextTrimming="CharacterEllipsis"
                                                Visibility="{Binding HasDescription, Converter={StaticResource BoolToVis}}" />
 
-                                    <!-- Ca 2 nut deu can quyen quan ly phong -> an luon duong ke cho khoi tro -->
-                                    <Border Height="1" Background="{StaticResource LineBrush}" Margin="0,12,0,10"
-                                            Visibility="{Binding DataContext.CanManageRooms,
-                                                         RelativeSource={RelativeSource AncestorType=UserControl},
-                                                         Converter={StaticResource BoolToVis}}" />
-                                    <StackPanel Orientation="Horizontal">
+                                    <Border Height="1" Background="{StaticResource LineBrush}" Margin="0,12,0,10" />
+                                    <WrapPanel>
+                                        <Button Content="Xem danh sách phòng" Style="{StaticResource GhostButton}"
+                                                Padding="14,6" Margin="0,0,8,0"
+                                                Command="{Binding DataContext.ViewRoomsCommand,
+                                                          RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                CommandParameter="{Binding}" />
                                         <Button Content="Sửa" Style="{StaticResource GhostButton}"
                                                 Padding="16,6" Margin="0,0,8,0"
                                                 Command="{Binding DataContext.EditCommand,
@@ -123,7 +127,7 @@
                                                 Visibility="{Binding DataContext.CanManageRooms,
                                                              RelativeSource={RelativeSource AncestorType=UserControl},
                                                              Converter={StaticResource BoolToVis}}" />
-                                    </StackPanel>
+                                    </WrapPanel>
                                 </StackPanel>
                             </Grid>
                         </Border>
