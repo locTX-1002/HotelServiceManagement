@@ -30,10 +30,22 @@ public sealed class PermissionManagementService : IPermissionManagementService
             .Select(x => x.PermissionCode).ToHashSet(StringComparer.OrdinalIgnoreCase);
         var conflict = ValidateSeparation(selected);
         if (conflict != null) return ServiceResult.Failure(conflict);
-        return await _repository.ReplaceRolePermissionsAsync(roleId, permissionIds)
-            ? ServiceResult.Success("Đã lưu quyền. Người dùng thuộc vai trò này cần đăng nhập lại.")
-            : ServiceResult.Failure("Không lưu được quyền vì vai trò hoặc quyền không hợp lệ.");
+
+        // Doc quyen cu TRUOC khi ghi de: doi quyen la thao tac nhay cam nhat cua Admin,
+        // nhat ky phai noi duoc vai tro do truoc do co nhung quyen gi.
+        var role = (await _repository.GetRolesWithPermissionsAsync()).FirstOrDefault(x => x.Id == roleId);
+        var before = role == null ? null : Describe(role.RolePermissions.Select(x => x.Permission?.PermissionCode));
+
+        if (!await _repository.ReplaceRolePermissionsAsync(roleId, permissionIds))
+            return ServiceResult.Failure("Không lưu được quyền vì vai trò hoặc quyền không hợp lệ.");
+
+        await AuditTrail.WriteAsync("permission.update", nameof(Role), roleId, before, Describe(selected));
+        return ServiceResult.Success("Đã lưu quyền. Người dùng thuộc vai trò này cần đăng nhập lại.");
     }
+
+    /// <summary>Danh sach ma quyen sap xep san de so hai ban nhat ky doc duoc bang mat.</summary>
+    private static string Describe(IEnumerable<string?> codes)
+        => string.Join(", ", codes.Where(x => !string.IsNullOrEmpty(x)).OrderBy(x => x));
 
     internal static string? ValidateSeparation(IReadOnlySet<string> selected)
     {
