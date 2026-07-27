@@ -16,6 +16,7 @@ public static class AuthorizationPolicy
 
     public static bool CanManageUsers => HasPermission(PermissionCodes.UserManage);
     public static bool CanManagePermissions => HasPermission(PermissionCodes.PermissionManage);
+    public static bool CanViewAuditLog => HasPermission(PermissionCodes.AuditView);
     public static bool CanViewRooms => HasPermission(PermissionCodes.RoomView);
     public static bool CanManageRooms => HasPermission(PermissionCodes.RoomManage);
     public static bool CanOperateFrontDesk
