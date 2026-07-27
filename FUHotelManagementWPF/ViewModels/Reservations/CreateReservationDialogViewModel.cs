@@ -510,7 +510,8 @@ namespace FUHotelManagementWPF.ViewModels.Reservations
 
                     var created = await _reservationService.CreateAsync(guestId, SelectedRoom.Id,
                         NumberOfGuests, CheckIn, CheckOut, SpecialRequests,
-                        deposit, deposit != null ? SelectedDepositMethod!.Method : null);
+                        deposit, deposit != null ? SelectedDepositMethod!.Method : null,
+                        SelectedStatus.Status!.Value);
                     result = created.Ok ? ServiceResult.Success(created.Message) : ServiceResult.Failure(created.Message);
                 }
 
