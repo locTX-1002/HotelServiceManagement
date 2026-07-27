@@ -97,9 +97,21 @@ public sealed class InvoiceService : IInvoiceService
         if (isNew && stay.Reservation.DepositAmount is > 0 and var deposit) { if (deposit > invoice.TotalAmount) return ServiceResult<Invoice>.Failure("Tiền cọc vượt tổng hoá đơn; cần xử lý hoàn cọc trước."); invoice.Payments.Add(new Payment { PaymentDate = stay.Reservation.DepositPaidAt ?? stay.ActualCheckIn, Amount = deposit, PaymentMethod = stay.Reservation.DepositPaymentMethod ?? PaymentMethod.Cash, Status = PaymentStatus.Completed, TransactionId = $"DEP-{stay.Reservation.BookingCode}", ReceivedByUserId = stay.Reservation.CreatedByUserId }); }
         var paidAmount = invoice.Payments.Where(p => p.Status == PaymentStatus.Completed).Sum(p => p.Amount); invoice.Status = invoice.TotalAmount <= 0 || paidAmount >= invoice.TotalAmount ? InvoiceStatus.Paid : paidAmount > 0 ? InvoiceStatus.PartiallyPaid : InvoiceStatus.Unpaid;
         if (!await _invoices.SaveAsync(invoice, isNew)) return ServiceResult<Invoice>.Failure("Dữ liệu lưu trú hoặc hoá đơn đã thay đổi; vui lòng tải lại.");
+        await AuditTrail.WriteAsync(isNew ? "invoice.create" : "invoice.update", nameof(Invoice), invoice.Id,
+            null, $"Lượt #{stayId} · Tổng: {invoice.TotalAmount:N0} VNĐ · Trạng thái: {invoice.Status}");
         return ServiceResult<Invoice>.Success(invoice, isNew ? "Đã lập hoá đơn tạm tính."
             : frozen ? "Đã cập nhật hoá đơn. Giảm giá giữ nguyên vì hoá đơn đã thu tiền."
             : "Đã tính lại hoá đơn.");
     }
-    public async Task<ServiceResult> CancelAsync(int id) { if (!AuthorizationPolicy.CanApproveInvoiceCancel) return ServiceResult.Failure("Bạn không có quyền duyệt huỷ hoá đơn."); return await _invoices.CancelAsync(id) ? ServiceResult.Success("Đã huỷ hoá đơn.") : ServiceResult.Failure("Không huỷ được hoá đơn đã có thanh toán."); }
+    public async Task<ServiceResult> CancelAsync(int id)
+    {
+        if (!AuthorizationPolicy.CanApproveInvoiceCancel) return ServiceResult.Failure("Bạn không có quyền duyệt huỷ hoá đơn.");
+        var ok = await _invoices.CancelAsync(id);
+        if (ok)
+        {
+            await AuditTrail.WriteAsync("invoice.cancel", nameof(Invoice), id, null, $"Huỷ hoá đơn #{id}");
+            return ServiceResult.Success("Đã huỷ hoá đơn.");
+        }
+        return ServiceResult.Failure("Không huỷ được hoá đơn đã có thanh toán.");
+    }
 }
