@@ -499,21 +499,24 @@ namespace FUHotelManagementWPF.ViewModels.Home
             try
             {
                 var users = await new UserManagementService().GetAllAsync();
+                var guestAccounts = await _guestAccountService.GetAllAsync();
+                var guestList = guestAccounts.Ok ? (guestAccounts.Data ?? []) : [];
+                GuestAccountCount = guestList.Count;
+                LockedGuestCount = guestList.Count(g => !g.IsActive);
+
                 if (users.Ok && users.Data != null)
                 {
-                    ActiveUserCount = users.Data.Count(u => u.IsActive);
-                    LockedUserCount = users.Data.Count(u => !u.IsActive);
-                    RoleSummaryText = string.Join("  ·  ", users.Data
+                    ActiveUserCount = users.Data.Count(u => u.IsActive) + guestList.Count(g => g.IsActive);
+                    LockedUserCount = users.Data.Count(u => !u.IsActive) + LockedGuestCount;
+
+                    var parts = users.Data
                         .GroupBy(u => u.Role?.RoleName)
                         .OrderBy(g => g.Key)
-                        .Select(g => $"{RoleLabel(g.Key)}: {g.Count()}"));
-                }
-
-                var guestAccounts = await _guestAccountService.GetAllAsync();
-                if (guestAccounts.Ok && guestAccounts.Data != null)
-                {
-                    GuestAccountCount = guestAccounts.Data.Count;
-                    LockedGuestCount = guestAccounts.Data.Count(g => !g.IsActive);
+                        .Select(g => $"{RoleLabel(g.Key)}: {g.Count()}")
+                        .ToList();
+                    if (GuestAccountCount > 0)
+                        parts.Add($"Khách hàng: {GuestAccountCount}");
+                    RoleSummaryText = string.Join("  ·  ", parts);
                 }
 
                 RecentLogs.Clear();

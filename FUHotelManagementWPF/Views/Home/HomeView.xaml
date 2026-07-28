@@ -91,7 +91,6 @@
             <Border Style="{StaticResource Card}" Margin="40,-30,40,0" Padding="20,18"
                     Effect="{StaticResource SoftShadowLarge}"
                     Visibility="{Binding IsSystemAdmin, Converter={StaticResource BoolToVis}}">
-                <StackPanel>
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
@@ -125,38 +124,6 @@
                                 Style="{StaticResource PrimaryButton}" Margin="10,0,0,0" />
                     </StackPanel>
                 </Grid>
-
-                <Border Height="1" Background="{StaticResource LineBrush}" Margin="0,14,0,12" />
-
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-
-                    <StackPanel Grid.Column="0" Margin="0,0,32,0">
-                        <TextBlock Text="TÀI KHOẢN KHÁCH HÀNG" Style="{StaticResource FieldLabel}" />
-                        <TextBlock Text="{Binding GuestAccountCount}" Style="{StaticResource PageTitleText}"
-                                   Foreground="{StaticResource SuccessBrush}" Margin="0,2,0,0" />
-                    </StackPanel>
-
-                    <StackPanel Grid.Column="1" Margin="0,0,32,0">
-                        <TextBlock Text="KHÁCH BỊ KHOÁ" Style="{StaticResource FieldLabel}" />
-                        <TextBlock Text="{Binding LockedGuestCount}" Style="{StaticResource PageTitleText}"
-                                   Margin="0,2,0,0" />
-                    </StackPanel>
-
-                    <TextBlock Grid.Column="2" Text="Quản lý tài khoản khách hàng: khoá/mở khoá, đặt lại mật khẩu."
-                               Style="{StaticResource CaptionText}" FontSize="12.5"
-                               VerticalAlignment="Center" TextWrapping="Wrap" />
-
-                    <Button Grid.Column="3" Content="Quản lý khách hàng"
-                            Command="{Binding OpenGuestManagementCommand}"
-                            Style="{StaticResource GhostButton}" VerticalAlignment="Center" />
-                </Grid>
-                </StackPanel>
             </Border>
 
             <!-- ======= KHU QUẢN LÝ VẬN HÀNH (Manager Dashboard) ======= -->

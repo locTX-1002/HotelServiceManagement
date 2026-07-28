@@ -218,12 +218,14 @@
                                                       Converter={StaticResource BoolToVis}}">
                                     <Button Style="{StaticResource IconGhostButton}" ToolTip="Sửa thông tin tài khoản"
                                             Command="{Binding DataContext.EditCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                            CommandParameter="{Binding}" Margin="0,0,4,0">
+                                            CommandParameter="{Binding}" Margin="0,0,4,0"
+                                            Visibility="{Binding CanEdit, Converter={StaticResource BoolToVis}}">
                                         <TextBlock Text="&#xE70F;" Style="{StaticResource IconText}" FontSize="13" />
                                     </Button>
                                     <Button Style="{StaticResource IconGhostButton}" ToolTip="Đặt lại mật khẩu"
                                             Command="{Binding DataContext.ResetPasswordCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                            CommandParameter="{Binding}" Margin="0,0,4,0">
+                                            CommandParameter="{Binding}" Margin="0,0,4,0"
+                                            Visibility="{Binding CanResetPassword, Converter={StaticResource BoolToVis}}">
                                         <TextBlock Text="&#xE8D7;" Style="{StaticResource IconText}" FontSize="13" />
                                     </Button>
                                     <Button Style="{StaticResource IconGhostButton}" ToolTip="{Binding ToggleActiveToolTip}"
