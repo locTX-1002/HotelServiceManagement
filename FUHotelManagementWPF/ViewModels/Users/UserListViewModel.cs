@@ -44,7 +44,7 @@ namespace FUHotelManagementWPF.ViewModels.Users
     public class UserListViewModel : ViewModelBase
     {
         private readonly IUserManagementService _service = new UserManagementService();
-        private readonly IGuestAccountService _guestAccountService = new GuestAccountService(); // Dịch vụ tài khoản khách
+        private readonly IGuestAccountService _guestAccountService = new GuestAccountService();
 
         private List<User> _all = [];
 
@@ -116,7 +116,6 @@ namespace FUHotelManagementWPF.ViewModels.Users
             }
         }
 
-        /// <summary>Chuỗi phân bố theo vai trò, hiển thị ở panel bên phải khi chưa chọn ai.</summary>
         public string RoleDistribution
         {
             get
@@ -180,28 +179,30 @@ namespace FUHotelManagementWPF.ViewModels.Users
             ErrorMessage = null;
             try
             {
-                // 1. Tải tài khoản nhân viên
                 var result = await _service.GetAllAsync();
                 var staffUsers = result.Ok ? (result.Data ?? []) : [];
 
-                // 2. Tải tài khoản khách hàng
                 var guestResult = await _guestAccountService.GetAllAsync();
                 var guestAccounts = guestResult.Ok ? (guestResult.Data ?? []) : [];
 
-                // 3. Chuyển GuestAccount sang dạng User giả lập để hiển thị thống nhất trong danh sách
                 var guestUsers = guestAccounts.Select(g => new User
                 {
-                    Id = -g.GuestId, // ID âm để phân biệt với tài khoản nhân viên
+                    Id = -g.GuestId,
                     FullName = g.Guest?.FullName ?? "Khách hàng",
                     Email = string.IsNullOrEmpty(g.Guest?.Email)
                         ? $"SĐT: {g.Guest?.PhoneNumber}"
                         : $"{g.Guest?.Email} (SĐT: {g.Guest?.PhoneNumber})",
-                    IsActive = true,
-                    Role = new Role { RoleName = "Guest", Description = "Khách hàng" }
+                    IsActive = g.IsActive,
+                    Role = new Role { RoleName = RoleNames.Guest, Description = "Khách hàng" }
                 });
 
                 _all = staffUsers.Concat(guestUsers).ToList();
                 ApplyFilter();
+
+                if (!result.Ok)
+                {
+                    ErrorMessage = result.Message;
+                }
             }
             catch (Exception)
             {
@@ -253,7 +254,10 @@ namespace FUHotelManagementWPF.ViewModels.Users
 
         private void SelectRoleFilter(object? parameter)
         {
-            if (parameter is not RoleFilterOption option) return;
+            if (parameter is not RoleFilterOption option)
+            {
+                return;
+            }
 
             _roleFilter = option.RoleName;
             foreach (var item in RoleFilters)
@@ -308,7 +312,10 @@ namespace FUHotelManagementWPF.ViewModels.Users
 
         private void OpenResetPasswordDialog(User? target)
         {
-            if (target == null) return;
+            if (target == null)
+            {
+                return;
+            }
 
             var dialog = new ResetPasswordDialog(new ResetPasswordDialogViewModel(target));
             SetOwner(dialog);
@@ -321,9 +328,10 @@ namespace FUHotelManagementWPF.ViewModels.Users
             if (row == null || !row.CanToggleActive) return;
 
             var willLock = row.IsActive;
+            var targetType = row.IsGuestAccount ? "khách hàng" : "nhân viên";
             var question = willLock
-                ? $"Khoá tài khoản \"{row.FullName}\"?\n\nTài khoản này sẽ không đăng nhập được cho tới khi được mở khoá."
-                : $"Mở khoá tài khoản \"{row.FullName}\"?\n\nTài khoản này sẽ đăng nhập lại được ngay.";
+                ? $"Khoá tài khoản {targetType} \"{row.FullName}\"?\n\nTài khoản này sẽ không đăng nhập được cho tới khi được mở khoá."
+                : $"Mở khoá tài khoản {targetType} \"{row.FullName}\"?";
 
             var caption = willLock ? "Khoá tài khoản" : "Mở khoá tài khoản";
             var owner = RoomMapViewModel.ActiveWindow();
@@ -333,7 +341,18 @@ namespace FUHotelManagementWPF.ViewModels.Users
 
             if (answer != MessageBoxResult.Yes) return;
 
-            var result = await _service.SetActiveAsync(row.User.Id, !row.IsActive);
+            ServiceResult result;
+            if (row.IsGuestAccount)
+            {
+                int guestId = Math.Abs(row.User.Id);
+                result = await _guestAccountService.SetActiveAsync(guestId, !row.IsActive);
+            }
+            else
+            {
+                var staffResult = await _service.SetActiveAsync(row.User.Id, !row.IsActive);
+                result = new ServiceResult(staffResult.Ok, staffResult.Message);
+            }
+
             if (result.Ok)
             {
                 Notify.Success(result.Message);
