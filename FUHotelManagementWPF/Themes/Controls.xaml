@@ -580,9 +580,21 @@
     <!-- Lich DatePicker mac dinh bi HandyControl doi sang tieng Trung (年/月). Dat
          Language thang tren o - uu tien cao hon override o App.xaml.cs - de ten thu
          va thang ra tieng Viet ke ca khi thu vien chan override. Language ke thua
-         nen truyen xuong Calendar trong popup. BasedOn giu nguyen giao dien HC. -->
+         nen truyen xuong Calendar trong popup. BasedOn giu nguyen giao dien HC.
+         Validation.ErrorTemplate tat adorner do mac dinh cua WPF - adorner ve tren layer
+         rieng, khong chiem cho trong layout nen no de len cac control ben duoi (da gap
+         o dialog Dat phong: vien do tran len hang nut "1 dem/2 dem/3 dem/1 tuan"). Cung
+         mot cach xu ly da dung cho TextBox o tren, chi con thieu DatePicker. -->
     <Style TargetType="{x:Type DatePicker}" BasedOn="{StaticResource {x:Type DatePicker}}">
         <Setter Property="Language" Value="vi-VN" />
+        <Setter Property="Validation.ErrorTemplate" Value="{x:Null}" />
+        <Style.Triggers>
+            <Trigger Property="Validation.HasError" Value="True">
+                <Setter Property="BorderBrush" Value="{StaticResource DangerBrush}" />
+                <Setter Property="ToolTip"
+                        Value="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors)[0].ErrorContent}" />
+            </Trigger>
+        </Style.Triggers>
     </Style>
 
     <!-- ============================================================
