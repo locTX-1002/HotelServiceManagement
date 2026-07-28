@@ -223,6 +223,10 @@ public sealed class GuestAccountService : IGuestAccountService
         account.IsActive = active;
         await _accounts.SaveAsync(account, false);
 
+        var guestName = account.Guest?.FullName ?? $"GuestId={guestId}";
+        await AuditTrail.WriteAsync(active ? "guest_account.unlock" : "guest_account.lock",
+            nameof(GuestAccount), guestId, null, guestName);
+
         return ServiceResult.Success(active ? "Đã mở khoá tài khoản khách hàng." : "Đã khoá tài khoản khách hàng.");
     }
 
@@ -239,6 +243,10 @@ public sealed class GuestAccountService : IGuestAccountService
 
         account.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
         await _accounts.SaveAsync(account, false);
+
+        var guestName = account.Guest?.FullName ?? $"GuestId={guestId}";
+        await AuditTrail.WriteAsync("guest_account.reset_password",
+            nameof(GuestAccount), guestId, null, guestName);
 
         return ServiceResult.Success("Đã đặt lại mật khẩu cho khách hàng.");
     }
