@@ -214,7 +214,7 @@ public sealed class GuestAccountService : IGuestAccountService
 
     public async Task<ServiceResult> SetActiveAsync(int guestId, bool active)
     {
-        if (!AuthorizationPolicy.CanManageGuests)
+        if (!AuthorizationPolicy.CanManageGuests && !AuthorizationPolicy.CanManageUsers)
             return ServiceResult.Failure("Bạn không có quyền khoá/mở khoá tài khoản khách.");
 
         var account = await _accounts.GetByGuestIdAsync(guestId);
@@ -228,7 +228,7 @@ public sealed class GuestAccountService : IGuestAccountService
 
     public async Task<ServiceResult> ResetPasswordByAdminAsync(int guestId, string newPassword)
     {
-        if (!AuthorizationPolicy.CanManageGuests)
+        if (!AuthorizationPolicy.CanManageGuests && !AuthorizationPolicy.CanManageUsers)
             return ServiceResult.Failure("Bạn không có quyền đặt lại mật khẩu cho khách.");
 
         var error = PasswordPolicy.Validate(newPassword);

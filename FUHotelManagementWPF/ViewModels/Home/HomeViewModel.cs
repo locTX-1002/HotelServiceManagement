@@ -38,6 +38,7 @@ namespace FUHotelManagementWPF.ViewModels.Home
         private readonly IRoomTypeService _roomTypeService = new RoomTypeService();
         private readonly IReservationService _reservationService = new ReservationService();
         private readonly IStayService _stayService = new StayService();
+        private readonly IGuestAccountService _guestAccountService = new GuestAccountService();
 
         // --- Hero: bo anh xoay vong ---
         private static readonly string[] HeroImages =
@@ -321,8 +322,23 @@ namespace FUHotelManagementWPF.ViewModels.Home
 
         public bool HasRecentLogs => RecentLogs.Count > 0;
 
+        private int _guestAccountCount;
+        public int GuestAccountCount
+        {
+            get => _guestAccountCount;
+            private set => SetProperty(ref _guestAccountCount, value);
+        }
+
+        private int _lockedGuestCount;
+        public int LockedGuestCount
+        {
+            get => _lockedGuestCount;
+            private set => SetProperty(ref _lockedGuestCount, value);
+        }
+
         public RelayCommand OpenUsersCommand { get; }
         public RelayCommand OpenAuditLogCommand { get; }
+        public RelayCommand OpenGuestManagementCommand { get; }
 
         // ---- Khu dành cho vai trò Quản lý (Manager Dashboard) ----
         public bool IsManager => !IsSystemAdmin
@@ -389,6 +405,8 @@ namespace FUHotelManagementWPF.ViewModels.Home
                 _ => NavigationService.NavigateTo("Người dùng"), _ => AuthorizationPolicy.CanManageUsers);
             OpenAuditLogCommand = new RelayCommand(
                 _ => NavigationService.NavigateTo("Nhật ký hệ thống"), _ => AuthorizationPolicy.CanViewAuditLog);
+            OpenGuestManagementCommand = new RelayCommand(
+                _ => NavigationService.NavigateTo("Người dùng"), _ => AuthorizationPolicy.CanManageUsers);
             OpenReportsCommand = new RelayCommand(
                 _ => NavigationService.NavigateTo("Báo cáo"), _ => AuthorizationPolicy.CanViewReports);
             OpenApprovalsCommand = new RelayCommand(
@@ -491,6 +509,13 @@ namespace FUHotelManagementWPF.ViewModels.Home
                         .Select(g => $"{RoleLabel(g.Key)}: {g.Count()}"));
                 }
 
+                var guestAccounts = await _guestAccountService.GetAllAsync();
+                if (guestAccounts.Ok && guestAccounts.Data != null)
+                {
+                    GuestAccountCount = guestAccounts.Data.Count;
+                    LockedGuestCount = guestAccounts.Data.Count(g => !g.IsActive);
+                }
+
                 RecentLogs.Clear();
                 var logs = await new AuditLogService()
                     .SearchAsync(DateTime.Today.AddDays(-29), DateTime.Today, null, null);
@@ -515,6 +540,7 @@ namespace FUHotelManagementWPF.ViewModels.Home
             RoleNames.Manager => "Quản lý",
             RoleNames.Receptionist => "Lễ tân",
             RoleNames.ServiceStaff => "Nhân viên dịch vụ",
+            RoleNames.Guest => "Khách hàng",
             _ => "Khác",
         };
 
