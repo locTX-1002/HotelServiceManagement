@@ -134,6 +134,8 @@
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
@@ -151,12 +153,35 @@
                         </StackPanel>
                     </StackPanel>
 
-                    <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                    <!-- Phong bao tri: chi thong tin, khong phai canh bao nen dung mau trung tinh -->
+                    <StackPanel Grid.Column="2" Margin="0,0,32,0">
+                        <TextBlock Text="PHÒNG ĐANG BẢO TRÌ" Style="{StaticResource FieldLabel}" />
+                        <TextBlock Text="{Binding MaintenanceRoomsCount}" Style="{StaticResource PageTitleText}" Margin="0,2,0,0" />
+                    </StackPanel>
+
+                    <!-- Canh bao: le tan dat ho tai quay khong bi chan boi tag blacklist nhu khach
+                         tu dat online, nen Quan ly can thay so nay de doi soat lai neu > 0 -->
+                    <StackPanel Grid.Column="3" Margin="0,0,32,0">
+                        <TextBlock Text="CẢNH BÁO BLACKLIST" Style="{StaticResource FieldLabel}" />
+                        <TextBlock Text="{Binding BlacklistedActiveCount}" Margin="0,2,0,0">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock" BasedOn="{StaticResource PageTitleText}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding HasBlacklistAlert}" Value="True">
+                                            <Setter Property="Foreground" Value="{StaticResource DangerBrush}" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="4" VerticalAlignment="Center">
                         <TextBlock Text="VẬN HÀNH &amp; BÁO CÁO" Style="{StaticResource FieldLabel}" />
                         <TextBlock Text="Giám sát doanh thu, duyệt yêu cầu hủy/giảm giá và xuất báo cáo hệ thống." Style="{StaticResource BodyText}" TextWrapping="Wrap" Margin="0,4,0,0" />
                     </StackPanel>
 
-                    <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center">
+                    <StackPanel Grid.Column="5" Orientation="Horizontal" VerticalAlignment="Center">
                         <Button Content="Xem Báo cáo" Command="{Binding OpenReportsCommand}" Style="{StaticResource GhostButton}" />
                         <Button Content="Xử lý Phê duyệt" Command="{Binding OpenApprovalsCommand}" Style="{StaticResource PrimaryButton}" Margin="10,0,0,0" />
                     </StackPanel>

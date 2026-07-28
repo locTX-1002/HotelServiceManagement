@@ -115,25 +115,27 @@ public sealed class GuestBookingDialogViewModel : ViewModelBase
             CheckOut = CheckIn.Date.AddDays(nights);
     }
 
+    /// <summary>Kiem tra rieng ngay nhan/tra - dung chung cho ca luc doi ngay lan luc bam Gui,
+    /// de thong bao loi ngay khong bi lam "chua chon phong" de len khi phong dang rong vi ngay sai.</summary>
+    private string? ValidateDateRange()
+    {
+        if (CheckIn.Date < DateTime.Today) return "Ngày nhận phòng không được ở quá khứ.";
+        if (CheckOut.Date <= CheckIn.Date) return "Ngày trả phòng phải sau ngày nhận phòng.";
+        return null;
+    }
+
     private async Task LoadRoomsAsync()
     {
         var version = ++_searchVersion;
         ErrorMessage = string.Empty;
 
-        if (CheckIn.Date < DateTime.Today)
+        var dateError = ValidateDateRange();
+        if (dateError != null)
         {
             IsLoadingRooms = false;
             _allAvailableRooms = [];
             ApplyRoomFilter();
-            ErrorMessage = "Ngày nhận phòng không được ở quá khứ.";
-            return;
-        }
-        if (CheckOut.Date <= CheckIn.Date)
-        {
-            IsLoadingRooms = false;
-            _allAvailableRooms = [];
-            ApplyRoomFilter();
-            ErrorMessage = "Ngày trả phòng phải sau ngày nhận phòng.";
+            ErrorMessage = dateError;
             return;
         }
 
@@ -192,6 +194,12 @@ public sealed class GuestBookingDialogViewModel : ViewModelBase
     private async Task SaveAsync()
     {
         ErrorMessage = string.Empty;
+        var dateError = ValidateDateRange();
+        if (dateError != null)
+        {
+            ErrorMessage = dateError;
+            return;
+        }
         if (SelectedRoom == null)
         {
             ErrorMessage = "Vui lòng chọn một phòng còn trống.";
