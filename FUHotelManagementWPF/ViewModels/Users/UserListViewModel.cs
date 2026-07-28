@@ -61,7 +61,7 @@ namespace FUHotelManagementWPF.ViewModels.Users
             new(RoleNames.Manager, "Quản lý"),
             new(RoleNames.Receptionist, "Lễ tân"),
             new(RoleNames.ServiceStaff, "Nhân viên dịch vụ"),
-            new("Guest", "Khách hàng"), // Chip lọc "Khách hàng"
+            new(RoleNames.Guest, "Khách hàng"),
         ];
 
         private string _searchText = string.Empty;
@@ -113,6 +113,28 @@ namespace FUHotelManagementWPF.ViewModels.Users
                 return locked == 0
                     ? $"{Rows.Count} tài khoản"
                     : $"{Rows.Count} tài khoản · {locked} đã khoá";
+            }
+        }
+
+        /// <summary>Chuỗi phân bố theo vai trò, hiển thị ở panel bên phải khi chưa chọn ai.</summary>
+        public string RoleDistribution
+        {
+            get
+            {
+                var admin = _all.Count(u => u.Role?.RoleName == RoleNames.Admin);
+                var manager = _all.Count(u => u.Role?.RoleName == RoleNames.Manager);
+                var receptionist = _all.Count(u => u.Role?.RoleName == RoleNames.Receptionist);
+                var staff = _all.Count(u => u.Role?.RoleName == RoleNames.ServiceStaff);
+                var guest = _all.Count(u => u.Role?.RoleName == RoleNames.Guest);
+
+                var parts = new List<string>();
+                if (admin > 0) parts.Add($"Quản trị viên: {admin}");
+                if (manager > 0) parts.Add($"Quản lý: {manager}");
+                if (receptionist > 0) parts.Add($"Lễ tân: {receptionist}");
+                if (staff > 0) parts.Add($"Nhân viên dịch vụ: {staff}");
+                if (guest > 0) parts.Add($"Khách hàng: {guest}");
+
+                return parts.Count > 0 ? string.Join("  ·  ", parts) : "Chưa có tài khoản nào";
             }
         }
 
@@ -225,6 +247,7 @@ namespace FUHotelManagementWPF.ViewModels.Users
 
             SelectedRow = Rows.FirstOrDefault(r => r.User.Id == keepId);
             OnPropertyChanged(nameof(TotalText));
+            OnPropertyChanged(nameof(RoleDistribution));
             OnPropertyChanged(nameof(IsEmpty));
         }
 

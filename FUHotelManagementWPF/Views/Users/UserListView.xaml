@@ -20,6 +20,10 @@
                     <Setter Property="Background" Value="{StaticResource InfoSoftBrush}" />
                     <Setter Property="TextElement.Foreground" Value="{StaticResource InfoBrush}" />
                 </DataTrigger>
+                <DataTrigger Binding="{Binding RoleName}" Value="Guest">
+                    <Setter Property="Background" Value="{StaticResource SuccessSoftBrush}" />
+                    <Setter Property="TextElement.Foreground" Value="{StaticResource SuccessBrush}" />
+                </DataTrigger>
             </Style.Triggers>
         </Style>
 
@@ -144,7 +148,7 @@
             <Border Grid.Row="3" Background="{StaticResource CardBrush}" BorderBrush="{StaticResource LineBrush}" BorderThickness="1" CornerRadius="6" Padding="32,24" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVis}}">
                 <StackPanel HorizontalAlignment="Center">
                     <TextBlock Text="&#xE721;" Style="{StaticResource IconText}" FontSize="32" Foreground="{StaticResource InkSoftBrush}" HorizontalAlignment="Center" />
-                    <TextBlock Text="Không tìm thấy tài khoản nhân viên nào" Style="{StaticResource SectionTitleText}" FontSize="15" HorizontalAlignment="Center" Margin="0,10,0,0" />
+                    <TextBlock Text="Không tìm thấy tài khoản nào" Style="{StaticResource SectionTitleText}" FontSize="15" HorizontalAlignment="Center" Margin="0,10,0,0" />
                     <TextBlock Text="Thử thay đổi từ khoá tìm kiếm hoặc bỏ chọn lọc vai trò hiện tại." Style="{StaticResource CaptionText}" FontSize="12" HorizontalAlignment="Center" Margin="0,4,0,0" />
                     <Button Content="Bỏ bộ lọc" Style="{StaticResource GhostButton}" HorizontalAlignment="Center" Margin="0,14,0,0" Padding="16,6" Command="{Binding ClearFilterCommand}" />
                 </StackPanel>
@@ -265,6 +269,14 @@
                                        HorizontalAlignment="Center" />
                             <TextBlock Text="Chọn một tài khoản để xem chi tiết" Style="{StaticResource CaptionText}"
                                        FontSize="12.5" HorizontalAlignment="Center" Margin="0,10,0,0" />
+
+                            <!-- Phân bố theo vai trò -->
+                            <Border Height="1" Background="{StaticResource LineBrush}" Margin="0,16,0,12" />
+                            <TextBlock Text="PHÂN BỐ THEO VAI TRÒ" Style="{StaticResource FieldLabel}"
+                                       HorizontalAlignment="Center" />
+                            <TextBlock Text="{Binding RoleDistribution}" Style="{StaticResource CaptionText}"
+                                       FontSize="12" HorizontalAlignment="Center" Margin="0,6,0,0"
+                                       TextWrapping="Wrap" TextAlignment="Center" />
                         </StackPanel>
 
                         <StackPanel DataContext="{Binding SelectedRow}">
@@ -315,10 +327,12 @@
                             <StackPanel Orientation="Vertical">
                                 <Button Content="Sửa thông tin" Style="{StaticResource PrimaryButton}"
                                         Padding="16,8" Margin="0,0,0,8" HorizontalAlignment="Stretch"
+                                        Visibility="{Binding CanEdit, Converter={StaticResource BoolToVis}}"
                                         Command="{Binding DataContext.EditCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                         CommandParameter="{Binding}" />
                                 <Button Content="Đặt lại mật khẩu" Style="{StaticResource GhostButton}"
                                         Padding="16,8" Margin="0,0,0,8" HorizontalAlignment="Stretch"
+                                        Visibility="{Binding CanResetPassword, Converter={StaticResource BoolToVis}}"
                                         ToolTip="Đặt mật khẩu mới cho tài khoản này"
                                         Command="{Binding DataContext.ResetPasswordCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                         CommandParameter="{Binding}" />
@@ -326,7 +340,7 @@
                                         Style="{StaticResource GhostButton}"
                                         Foreground="{StaticResource DangerBrush}"
                                         Padding="16,8" HorizontalAlignment="Stretch"
-                                        IsEnabled="{Binding CanToggleActive}"
+                                        Visibility="{Binding CanToggleActive, Converter={StaticResource BoolToVis}}"
                                         ToolTip="{Binding ToggleActiveToolTip}"
                                         Command="{Binding DataContext.ToggleActiveCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                         CommandParameter="{Binding}" />
@@ -336,6 +350,18 @@
                                     Visibility="{Binding IsSelf, Converter={StaticResource BoolToVis}}">
                                 <TextBlock TextWrapping="Wrap" FontSize="11.5" Foreground="{StaticResource InfoBrush}"
                                            Text="Bạn đang đăng nhập bằng tài khoản này. Để đảm bảo an toàn, hệ thống không cho phép tự khoá phiên làm việc hiện tại." />
+                            </Border>
+
+                            <Border Background="{StaticResource InfoSoftBrush}" CornerRadius="4" Padding="12,10" Margin="0,10,0,0"
+                                    Visibility="{Binding ShowGuestNote, Converter={StaticResource BoolToVis}}">
+                                <TextBlock TextWrapping="Wrap" FontSize="11.5" Foreground="{StaticResource InfoBrush}"
+                                           Text="Tài khoản khách hàng được quản lý riêng. Không thể sửa thông tin, đặt lại mật khẩu hoặc khoá từ đây." />
+                            </Border>
+
+                            <Border Background="{StaticResource InfoSoftBrush}" CornerRadius="4" Padding="12,10" Margin="0,10,0,0"
+                                    Visibility="{Binding ShowAdminLockNote, Converter={StaticResource BoolToVis}}">
+                                <TextBlock TextWrapping="Wrap" FontSize="11.5" Foreground="{StaticResource InfoBrush}"
+                                           Text="Tài khoản Quản trị viên do cấu hình triển khai tạo ra. Không thể sửa hoặc khoá từ ứng dụng." />
                             </Border>
                         </StackPanel>
                     </Grid>

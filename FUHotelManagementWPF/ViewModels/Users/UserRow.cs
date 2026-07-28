@@ -29,6 +29,7 @@ namespace FUHotelManagementWPF.ViewModels.Users
             RoleNames.Manager => "Quản lý",
             RoleNames.Receptionist => "Lễ tân",
             RoleNames.ServiceStaff => "Nhân viên dịch vụ",
+            RoleNames.Guest => "Khách hàng",
             _ => "Chưa gán vai trò",
         };
 
@@ -49,21 +50,30 @@ namespace FUHotelManagementWPF.ViewModels.Users
         /// </summary>
         public bool IsAdminAccount => RoleName == RoleNames.Admin;
 
-        public bool CanEdit => !IsAdminAccount;
-        public bool CanResetPassword => !IsAdminAccount;
-        public bool CanToggleActive => !IsSelf && !IsAdminAccount;
+        /// <summary>
+        /// Tai khoan Khach hang (GuestAccount) khong nam trong bang User - khong sua/khoa/
+        /// doi mat khau qua UserManagementService duoc. Cac thao tac nay chi danh cho nhan vien.
+        /// </summary>
+        public bool IsGuestAccount => RoleName == RoleNames.Guest;
+
+        public bool CanEdit => !IsAdminAccount && !IsGuestAccount;
+        public bool CanResetPassword => !IsAdminAccount && !IsGuestAccount;
+        public bool CanToggleActive => !IsSelf && !IsAdminAccount && !IsGuestAccount;
 
         /// <summary>Hien dong giai thich thay cho cac nut da an.</summary>
         public bool ShowAdminLockNote => IsAdminAccount;
+        public bool ShowGuestNote => IsGuestAccount;
 
         public string ToggleActiveText => User.IsActive ? "Khoá tài khoản" : "Mở khoá";
 
         public string ToggleActiveToolTip => IsAdminAccount
             ? "Tài khoản Quản trị viên không thao tác được từ ứng dụng"
-            : IsSelf
-                ? "Không thể tự khoá tài khoản đang đăng nhập"
-                : User.IsActive
-                    ? "Khoá tài khoản - nhân viên này sẽ không đăng nhập được nữa"
-                    : "Mở khoá để nhân viên đăng nhập lại";
+            : IsGuestAccount
+                ? "Tài khoản khách hàng không khoá từ đây"
+                : IsSelf
+                    ? "Không thể tự khoá tài khoản đang đăng nhập"
+                    : User.IsActive
+                        ? "Khoá tài khoản - nhân viên này sẽ không đăng nhập được nữa"
+                        : "Mở khoá để nhân viên đăng nhập lại";
     }
 }
