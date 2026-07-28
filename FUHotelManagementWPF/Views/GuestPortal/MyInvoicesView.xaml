@@ -123,6 +123,7 @@
                                         <RowDefinition Height="Auto" />
                                         <RowDefinition Height="Auto" />
                                         <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
                                     </Grid.RowDefinitions>
 
                                     <TextBlock Grid.Row="0" Grid.Column="0" Text="Tiền phòng"
@@ -159,13 +160,18 @@
                                                Style="{StaticResource CaptionText}" Margin="0,0,0,8"
                                                Visibility="{Binding HasOtherPromotion, Converter={StaticResource BoolToVis}}" />
 
-                                    <Border Grid.Row="6" Grid.ColumnSpan="2" Height="1"
+                                    <TextBlock Grid.Row="6" Grid.ColumnSpan="2" Text="{Binding ManualDiscountText}"
+                                               Style="{StaticResource CaptionText}" Margin="0,0,0,8"
+                                               Foreground="{StaticResource SuccessBrush}"
+                                               Visibility="{Binding HasManualDiscount, Converter={StaticResource BoolToVis}}" />
+
+                                    <Border Grid.Row="7" Grid.ColumnSpan="2" Height="1"
                                             Background="{StaticResource LineBrush}" Margin="0,4,0,10" />
 
-                                    <TextBlock Grid.Row="7" Grid.Column="0" Text="Tổng cộng"
+                                    <TextBlock Grid.Row="8" Grid.Column="0" Text="Tổng cộng"
                                                Style="{StaticResource BodyText}" FontWeight="Bold"
                                                Foreground="{StaticResource BrandBrush}" />
-                                    <TextBlock Grid.Row="7" Grid.Column="1" HorizontalAlignment="Right"
+                                    <TextBlock Grid.Row="8" Grid.Column="1" HorizontalAlignment="Right"
                                                Style="{StaticResource BodyText}" FontWeight="Bold"
                                                Foreground="{StaticResource BrandBrush}"
                                                Text="{Binding Invoice.TotalAmount, Converter={StaticResource Money}}" />

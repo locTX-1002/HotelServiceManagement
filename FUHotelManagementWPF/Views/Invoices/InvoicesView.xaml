@@ -327,11 +327,9 @@
                                                       IsEditable="True"
                                                       Text="{Binding PromotionCode, UpdateSourceTrigger=PropertyChanged}" />
 
-                                            <!-- GIAM TAY: chi quan ly moi thay o nay. Dung khi khach can bot
-                                                 ma chua kip tao ma khuyen mai - go thang so tien roi tinh lai.
-                                                 Cong don voi ma khuyen mai va uu dai VIP; tren hoa don se hien
-                                                 nhan "TUNHAP" o dong ly do giam. Le tan khong thay o nay, va
-                                                 service van chan lai mot lan nua neu co ai goi thang. -->
+                                            <!-- GIẢM TAY: lễ tân nhập số tiền để gửi yêu cầu phê duyệt.
+                                                 Khi quản lý duyệt, số tiền được lưu riêng trên Invoice và
+                                                 không bị trộn vào mã khuyến mãi. -->
                                             <StackPanel Visibility="{Binding CanGiveManualDiscount,
                                                                      Converter={StaticResource BoolToVis}}">
                                                 <TextBlock Text="GIẢM TAY (Đ)" Style="{StaticResource FieldLabel}"

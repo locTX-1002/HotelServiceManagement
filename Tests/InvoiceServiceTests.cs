@@ -78,6 +78,98 @@ public class InvoiceServiceTests
         Assert.Contains("tải lại", result.Message);
     }
 
+    [Fact]
+    public async Task PrepareAsync_WhenRecalculating_PreservesApprovedManualDiscount()
+    {
+        AppSession.SignIn(Admin());
+
+        var stay = new Stay
+        {
+            Id = 1,
+            ActualCheckIn = new DateTime(2026, 7, 20),
+            Status = StayStatus.Active,
+            Reservation = new Reservation
+            {
+                Room = new Room
+                {
+                    RoomType = new RoomType { BasePrice = 1_000_000m }
+                }
+            },
+            Invoice = new Invoice
+            {
+                Id = 7,
+                StayId = 1,
+                ManualDiscountAmount = 100_000m,
+                DiscountAmount = 100_000m,
+                TotalAmount = 900_000m,
+            }
+        };
+
+        var result = await new InvoiceService(
+                new FakeInvoiceRepository(stay),
+                new FakePromotionRepository(new Promotion()))
+            .PrepareAsync(1, null, new DateTime(2026, 7, 21));
+
+        Assert.True(result.Ok, result.Message);
+        Assert.Equal(100_000m, result.Data!.ManualDiscountAmount);
+        Assert.Equal(100_000m, result.Data.DiscountAmount);
+        Assert.Equal(900_000m, result.Data.TotalAmount);
+        Assert.Null(result.Data.PromotionCode);
+    }
+
+    [Fact]
+    public async Task ApplyApprovedDiscountAsync_PreservesExistingPromotion()
+    {
+        AppSession.SignIn(Admin());
+
+        var promotion = new Promotion
+        {
+            Id = 12,
+            Code = "SALE10",
+            Type = PromotionType.Percentage,
+            Value = 10m,
+            StartDate = new DateTime(2026, 7, 1),
+            EndDate = new DateTime(2026, 7, 31),
+            IsActive = true,
+        };
+
+        var stay = new Stay
+        {
+            Id = 1,
+            ActualCheckIn = new DateTime(2026, 7, 20),
+            ActualCheckOut = new DateTime(2026, 7, 21),
+            Status = StayStatus.Completed,
+            Reservation = new Reservation
+            {
+                Room = new Room
+                {
+                    RoomType = new RoomType { BasePrice = 1_000_000m }
+                }
+            },
+            Invoice = new Invoice
+            {
+                Id = 7,
+                StayId = 1,
+                PromotionId = promotion.Id,
+                PromotionCode = promotion.Code,
+                DiscountAmount = 100_000m,
+                TotalAmount = 900_000m,
+            }
+        };
+
+        var result = await new InvoiceService(
+                new FakeInvoiceRepository(stay),
+                new FakePromotionRepository(promotion))
+            .ApplyApprovedDiscountAsync(1, 100_000m);
+
+        Assert.True(result.Ok, result.Message);
+        Assert.Equal(promotion.Id, result.Data!.PromotionId);
+        Assert.Equal(promotion.Code, result.Data.PromotionCode);
+        Assert.Equal(100_000m, result.Data.ManualDiscountAmount);
+        Assert.Equal(200_000m, result.Data.DiscountAmount);
+        Assert.Equal(800_000m, result.Data.TotalAmount);
+    }
+
     /// <summary>
     /// Tong moi thap hon so da thu thi phai hoan tien - viec do lam ngoai app, nen chan.
     /// </summary>
