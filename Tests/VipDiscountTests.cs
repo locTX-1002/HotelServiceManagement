@@ -32,8 +32,9 @@ public class VipDiscountTests
             Assert.Equal(BasePrice, invoice.Data!.RoomCharge);
             Assert.Equal(BasePrice * 0.10m, invoice.Data.DiscountAmount);
             Assert.Equal(BasePrice * 0.90m, invoice.Data.TotalAmount);
-            // Ghi ro ly do giam de le tan/khach doc duoc
-            Assert.Contains("VIP10", invoice.Data.PromotionCode);
+            Assert.True(invoice.Data.IsVipDiscountApplied);
+            Assert.Null(invoice.Data.PromotionId);
+            Assert.Null(invoice.Data.PromotionCode);
         }
         finally { AppSession.SignOut(); }
     }
@@ -52,6 +53,7 @@ public class VipDiscountTests
 
             Assert.Equal(0m, invoice.Data!.DiscountAmount);
             Assert.Equal(BasePrice, invoice.Data.TotalAmount);
+            Assert.False(invoice.Data.IsVipDiscountApplied);
             Assert.Null(invoice.Data.PromotionCode);
         }
         finally { AppSession.SignOut(); }
@@ -81,8 +83,9 @@ public class VipDiscountTests
             // 20% ma + 10% VIP = 30% cua 1.000.000 = 300.000
             Assert.Equal(BasePrice * 0.30m, invoice.Data!.DiscountAmount);
             Assert.Equal(BasePrice * 0.70m, invoice.Data.TotalAmount);
-            Assert.Contains("VIP10", invoice.Data.PromotionCode);
-            Assert.Contains(code, invoice.Data.PromotionCode);
+            Assert.True(invoice.Data.IsVipDiscountApplied);
+            Assert.Equal(promo.Data.Id, invoice.Data.PromotionId);
+            Assert.Equal(code, invoice.Data.PromotionCode);
             // Khong bao gio am du giam bao nhieu
             Assert.True(invoice.Data.TotalAmount >= 0);
         }

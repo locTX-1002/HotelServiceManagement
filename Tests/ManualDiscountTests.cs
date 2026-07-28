@@ -22,7 +22,7 @@ public class ManualDiscountTests
     private const decimal BasePrice = 1_000_000m;
 
     [DbFact]
-    public async Task QuanLy_GiamTay_TruDungSoTien_VaGhiNhanTuNhap()
+    public async Task QuanLy_GiamTay_TruDungSoTien_VaLuuRiengKhoiKhuyenMai()
     {
         await using var box = await Box.CreateAsync(BasePrice);
         try
@@ -34,10 +34,99 @@ public class ManualDiscountTests
             var invoice = await new InvoiceService().ApplyApprovedDiscountAsync(stayId, 150_000m);
 
             Assert.True(invoice.Ok, invoice.Message);
-            Assert.Equal(150_000m, invoice.Data!.DiscountAmount);
+            Assert.Equal(150_000m, invoice.Data!.ManualDiscountAmount);
+            Assert.Equal(150_000m, invoice.Data.DiscountAmount);
             Assert.Equal(BasePrice - 150_000m, invoice.Data.TotalAmount);
-            // Nhan de le tan/khach doc duoc vi sao hoa don bi tru
-            Assert.Contains(InvoiceService.ManualDiscountLabel, invoice.Data.PromotionCode);
+            Assert.Null(invoice.Data.PromotionId);
+            Assert.Null(invoice.Data.PromotionCode);
+        }
+        finally { AppSession.SignOut(); }
+    }
+
+    [DbFact]
+    public async Task SauKhiDuyetGiamTay_TinhLaiHoaDon_VanGiuSoTienDaDuyet()
+    {
+        await using var box = await Box.CreateAsync(BasePrice);
+        try
+        {
+            await TestUsers.SignInAsync(RoleNames.Manager);
+            var stayId = await box.CheckInAsync();
+            await TestUsers.SignInAsync(RoleNames.Manager);
+
+            var approved = await new InvoiceService()
+                .ApplyApprovedDiscountAsync(stayId, 100_000m);
+
+            Assert.True(approved.Ok, approved.Message);
+            Assert.Equal(100_000m, approved.Data!.ManualDiscountAmount);
+
+            await TestUsers.SignInAsync(RoleNames.Receptionist);
+            var recalculated = await new InvoiceService().PrepareAsync(
+                stayId,
+                promotionCode: null,
+                asOf: DateTime.Today.AddDays(1).AddHours(11));
+
+            Assert.True(recalculated.Ok, recalculated.Message);
+            Assert.Equal(100_000m, recalculated.Data!.ManualDiscountAmount);
+            Assert.Equal(100_000m, recalculated.Data.DiscountAmount);
+            Assert.Equal(BasePrice - 100_000m, recalculated.Data.TotalAmount);
+            Assert.Null(recalculated.Data.PromotionCode);
+        }
+        finally { AppSession.SignOut(); }
+    }
+
+    [DbFact]
+    public async Task GiamTay_DuocDuyet_KhongLamMatMaKhuyenMaiThat()
+    {
+        await using var box = await Box.CreateAsync(BasePrice);
+        try
+        {
+            await TestUsers.SignInAsync(RoleNames.Manager);
+            var code = $"MD{Guid.NewGuid():N}"[..10].ToUpperInvariant();
+            var promotion = await new PromotionService().SaveAsync(
+                null,
+                code,
+                "Test giảm tay và khuyến mãi",
+                PromotionType.Percentage,
+                10m,
+                DateTime.Today.AddDays(-1),
+                DateTime.Today.AddDays(7),
+                true);
+
+            Assert.True(promotion.Ok, promotion.Message);
+            box.PromotionId = promotion.Data!.Id;
+
+            await TestUsers.SignInAsync(RoleNames.Receptionist);
+            var stayId = await box.CheckInAsync();
+
+            var prepared = await new InvoiceService().PrepareAsync(
+                stayId,
+                code,
+                DateTime.Today.AddDays(1).AddHours(11));
+
+            Assert.True(prepared.Ok, prepared.Message);
+
+            await TestUsers.SignInAsync(RoleNames.Manager);
+            var approved = await new InvoiceService()
+                .ApplyApprovedDiscountAsync(stayId, 100_000m);
+
+            Assert.True(approved.Ok, approved.Message);
+            Assert.Equal(promotion.Data.Id, approved.Data!.PromotionId);
+            Assert.Equal(code, approved.Data.PromotionCode);
+            Assert.Equal(100_000m, approved.Data.ManualDiscountAmount);
+            Assert.Equal(200_000m, approved.Data.DiscountAmount);
+            Assert.Equal(800_000m, approved.Data.TotalAmount);
+
+            await TestUsers.SignInAsync(RoleNames.Receptionist);
+            var recalculated = await new InvoiceService().PrepareAsync(
+                stayId,
+                code,
+                DateTime.Today.AddDays(1).AddHours(11));
+
+            Assert.True(recalculated.Ok, recalculated.Message);
+            Assert.Equal(promotion.Data.Id, recalculated.Data!.PromotionId);
+            Assert.Equal(code, recalculated.Data.PromotionCode);
+            Assert.Equal(100_000m, recalculated.Data.ManualDiscountAmount);
+            Assert.Equal(800_000m, recalculated.Data.TotalAmount);
         }
         finally { AppSession.SignOut(); }
     }
@@ -79,7 +168,8 @@ public class ManualDiscountTests
 
             Assert.True(invoice.Ok, invoice.Message);
             // Tru toi da bang tong, khong bao gio ra so am
-            Assert.Equal(BasePrice, invoice.Data!.DiscountAmount);
+            Assert.Equal(BasePrice, invoice.Data!.ManualDiscountAmount);
+            Assert.Equal(BasePrice, invoice.Data.DiscountAmount);
             Assert.Equal(0m, invoice.Data.TotalAmount);
             Assert.True(invoice.Data.TotalAmount >= 0);
         }
@@ -137,6 +227,7 @@ public class ManualDiscountTests
     {
         public int RoomTypeId { get; private init; }
         public int RoomId { get; private init; }
+        public int? PromotionId { get; set; }
         private readonly List<int> _guestIds = [];
 
         public static async Task<Box> CreateAsync(decimal basePrice)
@@ -193,6 +284,7 @@ public class ManualDiscountTests
             var guestIds = _guestIds;
             var roomId = RoomId;
             var typeId = RoomTypeId;
+            var promotionId = PromotionId;
 
             await using var db = HotelDbContextFactory.Create();
             // Xoa nguoc theo thu tu khoa ngoai
@@ -206,6 +298,12 @@ public class ManualDiscountTests
             await db.Guests.Where(g => guestIds.Contains(g.Id)).ExecuteDeleteAsync();
             await db.Rooms.Where(r => r.Id == roomId).ExecuteDeleteAsync();
             await db.RoomTypes.Where(t => t.Id == typeId).ExecuteDeleteAsync();
+            if (promotionId.HasValue)
+            {
+                await db.Promotions
+                    .Where(promotion => promotion.Id == promotionId.Value)
+                    .ExecuteDeleteAsync();
+            }
         }
     }
 }

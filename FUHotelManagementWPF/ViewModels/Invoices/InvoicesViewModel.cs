@@ -243,9 +243,37 @@ public sealed class InvoicesViewModel : ViewModelBase
     public string SurchargeDetailText => Surcharges.Count == 0
         ? "Không phát sinh"
         : $"{Surcharges.Count} khoản phụ thu";
-    public string DiscountDetailText => string.IsNullOrWhiteSpace(Invoice?.PromotionCode)
-        ? "Không áp dụng"
-        : Invoice.PromotionCode;
+    public string DiscountDetailText
+    {
+        get
+        {
+            if (Invoice == null)
+            {
+                return "Không áp dụng";
+            }
+
+            var parts = new List<string>();
+
+            if (!string.IsNullOrWhiteSpace(Invoice.PromotionCode))
+            {
+                parts.Add($"Mã {Invoice.PromotionCode}");
+            }
+
+            if (Invoice.IsVipDiscountApplied)
+            {
+                parts.Add("VIP 10%");
+            }
+
+            if (Invoice.ManualDiscountAmount > 0)
+            {
+                parts.Add($"Giảm tay {Invoice.ManualDiscountAmount:N0} đ");
+            }
+
+            return parts.Count == 0
+                ? "Không áp dụng"
+                : string.Join(" + ", parts);
+        }
+    }
     public decimal InvoiceSubtotal => Invoice == null
         ? LiveRoomCharge + LiveServiceCharge + LiveSurcharge
         : Invoice.RoomCharge + Invoice.ServiceCharge + Invoice.SurchargeAmount;
@@ -496,9 +524,16 @@ public sealed class InvoicesViewModel : ViewModelBase
             Invoice = invoice;
             selectedStay.Invoice = invoice;
             RefreshStayList();
-            SelectedPromotion = Invoice?.PromotionCode == null
-                ? null
-                : Promotions.FirstOrDefault(x => x.Code == Invoice.PromotionCode);
+            SelectedPromotion = Invoice?.PromotionId is int promotionId
+                ? Promotions.FirstOrDefault(item => item.Id == promotionId)
+                : string.IsNullOrWhiteSpace(Invoice?.PromotionCode)
+                    ? null
+                    : Promotions.FirstOrDefault(item =>
+                        item.Code.Equals(
+                            Invoice.PromotionCode,
+                            StringComparison.OrdinalIgnoreCase));
+
+            // Chỉ đổ mã khuyến mãi thật vào ô nhập. Giảm VIP/giảm tay có cột riêng.
             PromotionCode = Invoice?.PromotionCode ?? string.Empty;
 
             if (Invoice != null)
@@ -552,8 +587,7 @@ public sealed class InvoicesViewModel : ViewModelBase
 
             var result = await _invoiceService.PrepareAsync(
                 SelectedStay.Id,
-                string.IsNullOrWhiteSpace(PromotionCode) ? null : PromotionCode,
-                manualDiscount: ManualDiscount);
+                string.IsNullOrWhiteSpace(PromotionCode) ? null : PromotionCode);
             if (!result.Ok || result.Data == null)
             {
                 ErrorMessage = result.Message;

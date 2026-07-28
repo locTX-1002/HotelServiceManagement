@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using BusinessObjects.Common;
 using BusinessObjects.Enums;
 
@@ -14,5 +15,7 @@ namespace BusinessObjects.Entities
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
         public bool IsActive { get; set; } = true;
+
+        public virtual ICollection<Invoice> Invoices { get; set; } = new List<Invoice>();
     }
 }
