@@ -583,6 +583,29 @@
          nen truyen xuong Calendar trong popup. BasedOn giu nguyen giao dien HC. -->
     <Style TargetType="{x:Type DatePicker}" BasedOn="{StaticResource {x:Type DatePicker}}">
         <Setter Property="Language" Value="vi-VN" />
+        <!-- ErrorTemplate mac dinh cua HandyControl ve chuoi do DUOI o ngay o AdornerLayer -
+             lop noi khong chiem cho layout nen tran xuong DE len nut chon nhanh (1 dem/2 dem)
+             chi cach 10px. Thay bang mot VIEN DO om sat control: AdornedElementPlaceholder lay
+             dung kich thuoc o ngay nen vien khong lam cao them, khong tran - van bao loi ngay
+             tai cho (chi tiet loi xem o tooltip khi ro chuot). Ap chung cho moi DatePicker.
+             Khong dat {x:Null}: tat han thi o ngay sai mat sach dau hieu, khach phai bam Luu
+             moi biet - da kiem chung tan mat. -->
+        <Setter Property="Validation.ErrorTemplate">
+            <Setter.Value>
+                <ControlTemplate>
+                    <Border BorderBrush="{StaticResource DangerBrush}" BorderThickness="1.4"
+                            CornerRadius="4">
+                        <AdornedElementPlaceholder />
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="Validation.HasError" Value="True">
+                <Setter Property="ToolTip"
+                        Value="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors)[0].ErrorContent}" />
+            </Trigger>
+        </Style.Triggers>
     </Style>
 
     <!-- ============================================================

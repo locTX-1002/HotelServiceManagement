@@ -148,6 +148,7 @@ namespace FUHotelManagementWPF.ViewModels.Reservations
             {
                 if (SetProperty(ref _checkIn, value))
                 {
+                    OnPropertyChanged(nameof(MinCheckOut));
                     if (CheckOut.Date <= value.Date) { CheckOut = value.Date.AddDays(1); }
                     ValidateDates();
                     RefreshRooms();
@@ -171,6 +172,13 @@ namespace FUHotelManagementWPF.ViewModels.Reservations
 
         /// <summary>Ngay som nhat cho chon tren lich - khong dat lui ve qua khu.</summary>
         public DateTime MinCheckIn { get; } = DateTime.Today;
+
+        /// <summary>
+        /// Ngay tra som nhat = ngay nhan + 1 dem. Bind vao DisplayDateStart cua o "Tra phong"
+        /// de lich TU CHAN ngay khong hop le (&lt;= ngay nhan) ngay tren giao dien. Doi ngay
+        /// nhan thi day theo (raise trong setter CheckIn).
+        /// </summary>
+        public DateTime MinCheckOut => CheckIn.Date.AddDays(1);
 
         private void ValidateDates()
         {

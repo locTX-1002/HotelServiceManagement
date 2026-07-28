@@ -163,7 +163,9 @@
                             </StackPanel>
                             <StackPanel Grid.Column="2">
                                 <TextBlock Text="TRẢ PHÒNG" Style="{StaticResource FieldLabel}" />
-                                <DatePicker DisplayDateStart="{Binding MinCheckIn, Mode=OneWay}"
+                                <!-- DisplayDateStart = MinCheckOut (ngay nhan + 1): lich tu chan ngay
+                                     tra <= ngay nhan ngay tren giao dien, khong de chon roi moi bao loi -->
+                                <DatePicker DisplayDateStart="{Binding MinCheckOut, Mode=OneWay}"
                                             SelectedDate="{Binding CheckOut, ValidatesOnNotifyDataErrors=True}" />
                             </StackPanel>
                         </Grid>

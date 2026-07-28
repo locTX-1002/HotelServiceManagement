@@ -37,7 +37,8 @@
                         </StackPanel>
                         <StackPanel Grid.Column="2">
                             <TextBlock Text="Trả phòng" Style="{StaticResource CaptionText}" />
-                            <DatePicker DisplayDateStart="{Binding MinCheckIn, Mode=OneWay}"
+                            <!-- MinCheckOut = ngay nhan + 1: lich tu chan ngay tra khong hop le -->
+                            <DatePicker DisplayDateStart="{Binding MinCheckOut, Mode=OneWay}"
                                         SelectedDate="{Binding CheckOut}" />
                         </StackPanel>
                     </Grid>

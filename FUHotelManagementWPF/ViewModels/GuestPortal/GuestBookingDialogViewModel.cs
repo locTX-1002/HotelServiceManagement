@@ -23,6 +23,13 @@ public sealed class GuestBookingDialogViewModel : ViewModelBase
 
     public DateTime MinCheckIn { get; } = DateTime.Today;
 
+    /// <summary>
+    /// Ngay tra som nhat cho chon tren lich = ngay nhan + 1 dem. Bind vao DisplayDateStart cua
+    /// o "Tra phong" de lich TU CHAN cac ngay khong hop le (&lt;= ngay nhan) ngay tren giao dien,
+    /// thay vi de khach chon roi moi bao loi. Doi ngay nhan thi day theo.
+    /// </summary>
+    public DateTime MinCheckOut => CheckIn.Date.AddDays(1);
+
     private DateTime _checkIn = DateTime.Today.AddDays(1);
     public DateTime CheckIn
     {
@@ -30,6 +37,7 @@ public sealed class GuestBookingDialogViewModel : ViewModelBase
         set
         {
             if (!SetProperty(ref _checkIn, value)) return;
+            OnPropertyChanged(nameof(MinCheckOut));
             if (CheckOut.Date <= value.Date) CheckOut = value.Date.AddDays(1);
             _ = LoadRoomsAsync();
         }
@@ -192,6 +200,20 @@ public sealed class GuestBookingDialogViewModel : ViewModelBase
     private async Task SaveAsync()
     {
         ErrorMessage = string.Empty;
+        // Kiem NGAY TRUOC phong. Khi ngay nhan = ngay tra, LoadRoomsAsync da xoa het phong nen
+        // SelectedRoom == null; neu kiem phong truoc se bao "chua chon phong" - de len loi ngay
+        // that su, khien khach hieu sai nguyen nhan. Dung dung hai thong bao LoadRoomsAsync dang
+        // dung (dong 128, 136) cho nhat quan.
+        if (CheckIn.Date < DateTime.Today)
+        {
+            ErrorMessage = "Ngày nhận phòng không được ở quá khứ.";
+            return;
+        }
+        if (CheckOut.Date <= CheckIn.Date)
+        {
+            ErrorMessage = "Ngày trả phòng phải sau ngày nhận phòng.";
+            return;
+        }
         if (SelectedRoom == null)
         {
             ErrorMessage = "Vui lòng chọn một phòng còn trống.";
