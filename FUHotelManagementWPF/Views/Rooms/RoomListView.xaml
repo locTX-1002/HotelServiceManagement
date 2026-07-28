@@ -209,10 +209,14 @@
                                    FontSize="12.5" HorizontalAlignment="Center" Margin="0,10,0,0" />
                     </StackPanel>
 
-                    <!-- Da chon -->
-                    <StackPanel DataContext="{Binding SelectedRow}">
-                        <StackPanel.Style>
-                            <Style TargetType="StackPanel">
+                    <!-- Da chon. Boc ScrollViewer: panel nay khong co chieu cao co dinh, du
+                         anh + thong tin + lich su dat + hang nut thao tac de vuot chieu cao
+                         cua so va bi cat cung o duoi (ListBox ben trai tu scroll duoc, panel
+                         nay thi khong, nen cac nut Doi trang thai/Sua/Xoa co the bi khuat). -->
+                    <ScrollViewer DataContext="{Binding SelectedRow}" VerticalScrollBarVisibility="Auto"
+                                  HorizontalScrollBarVisibility="Disabled">
+                        <ScrollViewer.Style>
+                            <Style TargetType="ScrollViewer">
                                 <Setter Property="Visibility" Value="Collapsed" />
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding DataContext.HasSelection, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="True">
@@ -220,7 +224,8 @@
                                     </DataTrigger>
                                 </Style.Triggers>
                             </Style>
-                        </StackPanel.Style>
+                        </ScrollViewer.Style>
+                        <StackPanel>
                         <!-- Gallery ảnh: mũi tên chuyển + bộ đếm (thay dialog Chi tiết cũ) -->
                         <Border Height="180" CornerRadius="4,4,0,0">
                             <Border.Background>
@@ -272,7 +277,7 @@
                                     <TextBlock Text="{Binding PriceText}" FontWeight="SemiBold" />
                                 </StackPanel>
                                 <StackPanel>
-                                    <TextBlock Text="TÌNH TRẠNG" Style="{StaticResource FieldLabel}" />
+                                    <TextBlock Text="KÍCH HOẠT" Style="{StaticResource FieldLabel}" />
                                     <TextBlock Text="{Binding ActiveText}" FontWeight="SemiBold" />
                                 </StackPanel>
                             </UniformGrid>
@@ -358,7 +363,8 @@
                                                      Converter={StaticResource BoolToVis}}" />
                             </WrapPanel>
                         </StackPanel>
-                    </StackPanel>
+                        </StackPanel>
+                    </ScrollViewer>
                 </Grid>
             </Border>
         </Grid>
