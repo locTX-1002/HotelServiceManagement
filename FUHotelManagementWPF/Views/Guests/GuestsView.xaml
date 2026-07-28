@@ -21,6 +21,17 @@
             </Style.Triggers>
         </Style>
 
+        <!-- Badge trạng thái tài khoản -->
+        <Style x:Key="AccountStatusBadge" TargetType="Border" BasedOn="{StaticResource BadgeNeutral}">
+            <Setter Property="MinWidth" Value="80" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsAccountActive}" Value="True">
+                    <Setter Property="Background" Value="{StaticResource SuccessSoftBrush}" />
+                    <Setter Property="TextElement.Foreground" Value="{StaticResource SuccessBrush}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
         <Style x:Key="GuestRowItem" TargetType="ListBoxItem">
             <Setter Property="Margin" Value="0,0,0,8" />
             <Setter Property="Template">
@@ -97,8 +108,9 @@
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
-                            <!-- Avatar chữ cái (hình tròn - ngoại lệ hệ bo góc) -->
+                            <!-- Avatar chữ cái -->
                             <Border Grid.Column="0" Width="40" Height="40" CornerRadius="999"
                                     Background="{StaticResource BrandSoftBrush}">
                                 <TextBlock Text="{Binding Initial}" FontWeight="Bold" FontSize="15"
@@ -111,11 +123,17 @@
                                            FontSize="11.5" TextTrimming="CharacterEllipsis" Margin="0,2,0,0" />
                             </StackPanel>
                             <Border Grid.Column="2" Style="{StaticResource GuestTagBadge}"
-                                    VerticalAlignment="Center" Margin="0,0,12,0"
+                                    VerticalAlignment="Center" Margin="0,0,8,0"
                                     Visibility="{Binding HasTag, Converter={StaticResource BoolToVis}}">
                                 <TextBlock Text="{Binding TagText}" />
                             </Border>
-                            <TextBlock Grid.Column="3" Text="{Binding ReservationText}"
+                            <!-- Badge trạng thái tài khoản trên dòng danh sách -->
+                            <Border Grid.Column="3" Style="{StaticResource AccountStatusBadge}"
+                                    VerticalAlignment="Center" Margin="0,0,8,0"
+                                    Visibility="{Binding HasAccount, Converter={StaticResource BoolToVis}}">
+                                <TextBlock Text="{Binding AccountBadgeText}" />
+                            </Border>
+                            <TextBlock Grid.Column="4" Text="{Binding ReservationText}"
                                        Style="{StaticResource CaptionText}" FontSize="12"
                                        VerticalAlignment="Center" />
                         </Grid>
@@ -163,10 +181,16 @@
                             </Border>
                             <StackPanel Margin="13,0,0,0" VerticalAlignment="Center">
                                 <TextBlock Text="{Binding Guest.FullName}" Style="{StaticResource SectionTitleText}" FontSize="17" />
-                                <Border Style="{StaticResource GuestTagBadge}" HorizontalAlignment="Left" Margin="0,4,0,0"
-                                        Visibility="{Binding HasTag, Converter={StaticResource BoolToVis}}">
-                                    <TextBlock Text="{Binding TagText}" />
-                                </Border>
+                                <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                    <Border Style="{StaticResource GuestTagBadge}" HorizontalAlignment="Left"
+                                            Visibility="{Binding HasTag, Converter={StaticResource BoolToVis}}">
+                                        <TextBlock Text="{Binding TagText}" />
+                                    </Border>
+                                    <Border Style="{StaticResource AccountStatusBadge}" Margin="6,0,0,0"
+                                            Visibility="{Binding HasAccount, Converter={StaticResource BoolToVis}}">
+                                        <TextBlock Text="{Binding AccountBadgeText}" />
+                                    </Border>
+                                </StackPanel>
                             </StackPanel>
                         </StackPanel>
 
@@ -191,22 +215,22 @@
                             </StackPanel>
                         </UniformGrid>
 
+                        <!-- Trạng thái tài khoản -->
+                        <StackPanel Margin="0,0,0,10">
+                            <TextBlock Text="TÀI KHOẢN ĐẶT PHÒNG" Style="{StaticResource FieldLabel}" />
+                            <TextBlock Text="{Binding AccountStatusText}" FontWeight="SemiBold" />
+                        </StackPanel>
+
                         <TextBlock Text="GHI CHÚ PHÂN LOẠI" Style="{StaticResource FieldLabel}" Margin="0,2,0,3"
                                    Visibility="{Binding HasTagNote, Converter={StaticResource BoolToVis}}" />
                         <TextBlock Text="{Binding TagNote}" Style="{StaticResource CaptionText}" FontSize="12"
                                    TextWrapping="Wrap"
                                    Visibility="{Binding HasTagNote, Converter={StaticResource BoolToVis}}" />
 
-                        <!-- Vach ngan cua vung hanh dong: an luon khi khong co nut nao hien -->
                         <Border Height="1" Background="{StaticResource LineBrush}" Margin="0,16,0,14"
                                 Visibility="{Binding DataContext.CanManageGuests,
                                              RelativeSource={RelativeSource AncestorType=UserControl},
                                              Converter={StaticResource BoolToVis}}" />
-                        <!-- WrapPanel chu khong phai StackPanel ngang: ba nut nay cong lai rong
-                             hon the chi tiet ("Cấp tài khoản đặt phòng" mot minh da rat dai), ma
-                             StackPanel ngang thi khong xuong dong - phan du bi WPF cat cut, nut
-                             van bam duoc nhung khong doc duoc chu. Khuon lay tu UserListView.xaml
-                             va RoomListView.xaml de ca du an chi con mot cong thuc hang nut. -->
                         <WrapPanel>
                             <WrapPanel.Resources>
                                 <Style TargetType="Button" BasedOn="{StaticResource GhostButton}">
@@ -223,7 +247,6 @@
                                     Visibility="{Binding DataContext.CanManageGuests,
                                                  RelativeSource={RelativeSource AncestorType=UserControl},
                                                  Converter={StaticResource BoolToVis}}" />
-                            <!-- Kich hoat tai khoan dat phong online cho khach (theo phan cong Phuc) -->
                             <Button Content="Cấp tài khoản đặt phòng"
                                     ToolTip="Tạo tài khoản để khách tự đăng nhập bằng số điện thoại"
                                     Command="{Binding DataContext.ActivateAccountCommand,
@@ -231,6 +254,18 @@
                                     Visibility="{Binding DataContext.CanManageGuests,
                                                  RelativeSource={RelativeSource AncestorType=UserControl},
                                                  Converter={StaticResource BoolToVis}}" />
+                            <!-- Khoá / Mở khoá tài khoản khách -->
+                            <Button Content="{Binding ToggleAccountText}"
+                                    ToolTip="{Binding AccountStatusText}"
+                                    Command="{Binding DataContext.ToggleAccountActiveCommand,
+                                              RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                    Visibility="{Binding CanToggleAccount, Converter={StaticResource BoolToVis}}" />
+                            <!-- Đặt lại mật khẩu tài khoản khách -->
+                            <Button Content="Đặt lại mật khẩu"
+                                    ToolTip="Đặt mật khẩu mới cho tài khoản khách hàng"
+                                    Command="{Binding DataContext.ResetAccountPasswordCommand,
+                                              RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                    Visibility="{Binding CanResetPassword, Converter={StaticResource BoolToVis}}" />
                             <Button Content="Xoá"
                                     Foreground="{StaticResource DangerBrush}"
                                     ToolTip="Xoá hồ sơ khách — khách đã có lịch sử đặt phòng sẽ không xoá được"

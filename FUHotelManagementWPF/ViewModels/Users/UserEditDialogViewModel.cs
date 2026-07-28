@@ -95,7 +95,7 @@ namespace FUHotelManagementWPF.ViewModels.Users
                 _email = existing.Email;
 
                 // Nếu là tài khoản Khách hàng thì cảnh báo
-                if (existing.Role?.RoleName == RoleNames.Guest || existing.Role?.RoleName == "Guest")
+                if (existing.Role?.RoleName == RoleNames.Guest)
                 {
                     ErrorMessage = "Tài khoản Khách hàng không chỉnh sửa tại đây. Hãy sử dụng chức năng Đặt lại mật khẩu hoặc Khoá tài khoản.";
                 }
@@ -123,7 +123,7 @@ namespace FUHotelManagementWPF.ViewModels.Users
             foreach (var role in result.Data)
             {
                 // Không hiển thị vai trò Guest trong danh sách gán vai trò nhân viên
-                if (role.RoleName != RoleNames.Guest && role.RoleName != "Guest")
+                if (role.RoleName != RoleNames.Guest)
                 {
                     RoleOptions.Add(new RoleOption(role.Id, Describe(role.RoleName)));
                 }
@@ -140,7 +140,7 @@ namespace FUHotelManagementWPF.ViewModels.Users
             RoleNames.Manager => "Quản lý (Manager)",
             RoleNames.Receptionist => "Lễ tân (Receptionist)",
             RoleNames.ServiceStaff => "Nhân viên dịch vụ (ServiceStaff)",
-            RoleNames.Guest or "Guest" => "Khách hàng (Guest)",
+            RoleNames.Guest => "Khách hàng (Guest)",
             _ => roleName,
         };
 
@@ -149,7 +149,7 @@ namespace FUHotelManagementWPF.ViewModels.Users
             if (IsBusy) return;
 
             // Ngăn chặn lưu nếu là tài khoản Khách hàng
-            if (_existing?.Role?.RoleName == RoleNames.Guest || _existing?.Role?.RoleName == "Guest")
+            if (_existing?.Role?.RoleName == RoleNames.Guest)
             {
                 ErrorMessage = "Tài khoản Khách hàng không chỉnh sửa tại đây. Vui lòng sử dụng Đặt lại mật khẩu hoặc Khoá tài khoản.";
                 return;

@@ -14,7 +14,7 @@ public sealed class GuestAccountService : IGuestAccountService
     public GuestAccountService(IGuestAccountRepository a, IGuestRepository g) { _accounts = a; _guests = g; }
 
     /// <summary>
-    /// Lấy danh sách tất cả tài khoản khách hàng để hiển thị trên màn Quản lý người dùng.
+    /// Lấy danh sách tất cả tài khoản khách hàng.
     /// </summary>
     public async Task<ServiceResult<List<GuestAccount>>> GetAllAsync()
     {
@@ -189,6 +189,8 @@ public sealed class GuestAccountService : IGuestAccountService
         var x = await _accounts.GetByPhoneAsync(phone.Trim());
         if (x?.PasswordHash == null || !BCrypt.Net.BCrypt.Verify(password, x.PasswordHash))
             return ServiceResult<GuestAccount>.Failure("Số điện thoại hoặc mật khẩu không đúng.");
+        if (!x.IsActive)
+            return ServiceResult<GuestAccount>.Failure("Tài khoản đã bị khoá. Vui lòng liên hệ lễ tân.");
         x.LastLoginAt = DateTime.Now;
         var guest = x.Guest;
         x.Guest = null!;
@@ -208,6 +210,45 @@ public sealed class GuestAccountService : IGuestAccountService
         x.Guest = null!;
         await _accounts.SaveAsync(x, false);
         return ServiceResult.Success("Đã đổi mật khẩu.");
+    }
+
+    public async Task<ServiceResult> SetActiveAsync(int guestId, bool active)
+    {
+        if (!AuthorizationPolicy.CanManageGuests && !AuthorizationPolicy.CanManageUsers)
+            return ServiceResult.Failure("Bạn không có quyền khoá/mở khoá tài khoản khách.");
+
+        var account = await _accounts.GetByGuestIdAsync(guestId);
+        if (account == null) return ServiceResult.Failure("Khách hàng chưa có tài khoản.");
+
+        account.IsActive = active;
+        await _accounts.SaveAsync(account, false);
+
+        var guestName = account.Guest?.FullName ?? $"GuestId={guestId}";
+        await AuditTrail.WriteAsync(active ? "guest_account.unlock" : "guest_account.lock",
+            nameof(GuestAccount), guestId, null, guestName);
+
+        return ServiceResult.Success(active ? "Đã mở khoá tài khoản khách hàng." : "Đã khoá tài khoản khách hàng.");
+    }
+
+    public async Task<ServiceResult> ResetPasswordByAdminAsync(int guestId, string newPassword)
+    {
+        if (!AuthorizationPolicy.CanManageGuests && !AuthorizationPolicy.CanManageUsers)
+            return ServiceResult.Failure("Bạn không có quyền đặt lại mật khẩu cho khách.");
+
+        var error = PasswordPolicy.Validate(newPassword);
+        if (error != null) return ServiceResult.Failure(error);
+
+        var account = await _accounts.GetByGuestIdAsync(guestId);
+        if (account == null) return ServiceResult.Failure("Khách hàng chưa có tài khoản.");
+
+        account.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
+        await _accounts.SaveAsync(account, false);
+
+        var guestName = account.Guest?.FullName ?? $"GuestId={guestId}";
+        await AuditTrail.WriteAsync("guest_account.reset_password",
+            nameof(GuestAccount), guestId, null, guestName);
+
+        return ServiceResult.Success("Đã đặt lại mật khẩu cho khách hàng.");
     }
 
     private static string NormalizePhone(string? value)

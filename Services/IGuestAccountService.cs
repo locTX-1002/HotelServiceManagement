@@ -23,4 +23,8 @@ public interface IGuestAccountService
     Task<ServiceResult> ChangePasswordAsync(int guestId, string currentPassword, string newPassword);
 
     Task<ServiceResult> UpdateGuestInfoAsync(int guestId, string fullName, string phoneNumber, string? email);
+
+    Task<ServiceResult> SetActiveAsync(int guestId, bool active);
+
+    Task<ServiceResult> ResetPasswordByAdminAsync(int guestId, string newPassword);
 }

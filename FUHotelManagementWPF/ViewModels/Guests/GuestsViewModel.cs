@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows;
 using BusinessObjects.Entities;
 using BusinessObjects.Enums;
 using FUHotelManagementWPF.MvvmCore;
@@ -11,10 +13,10 @@ using Services;
 
 namespace FUHotelManagementWPF.ViewModels.Guests
 {
-    /// <summary>Dòng khách hàng cho card-row + panel chi tiết.</summary>
     public class GuestRow
     {
         public Guest Guest { get; }
+        public GuestAccount? Account { get; }
 
         public string Initial => string.IsNullOrWhiteSpace(Guest.FullName)
             ? "?" : Guest.FullName.Trim()[..1].ToUpper();
@@ -35,19 +37,31 @@ namespace FUHotelManagementWPF.ViewModels.Guests
         public string? TagNote => Guest.TagNote;
         public bool HasTagNote => !string.IsNullOrWhiteSpace(Guest.TagNote);
 
-        public GuestRow(Guest guest) => Guest = guest;
+        public bool HasAccount => Account != null;
+        public bool IsAccountActive => Account?.IsActive == true;
+        public string AccountStatusText => Account == null
+            ? "Chưa có tài khoản"
+            : Account.IsActive ? "Tài khoản hoạt động" : "Tài khoản đã khoá";
+        public string AccountBadgeText => Account == null
+            ? "Chưa cấp"
+            : Account.IsActive ? "Đang hoạt động" : "Đã khoá";
+
+        public bool CanToggleAccount => HasAccount;
+        public string ToggleAccountText => IsAccountActive ? "Khoá tài khoản" : "Mở khoá tài khoản";
+        public bool CanResetPassword => HasAccount;
+
+        public GuestRow(Guest guest, GuestAccount? account = null)
+        {
+            Guest = guest;
+            Account = account;
+        }
     }
 
-    /// <summary>Module Khách hàng: danh sách D3 master-detail + tìm kiếm + CRUD popup.</summary>
     public class GuestsViewModel : ViewModelBase
     {
         private readonly IGuestService _service = new GuestService();
+        private readonly IGuestAccountService _accountService = new GuestAccountService();
 
-        /// <summary>
-        /// An nut them/sua/cap tai khoan/xoa voi vai tro khong duoc phep - service van la lop chan cuoi.
-        /// Dung thang AuthorizationPolicy (nguon su that duy nhat), khong chep lai dieu kien vai tro.
-        /// NV dich vu van xem duoc danh sach khach de biet khach nao o phong nao.
-        /// </summary>
         public bool CanManageGuests => AuthorizationPolicy.CanOperateFrontDesk;
 
         public ObservableCollection<GuestRow> Rows { get; } = [];
@@ -81,6 +95,8 @@ namespace FUHotelManagementWPF.ViewModels.Guests
         public RelayCommand EditCommand { get; }
         public RelayCommand ActivateAccountCommand { get; }
         public AsyncRelayCommand DeleteCommand { get; }
+        public AsyncRelayCommand ToggleAccountActiveCommand { get; }
+        public RelayCommand ResetAccountPasswordCommand { get; }
 
         public GuestsViewModel()
         {
@@ -88,6 +104,8 @@ namespace FUHotelManagementWPF.ViewModels.Guests
             EditCommand = new RelayCommand(_ => OpenDialog(SelectedRow?.Guest));
             ActivateAccountCommand = new RelayCommand(_ => OpenActivateDialog());
             DeleteCommand = new AsyncRelayCommand(DeleteAsync);
+            ToggleAccountActiveCommand = new AsyncRelayCommand(ToggleAccountActiveAsync);
+            ResetAccountPasswordCommand = new RelayCommand(_ => OpenResetPasswordDialog());
             _ = LoadAsync();
         }
 
@@ -96,12 +114,22 @@ namespace FUHotelManagementWPF.ViewModels.Guests
             IsLoading = true;
             try
             {
-                var list = await _service.SearchAsync(SearchText);
+                var guests = await _service.SearchAsync(SearchText);
+
+                var accountResult = await _accountService.GetAllAsync();
+                var accountMap = new Dictionary<int, GuestAccount>();
+                if (accountResult.Ok && accountResult.Data != null)
+                {
+                    foreach (var acc in accountResult.Data)
+                        accountMap[acc.GuestId] = acc;
+                }
+
                 var keepId = SelectedRow?.Guest.Id;
                 Rows.Clear();
-                foreach (var g in list)
+                foreach (var g in guests)
                 {
-                    Rows.Add(new GuestRow(g));
+                    accountMap.TryGetValue(g.Id, out var account);
+                    Rows.Add(new GuestRow(g, account));
                 }
                 SelectedRow = Rows.FirstOrDefault(r => r.Guest.Id == keepId);
                 OnPropertyChanged(nameof(TotalText));
@@ -129,15 +157,14 @@ namespace FUHotelManagementWPF.ViewModels.Guests
             }
         }
 
-        // Xoa khach dang chon - service tu chan neu khach da co lich su dat phong (hien nguyen Message).
-        private async System.Threading.Tasks.Task DeleteAsync(object? _)
+        private async Task DeleteAsync(object? _)
         {
             if (SelectedRow == null)
             {
                 return;
             }
 
-            var confirmed = Views.Dialogs.ConfirmDialog.Ask(
+            var confirmed = ConfirmDialog.Ask(
                 $"Xoá khách \"{SelectedRow.Guest.FullName}\"?",
                 "Hồ sơ sẽ bị xoá hẳn khỏi hệ thống.",
                 "Khách đã có lịch sử đặt phòng sẽ không xoá được — hệ thống sẽ báo lại.",
@@ -160,8 +187,6 @@ namespace FUHotelManagementWPF.ViewModels.Guests
             }
         }
 
-        // Kich hoat tai khoan dat phong cho khach dang chon (dang nhap bang SDT).
-        // Da co tai khoan hay chua do service tu kiem tra va bao Message.
         private void OpenActivateDialog()
         {
             if (SelectedRow == null)
@@ -173,6 +198,49 @@ namespace FUHotelManagementWPF.ViewModels.Guests
             {
                 Owner = RoomMapViewModel.ActiveWindow(),
             }.ShowDialog();
+
+            _ = LoadAsync();
+        }
+
+        private async Task ToggleAccountActiveAsync(object? _)
+        {
+            if (SelectedRow?.Account == null) return;
+
+            var willLock = SelectedRow.IsAccountActive;
+            var question = willLock
+                ? $"Khoá tài khoản khách \"{SelectedRow.Guest.FullName}\"?\n\nKhách sẽ không đăng nhập được cho tới khi được mở khoá."
+                : $"Mở khoá tài khoản khách \"{SelectedRow.Guest.FullName}\"?";
+            var caption = willLock ? "Khoá tài khoản" : "Mở khoá tài khoản";
+            var owner = RoomMapViewModel.ActiveWindow();
+
+            var answer = owner == null
+                ? MessageBox.Show(question, caption, MessageBoxButton.YesNo, MessageBoxImage.Question)
+                : MessageBox.Show(owner, question, caption, MessageBoxButton.YesNo, MessageBoxImage.Question);
+
+            if (answer != MessageBoxResult.Yes) return;
+
+            var result = await _accountService.SetActiveAsync(SelectedRow.Guest.Id, !willLock);
+            if (result.Ok)
+            {
+                Notify.Success(result.Message);
+                await LoadAsync();
+            }
+            else
+            {
+                Notify.Error(result.Message);
+            }
+        }
+
+        private void OpenResetPasswordDialog()
+        {
+            if (SelectedRow?.Account == null) return;
+
+            var dialog = new GuestResetPasswordDialog(
+                new GuestResetPasswordDialogViewModel(SelectedRow.Guest))
+            {
+                Owner = RoomMapViewModel.ActiveWindow(),
+            };
+            dialog.ShowDialog();
         }
     }
 }

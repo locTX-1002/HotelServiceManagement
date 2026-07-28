@@ -17,6 +17,8 @@ namespace BusinessObjects.Entities
         // tung lien ket Google. Dung de nhan ra ngay lan dang nhap Google sau, khong can hoi lai SDT.
         public string? GoogleSubjectId { get; set; }
 
+        public bool IsActive { get; set; } = true;
+
         public DateTime CreatedAt { get; set; }
         public DateTime? LastLoginAt { get; set; }
     }
