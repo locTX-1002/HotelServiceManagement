@@ -9,12 +9,12 @@ using Services;
 
 namespace FUHotelManagementWPF.ViewModels.Users
 {
-    /// <summary>Mot lua chon vai tro trong ComboBox (Id khop bang Roles trong DB).</summary>
+    /// <summary>Một lựa chọn vai trò trong ComboBox (Id khớp bảng Roles trong DB).</summary>
     public record RoleOption(int Id, string Label);
 
     /// <summary>
-    /// Dialog them / sua tai khoan nhan vien. Mat khau KHONG nam trong ViewModel:
-    /// code-behind doc thang tu PasswordBox roi truyen vao SaveAsync (xem chu thich duoi).
+    /// Dialog thêm / sửa tài khoản nhân viên. Mật khẩu KHÔNG nằm trong ViewModel:
+    /// code-behind đọc thẳng từ PasswordBox rồi truyền vào SaveAsync.
     /// </summary>
     public class UserEditDialogViewModel : ValidatableViewModelBase
     {
@@ -32,9 +32,8 @@ namespace FUHotelManagementWPF.ViewModels.Users
             : "Tạo tài khoản đăng nhập cho nhân viên mới.";
 
         /// <summary>
-        /// Vai tro DOC TU DATABASE (bang Roles), khong ghi cung nua: truoc day 4 vai tro
-        /// va Id nam cung trong file nay nen doi seed la lech ma khong ai biet.
-        /// Danh sach nay KHONG co Admin - vai tro Quan tri vien khong duoc gan qua giao dien.
+        /// Vai trò ĐỌC TỪ DATABASE (bảng Roles).
+        /// Danh sách này KHÔNG có Admin & Guest - chỉ dùng gán vai trò nhân viên.
         /// </summary>
         public ObservableCollection<RoleOption> RoleOptions { get; } = [];
 
@@ -59,10 +58,6 @@ namespace FUHotelManagementWPF.ViewModels.Users
             set => SetProperty(ref _selectedRole, value);
         }
 
-        /// <summary>
-        /// Mo ta yeu cau mat khau. PasswordPolicy chi tra ve cau loi khi sai chu khong
-        /// expose mo ta nen phai viet tay - sua PasswordPolicy.Validate thi sua ca dong nay.
-        /// </summary>
         public string PasswordHint =>
             "Ít nhất 8 ký tự, có chữ hoa, chữ thường, chữ số và ký tự đặc biệt. Ví dụ: Hotel@2026";
 
@@ -98,12 +93,18 @@ namespace FUHotelManagementWPF.ViewModels.Users
             {
                 _fullName = existing.FullName;
                 _email = existing.Email;
+
+                // Nếu là tài khoản Khách hàng thì cảnh báo
+                if (existing.Role?.RoleName == RoleNames.Guest || existing.Role?.RoleName == "Guest")
+                {
+                    ErrorMessage = "Tài khoản Khách hàng không chỉnh sửa tại đây. Hãy sử dụng chức năng Đặt lại mật khẩu hoặc Khoá tài khoản.";
+                }
             }
 
             _ = LoadRolesAsync();
         }
 
-        /// <summary>Do vai tro tu DB vao ComboBox roi chon san dung vai tro dang co.</summary>
+        /// <summary>Đổ vai trò từ DB vào ComboBox rồi chọn sẵn đúng vai trò đang có.</summary>
         private async Task LoadRolesAsync()
         {
             var result = await _service.GetAssignableRolesAsync();
@@ -118,9 +119,14 @@ namespace FUHotelManagementWPF.ViewModels.Users
             {
                 RoleOptions.Add(new RoleOption(_existing.RoleId, "Quản trị viên (Admin)"));
             }
+
             foreach (var role in result.Data)
             {
-                RoleOptions.Add(new RoleOption(role.Id, Describe(role.RoleName)));
+                // Không hiển thị vai trò Guest trong danh sách gán vai trò nhân viên
+                if (role.RoleName != RoleNames.Guest && role.RoleName != "Guest")
+                {
+                    RoleOptions.Add(new RoleOption(role.Id, Describe(role.RoleName)));
+                }
             }
 
             SelectedRole = _existing != null
@@ -128,23 +134,24 @@ namespace FUHotelManagementWPF.ViewModels.Users
                 : RoleOptions.FirstOrDefault(o => o.Label.Contains("Lễ tân")) ?? RoleOptions.FirstOrDefault();
         }
 
-        /// <summary>Ten vai tro trong DB la tieng Anh; man hinh phai hien tieng Viet.</summary>
+        /// <summary>Tên vai trò trong DB là tiếng Anh; màn hình phải hiện tiếng Việt.</summary>
         private static string Describe(string roleName) => roleName switch
         {
             RoleNames.Manager => "Quản lý (Manager)",
             RoleNames.Receptionist => "Lễ tân (Receptionist)",
             RoleNames.ServiceStaff => "Nhân viên dịch vụ (ServiceStaff)",
+            RoleNames.Guest or "Guest" => "Khách hàng (Guest)",
             _ => roleName,
         };
 
-        /// <summary>
-        /// Luu. Hai chuoi mat khau do code-behind doc tu PasswordBox dua sang (PasswordBox
-        /// khong binding duoc) - o che do sua thi bo qua ca hai.
-        /// </summary>
         public async Task SaveAsync(string password, string confirmPassword)
         {
-            if (IsBusy)
+            if (IsBusy) return;
+
+            // Ngăn chặn lưu nếu là tài khoản Khách hàng
+            if (_existing?.Role?.RoleName == RoleNames.Guest || _existing?.Role?.RoleName == "Guest")
             {
+                ErrorMessage = "Tài khoản Khách hàng không chỉnh sửa tại đây. Vui lòng sử dụng Đặt lại mật khẩu hoặc Khoá tài khoản.";
                 return;
             }
 
@@ -177,7 +184,6 @@ namespace FUHotelManagementWPF.ViewModels.Users
             }
             if (HasErrors || ErrorMessage != null)
             {
-                // Vien do khong noi duoc vi sao - day cau loi len banner cho nhin thay ngay.
                 ErrorMessage ??= FirstError();
                 return;
             }
@@ -196,7 +202,6 @@ namespace FUHotelManagementWPF.ViewModels.Users
                 }
                 else
                 {
-                    // Giu nguyen form de nguoi dung sua tiep, chi hien banner loi.
                     ErrorMessage = result.Message;
                 }
             }

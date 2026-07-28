@@ -13,21 +13,12 @@ using Services;
 
 namespace FUHotelManagementWPF.ViewModels.Users
 {
-    /// <summary>Mot chip loc theo vai tro. IsSelected de chip dang chon in dam.</summary>
     public class RoleFilterOption : ViewModelBase
     {
-        /// <summary>Rong = "Tat ca" (khong loc).</summary>
         public string RoleName { get; }
-
-        /// <summary>Ten vai tro chua kem so luong - de ghep lai moi lan Count doi.</summary>
         public string RawLabel { get; }
 
         private int _count;
-
-        /// <summary>
-        /// So tai khoan dang mang vai tro nay. Hien ngay tren chip de Admin biet
-        /// nhan vao co gi khong, thay vi bam thu roi thay bang trong.
-        /// </summary>
         public int Count
         {
             get => _count;
@@ -50,30 +41,17 @@ namespace FUHotelManagementWPF.ViewModels.Users
         }
     }
 
-    /// <summary>
-    /// Module Nguoi dung: danh sach tai khoan nhan vien (chi Admin) + tim kiem,
-    /// loc vai tro, them/sua, khoa/mo, dat lai mat khau.
-    /// </summary>
     public class UserListViewModel : ViewModelBase
     {
         private readonly IUserManagementService _service = new UserManagementService();
+        private readonly IGuestAccountService _guestAccountService = new GuestAccountService(); // Dịch vụ tài khoản khách
 
-        /// <summary>
-        /// Ban goc tai ve tu service. Loc/tim lam ngay tren bo nho vi service chi co
-        /// GetAllAsync (khong co ham tim theo tu khoa) va so nhan vien khach san rat it.
-        /// </summary>
         private List<User> _all = [];
 
         public ObservableCollection<UserRow> Rows { get; } = [];
 
-        /// <summary>
-        /// Mo duoc man: dung DUNG dieu kien ma menu dung (<c>user.view</c>), khong thi
-        /// muc menu hien ra ma bam vao lai bao khong co quyen.
-        /// </summary>
         public bool CanViewUsers => AuthorizationPolicy.CanViewUsers;
         public bool NoUserAccess => !CanViewUsers;
-
-        /// <summary>Them / sua / khoa / dat lai mat khau - chat hon xem, doi <c>user.manage</c>.</summary>
         public bool CanManageUsers => AuthorizationPolicy.CanManageUsers;
 
         public List<RoleFilterOption> RoleFilters { get; } =
@@ -83,6 +61,7 @@ namespace FUHotelManagementWPF.ViewModels.Users
             new(RoleNames.Manager, "Quản lý"),
             new(RoleNames.Receptionist, "Lễ tân"),
             new(RoleNames.ServiceStaff, "Nhân viên dịch vụ"),
+            new("Guest", "Khách hàng"), // Chip lọc "Khách hàng"
         ];
 
         private string _searchText = string.Empty;
@@ -109,8 +88,6 @@ namespace FUHotelManagementWPF.ViewModels.Users
             set { if (SetProperty(ref _isLoading, value)) { OnPropertyChanged(nameof(IsEmpty)); } }
         }
 
-        // Trang thai loi: giu rieng voi rong de nguoi dung biet la mat ket noi
-        // chu khong phai "chua co tai khoan nao".
         private string? _errorMessage;
         public string? ErrorMessage
         {
@@ -140,6 +117,7 @@ namespace FUHotelManagementWPF.ViewModels.Users
         }
 
         public RelayCommand AddCommand { get; }
+        public RelayCommand CreateGuestAccountCommand { get; }
         public RelayCommand EditCommand { get; }
         public RelayCommand ResetPasswordCommand { get; }
         public RelayCommand FilterRoleCommand { get; }
@@ -150,8 +128,7 @@ namespace FUHotelManagementWPF.ViewModels.Users
         public UserListViewModel()
         {
             AddCommand = new RelayCommand(_ => OpenEditDialog(null));
-            // Nhan tham so UserRow de nut ngay tren dong lam viec duoc luon: bam nut cua
-            // dong nao thi sua dong do, khong phai chon dong roi moi bam nut o thanh tren.
+            CreateGuestAccountCommand = new RelayCommand(_ => OpenCreateGuestAccountDialog());
             EditCommand = new RelayCommand(p => OpenEditDialog(RowOf(p)?.User));
             ResetPasswordCommand = new RelayCommand(p => OpenResetPasswordDialog(RowOf(p)?.User));
             FilterRoleCommand = new RelayCommand(SelectRoleFilter);
@@ -167,7 +144,6 @@ namespace FUHotelManagementWPF.ViewModels.Users
             }
         }
 
-        /// <summary>Dong duoc truyen vao tu nut tren luoi; khong co thi lay dong dang chon.</summary>
         private UserRow? RowOf(object? parameter) => parameter as UserRow ?? SelectedRow;
 
         private void ClearFilters()
@@ -182,18 +158,28 @@ namespace FUHotelManagementWPF.ViewModels.Users
             ErrorMessage = null;
             try
             {
+                // 1. Tải tài khoản nhân viên
                 var result = await _service.GetAllAsync();
-                if (result.Ok)
+                var staffUsers = result.Ok ? (result.Data ?? []) : [];
+
+                // 2. Tải tài khoản khách hàng
+                var guestResult = await _guestAccountService.GetAllAsync();
+                var guestAccounts = guestResult.Ok ? (guestResult.Data ?? []) : [];
+
+                // 3. Chuyển GuestAccount sang dạng User giả lập để hiển thị thống nhất trong danh sách
+                var guestUsers = guestAccounts.Select(g => new User
                 {
-                    _all = result.Data ?? [];
-                    ApplyFilter();
-                }
-                else
-                {
-                    _all = [];
-                    ApplyFilter();
-                    ErrorMessage = result.Message;
-                }
+                    Id = -g.GuestId, // ID âm để phân biệt với tài khoản nhân viên
+                    FullName = g.Guest?.FullName ?? "Khách hàng",
+                    Email = string.IsNullOrEmpty(g.Guest?.Email)
+                        ? $"SĐT: {g.Guest?.PhoneNumber}"
+                        : $"{g.Guest?.Email} (SĐT: {g.Guest?.PhoneNumber})",
+                    IsActive = true,
+                    Role = new Role { RoleName = "Guest", Description = "Khách hàng" }
+                });
+
+                _all = staffUsers.Concat(guestUsers).ToList();
+                ApplyFilter();
             }
             catch (Exception)
             {
@@ -207,11 +193,8 @@ namespace FUHotelManagementWPF.ViewModels.Users
             }
         }
 
-        // Loc tren danh sach da tai: theo tu khoa (ten/email) + theo vai tro dang chon.
         private void ApplyFilter()
         {
-            // Dem tren _all chu khong tren Rows: so tren chip phai la tong so tai khoan
-            // cua vai tro do, khong doi theo tu khoa dang go.
             foreach (var filter in RoleFilters)
             {
                 filter.Count = filter.RoleName.Length == 0
@@ -247,10 +230,7 @@ namespace FUHotelManagementWPF.ViewModels.Users
 
         private void SelectRoleFilter(object? parameter)
         {
-            if (parameter is not RoleFilterOption option)
-            {
-                return;
-            }
+            if (parameter is not RoleFilterOption option) return;
 
             _roleFilter = option.RoleName;
             foreach (var item in RoleFilters)
@@ -260,10 +240,6 @@ namespace FUHotelManagementWPF.ViewModels.Users
             ApplyFilter();
         }
 
-        /// <summary>
-        /// Gan Owner qua ham rieng vi ActiveWindow() co the tra ve chinh dialog dang mo
-        /// (WPF nem "Window cannot be its own owner") hoac null luc chua co cua so nao.
-        /// </summary>
         private static void SetOwner(Window dialog)
         {
             var owner = RoomMapViewModel.ActiveWindow();
@@ -286,48 +262,53 @@ namespace FUHotelManagementWPF.ViewModels.Users
             }
             catch (Exception ex)
             {
-                // async void: loi khong ai bat duoc nua nen phai chan tai day, khong thi tat app.
                 Notify.Error($"Không mở được form tài khoản: {ex.Message}");
+            }
+        }
+
+        private async void OpenCreateGuestAccountDialog()
+        {
+            try
+            {
+                var dialog = new CreateGuestAccountDialog();
+                SetOwner(dialog);
+                if (dialog.ShowDialog() == true)
+                {
+                    await LoadAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                Notify.Error($"Không mở được form tạo tài khoản khách: {ex.Message}");
             }
         }
 
         private void OpenResetPasswordDialog(User? target)
         {
-            if (target == null)
-            {
-                return;
-            }
+            if (target == null) return;
 
             var dialog = new ResetPasswordDialog(new ResetPasswordDialogViewModel(target));
             SetOwner(dialog);
             dialog.ShowDialog();
         }
 
-        // Khoa / mo khoa tai khoan dang chon. Dung MessageBox vi day la hanh dong
-        // chan nguoi khac dang nhap - can hoi lai truoc khi lam.
         private async Task ToggleActiveAsync(object? parameter)
         {
             var row = RowOf(parameter);
-            if (row == null || !row.CanToggleActive)
-            {
-                return;
-            }
+            if (row == null || !row.CanToggleActive) return;
 
             var willLock = row.IsActive;
             var question = willLock
-                ? $"Khoá tài khoản \"{row.FullName}\"?\n\nNhân viên này sẽ không đăng nhập được cho tới khi được mở khoá."
-                : $"Mở khoá tài khoản \"{row.FullName}\"?\n\nNhân viên này sẽ đăng nhập lại được ngay.";
+                ? $"Khoá tài khoản \"{row.FullName}\"?\n\nTài khoản này sẽ không đăng nhập được cho tới khi được mở khoá."
+                : $"Mở khoá tài khoản \"{row.FullName}\"?\n\nTài khoản này sẽ đăng nhập lại được ngay.";
 
             var caption = willLock ? "Khoá tài khoản" : "Mở khoá tài khoản";
             var owner = RoomMapViewModel.ActiveWindow();
-            // Tach hai nhanh vi MessageBox.Show khong nhan owner null.
             var answer = owner == null
                 ? MessageBox.Show(question, caption, MessageBoxButton.YesNo, MessageBoxImage.Question)
                 : MessageBox.Show(owner, question, caption, MessageBoxButton.YesNo, MessageBoxImage.Question);
-            if (answer != MessageBoxResult.Yes)
-            {
-                return;
-            }
+
+            if (answer != MessageBoxResult.Yes) return;
 
             var result = await _service.SetActiveAsync(row.User.Id, !row.IsActive);
             if (result.Ok)

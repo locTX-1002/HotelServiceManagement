@@ -4,10 +4,8 @@
              xmlns:mvvm="clr-namespace:FUHotelManagementWPF.MvvmCore"
              xmlns:hc="https://handyorg.github.io/handycontrol">
     <UserControl.Resources>
-        <!-- Badge vai tro: doi mau theo ten vai tro goc trong DB.
-             Mac dinh (ServiceStaff / chua gan) = trung tinh nhu BadgeNeutral. -->
+        <!-- Badge vai trò -->
         <Style x:Key="RoleBadge" TargetType="Border" BasedOn="{StaticResource BadgeNeutral}">
-            <!-- Ep be rong bang nhau de cot trang thai khong so le doc theo danh sach -->
             <Setter Property="MinWidth" Value="104" />
             <Style.Triggers>
                 <DataTrigger Binding="{Binding RoleName}" Value="Admin">
@@ -25,9 +23,8 @@
             </Style.Triggers>
         </Style>
 
-        <!-- Badge trang thai: dang hoat dong = xanh, da khoa = trung tinh -->
+        <!-- Badge trạng thái -->
         <Style x:Key="UserStatusBadge" TargetType="Border" BasedOn="{StaticResource BadgeNeutral}">
-            <!-- Ep be rong bang nhau de cot trang thai khong so le doc theo danh sach -->
             <Setter Property="MinWidth" Value="104" />
             <Style.Triggers>
                 <DataTrigger Binding="{Binding IsActive}" Value="True">
@@ -37,7 +34,7 @@
             </Style.Triggers>
         </Style>
 
-        <!-- Chip loc vai tro: chip dang chon in dam cho de nhan ra -->
+        <!-- Chip lọc vai trò -->
         <Style x:Key="RoleFilterChip" TargetType="Button" BasedOn="{StaticResource QuickChip}">
             <Style.Triggers>
                 <DataTrigger Binding="{Binding IsSelected}" Value="True">
@@ -73,7 +70,7 @@
     </UserControl.Resources>
 
     <Grid Margin="24,18,24,24">
-        <!-- Khong co quyen xem: bao mot cau roi dung, khong goi service -->
+        <!-- Không có quyền xem -->
         <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" MaxWidth="420"
                     Visibility="{Binding NoUserAccess, Converter={StaticResource BoolToVis}}">
             <TextBlock Text="&#xE72E;" Style="{StaticResource IconText}" FontSize="26"
@@ -96,9 +93,17 @@
             <TextBlock Grid.Row="0" Text="Người dùng" Style="{StaticResource PageTitleText}" Margin="0,0,0,12" />
 
             <DockPanel Grid.Row="1" Margin="0,0,0,10">
-                <Button DockPanel.Dock="Right" Content="+ Thêm tài khoản" Style="{StaticResource PrimaryButton}"
-                        Padding="16,8" Command="{Binding AddCommand}"
-                        Visibility="{Binding CanManageUsers, Converter={StaticResource BoolToVis}}" />
+                <!-- Cụm 2 nút hành động chính bên phải -->
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                    <Button Content="+ Thêm tài khoản" Style="{StaticResource PrimaryButton}"
+                            Padding="16,8" Command="{Binding AddCommand}"
+                            Visibility="{Binding CanManageUsers, Converter={StaticResource BoolToVis}}"
+                            Margin="0,0,8,0" />
+                    <Button Content="+ Tài khoản khách" Style="{StaticResource GhostButton}"
+                            Padding="16,8" Command="{Binding CreateGuestAccountCommand}"
+                            Visibility="{Binding CanManageUsers, Converter={StaticResource BoolToVis}}" />
+                </StackPanel>
+
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                     <TextBox x:Name="userSearch" Style="{StaticResource SearchBox}" VerticalAlignment="Center"
                              Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged, Delay=300}"
@@ -130,12 +135,12 @@
                 </ItemsControl>
             </StackPanel>
 
-            <!-- Trang thai dang tai -->
+            <!-- Trạng thái đang tải -->
             <hc:LoadingCircle Grid.Row="3" Width="34" Height="34"
                               Foreground="{StaticResource BrandBrush}"
                               Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}" />
 
-            <!-- Trang thai rong -->
+            <!-- Trạng thái rỗng -->
             <Border Grid.Row="3" Background="{StaticResource CardBrush}" BorderBrush="{StaticResource LineBrush}" BorderThickness="1" CornerRadius="6" Padding="32,24" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVis}}">
                 <StackPanel HorizontalAlignment="Center">
                     <TextBlock Text="&#xE721;" Style="{StaticResource IconText}" FontSize="32" Foreground="{StaticResource InkSoftBrush}" HorizontalAlignment="Center" />
@@ -145,7 +150,7 @@
                 </StackPanel>
             </Border>
 
-            <!-- Trang thai loi -->
+            <!-- Trạng thái lỗi -->
             <Border Grid.Row="3" Background="{StaticResource DangerSoftBrush}" CornerRadius="4"
                     Padding="14,12" VerticalAlignment="Top" HorizontalAlignment="Center"
                     Visibility="{Binding HasError, Converter={StaticResource BoolToVis}}">
@@ -181,7 +186,7 @@
                                     <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
-                                <!-- Avatar chu cai dau -->
+                                <!-- Avatar chữ cái đầu -->
                                 <Border Grid.Column="0" Width="40" Height="40" CornerRadius="999"
                                         Background="{StaticResource BrandSoftBrush}">
                                     <TextBlock Text="{Binding Initial}" FontWeight="Bold" FontSize="15"
@@ -202,8 +207,7 @@
                                     <TextBlock Text="{Binding StatusText}" />
                                 </Border>
 
-                                <!-- Nút thao tác nhanh trên từng dòng. Chỉ hiện với quyền user.manage:
-                                     tài khoản chỉ có quyền xem thì nhìn được danh sách, không sửa được. -->
+                                <!-- Nút thao tác nhanh trên từng dòng -->
                                 <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center"
                                             Visibility="{Binding DataContext.CanManageUsers,
                                                       RelativeSource={RelativeSource AncestorType=UserControl},
@@ -315,7 +319,7 @@
                                         CommandParameter="{Binding}" />
                                 <Button Content="Đặt lại mật khẩu" Style="{StaticResource GhostButton}"
                                         Padding="16,8" Margin="0,0,0,8" HorizontalAlignment="Stretch"
-                                        ToolTip="Đặt mật khẩu mới cho nhân viên này"
+                                        ToolTip="Đặt mật khẩu mới cho tài khoản này"
                                         Command="{Binding DataContext.ResetPasswordCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                         CommandParameter="{Binding}" />
                                 <Button Content="{Binding ToggleActiveText}"

@@ -20,5 +20,6 @@ namespace BusinessObjects
         public const string Manager = "Manager";
         public const string Receptionist = "Receptionist";
         public const string ServiceStaff = "ServiceStaff";
+        public const string Guest = "Guest";
     }
 }
