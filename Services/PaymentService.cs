@@ -49,10 +49,13 @@ public sealed class PaymentService : IPaymentService
         {
             var payment = await _repository.RecordAsync(invoiceId, amount, method,
                 normalizedTransactionId, AppSession.CurrentUser?.Id, DateTime.Now);
-            return payment == null
-                ? ServiceResult<Payment>.Failure(
-                    "Không thanh toán được: hoá đơn đã đóng, mã giao dịch trùng, hoặc số tiền vượt quá số còn nợ.")
-                : ServiceResult<Payment>.Success(payment, "Đã ghi nhận thanh toán.");
+            if (payment == null)
+                return ServiceResult<Payment>.Failure(
+                    "Không thanh toán được: hoá đơn đã đóng, mã giao dịch trùng, hoặc số tiền vượt quá số còn nợ.");
+
+            await AuditTrail.WriteAsync("payment.record", nameof(Payment), payment.Id,
+                null, $"Thu {amount:N0} VNĐ ({method}) cho Hoá đơn #{invoiceId}");
+            return ServiceResult<Payment>.Success(payment, "Đã ghi nhận thanh toán.");
         }
         catch (DbUpdateException)
         {
@@ -68,8 +71,11 @@ public sealed class PaymentService : IPaymentService
         if (!AuthorizationPolicy.CanApprovePaymentVoid)
             return ServiceResult<Payment>.Failure("Bạn không có quyền huỷ giao dịch.");
         var payment = await _repository.VoidAsync(paymentId);
-        return payment == null
-            ? ServiceResult<Payment>.Failure("Không tìm thấy giao dịch đã hoàn tất để huỷ.")
-            : ServiceResult<Payment>.Success(payment, "Đã huỷ giao dịch và cập nhật lại hoá đơn.");
+        if (payment == null)
+            return ServiceResult<Payment>.Failure("Không tìm thấy giao dịch đã hoàn tất để huỷ.");
+
+        await AuditTrail.WriteAsync("payment.void", nameof(Payment), payment.Id,
+            $"{payment.Amount:N0} VNĐ", $"Huỷ giao dịch #{payment.Id} (Hoá đơn #{payment.InvoiceId})");
+        return ServiceResult<Payment>.Success(payment, "Đã huỷ giao dịch và cập nhật lại hoá đơn.");
     }
 }

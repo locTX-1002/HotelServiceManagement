@@ -89,17 +89,17 @@
                               BorderThickness="0" RowHeight="46" CanUserSortColumns="True">
                         <DataGrid.Columns>
                             <!-- THỜI GIAN -->
-                            <DataGridTemplateColumn Header="THỜI GIAN" Width="140">
+                            <DataGridTemplateColumn Header="THỜI GIAN" Width="135">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <TextBlock Text="{Binding CreatedAt, StringFormat='dd/MM/yyyy  HH:mm'}"
-                                                   FontWeight="SemiBold" VerticalAlignment="Center" Margin="12,0,0,0" FontSize="12.5" />
+                                                   FontWeight="SemiBold" VerticalAlignment="Center" Margin="12,0,0,0" FontSize="12" />
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
 
                             <!-- NGƯỜI THAO TÁC -->
-                            <DataGridTemplateColumn Header="NGƯỜI THAO TÁC" Width="210">
+                            <DataGridTemplateColumn Header="NGƯỜI THAO TÁC" Width="200">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="8,0">
@@ -116,47 +116,53 @@
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
 
-                            <!-- HÀNH ĐỘNG & CHI TIẾT THAO TÁC -->
-                            <DataGridTemplateColumn Header="HÀNH ĐỘNG &amp; CHI TIẾT THAO TÁC" Width="*">
+                            <!-- HÀNH ĐỘNG -->
+                            <DataGridTemplateColumn Header="HÀNH ĐỘNG" Width="170">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="8,0">
-                                            <Border CornerRadius="4" Padding="6,2" VerticalAlignment="Center" Margin="0,0,8,0">
-                                                <Border.Style>
-                                                    <Style TargetType="Border" BasedOn="{StaticResource BadgeNeutral}">
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding ActionKind}" Value="Success">
-                                                                <Setter Property="Background" Value="{StaticResource SuccessSoftBrush}" />
-                                                                <Setter Property="TextElement.Foreground" Value="{StaticResource SuccessBrush}" />
-                                                            </DataTrigger>
-                                                            <DataTrigger Binding="{Binding ActionKind}" Value="Danger">
-                                                                <Setter Property="Background" Value="{StaticResource DangerSoftBrush}" />
-                                                                <Setter Property="TextElement.Foreground" Value="{StaticResource DangerBrush}" />
-                                                            </DataTrigger>
-                                                            <DataTrigger Binding="{Binding ActionKind}" Value="Warning">
-                                                                <Setter Property="Background" Value="{StaticResource WarningSoftBrush}" />
-                                                                <Setter Property="TextElement.Foreground" Value="{StaticResource WarningBrush}" />
-                                                            </DataTrigger>
-                                                            <DataTrigger Binding="{Binding ActionKind}" Value="Info">
-                                                                <Setter Property="Background" Value="{StaticResource InfoSoftBrush}" />
-                                                                <Setter Property="TextElement.Foreground" Value="{StaticResource InfoBrush}" />
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </Border.Style>
-                                                <TextBlock Text="{Binding ActionText}" FontWeight="SemiBold" FontSize="11" />
-                                            </Border>
-                                            <TextBlock Text="{Binding SummaryText}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" FontSize="12.5" Foreground="{StaticResource InkBrush}" />
-                                        </StackPanel>
+                                        <Border CornerRadius="4" Padding="8,3" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="8,0">
+                                            <Border.Style>
+                                                <Style TargetType="Border" BasedOn="{StaticResource BadgeNeutral}">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding ActionKind}" Value="Success">
+                                                            <Setter Property="Background" Value="{StaticResource SuccessSoftBrush}" />
+                                                            <Setter Property="TextElement.Foreground" Value="{StaticResource SuccessBrush}" />
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding ActionKind}" Value="Danger">
+                                                            <Setter Property="Background" Value="{StaticResource DangerSoftBrush}" />
+                                                            <Setter Property="TextElement.Foreground" Value="{StaticResource DangerBrush}" />
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding ActionKind}" Value="Warning">
+                                                            <Setter Property="Background" Value="{StaticResource WarningSoftBrush}" />
+                                                            <Setter Property="TextElement.Foreground" Value="{StaticResource WarningBrush}" />
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding ActionKind}" Value="Info">
+                                                            <Setter Property="Background" Value="{StaticResource InfoSoftBrush}" />
+                                                            <Setter Property="TextElement.Foreground" Value="{StaticResource InfoBrush}" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <TextBlock Text="{Binding ActionText}" FontWeight="SemiBold" FontSize="11.5" />
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!-- CHI TIẾT THAO TÁC -->
+                            <DataGridTemplateColumn Header="CHI TIẾT THAO TÁC" Width="*">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding DetailText}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Margin="8,0" FontSize="12.5" Foreground="{StaticResource InkBrush}" />
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
 
                             <!-- KẾT QUẢ -->
-                            <DataGridTemplateColumn Header="KẾT QUẢ" Width="110">
+                            <DataGridTemplateColumn Header="KẾT QUẢ" Width="125">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <Border CornerRadius="12" Padding="10,3" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="8,0">
+                                        <Border CornerRadius="12" Padding="12,4" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="8,0">
                                             <Border.Style>
                                                 <Style TargetType="Border">
                                                     <Setter Property="Background" Value="{StaticResource SuccessSoftBrush}" />
