@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Threading;
 using System.Windows;
 using System.Windows.Markup;
+using HandyControl.Tools;
 using Services;
 
 namespace FUHotelManagementWPF;
@@ -91,12 +92,15 @@ public partial class App : Application
     }
 
     /// <summary>
-    /// Ep tieng Viet cho toan app. Lich cua DatePicker mac dinh bi HandyControl
-    /// (thu vien Trung Quoc) doi sang tieng Trung; may deu la en-US nhung app van
-    /// hien 年/月. Dat truoc khi mo cua so dau tien nen khong con cho nao lo tieng.
+    /// Ep tieng Viet cho toan app. Rieng lich cua DatePicker khong doi duoc: no dung
+    /// HandyControl (thu vien Trung Quoc), va HandyControl co he thong ngon ngu RIENG
+    /// cua no (ConfigHelper.SetLang), khong doc Thread.CurrentCulture hay
+    /// FrameworkElement.Language cua WPF - nen 2 dong o duoi khong anh huong gi den
+    /// lich ca, chi doi duoc cac control WPF thuan.
     ///
-    /// Language cua WPF (xml:lang) moi la thu quyet dinh ten thu/thang tren lich,
-    /// khong phai CurrentCulture - nen phai override rieng.
+    /// HandyControl khong co goi ngon ngu tieng Viet (chi co en/fr/es/ru/ja/ko/pl/cs...),
+    /// nen chon "en" - it nhat khong con la tieng Trung. Phai cai them goi NuGet rieng
+    /// HandyControl.Lang.en thi SetLang("en") moi co file de doc, chi goi ham la chua du.
     /// </summary>
     private static void ForceVietnamese()
     {
@@ -113,9 +117,11 @@ public partial class App : Application
         }
         catch (Exception)
         {
-            // Neu thu vien khac da override roi thi bo qua - style DatePicker o duoi
-            // van dat Language="vi-VN" tren tung o nen lich van ra tieng Viet.
+            // Neu thu vien khac da override roi thi bo qua - khong lien quan gi den
+            // lich HandyControl, chi anh huong cac control WPF thuan khac.
         }
+
+        ConfigHelper.Instance.SetLang("en");
     }
 
     private async System.Threading.Tasks.Task StartupAsync()
