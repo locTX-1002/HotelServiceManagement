@@ -231,6 +231,7 @@ namespace FUHotelManagementWPF.ViewModels.Reports
 
         public AsyncRelayCommand LoadCommand { get; }
         public AsyncRelayCommand ExportCsvCommand { get; }
+        public AsyncRelayCommand ExportPdfCommand { get; }
         public RelayCommand Last7DaysCommand { get; }
         public RelayCommand Last30DaysCommand { get; }
         public RelayCommand ThisMonthCommand { get; }
@@ -239,6 +240,7 @@ namespace FUHotelManagementWPF.ViewModels.Reports
         {
             LoadCommand = new AsyncRelayCommand(_ => LoadAsync(true));
             ExportCsvCommand = new AsyncRelayCommand(ExportCsvAsync);
+            ExportPdfCommand = new AsyncRelayCommand(ExportPdfAsync);
             Last7DaysCommand = new RelayCommand(_ => SetRange(DateTime.Today.AddDays(-6), DateTime.Today));
             Last30DaysCommand = new RelayCommand(_ => SetRange(DateTime.Today.AddDays(-29), DateTime.Today));
             ThisMonthCommand = new RelayCommand(_ => SetRange(DateTime.Today.AddMonths(-3), DateTime.Today));
@@ -393,6 +395,32 @@ namespace FUHotelManagementWPF.ViewModels.Reports
             catch (Exception)
             {
                 Notify.Error("Không ghi được file CSV. Chọn thư mục khác rồi thử lại.");
+            }
+        }
+
+        private async Task ExportPdfAsync(object? _)
+        {
+            if (!HasPermission) { Notify.Warning("Bạn không có quyền xem báo cáo."); return; }
+            if (ToDate.Date < FromDate.Date) { Notify.Warning("Ngày kết thúc phải bằng hoặc sau ngày bắt đầu."); return; }
+
+            var result = await _service.ExportRevenuePdfAsync(FromDate, ToDate);
+            if (!result.Ok || result.Data == null) { Notify.Error(result.Message); return; }
+
+            var dialog = new Microsoft.Win32.SaveFileDialog
+            {
+                Filter = "PDF (*.pdf)|*.pdf",
+                FileName = $"bao-cao-doanh-thu-{FromDate:yyyyMMdd}-{ToDate:yyyyMMdd}.pdf",
+            };
+            if (dialog.ShowDialog() != true) return;
+
+            try
+            {
+                await File.WriteAllBytesAsync(dialog.FileName, result.Data);
+                Notify.Success($"Đã xuất PDF: {dialog.FileName}");
+            }
+            catch (Exception)
+            {
+                Notify.Error("Không ghi được file PDF. Chọn thư mục khác rồi thử lại.");
             }
         }
     }

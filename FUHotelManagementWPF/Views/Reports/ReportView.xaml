@@ -65,6 +65,10 @@
                             Padding="16,8" Margin="10,0,0,0"
                             ToolTip="Lưu bảng doanh thu ra file CSV mở được bằng Excel"
                             Command="{Binding ExportCsvCommand}" />
+                    <Button Content="Xuất PDF" Style="{StaticResource GhostButton}"
+                            Padding="16,8" Margin="10,0,0,0"
+                            ToolTip="Lưu báo cáo doanh thu ra file PDF"
+                            Command="{Binding ExportPdfCommand}" />
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                     <TextBlock Text="Từ ngày:" Style="{StaticResource CaptionText}"
