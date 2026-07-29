@@ -1,4 +1,5 @@
 using BusinessObjects;
+using BusinessObjects.Enums;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -11,6 +12,8 @@ namespace FUHotelManagementWPF.ViewModels.Users
 {
     /// <summary>Một lựa chọn vai trò trong ComboBox (Id khớp bảng Roles trong DB).</summary>
     public record RoleOption(int Id, string Label);
+
+    public record GenderOption(Gender Value, string Label);
 
     /// <summary>
     /// Dialog thêm / sửa tài khoản nhân viên. Mật khẩu KHÔNG nằm trong ViewModel:
@@ -58,6 +61,20 @@ namespace FUHotelManagementWPF.ViewModels.Users
             set => SetProperty(ref _selectedRole, value);
         }
 
+        public ObservableCollection<GenderOption> GenderOptions { get; } =
+        [
+            new(Gender.Male, "Nam"),
+            new(Gender.Female, "Nữ"),
+            new(Gender.Other, "Khác"),
+        ];
+
+        private GenderOption? _selectedGender;
+        public GenderOption? SelectedGender
+        {
+            get => _selectedGender;
+            set => SetProperty(ref _selectedGender, value);
+        }
+
         public string PasswordHint =>
             "Ít nhất 8 ký tự, có chữ hoa, chữ thường, chữ số và ký tự đặc biệt. Ví dụ: Hotel@2026";
 
@@ -89,12 +106,15 @@ namespace FUHotelManagementWPF.ViewModels.Users
             _existing = existing;
             TogglePasswordCommand = new RelayCommand(_ => IsPasswordVisible = !IsPasswordVisible);
 
+            _selectedGender = GenderOptions.FirstOrDefault(g => g.Value == Gender.Male);
+
             if (existing != null)
             {
                 _fullName = existing.FullName;
                 _email = existing.Email;
+                _selectedGender = GenderOptions.FirstOrDefault(g => g.Value == existing.Gender)
+                                  ?? GenderOptions[0];
 
-                // Nếu là tài khoản Khách hàng thì cảnh báo
                 if (existing.Role?.RoleName == RoleNames.Guest)
                 {
                     ErrorMessage = "Tài khoản Khách hàng không chỉnh sửa tại đây. Hãy sử dụng chức năng Đặt lại mật khẩu hoặc Khoá tài khoản.";
@@ -191,9 +211,10 @@ namespace FUHotelManagementWPF.ViewModels.Users
             IsBusy = true;
             try
             {
+                var gender = SelectedGender?.Value ?? Gender.Male;
                 var result = IsEdit
-                    ? await _service.UpdateAsync(_existing!.Id, FullName, Email, SelectedRole!.Id)
-                    : await _service.CreateAsync(FullName, Email, password, SelectedRole!.Id);
+                    ? await _service.UpdateAsync(_existing!.Id, FullName, Email, SelectedRole!.Id, gender)
+                    : await _service.CreateAsync(FullName, Email, password, SelectedRole!.Id, gender);
 
                 if (result.Ok)
                 {

@@ -1,5 +1,6 @@
 using BusinessObjects;
 using BusinessObjects.Entities;
+using BusinessObjects.Enums;
 using Repositories;
 namespace Services;
 
@@ -32,7 +33,7 @@ public sealed class UserManagementService : IUserManagementService
         return ServiceResult<List<Role>>.Success(roles.Where(x => x.RoleName != AdminRoleName).ToList());
     }
 
-    public async Task<ServiceResult<User>> CreateAsync(string name, string email, string password, int roleId)
+    public async Task<ServiceResult<User>> CreateAsync(string name, string email, string password, int roleId, Gender gender = Gender.Male)
     {
         if (!CanManageUsers) return ServiceResult<User>.Failure("Bạn không có quyền tạo tài khoản.");
         var error = Validate(name, email, password);
@@ -43,14 +44,14 @@ public sealed class UserManagementService : IUserManagementService
             return ServiceResult<User>.Failure("Không thể tạo tài khoản Quản trị viên từ ứng dụng. Tài khoản này do cấu hình triển khai tạo ra.");
         var n = email.Trim().ToLowerInvariant();
         if (await _r.EmailExistsAsync(n)) return ServiceResult<User>.Failure("Email đã tồn tại.");
-        var x = new User { FullName = name.Trim(), Email = n, PasswordHash = BCrypt.Net.BCrypt.HashPassword(password), RoleId = roleId, IsActive = true };
+        var x = new User { FullName = name.Trim(), Email = n, PasswordHash = BCrypt.Net.BCrypt.HashPassword(password), RoleId = roleId, IsActive = true, Gender = gender };
         await _r.SaveAsync(x, true); x.Role = role;
         await AuditTrail.WriteAsync("user.create", nameof(User), x.Id,
             null, $"{x.FullName} <{x.Email}> · {role.RoleName}");
         return ServiceResult<User>.Success(x, "Đã tạo tài khoản.");
     }
 
-    public async Task<ServiceResult<User>> UpdateAsync(int id, string name, string email, int roleId)
+    public async Task<ServiceResult<User>> UpdateAsync(int id, string name, string email, int roleId, Gender gender = Gender.Male)
     {
         if (!CanManageUsers) return ServiceResult<User>.Failure("Bạn không có quyền sửa tài khoản.");
         var error = Validate(name, email, null);
@@ -65,9 +66,8 @@ public sealed class UserManagementService : IUserManagementService
             return ServiceResult<User>.Failure("Không thể gán vai trò Quản trị viên cho tài khoản khác.");
         var n = email.Trim().ToLowerInvariant();
         if (await _r.EmailExistsAsync(n, id)) return ServiceResult<User>.Failure("Email đã tồn tại.");
-        // Chup lai truoc khi ghi de - nhat ky can biet doi tu gi sang gi.
         var before = $"{x.FullName} <{x.Email}> · {x.Role?.RoleName}";
-        x.FullName = name.Trim(); x.Email = n; x.RoleId = roleId;
+        x.FullName = name.Trim(); x.Email = n; x.RoleId = roleId; x.Gender = gender;
         await _r.SaveAsync(x, false); x.Role = role;
         await AuditTrail.WriteAsync("user.update", nameof(User), x.Id,
             before, $"{x.FullName} <{x.Email}> · {role.RoleName}");

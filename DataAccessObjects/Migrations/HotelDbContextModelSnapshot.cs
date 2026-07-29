@@ -1773,6 +1773,9 @@ namespace DataAccessObjects.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<int>("Gender")
+                        .HasColumnType("int");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -1799,6 +1802,7 @@ namespace DataAccessObjects.Migrations
                             Id = 1,
                             Email = "admin@hotel.com",
                             FullName = "Admin User",
+                            Gender = 0,
                             IsActive = true,
                             PasswordHash = "$2a$11$/LMRtOKzu0S3y3Wy61vsPeGaBR.YvvmkgijRmvbobvp2RNSlrkD3e",
                             RoleId = 1
@@ -1808,6 +1812,7 @@ namespace DataAccessObjects.Migrations
                             Id = 2,
                             Email = "manager@hotel.com",
                             FullName = "Manager User",
+                            Gender = 0,
                             IsActive = true,
                             PasswordHash = "$2a$11$T0pLWQ97vlvtz6TZar.kpeCGQeYKu3ojVW/99TcqzI5n3FWPEbPma",
                             RoleId = 2
@@ -1817,6 +1822,7 @@ namespace DataAccessObjects.Migrations
                             Id = 3,
                             Email = "receptionist@hotel.com",
                             FullName = "Receptionist User",
+                            Gender = 0,
                             IsActive = true,
                             PasswordHash = "$2a$11$1J39Dq0KNZJB5wIWzBxdAOOZx8hsLsvUFsdlq3f4sCTAMvdJNw7l6",
                             RoleId = 3
@@ -1826,6 +1832,7 @@ namespace DataAccessObjects.Migrations
                             Id = 4,
                             Email = "service@hotel.com",
                             FullName = "Service Staff",
+                            Gender = 0,
                             IsActive = true,
                             PasswordHash = "$2a$11$A4f9RZSr6u.ePghf680l8eU5FJos.cO0eqaadtofI4wY4pu5D/Gb.",
                             RoleId = 4

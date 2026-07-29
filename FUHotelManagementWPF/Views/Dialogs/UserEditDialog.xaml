@@ -34,6 +34,10 @@
                 <TextBox Text="{Binding Email, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
                          ToolTip="Email này cũng là tên đăng nhập của nhân viên" />
 
+                <TextBlock Text="GIỚI TÍNH" Style="{StaticResource FieldLabel}" Margin="0,13,0,5" />
+                <ComboBox ItemsSource="{Binding GenderOptions}" SelectedItem="{Binding SelectedGender}"
+                          DisplayMemberPath="Label" />
+
                 <TextBlock Text="VAI TRÒ" Style="{StaticResource FieldLabel}" Margin="0,13,0,5" />
                 <ComboBox ItemsSource="{Binding RoleOptions}" SelectedItem="{Binding SelectedRole}"
                           DisplayMemberPath="Label" />

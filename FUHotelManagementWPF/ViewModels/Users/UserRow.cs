@@ -1,5 +1,6 @@
 using BusinessObjects;
 using BusinessObjects.Entities;
+using BusinessObjects.Enums;
 using Services;
 
 namespace FUHotelManagementWPF.ViewModels.Users
@@ -13,6 +14,14 @@ namespace FUHotelManagementWPF.ViewModels.Users
         public string FullName => User.FullName;
         public string Email => User.Email;
         public string RoleName => User.Role?.RoleName ?? string.Empty;
+
+        public string GenderDisplay => User.Gender switch
+        {
+            Gender.Male => "Nam",
+            Gender.Female => "Nữ",
+            Gender.Other => "Khác",
+            _ => "—",
+        };
 
         public string RoleDisplay => RoleName switch
         {
