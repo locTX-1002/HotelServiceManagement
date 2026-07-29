@@ -201,11 +201,7 @@ namespace FUHotelManagementWPF.ViewModels.Reports
             ExportCsvCommand = new AsyncRelayCommand(ExportCsvAsync);
             Last7DaysCommand = new RelayCommand(_ => SetRange(DateTime.Today.AddDays(-6), DateTime.Today));
             Last30DaysCommand = new RelayCommand(_ => SetRange(DateTime.Today.AddDays(-29), DateTime.Today));
-            ThisMonthCommand = new RelayCommand(_ =>
-            {
-                var today = DateTime.Today;
-                SetRange(new DateTime(today.Year, today.Month, 1), today);
-            });
+            ThisMonthCommand = new RelayCommand(_ => SetRange(DateTime.Today.AddMonths(-3), DateTime.Today));
 
             // Khong co quyen thi khong goi service (service cung se tu choi) - chi hien thong bao
             if (HasPermission)

@@ -79,7 +79,7 @@
                             Command="{Binding Last7DaysCommand}" />
                     <Button Content="30 ngày" Style="{StaticResource QuickChip}"
                             VerticalAlignment="Center" Command="{Binding Last30DaysCommand}" />
-                    <Button Content="Tháng này" Style="{StaticResource QuickChip}"
+                    <Button Content="3 tháng" Style="{StaticResource QuickChip}"
                             VerticalAlignment="Center" Command="{Binding ThisMonthCommand}" />
                 </StackPanel>
             </DockPanel>
