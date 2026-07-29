@@ -53,6 +53,7 @@
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
             <!-- Thanh cong cu: khoang ngay + chip chon nhanh + 2 nut hanh dong -->
@@ -216,9 +217,11 @@
 
                     <Grid Grid.Row="1">
                         <DataGrid ItemsSource="{Binding Rows}"
+                                  SelectedItem="{Binding SelectedRow, Mode=TwoWay}"
                                   AutoGenerateColumns="False" IsReadOnly="True"
                                   CanUserAddRows="False" HeadersVisibility="Column"
                                   GridLinesVisibility="None" RowHeight="44"
+                                  SelectionMode="Single"
                                   ColumnHeaderStyle="{StaticResource AppColumnHeaderStyle}"
                                   RowStyle="{StaticResource AppRowStyle}"
                                   CellStyle="{StaticResource AppCellStyle}">
@@ -260,6 +263,56 @@
                                    HorizontalAlignment="Center" VerticalAlignment="Center"
                                    Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVis}}" />
                     </Grid>
+                </Grid>
+            </Border>
+
+            <!-- Chi tiet hoa don khi chon 1 ngay -->
+            <Border Grid.Row="5" Style="{StaticResource Card}" Effect="{StaticResource SoftShadow}"
+                    Padding="14" Margin="0,12,0,0" MaxHeight="280"
+                    Visibility="{Binding HasSelectedDay, Converter={StaticResource BoolToVis}}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <TextBlock Grid.Row="0" Text="{Binding SelectedDayText}"
+                               Style="{StaticResource SectionTitleText}" Margin="0,0,0,8" />
+                    <DataGrid Grid.Row="1" ItemsSource="{Binding DayInvoices}"
+                              AutoGenerateColumns="False" IsReadOnly="True"
+                              CanUserAddRows="False" HeadersVisibility="Column"
+                              GridLinesVisibility="None" RowHeight="38"
+                              ColumnHeaderStyle="{StaticResource AppColumnHeaderStyle}"
+                              RowStyle="{StaticResource AppRowStyle}"
+                              CellStyle="{StaticResource AppCellStyle}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="#" Width="50"
+                                                Binding="{Binding Id}" />
+                            <DataGridTextColumn Header="Phòng" Width="70"
+                                                Binding="{Binding RoomNumber}" />
+                            <DataGridTextColumn Header="Tiền phòng" Width="*"
+                                                HeaderStyle="{StaticResource MoneyHeader}"
+                                                ElementStyle="{StaticResource MoneyCellText}"
+                                                Binding="{Binding RoomCharge, Converter={StaticResource Money}}" />
+                            <DataGridTextColumn Header="Dịch vụ" Width="*"
+                                                HeaderStyle="{StaticResource MoneyHeader}"
+                                                ElementStyle="{StaticResource MoneyCellText}"
+                                                Binding="{Binding ServiceCharge, Converter={StaticResource Money}}" />
+                            <DataGridTextColumn Header="Phụ thu" Width="*"
+                                                HeaderStyle="{StaticResource MoneyHeader}"
+                                                ElementStyle="{StaticResource MoneyCellText}"
+                                                Binding="{Binding SurchargeAmount, Converter={StaticResource Money}}" />
+                            <DataGridTextColumn Header="Giảm giá" Width="*"
+                                                HeaderStyle="{StaticResource MoneyHeader}"
+                                                ElementStyle="{StaticResource MoneyCellText}"
+                                                Binding="{Binding DiscountAmount, Converter={StaticResource Money}}" />
+                            <DataGridTextColumn Header="Tổng" Width="*"
+                                                HeaderStyle="{StaticResource MoneyHeader}"
+                                                ElementStyle="{StaticResource MoneyCellText}"
+                                                Binding="{Binding TotalAmount, Converter={StaticResource Money}}" />
+                            <DataGridTextColumn Header="Trạng thái" Width="110"
+                                                Binding="{Binding StatusText}" />
+                        </DataGrid.Columns>
+                    </DataGrid>
                 </Grid>
             </Border>
         </Grid>

@@ -1,5 +1,7 @@
 using BusinessObjects;
+using BusinessObjects.Entities;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
@@ -189,6 +191,44 @@ namespace FUHotelManagementWPF.ViewModels.Reports
 
         public string DayCountText => $"{Rows.Count} ngày có phát sinh";
 
+        // ---- Chi tiet hoa don theo ngay ----
+        private List<Invoice> _allInvoices = [];
+
+        private RevenueByDay? _selectedRow;
+        public RevenueByDay? SelectedRow
+        {
+            get => _selectedRow;
+            set
+            {
+                if (SetProperty(ref _selectedRow, value))
+                {
+                    OnPropertyChanged(nameof(HasSelectedDay));
+                    OnPropertyChanged(nameof(SelectedDayText));
+                    RefreshDayInvoices();
+                }
+            }
+        }
+
+        public bool HasSelectedDay => _selectedRow != null;
+        public string SelectedDayText => _selectedRow != null
+            ? $"Hoá đơn ngày {_selectedRow.Date:dd/MM/yyyy}"
+            : string.Empty;
+
+        public ObservableCollection<InvoiceRow> DayInvoices { get; } = [];
+
+        private void RefreshDayInvoices()
+        {
+            DayInvoices.Clear();
+            if (_selectedRow == null) return;
+            var date = _selectedRow.Date.Date;
+            var filtered = _allInvoices.Where(x => x.InvoiceDate.Date == date)
+                .OrderByDescending(x => x.TotalAmount).ToList();
+            foreach (var inv in filtered)
+            {
+                DayInvoices.Add(new InvoiceRow(inv));
+            }
+        }
+
         public AsyncRelayCommand LoadCommand { get; }
         public AsyncRelayCommand ExportCsvCommand { get; }
         public RelayCommand Last7DaysCommand { get; }
@@ -284,9 +324,10 @@ namespace FUHotelManagementWPF.ViewModels.Reports
             InvoiceRevenue = report.InvoiceRevenue;
             CollectedAmount = report.CollectedAmount;
 
+            _allInvoices = report.Invoices.ToList();
+            SelectedRow = null;
+
             Rows.Clear();
-            // Sap xep lai o VM cho chac: bang luon phai ngay moi nhat len dau
-            // Giu nguyen thu tu service tra ve (da sap giam dan theo doanh thu theo dung de bai)
             foreach (var day in report.ByDay)
             {
                 Rows.Add(day);
@@ -354,5 +395,39 @@ namespace FUHotelManagementWPF.ViewModels.Reports
                 Notify.Error("Không ghi được file CSV. Chọn thư mục khác rồi thử lại.");
             }
         }
+    }
+
+    public class InvoiceRow
+    {
+        private static readonly Dictionary<BusinessObjects.Enums.InvoiceStatus, string> StatusLabels = new()
+        {
+            [BusinessObjects.Enums.InvoiceStatus.Unpaid] = "Chưa thanh toán",
+            [BusinessObjects.Enums.InvoiceStatus.PartiallyPaid] = "Thanh toán 1 phần",
+            [BusinessObjects.Enums.InvoiceStatus.Paid] = "Đã thanh toán",
+            [BusinessObjects.Enums.InvoiceStatus.Cancelled] = "Đã huỷ",
+        };
+
+        public InvoiceRow(Invoice inv)
+        {
+            Id = inv.Id;
+            RoomNumber = inv.Stay?.Reservation?.Room?.RoomNumber ?? "—";
+            InvoiceDate = inv.InvoiceDate;
+            RoomCharge = inv.RoomCharge;
+            ServiceCharge = inv.ServiceCharge;
+            SurchargeAmount = inv.SurchargeAmount;
+            DiscountAmount = inv.DiscountAmount;
+            TotalAmount = inv.TotalAmount;
+            StatusText = StatusLabels.GetValueOrDefault(inv.Status, inv.Status.ToString());
+        }
+
+        public int Id { get; }
+        public string RoomNumber { get; }
+        public DateTime InvoiceDate { get; }
+        public decimal RoomCharge { get; }
+        public decimal ServiceCharge { get; }
+        public decimal SurchargeAmount { get; }
+        public decimal DiscountAmount { get; }
+        public decimal TotalAmount { get; }
+        public string StatusText { get; }
     }
 }
