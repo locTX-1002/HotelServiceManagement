@@ -317,9 +317,6 @@
                             <TextBlock Text="{Binding Email}" FontWeight="SemiBold"
                                        TextTrimming="CharacterEllipsis" Margin="0,2,0,10" />
 
-                            <TextBlock Text="GIỚI TÍNH" Style="{StaticResource FieldLabel}" />
-                            <TextBlock Text="{Binding GenderDisplay}" FontWeight="SemiBold" Margin="0,2,0,10" />
-
                             <TextBlock Text="VAI TRÒ HỆ THỐNG" Style="{StaticResource FieldLabel}" />
                             <TextBlock Text="{Binding RoleDisplay}" FontWeight="SemiBold" Margin="0,2,0,10" />
 
